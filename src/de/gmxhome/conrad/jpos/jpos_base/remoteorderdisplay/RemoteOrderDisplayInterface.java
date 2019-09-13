@@ -276,7 +276,11 @@ public interface RemoteOrderDisplayInterface extends JposBaseInterface {
      * Final part of ClearVideo method. Can be overwritten within derived classes, if necessary.
      * The parameters of the method will be passed via a ClearVideo object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
-     * checks have been made before, only runtime errors can occur.
+     * checks have been made before.<br>
+     * In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>All display units specified by request.getUnits() are online.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by ClearVideo.
      * @throws JposException    For details, see UPOS method ClearVideo.
@@ -316,7 +320,13 @@ public interface RemoteOrderDisplayInterface extends JposBaseInterface {
      * Final part of ClearVideoRegion method. Can be overwritten within derived classes, if necessary.
      * The parameters of the method will be passed via a ClearVideoRegion object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
-     * checks have been made before, only runtime errors can occur.
+     * checks have been made before, only runtime errors can occur.<br>
+     * In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>All display units specified by request.getUnits() are online.</li>
+     *     <li>request.getRow(), request.getColumn(), request.getHeight() and request.getWidth() specify a valid region
+     *     on all affected units.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by ClearVideoRegion.
      * @throws JposException    For details, see UPOS method ClearVideoRegion.
@@ -337,7 +347,7 @@ public interface RemoteOrderDisplayInterface extends JposBaseInterface {
      * <ul>
      *     <li>All display units specified by units are online,</li>
      *     <li>row, column, height and width specify a valid region on all affected units,</li>
-     *     <li>targetRow, targetColumn, height and width specify a valid region on all affected units, too.</li>
+     *     <li>targetRow, targetColumn, height and width specify a valid region on all affected units.</li>
      * </ul>
      *
      * @param units        Bitwise mask indicating which video unit(s) to operate on.
@@ -356,7 +366,15 @@ public interface RemoteOrderDisplayInterface extends JposBaseInterface {
      * Final part of CopyVideoRegion method. Can be overwritten within derived classes, if necessary.
      * The parameters of the method will be passed via a CopyVideoRegion object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
-     * checks have been made before, only runtime errors can occur.
+     * checks have been made before, only runtime errors can occur.<br>
+     * In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>All display units specified by request.getUnits() are online.</li>
+     *     <li>request.getRow(), request.getColumn(), request.getHeight() and request.getWidth() specify a valid region
+     *     on all affected units.</li>
+     *     <li>request.getTargetRow(), request.getTargetColumn(), request.getHeight() and request.getWidth() specify a
+     *     valid region on all affected units.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by CopyVideoRegion.
      * @throws JposException    For details, see UPOS method CopyVideoRegion.
@@ -395,7 +413,12 @@ public interface RemoteOrderDisplayInterface extends JposBaseInterface {
      * Final part of DisplayData method. Can be overwritten within derived classes, if necessary.
      * The parameters of the method will be passed via a DisplayData object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
-     * checks have been made before, only runtime errors can occur.
+     * checks have been made before, only runtime errors can occur.<br>
+     * In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>All display units specified by units are online,</li>
+     *     <li>request.getRow() and request.getColumn() specify a valid coordinate on all affected units.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by DisplayData.
      * @throws JposException    For details, see UPOS method DisplayData.
@@ -437,7 +460,13 @@ public interface RemoteOrderDisplayInterface extends JposBaseInterface {
      * Final part of DrawBox method. Can be overwritten within derived classes, if necessary.
      * The parameters of the method will be passed via a DrawBox object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
-     * checks have been made before, only runtime errors can occur.
+     * checks have been made before, only runtime errors can occur.<br>
+     * In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>All display units specified by request.getUnits() are online.</li>
+     *     <li>request.getRow(), request.getColumn(), request.getHeight() and request.getWidth() specify a valid region
+     *     on all affected units.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by DrawBox.
      * @throws JposException    For details, see UPOS method DrawBox.
@@ -475,7 +504,13 @@ public interface RemoteOrderDisplayInterface extends JposBaseInterface {
      * Final part of RestoreVideoRegion method. Can be overwritten within derived classes, if necessary.
      * The parameters of the method will be passed via a RestoreVideoRegion object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
-     * checks have been made before, only runtime errors can occur.
+     * checks have been made before, only runtime errors can occur.<br>
+     * In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>All display units specified by request.getUnits() are online.</li>
+     *     <li>request.getTargetRow() and request.getTargetColumn() specify a valid coordinate on all affected units.</li>
+     *     <li>request.getBufferId() &le; VideoSaveBuffers.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by RestoreVideoRegion.
      * @throws JposException    For details, see UPOS method RestoreVideoRegion.
@@ -515,7 +550,14 @@ public interface RemoteOrderDisplayInterface extends JposBaseInterface {
      * Final part of SaveVideoRegion method. Can be overwritten within derived classes, if necessary.
      * The parameters of the method will be passed via a SaveVideoRegion object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
-     * checks have been made before, only runtime errors can occur.
+     * checks have been made before, only runtime errors can occur.<br>
+     * In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>All display units specified by request.getUnits() are online.</li>
+     *     <li>request.getRow(), request.getColumn(), request.getHeight() and request.getWidth() specify a valid region
+     *     on all affected units.</li>
+     *     <li>request.getBufferId() &le; VideoSaveBuffers.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by SaveVideoRegion.
      * @throws JposException    For details, see UPOS method SaveVideoRegion.
@@ -555,7 +597,11 @@ public interface RemoteOrderDisplayInterface extends JposBaseInterface {
      * Final part of TransactionDisplay method. Can be overwritten within derived classes, if necessary.
      * The parameters of the method will be passed via a TransactionDisplay object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
-     * checks have been made before, only runtime errors can occur.
+     * checks have been made before, only runtime errors can occur.<br>
+     * In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>All display units specified by request.getUnits() are online.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by TransactionDisplay.
      * @throws JposException    For details, see UPOS method TransactionDisplay.
@@ -597,7 +643,13 @@ public interface RemoteOrderDisplayInterface extends JposBaseInterface {
      * Final part of UpdateVideoRegionAttribute method. Can be overwritten within derived classes, if necessary.
      * The parameters of the method will be passed via a UpdateVideoRegionAttribute object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
-     * checks have been made before, only runtime errors can occur.
+     * checks have been made before, only runtime errors can occur.<br>
+     * In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>All display units specified by request.getUnits() are online.</li>
+     *     <li>request.getRow(), request.getColumn(), request.getHeight() and request.getWidth() specify a valid region
+     *     on all affected units.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by UpdateVideoRegionAttribute.
      * @throws JposException    For details, see UPOS method UpdateVideoRegionAttribute.
@@ -633,7 +685,12 @@ public interface RemoteOrderDisplayInterface extends JposBaseInterface {
      * Final part of VideoSound method. Can be overwritten within derived classes, if necessary.
      * The parameters of the method will be passed via a UpdateVideoRegionAttribute object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
-     * checks have been made before, only runtime errors can occur.
+     * checks have been made before, only runtime errors can occur.<br>
+     * In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>All display units specified by request.getUnits() are online.</li>
+     *     <li>For all affected units, CapTone is true.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by VideoSound.
      * @throws JposException    For details, see UPOS method VideoSound.

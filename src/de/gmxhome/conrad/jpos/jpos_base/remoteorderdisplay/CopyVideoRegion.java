@@ -62,6 +62,11 @@ public class CopyVideoRegion extends AreaBase {
 
     @Override
     public void invoke() throws JposException {
-        ((RemoteOrderDisplayService)Props.EventSource).RemoteOrderDisplayInterface.copyVideoRegion(this);
+        checkUnitsOnline();
+        checkAreaValid();
+        RemoteOrderDisplayService svc = ((RemoteOrderDisplayService)Props.EventSource);
+        int errorunits = svc.validateCoordinates(getUnits(), getTargetRow() + getHeight() - 1, getTargetColumn() + getWidth() -1);
+        svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
+        svc.RemoteOrderDisplayInterface.copyVideoRegion(this);
     }
 }

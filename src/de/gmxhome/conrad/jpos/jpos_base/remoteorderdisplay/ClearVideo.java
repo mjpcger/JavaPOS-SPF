@@ -48,6 +48,7 @@ public class ClearVideo extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
+        checkUnitsOnline();
         ((RemoteOrderDisplayService)Props.EventSource).RemoteOrderDisplayInterface.clearVideo(this);
     }
 }

@@ -67,6 +67,12 @@ public class RestoreVideoRegion extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((RemoteOrderDisplayService)Props.EventSource).RemoteOrderDisplayInterface.restoreVideoRegion(this);
+        checkUnitsOnline();
+        RemoteOrderDisplayService svc = (RemoteOrderDisplayService) Props.EventSource;
+        int errorunits = svc.validateCoordinates(getUnits(), getTargetRow(), getTargetColumn());
+        svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
+        errorunits = svc.validateBufferID(getUnits(), getBufferId());
+        svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + getBufferId() + " for units specified by " + errorunits);
+        svc.RemoteOrderDisplayInterface.restoreVideoRegion(this);
     }
 }

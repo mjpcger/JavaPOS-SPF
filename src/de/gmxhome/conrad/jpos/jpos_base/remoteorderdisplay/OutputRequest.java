@@ -76,4 +76,14 @@ public class OutputRequest extends JposOutputRequest {
         if (current != null && current.Props == Props && (current.Units & Units) != 0)
             current.abortCommand();
     }
+
+    /**
+     * Checks whether all units specified by Units are online.
+     * @throws JposException If not all specified units are online.
+     */
+    protected void checkUnitsOnline() throws JposException {
+        RemoteOrderDisplayProperties data = (RemoteOrderDisplayProperties) (Props);
+        RemoteOrderDisplayService svc = (RemoteOrderDisplayService) data.EventSource;
+        svc.check((~data.UnitsOnline & getUnits()) != 0, ~data.UnitsOnline & getUnits(), JposConst.JPOS_E_OFFLINE, 0, "Display units specified by " + (getUnits() & ~data.UnitsOnline) + " offline");
+    }
 }

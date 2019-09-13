@@ -366,9 +366,16 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
             RemoteOrderDisplayConst.ROD_CLK_12_LONG, RemoteOrderDisplayConst.ROD_CLK_24_LONG
     };
 
-    private int validateCoordinates(int bits, int height, int width) {
+    /**
+     * Checks whether the given coordinates are valid for the specified units.
+     * @param bits      Unit to be checked.
+     * @param row       Character row of coordinate.
+     * @param column    Character column of coordinate.
+     * @return Bit mask, 1 for every requested unit where row and column are not valid coordinates.
+     */
+    public int validateCoordinates(int bits, int row, int column) {
         int result = 0;
-        if (height < 0 || width < 0)
+        if (row < 0 || column < 0)
             return bits;
         while (bits != 0) {
             int index = Data.unitsToFirstIndex(bits);
@@ -378,7 +385,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
                 String[] values = mode.split(":");
                 if (Integer.parseInt(values[0]) == Data.Unit[index].VideoMode) {
                     String[] limits = values[1].split("x");
-                    if (height > Integer.parseInt(limits[0]) || width > Integer.parseInt(limits[1]))
+                    if (row > Integer.parseInt(limits[0]) || column > Integer.parseInt(limits[1]))
                         result |= 1 << index;
                     break;
                 }
@@ -387,7 +394,13 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
         return result;
     }
 
-    private int validateClockID(int bits, int id) {
+    /**
+     * Checks if id is a valid clock id for all units specified by bits.
+     * @param bits  Bit mask specifying all requested units.
+     * @param id    Clock ID to be checked.
+     * @return  Bit mask, 1 for every requested unit where id is not a valid clock ID.
+     */
+    public int validateClockID(int bits, int id) {
         int result = 0;
         if (id < 1)
             return bits;
@@ -476,7 +489,13 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
         logCall("ControlCursor");
     }
 
-    private int validateBufferID(int units, int id) {
+    /**
+     * Checks if id is a valid buffer id for all specified units.
+     * @param units Bit mask specifying all requested units.
+     * @param id    Buffer ID to be checked.
+     * @return  Bit mask, 1 for every requested unit where id is not a valid buffer ID.
+     */
+    public int validateBufferID(int units, int id) {
         int result = 0;
         while (units != 0) {
             int index = Data.unitsToFirstIndex(units);
@@ -716,7 +735,12 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
         doItTrans(RemoteOrderDisplayInterface.updateVideoRegionAttribute(i, i1, i2, i3, i4, i5, i6), "UpdateVideoRegionAttribute");
     }
 
-    private int validateTone(int bits) {
+    /**
+     * Checks if CapTone is true for all units specified by bits.
+     * @param bits  Bit mask specifying all units to be checked.
+     * @return Bit mask, 1 for every requested unit where CapTone is false.
+     */
+    public int validateTone(int bits) {
         int result = 0;
         while (bits != 0) {
             int index = Data.unitsToFirstIndex(bits);

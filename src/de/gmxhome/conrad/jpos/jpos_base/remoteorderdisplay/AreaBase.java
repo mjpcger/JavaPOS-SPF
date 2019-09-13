@@ -17,6 +17,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
+import jpos.JposConst;
+import jpos.JposException;
 
 /**
  * Output request class for remote order display methods using row, column, height and width parameters to specify a
@@ -57,5 +59,13 @@ public class AreaBase extends PositionBase {
         super(props, units, row, column);
         Height = height;
         Width = width;
+    }
+
+    protected void checkAreaValid() throws JposException {
+        RemoteOrderDisplayProperties data = (RemoteOrderDisplayProperties) (Props);
+        RemoteOrderDisplayService svc = (RemoteOrderDisplayService) data.EventSource;
+        int errorunits = svc.validateCoordinates(getUnits(), getRow(), getColumn());
+        errorunits |= svc.validateCoordinates(getUnits(), getRow() + getHeight() - 1, getColumn() + getWidth() - 1);
+        svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
     }
 }
