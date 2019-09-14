@@ -34,6 +34,10 @@ public class PrintRecSubtotal extends SimpleAmountOutputRequest {
 
     @Override
     public void invokeMethod() throws JposException {
-        ((FiscalPrinterProperties)Props).printRecSubtotal(this);
+        FiscalPrinterService svc = (FiscalPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.checkCoverPaper(svc.getFiscalStation());
+        }
+        svc.FiscalPrinterInterface.printRecSubtotal(this);
     }
 }

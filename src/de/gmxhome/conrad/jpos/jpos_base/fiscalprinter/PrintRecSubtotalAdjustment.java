@@ -47,6 +47,10 @@ public class PrintRecSubtotalAdjustment extends PrintRecSubtotalAdjustVoid {
 
     @Override
     public void invokeMethod() throws JposException {
-        ((FiscalPrinterProperties)Props).printRecSubtotalAdjustment(this);
+        FiscalPrinterService svc = (FiscalPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.checkCoverPaper(svc.getFiscalStation());
+        }
+        svc.FiscalPrinterInterface.printRecSubtotalAdjustment(this);
     }
 }

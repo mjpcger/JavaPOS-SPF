@@ -55,7 +55,12 @@ public class PrintRecMessage extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((FiscalPrinterProperties)Props).printRecMessage(this);
+        FiscalPrinterService svc = (FiscalPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.checkCoverPaper(svc.getFiscalStation());
+            Device.checkext(getMessage().length() > ((FiscalPrinterProperties)Props).MessageLength, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_DESCRIPTION, "Message too long");
+        }
+        svc.FiscalPrinterInterface.printRecMessage(this);
         super.invoke();
     }
 }

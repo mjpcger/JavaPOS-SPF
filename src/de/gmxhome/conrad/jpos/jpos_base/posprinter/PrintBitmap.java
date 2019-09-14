@@ -84,6 +84,10 @@ public class PrintBitmap extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((POSPrinterService)Props.EventSource).POSPrinterInterface.printBitmap(this);
+        POSPrinterService svc = (POSPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.extendedErrorCheck(getStation());
+        }
+        svc.POSPrinterInterface.printBitmap(this);
     }
 }

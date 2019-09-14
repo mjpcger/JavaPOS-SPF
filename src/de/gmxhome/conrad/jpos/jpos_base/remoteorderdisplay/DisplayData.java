@@ -59,8 +59,10 @@ public class DisplayData extends PositionBase {
 
     @Override
     public void invoke() throws JposException {
-        checkUnitsOnline();
-        checkPositionValid();
+        if (EndSync == null) {
+            checkUnitsOnline();
+            checkPositionValid();
+        }
         ((RemoteOrderDisplayService)Props.EventSource).RemoteOrderDisplayInterface.displayData(this);
     }
 }

@@ -45,6 +45,10 @@ public class PrintRecVoid extends PrePostOutputRequest {
 
     @Override
     public void invokeMethod() throws JposException {
-        ((FiscalPrinterProperties)Props).printRecVoid(this);
+        FiscalPrinterService svc = (FiscalPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.checkCoverPaper(svc.getFiscalStation());
+        }
+        svc.FiscalPrinterInterface.printRecVoid(this);
     }
 }

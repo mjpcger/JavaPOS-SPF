@@ -106,6 +106,10 @@ public class DrawRuledLine extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((POSPrinterService)Props.EventSource).POSPrinterInterface.drawRuledLine(this);
+        POSPrinterService svc = (POSPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.extendedErrorCheck(getStation());
+        }
+        svc.POSPrinterInterface.drawRuledLine(this);
     }
 }

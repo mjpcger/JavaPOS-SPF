@@ -50,12 +50,13 @@ public class SaveVideoRegion extends AreaBase {
 
     @Override
     public void invoke() throws JposException {
-        RemoteOrderDisplayProperties data = (RemoteOrderDisplayProperties) (Props);
-        RemoteOrderDisplayService svc = (RemoteOrderDisplayService) data.EventSource;
-        checkUnitsOnline();
-        checkAreaValid();
-        int errorunits = svc.validateBufferID(getUnits(), getBufferId());
-        svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + getBufferId() + " for units specified by " + errorunits);
+        RemoteOrderDisplayService svc = (RemoteOrderDisplayService) Props.EventSource;
+        if (EndSync == null) {
+            checkUnitsOnline();
+            checkAreaValid();
+            int errorunits = svc.validateBufferID(getUnits(), getBufferId());
+            svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + getBufferId() + " for units specified by " + errorunits);
+        }
         svc.RemoteOrderDisplayInterface.saveVideoRegion(this);
     }
 }

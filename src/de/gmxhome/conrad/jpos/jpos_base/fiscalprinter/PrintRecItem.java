@@ -73,6 +73,10 @@ public class PrintRecItem extends SimpleItemOutputRequest {
 
     @Override
     public void invokeMethod() throws JposException {
-        ((FiscalPrinterProperties)Props).printRecItem(this);
+        FiscalPrinterService svc = (FiscalPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.checkCoverPaper(svc.getFiscalStation());
+        }
+        svc.FiscalPrinterInterface.printRecItem(this);
     }
 }

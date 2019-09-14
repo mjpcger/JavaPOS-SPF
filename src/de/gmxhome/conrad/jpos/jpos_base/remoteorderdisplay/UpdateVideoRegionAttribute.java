@@ -52,8 +52,10 @@ public class UpdateVideoRegionAttribute extends ClearVideoRegion {
 
     @Override
     public void invoke() throws JposException {
-        checkUnitsOnline();
-        checkAreaValid();
+        if (EndSync == null) {
+            checkUnitsOnline();
+            checkAreaValid();
+        }
         ((RemoteOrderDisplayService)Props.EventSource).RemoteOrderDisplayInterface.updateVideoRegionAttribute(this);
     }
 }

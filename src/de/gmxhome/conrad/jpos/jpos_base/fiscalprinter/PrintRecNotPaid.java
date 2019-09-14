@@ -46,6 +46,10 @@ public class PrintRecNotPaid extends SimpleAmountOutputRequest {
 
     @Override
     public void invokeMethod() throws JposException {
-        ((FiscalPrinterProperties)Props).printRecNotPaid(this);
+        FiscalPrinterService svc = (FiscalPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.checkCoverPaper(svc.getFiscalStation());
+        }
+        svc.FiscalPrinterInterface.printRecNotPaid(this);
     }
 }

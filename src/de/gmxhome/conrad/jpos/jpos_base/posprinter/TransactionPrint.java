@@ -76,7 +76,11 @@ public class TransactionPrint extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((POSPrinterService)Props.EventSource).POSPrinterInterface.transactionPrint(this);
+        POSPrinterService svc = (POSPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.extendedErrorCheck(getStation());
+        }
+        svc.POSPrinterInterface.transactionPrint(this);
         for (OutputRequest request : TransactionCommands) {
             Device.check (Abort != null, JposConst.JPOS_E_FAILURE, "Transaction interrupted");
             request.invoke();

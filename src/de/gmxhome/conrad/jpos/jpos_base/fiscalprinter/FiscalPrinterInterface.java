@@ -546,7 +546,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>Device is enabled,</li>
      *     <li>CapDuplicateReceipt is true,</li>
      *     <li>PrinterState is PS_MONITOR,</li>
-     *     <li>If AsyncMode is false: State is not S_BUSY.</li>
+     *     <li>State is not S_BUSY.</li>
      * </ul>
      * Since the UPOS specification does not clearly specify whether property DuplicateReceipt must be true,
      * it can be checked by the specific implementation if this should be necessary.
@@ -851,6 +851,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintFiscalDocumentLine object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>The slip station is present.</li>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>CapSlpEmptySensor is false or SlpEmpty is false.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters to
      *                          be used by PrintFiscalDocumentLine.
@@ -872,10 +878,13 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * </ul>
      * In addition, If AsyncMode is false:
      * <ul>
-     *     <li>State is not S_BUSY,</li>
-     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
-     *     <li>CapRecEmptySensor is false or RecEmpty is false.</li>
+     *     <li>State is not S_BUSY.</li>
      * </ul>
+     * <br>On success, the station stored within the returned PrintFixedOutput object must be set to the correct
+     * print station. If the implementation supports fixed output only to the receipt station, no further action
+     * is necessary because the default station is receipt. If the implementation supports fixed output on slip
+     * and slip has been selected in beginFixedOutput, PrintFixedOutput.changeToSlip() must be called to change
+     * the station before returning.
      *
      * @param documentType  Identifier of a document stored in the Fiscal Printer.
      * @param lineNumber    Number of the line in the document to print.
@@ -889,7 +898,13 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * Final part of PrintFixedOutput method. Can be overwritten within derived classes, if necessary.
      * The parameters of the method will be passed via a PrintFixedOutput object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
-     * All plausibility checks have been made before, only runtime errors can occur.
+     * All plausibility checks have been made before, especially the following additional checks that have not been
+     * made preceiding the validation part:
+     * <ul>
+     *     <li>The station specified in beginFixedOutput is present.</li>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the corresponding empty paper sensor is not present signals paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintFixedOutput.
@@ -916,8 +931,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * <ul>
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
-     *     <li>the corresponding empty paper sensor is not present or its property value (JrnEmpty, RecEmpty or
-     * SlpEmpty) is false.</li>
+     *     <li>the corresponding empty paper sensor is not present or signals paper present.</li>
      * </ul>
      *
      * @param station       The Fiscal Printer station to be used.
@@ -932,6 +946,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintNormal object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>The station(s) specified by getStation() is present.</li>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the corresponding empty paper sensor is not present or signals paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintNormal.
@@ -958,7 +978,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      *
      * @param amount            Amount to be incremented or decremented.
@@ -972,6 +992,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecCash object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecCash.
@@ -997,7 +1023,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * The implementation should sets properties PreLine and PostLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
@@ -1023,6 +1049,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecItem object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecItem.
@@ -1056,7 +1088,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * The implementation should sets properties PreLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
@@ -1080,6 +1112,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecItemAdjustment object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecItemAdjustment.
@@ -1113,7 +1151,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * The implementation should sets properties PreLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
@@ -1137,6 +1175,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecItemAdjustmentVoid object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecItemAdjustmentVoid.
@@ -1162,7 +1206,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * FiscalPrinter specific implementations should set properties PreLine and PostLine as expected. The UPOS specification
      * does not tells anything about handling of PreLine and PostLine in PrintRecItemFuel, therefore
@@ -1188,6 +1232,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecItemFuel object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecItemFuel.
@@ -1213,7 +1263,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * FiscalPrinter specific implementations should set properties PreLine and PostLine as expected. The UPOS specification
      * does not tells anything about handling of PreLine and PostLine in PrintRecItemFuelVoid, therefore
@@ -1235,6 +1285,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecItemFuelVoid object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecItemFuelVoid.
@@ -1260,7 +1316,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * The implementation should sets properties PreLine and PostLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
@@ -1286,6 +1342,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecItemVoid object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecItemVoid.
@@ -1311,7 +1373,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * The implementation should sets property PreLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
@@ -1337,6 +1399,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecItemRefund object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecItemRefund.
@@ -1362,7 +1430,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      *
      * @param description       Text describing the item sold.
@@ -1381,6 +1449,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecItemRefundVoid object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecItemRefundVoid.
@@ -1407,7 +1481,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false,</li>
+     * or signal paper present,</li>
      *     <li>description in not longer than MessageLength property specifies.</li>
      * </ul>
      *
@@ -1422,6 +1496,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecMessage object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecMessage.
@@ -1448,7 +1528,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      *
      * @param description       Text describing the not paid amount.
@@ -1463,6 +1543,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecNotPaid object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      * <br>The default implementation should be called within derived methods to ensure that the property
      * PrinterState is updated as expected.
      *
@@ -1495,7 +1581,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * The implementation should sets property PreLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
@@ -1519,6 +1605,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecPackageAdjustment object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecPackageAdjustment.
@@ -1546,7 +1638,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * The implementation should sets property PreLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
@@ -1569,6 +1661,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecPackageAdjustVoid object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecPackageAdjustVoid.
@@ -1594,7 +1692,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * The implementation should sets property PreLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
@@ -1617,6 +1715,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecRefund object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecRefund.
@@ -1642,7 +1746,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      *
      * @param description       Text describing the item sold.
@@ -1658,6 +1762,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecRefundVoid object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecRefundVoid.
@@ -1682,7 +1792,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * The implementation should sets property PostLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
@@ -1703,6 +1813,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecSubtotal object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecSubtotal.
@@ -1735,7 +1851,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * The implementation should sets property PreLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
@@ -1758,6 +1874,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecSubtotalAdjustment object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecSubtotalAdjustment.
@@ -1789,7 +1911,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * The implementation should sets property PreLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
@@ -1811,6 +1933,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecSubtotalAdjustVoid object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecSubtotalAdjustVoid.
@@ -1834,7 +1962,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      *
      * @param taxId            Customer identification with identification characters and tax number.
@@ -1848,6 +1976,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecTaxID object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecTaxID.
@@ -1875,7 +2009,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * The implementation should sets property PostLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
@@ -1899,6 +2033,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecTotal object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecTotal.
@@ -1923,7 +2063,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      *
      * @param description   Text describing the void.
@@ -1937,6 +2077,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecVoid object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      * <br>The default implementation should be called within derived methods to ensure that the property
      * PrinterState is updated as expected.
      *
@@ -1973,7 +2119,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>State is not S_BUSY,</li>
      *     <li>CapCoverSensor is false or CoverOpen is false,</li>
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
-     * or their property values (JrnEmpty and RecEmpty or SlpEmpty) are false.</li>
+     * or signal paper present.</li>
      * </ul>
      * The implementation should sets properties PreLine and PostLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
@@ -1999,6 +2145,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintRecVoidItem object. This method
      * will be called when the corresponding operation shall be performed, either synchronously or asynchronously.
      * All plausibility checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
      * <br>The default implementation should be called within derived methods to ensure that the property
      * PrinterState is updated as expected.
      *

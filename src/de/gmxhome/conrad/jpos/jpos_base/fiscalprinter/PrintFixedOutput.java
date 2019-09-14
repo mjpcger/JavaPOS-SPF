@@ -22,6 +22,27 @@ import jpos.*;
  * Output request executor for FiscalPrinter method PrintFiscalDocumentLine.
  */
 public class PrintFixedOutput extends OutputRequest {
+    private int Station = FiscalPrinterConst.FPTR_S_RECEIPT;
+
+    /**
+     * FiscalPrinter method BeginFixedOutput parameter station, see UPOS specification. Default:
+     * FPTR_S_RECEIPT. If printer supports fixed output on slip paper and beginFixedOutput has been
+     * called with station = FPTR_S_SLIP, the implementation class must explicitly call changeToSlip
+     * to activate slipoutput.
+     * @return Print station.
+     */
+    public int getStation() {
+        return Station;
+    }
+
+    /**
+     * Changes Station to FPTR_S_SLIP. Must be called before first call of invoke() whenever FPTR_S_SLIP
+     * had been specified in the corresponding BeginFixedOutput method call.
+     */
+    public void changeToSlip() {
+        Station = FiscalPrinterConst.FPTR_S_SLIP;
+    }
+
     private int DocumentType;
 
     /**
@@ -69,7 +90,9 @@ public class PrintFixedOutput extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((FiscalPrinterProperties)Props).printFixedOutput(this);
+        FiscalPrinterService svc = (FiscalPrinterService)Props.EventSource;
+        svc.checkCoverPaper(getStation());
+        svc.FiscalPrinterInterface.printFixedOutput(this);
         super.invoke();
     }
 }

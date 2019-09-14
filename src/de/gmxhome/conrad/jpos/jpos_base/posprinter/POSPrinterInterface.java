@@ -865,6 +865,12 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a CutPaper object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
      * checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>Receipt paper is present.</li>
+     *     <li>Cover is closed.</li>
+     *     <li>If present, cartridge is operational.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by CutPaper.
      * @throws JposException    For details, see UPOS method CutPaper.
@@ -901,6 +907,12 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a DrawRuledLine object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
      * checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>The station specified by request.getStation() is present.</li>
+     *     <li>Cover is closed.</li>
+     *     <li>If present, cartridge is operational.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by DrawRuledLine.
      * @throws JposException    For details, see UPOS method DrawRuledLine.
@@ -933,6 +945,12 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a MarkFeed object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
      * checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>Receipt paper is present.</li>
+     *     <li>Cover is closed.</li>
+     *     <li>If present, cartridge is operational.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by MarkFeed.
      * @throws JposException    For details, see UPOS method MarkFeed.
@@ -970,6 +988,12 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintBarCode object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
      * checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>The station specified by request.getStation() is present.</li>
+     *     <li>Cover is closed.</li>
+     *     <li>If present, cartridge is operational.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by PrintBarCode.
      * @throws JposException    For details, see UPOS method PrintBarCode.
@@ -1008,6 +1032,12 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintBitmap object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
      * checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>The station specified by request.getStation() is present.</li>
+     *     <li>Cover is closed.</li>
+     *     <li>If present, cartridge is operational.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by PrintBitmap.
      * @throws JposException    For details, see UPOS method PrintBitmap.
@@ -1049,6 +1079,12 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintMemoryBitmap object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
      * checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>The station specified by request.getStation() is present.</li>
+     *     <li>Cover is closed.</li>
+     *     <li>If present, cartridge is operational.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by PrintMemoryBitmap.
      * @throws JposException    For details, see UPOS method PrintMemoryBitmap.
@@ -1080,6 +1116,12 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintNormal object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
      * checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>The station specified by request.getStation() is present.</li>
+     *     <li>Cover is closed.</li>
+     *     <li>If present, cartridge is operational.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by PrintNormal.
      * @throws JposException    For details, see UPOS method PrintNormal.
@@ -1115,6 +1157,12 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PrintTwoNormal object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
      * checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>The stations specified by request.getStation() are present.</li>
+     *     <li>Covers are closed.</li>
+     *     <li>If present, cartridges are operational.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by PrintTwoNormal.
      * @throws JposException    For details, see UPOS method PrintTwoNormal.
@@ -1148,6 +1196,12 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a TransactionPrint object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
      * checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>The station specified by request.getStation() is present.</li>
+     *     <li>Cover is closed.</li>
+     *     <li>If present, cartridge is operational.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by TransactionPrint.
      * @throws JposException    For details, see UPOS method TransactionPrint.
@@ -1182,6 +1236,12 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a RotatePrint object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
      * checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>The station specified by request.getStation() is present.</li>
+     *     <li>Cover is closed.</li>
+     *     <li>If present, cartridge is operational.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by RotatePrint.
      * @throws JposException    For details, see UPOS method RotatePrint.
@@ -1215,6 +1275,12 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * The parameters of the method will be passed via a PageModePrint object. This method will be called
      * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
      * checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before invocation:
+     * <ul>
+     *     <li>The station specified by PageModeStation is present.</li>
+     *     <li>Cover is closed.</li>
+     *     <li>If present, cartridge is operational.</li>
+     * </ul>
      *
      * @param request   Output request object returned by validation method that contains all parameters to be used by PageModePrint.
      * @throws JposException    For details, see UPOS method PageModePrint.

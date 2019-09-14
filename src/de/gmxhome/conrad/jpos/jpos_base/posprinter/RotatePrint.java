@@ -77,7 +77,11 @@ public class RotatePrint extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((POSPrinterService)Props.EventSource).POSPrinterInterface.rotatePrint(this);
+        POSPrinterService svc = (POSPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.extendedErrorCheck(getStation());
+        }
+        svc.POSPrinterInterface.rotatePrint(this);
         for (OutputRequest request : SidewaysCommands) {
             Device.check (Abort != null, JposConst.JPOS_E_FAILURE, "Rotate print interrupted");
             request.invoke();

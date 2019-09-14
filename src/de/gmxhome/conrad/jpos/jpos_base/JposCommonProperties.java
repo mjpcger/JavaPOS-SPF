@@ -220,17 +220,6 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     public int FlagWhenIdleStatusValue = 0;
 
     /**
-     * Holds the value event number of a DirectIOEvent to be fired instead of a StatusUpdateEvent when the device
-     * becomes idle. Default: 0.
-     * <br>If zero, a StatusUpdateEvent with status value FlagWhenIdleStatusValue will be fired.
-     * <br>If not zero. a StatusUpdateEvent with status value FlagWhenIdleStatusValue will be suppressed and a
-     * DirectIOEvent with EventNumber FlagWhenIdleViaDirectIOEventNumber, Data = 0 and Obj = null will be fired instead.
-     * <p>Keep in mind: If DirectIOEvent objects shall support this behavior, set DirectIOEventList to ErrorEventList
-     * to become synchronized with OutputCompleteEvent and ErrorEvent events of asynchronous output requests.
-     */
-    public int FlagWhenIdleViaDirectIOEventNumber = 0;
-
-    /**
      * Flag that specifies whether the device supports deprecated methods in cases where UPOS specifies that a service
      * may throw an exception with error code E_DEPRECATED. This is the case whenever deprecation started more than 2
      * minor release numbers before the current UPOS release. Since this implementation is for UPOS release 1.14, this

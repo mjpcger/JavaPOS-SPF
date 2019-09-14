@@ -48,7 +48,11 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         return (amount / factor) * factor;
     }
 
-    private int getFiscalStation() {
+    /**
+     * Retrieves print stations to be checked for for fiscal receipt.
+     * @return  Stations to be checked, FiscalReceiptStation combined with journal station.
+     */
+    int getFiscalStation() {
         return Data.FiscalReceiptStation == FiscalPrinterConst.FPTR_RS_RECEIPT ?
                 FiscalPrinterConst.FPTR_S_JOURNAL_RECEIPT :
                 FiscalPrinterConst.FPTR_S_SLIP | FiscalPrinterConst.FPTR_S_JOURNAL;
@@ -115,16 +119,25 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void ifSyncCheckBusyCoverPaper(int station) throws JposException {
         if (!Data.AsyncMode) {
             Device.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Device is busy");
-            Device.checkext(Data.CapCoverSensor && Data.CoverOpen, FiscalPrinterConst.JPOS_EFPTR_COVER_OPEN, "Device cover open");
-            if ((station & FiscalPrinterConst.FPTR_S_SLIP) != 0) {
-                Device.checkext(Data.CapSlpEmptySensor && Data.SlpEmpty, FiscalPrinterConst.JPOS_EFPTR_SLP_EMPTY, "No slip paper");
-            }
-            if ((station & FiscalPrinterConst.FPTR_S_RECEIPT) != 0) {
-                Device.checkext(Data.CapRecEmptySensor && Data.RecEmpty, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "No receipt paper");
-            }
-            if ((station & FiscalPrinterConst.FPTR_S_JOURNAL) != 0) {
-                Device.checkext(Data.CapJrnEmptySensor && Data.JrnEmpty, FiscalPrinterConst.JPOS_EFPTR_JRN_EMPTY, "No journal paper");
-            }
+            checkCoverPaper(station);
+        }
+    }
+
+    /**
+     * Checks whether the cover is closed and paper present on all selected stations.
+     * @param station   Selected station(s), any bit-wise combination of S_JOURNAL, S_RECEIPT and S_SLIP.
+     * @throws JposException If AsyncMode is false and device busy, cover open or paper not present.
+     */
+    public void checkCoverPaper(int station) throws JposException {
+        Device.checkext(Data.CapCoverSensor && Data.CoverOpen, FiscalPrinterConst.JPOS_EFPTR_COVER_OPEN, "Device cover open");
+        if ((station & FiscalPrinterConst.FPTR_S_SLIP) != 0) {
+            Device.checkext(Data.CapSlpEmptySensor && Data.SlpEmpty, FiscalPrinterConst.JPOS_EFPTR_SLP_EMPTY, "No slip paper");
+        }
+        if ((station & FiscalPrinterConst.FPTR_S_RECEIPT) != 0) {
+            Device.checkext(Data.CapRecEmptySensor && Data.RecEmpty, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "No receipt paper");
+        }
+        if ((station & FiscalPrinterConst.FPTR_S_JOURNAL) != 0) {
+            Device.checkext(Data.CapJrnEmptySensor && Data.JrnEmpty, FiscalPrinterConst.JPOS_EFPTR_JRN_EMPTY, "No journal paper");
         }
     }
 
@@ -1363,8 +1376,8 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         logPreCall("PrintDuplicateReceipt");
         checkEnabled();
         Device.check(!Data.CapDuplicateReceipt, JposConst.JPOS_E_ILLEGAL, "Duplicate receipt not supported");
-        checkBusySync();
         Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device not in monitor state");
+        Device.check(Data.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Output in progress");
         FiscalPrinterInterface.printDuplicateReceipt();
         logCall("PrintDuplicateReceipt");
     }
@@ -1633,7 +1646,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         checkEnabled();
         Device.check(!Data.CapFixedOutput, JposConst.JPOS_E_ILLEGAL, "Fixed output printing not supported");
         Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FIXED_OUTPUT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fixed output state");
-        ifSyncCheckBusyCoverPaper(FiscalPrinterConst.FPTR_S_RECEIPT);
+        Device.check(!Props.AsyncMode && Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Device is busy");
         callIt(FiscalPrinterInterface.printFixedOutput(documentType, lineNumber, data), "PrintFixedOutput");
     }
 

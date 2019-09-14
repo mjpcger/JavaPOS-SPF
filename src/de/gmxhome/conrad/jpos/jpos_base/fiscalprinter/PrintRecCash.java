@@ -45,7 +45,11 @@ public class PrintRecCash extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((FiscalPrinterProperties)Props).printRecCash(this);
+        FiscalPrinterService svc = (FiscalPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.checkCoverPaper(svc.getFiscalReceiptStation());
+        }
+        svc.FiscalPrinterInterface.printRecCash(this);
         super.invoke();
     }
 }

@@ -37,6 +37,10 @@ public class PrintRecItemAdjustmentVoid extends PrintRecItemAdjustment {
 
     @Override
     public void invokeMethod() throws JposException {
-        ((FiscalPrinterProperties)Props).printRecItemAdjustmentVoid(this);
+        FiscalPrinterService svc = (FiscalPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.checkCoverPaper(svc.getFiscalStation());
+        }
+        svc.FiscalPrinterInterface.printRecItemAdjustmentVoid(this);
     }
 }

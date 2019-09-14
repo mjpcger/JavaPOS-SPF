@@ -44,7 +44,11 @@ public class PrintRecTaxID extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((FiscalPrinterProperties)Props).printRecTaxID(this);
+        FiscalPrinterService svc = (FiscalPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.checkCoverPaper(svc.getFiscalStation());
+        }
+        svc.FiscalPrinterInterface.printRecTaxID(this);
         super.invoke();
     }
 }

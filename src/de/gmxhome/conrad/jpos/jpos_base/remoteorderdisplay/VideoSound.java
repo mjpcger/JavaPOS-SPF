@@ -79,9 +79,11 @@ public class VideoSound extends OutputRequest {
     @Override
     public void invoke() throws JposException {
         RemoteOrderDisplayService svc = (RemoteOrderDisplayService) Props.EventSource;
-        checkUnitsOnline();
-        int errunits = svc.validateTone(getUnits());
-        svc.check(errunits != 0, errunits, JposConst.JPOS_E_FAILURE, 0, "Selected units do not support video sound: " + errunits);
-        ((RemoteOrderDisplayService)Props.EventSource).RemoteOrderDisplayInterface.videoSound(this);
+        if (EndSync == null) {
+            checkUnitsOnline();
+            int errunits = svc.validateTone(getUnits());
+            svc.check(errunits != 0, errunits, JposConst.JPOS_E_FAILURE, 0, "Selected units do not support video sound: " + errunits);
+        }
+        svc.RemoteOrderDisplayInterface.videoSound(this);
     }
 }

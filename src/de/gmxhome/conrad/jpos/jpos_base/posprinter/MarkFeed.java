@@ -47,6 +47,10 @@ public class MarkFeed extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((POSPrinterService)Props.EventSource).POSPrinterInterface.markFeed(this);
+        POSPrinterService svc = (POSPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.extendedErrorCheck(POSPrinterConst.PTR_S_RECEIPT);
+        }
+        svc.POSPrinterInterface.markFeed(this);
     }
 }

@@ -3127,7 +3127,17 @@ public class POSPrinterService extends JposBase implements POSPrinterService114 
         Device.check(station == POSPrinterConst.PTR_S_SLIP && !Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "No slip");
     }
 
-    private void checkTwoStations(int stations, int[] stationIndex, int[] station) throws JposException {
+    /**
+     * Retrieves station constants and station indices from given stations constant specifying two stations. stations
+     * specifies the stations of interest. On return, station will be filled with the corresponding singe-station
+     * constants and stationIndex with a unique index in range 0 - 2.
+     * @param stations      POSPrinter constant representing two stations, e.g. PTR_S_JOURNAL_RECEIPT.
+     * @param stationIndex  Two-dimensional int array. Filled with internal station indices for both stations.
+     * @param station       Two-dimensional int array. Filled with POSPrinter constant, e.g. PTR_S_JOURNAL, PTR_S_RECEIPT.
+     * @throws JposException If concurrent printing is not supported for the specified stations by the printer, or if
+     *                       one of the specified stations is in page mode, sideways print mode or transaction mode.
+     */
+    void checkTwoStations(int stations, int[] stationIndex, int[] station) throws JposException {
         switch (stations) {
             case POSPrinterConst.PTR_S_JOURNAL_RECEIPT:
             case POSPrinterConst.PTR_TWO_RECEIPT_JOURNAL:
@@ -3159,7 +3169,12 @@ public class POSPrinterService extends JposBase implements POSPrinterService114 
         return station / 2;
     }
 
-    private void extendedErrorCheck(int station) throws JposException {
+    /**
+     * Checks whether the selected print station is operational.
+     * @param station   Station to be checked
+     * @throws JposException If station is not present or not operational.
+     */
+    public void extendedErrorCheck(int station) throws JposException {
         boolean[][] relevantconditions = new boolean[][]{
                 new boolean[]{Data.JrnEmpty, Data.JrnCartridgeState == POSPrinterConst.PTR_CART_REMOVED, Data.JrnCartridgeState == POSPrinterConst.PTR_CART_EMPTY, Data.JrnCartridgeState == POSPrinterConst.PTR_CART_CLEANING },
                 new boolean[]{Data.RecEmpty, Data.RecCartridgeState == POSPrinterConst.PTR_CART_REMOVED, Data.RecCartridgeState == POSPrinterConst.PTR_CART_EMPTY, Data.RecCartridgeState == POSPrinterConst.PTR_CART_CLEANING },

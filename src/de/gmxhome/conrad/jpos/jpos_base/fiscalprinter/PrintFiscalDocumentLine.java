@@ -45,7 +45,11 @@ public class PrintFiscalDocumentLine extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((FiscalPrinterProperties)Props).printFiscalDocumentLine(this);
+        FiscalPrinterService svc = (FiscalPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.checkCoverPaper(FiscalPrinterConst.FPTR_S_SLIP);
+        }
+        svc.FiscalPrinterInterface.printFiscalDocumentLine(this);
         super.invoke();
     }
 }

@@ -119,6 +119,10 @@ public class PrintBarCode extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((POSPrinterService)Props.EventSource).POSPrinterInterface.printBarCode(this);
+        POSPrinterService svc = (POSPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.extendedErrorCheck(getStation());
+        }
+        svc.POSPrinterInterface.printBarCode(this);
     }
 }

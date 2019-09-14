@@ -78,6 +78,13 @@ public class PrintTwoNormal extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((POSPrinterService)Props.EventSource).POSPrinterInterface.printTwoNormal(this);
+        POSPrinterService svc = (POSPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            int[] stations = new int[2];
+            svc.checkTwoStations(getStation(), new int[2], stations);
+            svc.extendedErrorCheck(stations[0]);
+            svc.extendedErrorCheck(stations[1]);
+        }
+        svc.POSPrinterInterface.printTwoNormal(this);
     }
 }

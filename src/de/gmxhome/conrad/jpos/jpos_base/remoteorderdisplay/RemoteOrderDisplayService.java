@@ -22,7 +22,10 @@ import jpos.services.RemoteOrderDisplayService114;
 
 /**
  * RemoteOrderDisplay service implementation. For more details about getter, setter and method implementations,
- * see JposBase.
+ * see JposBase.<br>
+ * Special handling has been added to method DirectIO: Due to the fact that UPOS does not support a FlagWhenIdle
+ * property for remote order displays, two commands have been added to the UPOS standard. See the description of
+ * method DirectIO for details.
  */
 public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDisplayService114 {
     private RemoteOrderDisplayProperties Data;
@@ -68,6 +71,21 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     public RemoteOrderDisplayInterface RemoteOrderDisplayInterface;
 
     /**
+     * DirectIO command as replacement for FlagWhenIdle property set.
+     */
+    public final static int REMOTE_ORDER_DISPLAY_SET_FLAG_WHEN_IDLE = 200;
+
+    /**
+     * DirectIO command to set status value for StatusUpdateEvent signalling idle state after FlagWhenIdle has been set.
+     */
+    public final static int REMOTE_ORDER_DISPLAY_FLAG_WHEN_IDLE_STATUS_VALUE = 201;
+
+    /**
+     * Framework specific FlagWhenIdle default value.
+     */
+    public final static int ROD_SUE_IDLE = 1001;
+
+    /**
      * Constructor. Stores given property set and device implementation object.
      *
      * @param props  Property set.
@@ -76,6 +94,70 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     public RemoteOrderDisplayService(RemoteOrderDisplayProperties props, JposDevice device) {
         super(props, device);
         Data = props;
+    }
+
+    /**
+     * Framework specific handling of remote order display devices:
+     * <ul>
+     *     <li>REMOTE_ORDER_DISPLAY_SET_FLAG_WHEN_IDLE: Function to set or reset the internally used FlagWhenIdle property.</li>
+     *     <li>REMOTE_ORDER_DISPLAY_FLAG_WHEN_IDLE_STATUS_VALUE: Function to set the status value to be used whenever
+     *     the device reaches idle state after FlagWhenIdle has been set.</li>
+     * </ul>
+     * For more details about FlagWhenIdle handling, see FlagWhenIdle handling for ElectronicJournel, FiscalPrinter or POSPrinter.
+     *
+     * @param command   Must be REMOTE_ORDER_DISPLAY_SET_FLAG_WHEN_IDLE or REMOTE_ORDER_DISPLAY_FLAG_WHEN_IDLE_STATUS_VALUE.
+     * @param data      In case of REMOTE_ORDER_DISPLAY_SET_FLAG_WHEN_IDLE, data[0] must be 0 to set the internal FlagWhenIdle
+     *                  property to false and any other value to set FlagWhenIdle to true.<br>
+     *                  In case of REMOTE_ORDER_DISPLAY_FLAG_WHEN_IDLE_STATUS_VALUE, data[0] specifies the status value
+     *                  to be used to signal idle state. data[0] must not be any of the standard status values.<br>
+     *                  The default FlagWhenIdle status value is ROD_SUE_IDLE.
+     * @param object    any value
+     * @throws JposException    E_DISABLED if device is not enabled, E_ILLEGAL if command is not SAMPLEROD_DIO_SET_FLAG_WHEN_IDLE
+     *                          or data is null or has length 0.
+     */
+    @Override
+    public void directIO(int command, int[] data, Object object) throws JposException {
+        logPreCall("DirectIO", "" + command + ", " + data[0] + ", " + object);
+        switch (command) {
+            case REMOTE_ORDER_DISPLAY_SET_FLAG_WHEN_IDLE:
+                setFlagWhenIdle(data);
+                break;
+            case REMOTE_ORDER_DISPLAY_FLAG_WHEN_IDLE_STATUS_VALUE:
+                setFlagWhenIdleStatusValue(data);
+                break;
+            default:
+                DeviceInterface.directIO(command, data, object);
+        }
+        logCall("DirectIO", "" + command + ", " + data[0] + ", " + object);
+    }
+
+    private void setFlagWhenIdle(int[] data) throws JposException {
+        check(!Data.DeviceEnabled, 0, JposConst.JPOS_E_DISABLED, 0, "Device not enabled");
+        check(data == null || data.length != 1, Data.UnitsOnline, JposConst.JPOS_E_ILLEGAL, 0, "Data invalid");
+        RemoteOrderDisplayInterface.flagWhenIdle(data[0] != 0 ? true : false);
+    }
+
+    private void setFlagWhenIdleStatusValue(int[] data) throws JposException {
+        long[] powerstates = new long[]{
+                JposConst.JPOS_SUE_POWER_ONLINE,
+                JposConst.JPOS_SUE_POWER_OFF,
+                JposConst.JPOS_SUE_POWER_OFFLINE,
+                JposConst.JPOS_SUE_POWER_OFF_OFFLINE
+        };
+        long[] firmwarestates = new long[]{
+                JposConst.JPOS_SUE_UF_COMPLETE,
+                JposConst.JPOS_SUE_UF_FAILED_DEV_OK,
+                JposConst.JPOS_SUE_UF_FAILED_DEV_UNRECOVERABLE,
+                JposConst.JPOS_SUE_UF_FAILED_DEV_NEEDS_FIRMWARE,
+                JposConst.JPOS_SUE_UF_FAILED_DEV_UNKNOWN,
+                JposConst.JPOS_SUE_UF_COMPLETE_DEV_NOT_RESTORED
+        };
+        check(!Data.DeviceEnabled, 0, JposConst.JPOS_E_DISABLED, 0, "Device not enabled");
+        check(data == null || data.length != 1, 0, JposConst.JPOS_E_ILLEGAL, 0, "Data invalid");
+        check(Device.member(data[0], powerstates), Data.UnitsOnline, JposConst.JPOS_E_ILLEGAL, 0, "Power state value not allowed as FlagWhenIdle status value: " + data[0]);
+        check(Device.member(data[0], firmwarestates), Data.UnitsOnline, JposConst.JPOS_E_ILLEGAL, 0, "Firmware update state value not allowed as FlagWhenIdle status value: " + data[0]);
+        check(data[0] > JposConst.JPOS_SUE_UF_PROGRESS && data[0] < JposConst.JPOS_SUE_UF_COMPLETE, Data.UnitsOnline, JposConst.JPOS_E_ILLEGAL, 0, "Firmware update progress state not allowed as FlagWhenIdle status value: " + data[0]);
+        Props.FlagWhenIdleStatusValue = data[0];
     }
 
     @Override

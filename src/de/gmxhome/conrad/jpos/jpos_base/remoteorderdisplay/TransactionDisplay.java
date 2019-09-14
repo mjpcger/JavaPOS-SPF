@@ -65,7 +65,8 @@ public class TransactionDisplay extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        checkUnitsOnline();
+        if (EndSync == null)
+            checkUnitsOnline();
         ((RemoteOrderDisplayService)Props.EventSource).RemoteOrderDisplayInterface.transactionDisplay(this);
         for (OutputRequest request : TransactionCommands) {
             Device.check (Abort != null, JposConst.JPOS_E_FAILURE, "Transaction interrupted");

@@ -64,7 +64,11 @@ public class PageModePrint extends OutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((POSPrinterService)Props.EventSource).POSPrinterInterface.pageModePrint(this);
+        POSPrinterService svc = (POSPrinterService)Props.EventSource;
+        if (EndSync == null) {
+            svc.extendedErrorCheck(((POSPrinterProperties)Props).PageModeStation);
+        }
+        svc.POSPrinterInterface.pageModePrint(this);
         for (OutputRequest request : PageModeCommands) {
             Device.check (Abort != null, JposConst.JPOS_E_FAILURE, "Page mode interrupted");
             request.invoke();

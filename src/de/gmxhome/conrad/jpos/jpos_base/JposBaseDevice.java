@@ -509,11 +509,6 @@ public class JposBaseDevice {
      */
     public void handleEvent(JposStatusUpdateEvent event) throws JposException {
         JposCommonProperties props = event.getPropertySet();
-        if (event.getStatus() == props.FlagWhenIdleStatusValue && props.FlagWhenIdleViaDirectIOEventNumber != 0) {
-            // Special handling for devices that support asynchronous processing without FlagWhenIdle handling.
-            handleEvent(new JposDirectIOEvent((JposBase)event.getSource(), props.FlagWhenIdleViaDirectIOEventNumber, 0, null));
-            return;
-        }
         synchronized (props.DevProps) {
             for (int j = 0; j < props.DevProps.size(); j++) {
                 JposCommonProperties dev = props.DevProps.get(j);
