@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE JposEntries PUBLIC "JposEntries" "jcl.dtd">
+<JposEntries>
+	<!-- Test FiscalPrinter Entry, implements FiscalPrinter, ElectronicJournal, LineDisplay and CashDrawer -->
+	<JposEntry logicalName="TestFiscalDrawer">
+		<creation factoryClass="SampleFiscalPrinter.SampleFiscalPrinterCDFactory" serviceClass="de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerService"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos category="CashDrawer" version="1.14.1"/>
+		<product description="JASPAR based service implementation for CashDrawer of sample fiscal printer" name="JPOS Services For CashDrawer of sample fiscal printer" />
+		<!-- For TCP communication tests, add the following lines to the other non JavaPOS required property sections -->
+		<prop name="Port" value="127.0.0.1:65432"/> <!-- Replace with real target ip:port -->
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+	</JposEntry>
+	<JposEntry logicalName="TestFiscalDisplay">
+		<creation factoryClass="SampleFiscalPrinter.SampleFiscalPrinterLDFactory" serviceClass="de.gmxhome.conrad.jpos.jpos_base.linedisplay.LineDisplayService"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos category="LineDisplay" version="1.14.1"/>
+		<product description="JASPAR based service implementation for LineDisplay of sample fiscal printer" name="JPOS Services For LineDisplay of sample fiscal printer" />
+		<!-- For TCP communication tests, add the following lines to the other non JavaPOS required property sections -->
+		<prop name="Port" value="127.0.0.1:65432"/> <!-- Replace with real target ip:port -->
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposDisplayTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+	</JposEntry>
+	<JposEntry logicalName="TestFiscalPrinter">
+		<creation factoryClass="SampleFiscalPrinter.SampleFiscalPrinterFactory" serviceClass="de.gmxhome.conrad.jpos.jpos_base.fiscalprinter.FiscalPrinterService"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos category="FiscalPrinter" version="1.14.1"/>
+		<product description="JASPAR based service implementation for FiscalPrinter of sample fiscal printer" name="JPOS Services For FiscalPrinter of sample fiscal printer" />
+		<!-- For TCP communication tests, add the following lines to the other non JavaPOS required property sections -->
+		<prop name="Port" value="127.0.0.1:65432"/> <!-- Replace with real target ip:port -->
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposPrinterTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<prop name="NonFiscalReceiptWithTrailer" value="0"/>
+	</JposEntry>
+	<JposEntry logicalName="TestFiscalJournal">
+		<creation factoryClass="SampleFiscalPrinter.SampleFiscalPrinterEJFactory" serviceClass="de.gmxhome.conrad.jpos.jpos_base.electronicjournal.ElectronicJournalService"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos category="ElectronicJournal" version="1.14.1"/>
+		<product description="JASPAR based service implementation for ElectronicJournal of sample fiscal printer" name="JPOS Services For ElectronicJournal of sample fiscal printer" />
+		<!-- For TCP communication tests, add the following lines to the other non JavaPOS required property sections -->
+		<prop name="Port" value="127.0.0.1:65432"/> <!-- Replace with real target ip:port -->
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposJournalTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+	</JposEntry>
+	<!-- Test MICR Entry -->
+	<JposEntry logicalName="TestMICR">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.micr.MICRService" factoryClass="SampleMICR.SampleMICRFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="MICR"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For Sample MICR" description="Sample Service For MICR Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposMICRTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="Target" value="127.0.0.1:45654"/>
+	</JposEntry>
+	<!-- Test CAT (Credit Authorization Terminal) Entry, implements CAT and ElectronicJournal(2x) devices -->
+	<JposEntry logicalName="TestCAT">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cat.CATService" factoryClass="SampleCAT.SampleCATFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="CAT"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For CAT of Sample CAT" description="Sample CAT Service For CAT Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="Port" value="127.0.0.1:54545"/>
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="JournalPath" value="Journal"/>
+		<prop name="DisplayName" value="TestDisplay"/>
+		<prop name="RequestTimeout" value="1000000"/>
+	</JposEntry>
+	<JposEntry logicalName="TestCustomerJournal">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.electronicjournal.ElectronicJournalService" factoryClass="SampleCAT.SampleEJFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="ElectronicJournal"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For electronic journal for Sample CAT customer tickets" description="Electronic journal for Sample CAT customer tickets"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposCustomerEJTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="Port" value="127.0.0.1:54545"/>
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="JournalPath" value="Journal"/>
+		<prop name="DisplayName" value="TestDisplay"/>
+		<prop name="RequestTimeout" value="1000000"/>
+	</JposEntry>
+	<JposEntry logicalName="TestMerchantJournal">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.electronicjournal.ElectronicJournalService" factoryClass="SampleCAT.SampleEJFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="ElectronicJournal"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For electronic journal for Sample CAT merchant tickets" description="Electronic journal for Sample CAT merchant tickets"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposMerchantEJTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="Port" value="127.0.0.1:54545"/>
+		<prop name="DevIndex" value="1"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="JournalPath" value="Journal"/>
+		<prop name="DisplayName" value="TestDisplay"/>
+		<prop name="RequestTimeout" value="1000000"/>
+	</JposEntry>
+	<!-- Test Coin Dispenser Entry-->
+	<JposEntry logicalName="TestCoinDispenser">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.coindispenser.CoinDispenserService" factoryClass="SampleCoinDispenser.SampleCoinDispenserFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="CoinDispenser"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For Standard Coin Dispenser" description="Sample Service For Coin Dispenser Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="ComPort" value="127.0.0.1:56789"/>
+	</JposEntry>
+	<!-- Test Scale Entry-->
+	<JposEntry logicalName="TestScale">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.scale.ScaleService" factoryClass="SampleScale.SampleScaleFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="Scale"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For Standard Scale" description="Sample Service For Scale Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="Target" value="127.0.0.1:53124"/>
+	</JposEntry>
+	<!-- Test Sample Printer with drawer Entries -->
+	<JposEntry logicalName="TestPrinterDrawer">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerService" factoryClass="SamplePOSPrinter.DrawerFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="CashDrawer"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For Drawer of Sample POSPrinter" description="Sample Drawer Service For Printer Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="Port" value="127.0.0.1:65432"/>
+	</JposEntry>
+	<JposEntry logicalName="TestPrinter">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.posprinter.POSPrinterService" factoryClass="SamplePOSPrinter.PrinterFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="POSPrinter"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For Sample POSPrinter" description="Sample POSPrinter Service For Printer Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposPrinterTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="Port" value="127.0.0.1:65432"/>
+	</JposEntry>
+	<!-- Test Sample Remote Order Display Entries. Values referencing the port must match -->
+	<JposEntry logicalName="TestRODisplay">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay.RemoteOrderDisplayService" factoryClass="SampleRemoteOrderDisplay.SampleRemoteOrderDisplayFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="RemoteOrderDisplay"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For RemoteOrderDisplay of Sample Remote Order Display" description="Sample Remote Order Display Service For Remote Order Display Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="Port" value="127.0.0.1:43434"/>
+	</JposEntry>
+	<!-- Test Combi Device Entries. Values referencing the port must match -->
+	<JposEntry logicalName="TestDrawer">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerService" factoryClass="SampleCombiDevice.DrawerFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="CashDrawer"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For Standard Drawer" description="Sample Service For Drawer of Combined Device Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="ComPort" value="127.0.0.1:34567"/>
+		<prop name="OwnPort" value="54321"/>		<!-- Any free local tcp port -->
+		<prop name="PollDelay" value="500"/>
+	</JposEntry>
+	<JposEntry logicalName="TestLock">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.keylock.KeylockService" factoryClass="SampleCombiDevice.KeylockFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="Keylock"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample Keylock Service For Combined Device Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposCombiTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="ComPort" value="127.0.0.1:34567"/>
+		<prop name="OwnPort" value="54321"/>		<!-- Any free local tcp port -->
+	</JposEntry>
+	<JposEntry logicalName="TestEKey">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.keylock.KeylockService" factoryClass="SampleCombiDevice.KeylockFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="M. Conrad"/>
+		<jpos version="1.14.1" category="Keylock"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample Keylock Service For Combined Device Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposCombiTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="1"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="ComPort" value="127.0.0.1:34567"/>
+		<prop name="OwnPort" value="54321"/>		<!-- Any free local tcp port -->
+	</JposEntry>
+	<JposEntry logicalName="TestDisplay">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.linedisplay.LineDisplayService" factoryClass="SampleCombiDevice.DisplayFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="M. Conrad"/>
+		<jpos version="1.14.1" category="LineDisplay"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample Display Service For Combined Device Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposCombiTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="ComPort" value="127.0.0.1:34567"/>
+		<prop name="OwnPort" value="54321"/>		<!-- Any free local tcp port -->
+	</JposEntry>
+	<JposEntry logicalName="TestMSR">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.msr.MSRService" factoryClass="SampleCombiDevice.MSRFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="M. Conrad"/>
+		<jpos version="1.14.1" category="MSR"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample MSR Service For Combined Device Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposCombiTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="ComPort" value="127.0.0.1:34567"/>
+		<prop name="OwnPort" value="54321"/>		<!-- Any free local tcp port -->
+	</JposEntry>
+	<JposEntry logicalName="TestKeyboard">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.poskeyboard.POSKeyboardService" factoryClass="SampleCombiDevice.KeyboardFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="M. Conrad"/>
+		<jpos version="1.14.1" category="POSKeyboard"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample Keyboard Service For Combined Device Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposCombiTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="ComPort" value="127.0.0.1:34567"/>
+		<prop name="OwnPort" value="54321"/>		<!-- Any free local tcp port -->
+	</JposEntry>
+	<JposEntry logicalName="TestScanner">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.scanner.ScannerService" factoryClass="SampleCombiDevice.ScannerFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="M. Conrad"/>
+		<jpos version="1.14.1" category="Scanner"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample Scanner Service For Combined Device Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposCombiTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="ComPort" value="127.0.0.1:34567"/>
+		<prop name="OwnPort" value="54321"/>		<!-- Any free local tcp port -->
+	</JposEntry>
+	<JposEntry logicalName="TestTone">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.toneindicator.ToneIndicatorService" factoryClass="SampleCombiDevice.ToneIndicatorFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="ToneIndicator"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample Tone Indicator Service For Combined Device Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposCombiTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="ComPort" value="127.0.0.1:34567"/>
+		<prop name="OwnPort" value="54321"/>		<!-- Any free local tcp port -->
+	</JposEntry>
+</JposEntries>
+

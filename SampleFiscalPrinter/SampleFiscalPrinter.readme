@@ -1,0 +1,19 @@
+Using the simulator
+===================
+
+After first start, SanpleFiscalPrinter.tcl creates SampleFiscalPrinterVars.tc which holds more or less empty variable values.
+Fiscal printer is in pre-fiscal state afterwards. To change to fiscalized state, press the Debug button and enter
+
+set SerialNo 12345678
+
+(you can use any number instead of 12345678 as well).
+In addition, at least one VAT value (VAT values must be in descending order), store fiscal ID and header lines must be set.
+To perform fiscalization, call directIO(SampleFiscalPrinter.SAMPLEFISCALPRINTERDIO_FISCALIZE, any, any) or enter
+
+fiscalize
+
+in the Debug console of the simulator.
+
+DO NOT DELETE OR CHANGE ANY SampleFiscalPrinterJournal.nnn.dat FILE!
+
+If you delete these files, SampleFiscalPrinterVars.tc should be deleted as well and fiscalization must be repeated.
