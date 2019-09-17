@@ -1,4 +1,3 @@
 Manifest-Version: 1.0
 Class-Path: jpos114.jar jssc.jar log4j-1.2.17.jar
-Main-Class: 
 

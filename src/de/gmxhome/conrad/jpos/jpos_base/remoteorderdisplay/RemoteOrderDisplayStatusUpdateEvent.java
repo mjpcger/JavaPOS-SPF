@@ -45,29 +45,23 @@ public class RemoteOrderDisplayStatusUpdateEvent extends JposStatusUpdateEvent {
     }
 
     @Override
-    public boolean setStatusProperties() {
+    public void setLateProperties() {
+        super.setLateProperties();
         RemoteOrderDisplayProperties data = (RemoteOrderDisplayProperties) getPropertySet();
-        data.EventUnits = Units;
-        data.EventSource.logSet("EventUnits");
-        return super.setStatusProperties();
+        if (data.EventUnits != Units) {
+            data.EventUnits = Units;
+            data.EventSource.logSet("EventUnits");
+        }
     }
 
     @Override
     public boolean checkStatusCorresponds() {
-        if (super.checkStatusCorresponds())
-            return true;
         return false;
     }
 
     @Override
     public boolean setAndCheckStatusProperties() {
-        RemoteOrderDisplayProperties props = (RemoteOrderDisplayProperties)getPropertySet();
-        int units = props.EventUnits;
-        boolean rc = super.setAndCheckStatusProperties();
-        if (units != props.EventUnits) {
-            props.EventSource.logSet("EventUnits");
-            return true;
-        }
-        return rc;
+        super.setAndCheckStatusProperties();
+        return true;
     }
 }

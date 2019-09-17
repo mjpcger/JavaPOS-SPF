@@ -626,16 +626,16 @@ public class JposBaseDevice {
                     if (event instanceof JposDirectIOEvent)
                         (dioevent = (JposDirectIOEvent)event).setDirectIOProperties();
                     else if (event instanceof JposStatusUpdateEvent) {
-                        stevent = (JposStatusUpdateEvent)event;
+                        (stevent = (JposStatusUpdateEvent)event).setLateProperties();
                     }
                 }
                 if (dioevent != null) {
                     Props.EventCB.fireDirectIOEvent(dioevent);
-                    log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toString() + "]");
+                    log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toLogString() + "]");
                 }
                 else if (stevent != null) {
                     Props.EventCB.fireStatusUpdateEvent(stevent);
-                    log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Status Update Event: [" + stevent.toString() + "]");
+                    log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Status Update Event: [" + stevent.toLogString() + "]");
                 }
             }
         }
@@ -722,7 +722,7 @@ public class JposBaseDevice {
                     }
                 } else if (dioevent != null) {
                     Props.EventCB.fireDirectIOEvent(dioevent);
-                    log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toString() + "]");
+                    log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toLogString() + "]");
                 }
             }
         }
@@ -781,7 +781,7 @@ public class JposBaseDevice {
                 }
                 if (ocevent != null) {
                     Props.EventCB.fireOutputCompleteEvent(ocevent);
-                    log(Level.DEBUG, Props.LogicalName + ": Fire Data Event: [" + ocevent.toLogString() + "]");
+                    log(Level.DEBUG, Props.LogicalName + ": Fire Output Complete Event: [" + ocevent.toLogString() + "]");
                 } else if (errevent != null) {
                     synchronized (AsyncProcessorRunning) {
                         Props.EventCB.fireErrorEvent(errevent);
@@ -799,7 +799,7 @@ public class JposBaseDevice {
                     }
                 } else if (dioevent != null) {
                     Props.EventCB.fireDirectIOEvent(dioevent);
-                    log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toString() + "]");
+                    log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toLogString() + "]");
                 }
             }
         }

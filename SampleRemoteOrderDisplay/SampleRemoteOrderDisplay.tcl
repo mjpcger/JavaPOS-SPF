@@ -168,11 +168,13 @@ proc clearLater {cv} {
 		puts -nonewline $Fd [format "%02dO%1d\3" $cv $ca]
 	}
 	if $ca {
+	    puts [sourceText "═ (online $cv)"]
 		if {[string equal $caa ""] == 0} {
 			after cancel $caa
 			set caa ""
 		}
 	} {
+	    puts [sourceText "╪ (offline $cv)"]
 		set caa [after 5000 "clearVideo $cv"]
 	}
 }
@@ -574,6 +576,11 @@ proc service {fd addr port} {
 		for {set cv 1} {$cv < [llength $Canvases]} {incr cv} {
 			global CanvasActive$cv
 			puts -nonewline $Fd [format "%02dO%1d\3" $cv [set CanvasActive$cv]]
+			if {[set CanvasActive$cv]} {
+			    puts [sourceText "═ (online $cv)"]
+			} {
+			    puts [sourceText "╪ (offline $cv)"]
+			}
 		}
 	} {
 		puts "Connect from $addr:$port rejected"

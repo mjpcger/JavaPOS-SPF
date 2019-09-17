@@ -46,7 +46,8 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
     }
 
     /**
-     * Set status properties to reflect the given status.
+     * Set status properties to reflect the given status. These properties must be set immediately before the event
+     * is buffered into the event queue.
      * @return true, if properties have been updated, false otherwise
      */
     public boolean setStatusProperties() {
@@ -105,6 +106,14 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
                     return true;
         }
         return false;
+    }
+
+    /**
+     * Sets those properties that shall be set immediately before the event will be fired to the application. Should be
+     * used for properties with a relationship to the event. For pure status values, use method setStatusProperties
+     * instead.
+     */
+    public void setLateProperties() {
     }
 
     /**

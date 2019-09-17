@@ -247,8 +247,33 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
                         log(Level.DEBUG, getClaimingInstance(ClaimedRemoteOrderDisplay, 0).LogicalName + ": Insufficient input: " + new String(data));
                 } catch (Exception e) {
                     e.printStackTrace();
+                    log(Level.TRACE, ID + ": IO error: " + e.getMessage());
+                    handeSocketError();
                 }
             }
+        }
+    }
+
+    private void handeSocketError() {
+        closePort(false);
+        InIOError = true;
+        RemoteOrderDisplayProperties disp = (RemoteOrderDisplayProperties)getClaimingInstance(ClaimedRemoteOrderDisplay, 0);
+        if (disp.UnitsOnline != 0) {
+            for (int i = 0; disp.UnitsOnline != 0; i++) {
+                int unit = 1 << i;
+                if ((disp.UnitsOnline & unit) != 0) {
+                    Display.Unit[i].CursorActive = false;
+                    disp.UnitsOnline &= ~unit;
+                }
+            }
+            disp.EventSource.logSet("UnitsOnline");
+        }
+        try {
+            handleEvent(new RemoteOrderDisplayStatusUpdateEvent(disp.EventSource, JposConst.JPOS_PS_OFF_OFFLINE, UnitOnline));
+        } catch (JposException e1) {
+            e1.printStackTrace();
+        } finally {
+            UnitOnline = 0;
         }
     }
 
