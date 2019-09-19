@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Structure of mplified MICR track as described in Epson TM-H6000 manual (E13B):
+# Structure of simplified MICR track as described in Epson TM-H6000 manual (E13B):
 # < ttttttttt < aaaaaaaaaaaaaaa ; ssss
 # where	< is the Transit character (T),
 #	; is the On-Us character (O),

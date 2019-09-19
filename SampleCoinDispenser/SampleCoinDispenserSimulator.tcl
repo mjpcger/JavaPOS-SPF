@@ -14,8 +14,9 @@
 
 # Coin Dispenser Simulator:
 # Has one slot for 1, 5, 10, 50 and 100 cent and two slots for 2, 20 and 200 cent, This allows correct payment for every
-# amount up to 5 euro. Therefore we have 11 slots order of coin size; 1, 2, 2, 10, 5, 20, 20, 100, 50, 200, 200. We
-# store the amount of coins in the slots in array slots, Initially, every slot has 10 coins:
+# amount up to 5 euro. Therefore we have 11 slots ordered by coin size; 1, 2, 2, 10, 5, 20, 20, 100, 50, 200, 200.
+# A description of all frames can be found near the end of this script (function reader).
+# We store the amount of coins in the slots in array slots, Initially, every slot has 10 coins:
 set slot(1)    10
 set slot(2a)   10
 set slot(2b)   10

@@ -16,13 +16,14 @@
 #  simulates a scale that supports Checkout Dialog 02/04
 #  Communication with the scales application is via COM port or via TCP/IP.
 #  In case of TCP/IP, Port must be filled with the service port number, a values
-#  between 0 and 65535, and Mode will be ignored.
-#  In case of a COM port, Port must be filled with the port name and Mode with
-#  the mode:
+#  between 0 and 65535, and Scale Dialog will be ignored.
+#  In case of a COM port, Port must be filled with the port name and Scale Dialog
+#  will be used as follows:
 #  - Under Windows, COM ports > COM9 must be specified with prefix \\.\. e.g.
 #    \\.\COM10
-#  - Format of Mode is <baudrate>,<parity>,<databits>,<stopbits>, e.g.
-#    2400,o,7,1 for 2400 baud, odd parity, 7 data bits and 1 stop bit.
+#  - Scale Dialog 02 and Dialog 04 are the same protocols, only with different
+#	 baud rates. Mode for Dialog 02 is 2400 baud, odd parity, 7 bit data, 1 stop bit.
+#	 Mode for Dialog 04 is 4800 baud, odd parity, 7 bit data, 1 stop bit.
 
 # Procedure that adjusts weight and price whenever the scale widget changes its value
 proc setWeightPrice x {
@@ -307,7 +308,7 @@ pack [ttk::labelframe .sc.f.tx -text "Item"] -expand 1 -fill both -side left
 pack [ttk::labelframe .sc.f.up -text "Price"] -expand 1 -fill both -side left
 pack [ttk::labelframe .sc.f.wg -text "Weight"] -expand 1 -fill both -side left
 pack [ttk::labelframe .sc.f.tot -text "Total"] -expand 1 -fill both -side left
-font configure ansifixed -size 20 -weight bold
+font configure ansifixed -size 16 -weight bold
 pack [ttk::label .sc.f.tx.l -textvariable Text -width 13 -font ansifixed -anchor w] -expand 1 -fill y
 pack [ttk::label .sc.f.up.l -textvariable PriceTx -width 7 -font ansifixed -anchor e] -expand 1 -fill both
 pack [ttk::label .sc.f.wg.l -textvariable WeightTx -width 5 -font ansifixed -anchor e] -expand 1 -fill y

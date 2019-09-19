@@ -22,6 +22,51 @@
  # If no COM port is available, a TCP server socket port can be specified. In this case,
  # socket communication can be made instead.
 #
+
+# Commands and responses use UTF-8 encoding.
+#  Drawer:
+#	DO							Open drawer command
+#	Dd							Drawer response. d specifies the current drawer state (C for Closed, O for Opened).
+#  Lock:
+#	Ll							Lock changed to position l, where l is one of the following characters: 0, 1, 2, X, Z, P or T. 
+#  Electronic key:
+#	Exxxxxxxxxxxx				Electronic key value changed to xxxxxxxxxxxx, where xxxxxxxxxxxx will be replaced by the hexadecimal
+#								value of the electronic key, in Anker mode starting with least significant byte. This means, if the
+#								key value is 0x123456789ABC, in Anker mode EBC9A78563412 will be sent, otherwise E123456789ABC. A value
+#								of 000000000000 means no key is present.
+#  Keyboard key:
+#	Brc							Button in row r and column c has been pressed. r is one character between 0 and 9 (0 = row 1), c is
+#								one character between A and M (A = column 1, ... M = column 13)
+#  Magnetic stripe reader:
+#	Mnnn1xx...x2yy...y3zz...z	Magnetic card has been read. nnn specified the number of characters following the thre-byte length field.
+#								Tracks 1 - 3 follow, each starting with the track number (1 - 3), the start sentinel (& or ;), the track
+#								data and the end sentinel (?). For unread or empty tracks, only start and end sentinel will be transmitted.
+#  Scanner:
+#	RE							Enable scanner command
+#	RD							Disable scanner command
+#	Rtdd...d					Label scanned with type specified by t, with data specified by dd...d. Supported types are A (UPC-A),
+#								E (UPC-E), F (EAN-13) and FF (EAN-8).
+#  Display
+#	Tlnndd...d[aa...a]			Display text command. l specifies the line number (0 or 1), nn the number of characters that follow. Due
+#								to UTF-8 encoding, nn is less than the number of bytes that follow if the text contains non-ascii characters.
+#								dd...d specify max. 20 characters that shall be displayed. All further characters [aa...a] are optional,
+#								they specify attributes for the most-left characters. The remaining characters will be displayed with
+#								default attribute (normal). The following attributes are supported:
+#									n	normal output,
+#									r	reverse video output,
+#									b	blinking output,
+#									a	reverse blinking output.
+#								For example, T025HELLO EARTH AND SUN!abrbn  will result in displaying "HELLO EARTH AND SUN!", where the
+#								H of HELLO will be reverse and blinking, E and 2nd L of HELLO are blinking, the 1st L of HELLO is reverse
+#								and the remainder will be displayed normally.
+#  Beeper
+#	B1							Start beeping command
+#	B0							Stop beeping command
+#  Device status
+#	SR							Status request command
+#	Sdlxxxxxxxxxxxx				Status response, d specifies the drawer state, l the lock state  xxxxxxxxxxxx will be replaced by the
+#								current electronic key value. The values that replace d, l and xxxxxxxxxxxx are the same as described for
+#								the corresponding device above.
 set OpenSeq "DO";           # Drawer Open command
 set DrawerValues {C O};     # List of possible drawer status characters for open and closed
 set DrawerMask "D%s";	    # %s will be replaced by drawer value
@@ -181,7 +226,7 @@ proc validateKey {P} {
 proc validateTrack1 {c s l} {
 	# No start and end sentinel, % and ?, allowed. 64-bit code.
 	for {set i [expr [string length $c] - 1]} {$i >= 0} {incr i -1} {
-		if {[string first [string range $c $i $i] { !"#$&'()*+,-./0123456789:;<=>@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_}] == -1} {
+		if {[string first [string range $c $i $i] { !"#$&'()*+,-./0123456789:;<=>@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_}] == -1} {;#"
 			return false
 		}
 	}
@@ -355,6 +400,7 @@ proc updateKeyValue {} {
 
 # Setup GUI
 wm title . "Combi Device"
+font create trackfont -family ansifixed -size 7 -weight normal
 pack [ttk::frame .sd] -expand 1 -fill both
 pack [ttk::labelframe .sd.s -text Settings] -expand 1 -fill both -side left
 pack [ttk::labelframe .sd.s.p -text Port] -side left -fill y -anchor w
@@ -387,14 +433,14 @@ pack [ttk::button .ds.s.b -text Scan -width 4 -command scanData] -expand 1 -fill
 pack [ttk::labelframe .m -text {Magnetic stripe reader}] -expand 1 -fill both
 pack [ttk::frame .m.t12] -expand 1 -fill both
 pack [ttk::labelframe .m.t12.t1 -text {Track 1}] -expand 1 -fill both -side left
-pack [ttk::entry .m.t12.t1.e -textvariable Track1 -width $Track1size -font fixed -validate key -validatecommand {validateTrack1 %S %P $Track1size}] -expand 1 -fill y -anchor w
+pack [ttk::entry .m.t12.t1.e -textvariable Track1 -width $Track1size -font trackfont -validate key -validatecommand {validateTrack1 %S %P $Track1size}] -expand 1 -fill y -anchor w
 pack [ttk::labelframe .m.t12.t2 -text {Track 2}] -expand 1 -fill both -side left
-pack [ttk::entry .m.t12.t2.e -textvariable Track2 -width $Track2size -font fixed -validate key -validatecommand {validateTrack1 %S %P $Track2size}] -expand 1 -fill y -anchor w
+pack [ttk::entry .m.t12.t2.e -textvariable Track2 -width $Track2size -font trackfont -validate key -validatecommand {validateTrack1 %S %P $Track2size}] -expand 1 -fill y -anchor w
 pack [ttk::frame .m.t3b] -expand 1 -fill both 
 pack [ttk::labelframe .m.t3b.t3 -text {Track 3}] -fill both -side left
-pack [ttk::entry .m.t3b.t3.e -textvariable Track3 -width $Track3size -font fixed -validate key -validatecommand {validateTrack1 %S %P $Track3size}] -expand 1 -fill y -anchor w -side left
-pack [ttk::button .m.t3b.b -text Read -width 4 -command msrData] -expand 1 -fill both -side left
-font configure ansifixed -size 50 -weight bold
+pack [ttk::entry .m.t3b.t3.e -textvariable Track3 -width $Track3size -font trackfont -validate key -validatecommand {validateTrack1 %S %P $Track3size}] -expand 1 -fill y -anchor w -side left
+pack [ttk::button .m.t3b.b -text "Read" -width 4 -command msrData] -expand 1 -fill both -side left
+font configure ansifixed -size 36 -weight bold
 pack [ttk::labelframe .di -text Display] -fill both
 pack [text .di.sp -width 20 -height $TextLineCount -borderwidth 2 -state disabled -font ansifixed]
 .di.sp tag add Normal end
@@ -410,7 +456,7 @@ for {set i 1} {$i < $TextLineCount} {incr i} {
 }
 
 pack [ttk::labelframe .kb -text Keyboard] -fill both
-for {set i 1} {$i <= 16} {incr i} {
+for {set i 1} {$i <= 13} {incr i} {
     for {set j 1} {$j <= 10} {incr j} {
         grid [ttk::button .kb.t[format %02d%02d $j $i] -text [format %c%c [expr $j + 64] [expr $i + 64]] -width 6 -command "buttonData $j $i"] -row $j -column $i -sticky news
     }

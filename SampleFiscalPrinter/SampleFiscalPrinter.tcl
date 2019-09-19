@@ -83,7 +83,7 @@ set DisplayLine2 ""
 pack [ttk::entry .d.l1 -textvariable DisplayLine1 -state readonly -width 20 -font dispFont]
 pack [ttk::entry .d.l2 -textvariable DisplayLine2 -state readonly -width 20 -font dispFont]
 pack [ttk::labelframe .t -text "Printer Window"]
-pack [text .t.x -width 42 -height 25 -font fontA -state disabled -yscrollcommand [list .t.s set]] -side left -expand 1 -fill y
+pack [text .t.x -width 42 -height 30 -font fontA -state disabled -yscrollcommand [list .t.s set]] -side left -expand 1 -fill y
 pack [scrollbar .t.s -command [list .t.x yview]] -side right -expand 1 -fill y
 .t.x tag add ABold end
 .t.x tag configure ABold -font boldA

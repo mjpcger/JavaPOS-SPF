@@ -75,7 +75,7 @@ font create boldA -family Courier -size 12 -weight bold
 font create fontB -family Courier -size 9 -weight normal
 font create boldB -family Courier -size 9 -weight bold
 pack [ttk::labelframe .t -text "Printer Window"]
-pack [text .t.x -width 42 -height 30 -font fontA -state disabled -yscrollcommand [list .t.s set]] -side left -expand 1 -fill y
+pack [text .t.x -width 42 -height 26 -font fontA -state disabled -yscrollcommand [list .t.s set]] -side left -expand 1 -fill y
 pack [scrollbar .t.s -command [list .t.x yview]] -side right -expand 1 -fill y
 .t.x tag add ABold end
 .t.x tag configure ABold -font boldA

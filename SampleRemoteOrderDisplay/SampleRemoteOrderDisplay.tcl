@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This device provides a remote order device controller that supports up to
+# 5 display devices with identical characteristics. All commands, responses
+# and messages start with a two-byte address (01 - 05), followed by a message
+# identifies, frame data and end with ETX (03h). A description for all
+# supported commands is near the end of this script.
+
 # Colors
 set colors [list grey0 blue3 green3 cyan3 red3 magenta3 yellow3 grey67 grey33 blue1 green1 cyan1 red1 magenta1 yellow1 grey100]
 set colorSelectLabelSize 20

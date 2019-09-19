@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Simulator for an EFT device, for handling with a CAST service. Communication happens
+# via TCP service port. A description of all supported frames can be found near the
+#end of this script, at procedure processInput.
+
 set Port 54545
 
 set cardno ""
