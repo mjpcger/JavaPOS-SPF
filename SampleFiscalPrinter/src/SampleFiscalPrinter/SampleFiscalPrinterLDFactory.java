@@ -35,24 +35,25 @@ public class SampleFiscalPrinterLDFactory extends Factory implements JposService
             String deviceClass = jposEntry.getPropertyValue("deviceCategory").toString();
             String port = jposEntry.getPropertyValue("Port").toString();
 
-            if (deviceClass.equals("LineDisplay")) {
-                JposDevice any = getDevice(port);
-                SampleFiscalPrinter dev;
-                boolean created = any != null;
-                if (!created) {
-                    dev = new SampleFiscalPrinter(port);
+            synchronized(Devices) {
+                if (deviceClass.equals("LineDisplay")) {
+                    JposDevice any = getDevice(port);
+                    SampleFiscalPrinter dev;
+                    boolean created = any != null;
+                    if (!created) {
+                        dev = new SampleFiscalPrinter(port);
+                    } else if (!(any instanceof SampleFiscalPrinter))
+                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
+                    else {
+                        dev = (SampleFiscalPrinter) any;
+                    }
+                    dev.checkRange(index, 0, dev.LineDisplays.length - 1, JposConst.JPOS_E_ILLEGAL, "Line display index out of range");
+                    dev.checkProperties(jposEntry);
+                    JposServiceInstance disp = addDevice(index, dev);
+                    if (!created)
+                        putDevice(port, dev);
+                    return disp;
                 }
-                else if (!(any instanceof SampleFiscalPrinter))
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
-                else {
-                    dev = (SampleFiscalPrinter) any;
-                }
-                dev.checkRange(index, 0, dev.LineDisplays.length - 1, JposConst.JPOS_E_ILLEGAL, "Line display index out of range");
-                dev.checkProperties(jposEntry);
-                JposServiceInstance disp = addDevice(index, dev);
-                if (!created)
-                    putDevice(port, dev);
-                return disp;
             }
             throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
