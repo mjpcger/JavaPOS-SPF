@@ -142,7 +142,7 @@ proc comInputCB {} {
         fileevent $Fd readable {}
         close $Fd
         set Fd ""
-        set StartStop "Start"
+        set StartStop "Stop"
         return
     }
 	if {[catch {read $Fd} c] == 1} {
@@ -316,14 +316,16 @@ proc startStop {} {
 	            close $SFd
 	            set SFd ""
 	            set StartStop "Start"
-	        }
-	        if {[catch {socket -server acceptConnect $ComPort} erg] == 1} {
-	            puts "Cannot open socket with port $ComPort: $erg"
+				puts "Server socket on port $ComPort closed"
 	        } {
-	            set SFd $erg
-	            set StartStop "Stop"
-	            puts "Server socket opened on port $ComPort"
-	        }
+				if {[catch {socket -server acceptConnect $ComPort} erg] == 1} {
+					puts "Cannot open socket with port $ComPort: $erg"
+				} {
+					set SFd $erg
+					set StartStop "Stop"
+					puts "Server socket opened on port $ComPort"
+				}
+			}
 	    } {
             if {[catch {open $ComPort r+} erg] == 1} {
                 puts "Cannot open $ComPort: $erg"
@@ -344,21 +346,32 @@ proc startStop {} {
 		    close $SFd
 		    set SFd ""
 		}
-		puts "$ComPort closed"
+		puts "Port $ComPort closed"
 	}
 }
 
 proc acceptConnect {channel addr port} {
-    global Fd Timeout
+    global Fd Timeout StartStop
     if {$Fd != ""} {
-        puts "Connect from $addr:$port rejected"
-        close $channel
+		after idle "checkConnect $channel $addr $port"
     } {
         puts "Connect from $addr:$port accepted"
         fconfigure $channel -blocking 0 -buffering none -encoding utf-8 -translation {lf lf}
         fileevent $channel readable comInputCB
         set Fd $channel
+        set StartStop "Stop (Connected)"
     }
+}
+
+proc checkConnect {channel addr port} {
+	global Fd
+	
+	if {$Fd != ""} {
+        puts "Connect from $addr:$port rejected"
+        close $channel
+	} {
+		acceptConnect $channel $addr $port
+	}
 }
 
 set Debug 0
