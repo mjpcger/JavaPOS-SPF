@@ -32,7 +32,29 @@ import static de.gmxhome.conrad.jpos.jpos_base.UniqueIOProcessor.IOProcessorErro
 
 /**
  * Implementation of a JposDevice based implementation of a coin dispenser driver that becomes
- * a JavaPOS CoinDispenser service in combination with the JposCoinDispenser class
+ * a JavaPOS CoinDispenser service in combination with the CoinDispenserService class.<br>
+ * The simulator provides a coin dispenser with the following properties:
+ * Has one slot for 1, 5, 10, 50 and 100 currency units and two slots for 2, 20 and 200 currency units. This allows
+ * correct payment for every amount up to 499 currency units.<br>
+ * These 11 slots are ordered by coin size: 1, 2, 2, 10, 5, 20, 20, 100, 50, 200, 200<br>
+ * Here the communication protocol:
+ * <ul>
+ *     <li>Commands to simulator:
+ *        <ul>
+ *            <li><b>R\n</b>: Read coin count for all slots.</li>
+ *            <li><b>A <i>a b c d e f g h i j k</i>\n</b>: Add values a - k to the corresponding slots.</li>
+ *            <li><b>O <i>a b c d e f g h i j k</i>\n</b>: Subtract values a - k from the corresponding slots.
+ *                All values must be 0 or 1</li>
+ *        </ul>
+ *     </li>
+ *     <li>Response from simulator:
+ *        <ul>
+ *            <li><b>OK <i>a b c d e f g h i j k</i>\n</b>: Operation successful, a - k are the current coin counts for
+ *                the corresponding slots.</li>
+ *            <li><b>KO\n</b>: Operation failed. This may happen due to a jam condition.</li>
+ *        </ul>
+ *     </li>
+ * </ul>
  */
 public class SampleCoinDispenser extends JposDevice implements Runnable{
     /**
@@ -93,32 +115,33 @@ public class SampleCoinDispenser extends JposDevice implements Runnable{
     /**
      * The status watcher thread.
      */
-    private Thread StateWatcher;
+    Thread StateWatcher;
 
     /**
      * A synchronization object used for timing.
      */
-    private SyncObject WaitObj;
+    SyncObject WaitObj;
 
     /**
      * A synchronization object used to wait until startup has been finished.
      */
-    private SyncObject WaitInitialized;
+    SyncObject WaitInitialized;
 
     /**
      * Termination flag, set when state watcher shall finish.
      */
-    private boolean ToBeFinished;
+    boolean ToBeFinished;
 
     /**
      * Coin counts per virtual slot.
      */
-    private int SlotCount[] = new int[8];                   // ( slots (1, 2, 5, 10, 20, 50, 100 and 200 cent)
+    int SlotCount[] = new int[8];                   // ( slots (1, 2, 5, 10, 20, 50, 100 and 200 cent)
 
     /**
      * Coin values of hardware slots
      */
-    private int HWSlotCount[] = new int[12];
+    int HWSlotCount[] = new int[12];
+
     /**
      * Maximum response length.
      */
@@ -127,12 +150,12 @@ public class SampleCoinDispenser extends JposDevice implements Runnable{
     /**
      * Dispenser state, valid if coin dispenser is online.
      */
-    private int DispenserState = CoinDispenserConst.COIN_STATUS_OK;
+    int DispenserState = CoinDispenserConst.COIN_STATUS_OK;
 
     /**
      * Offline state, true if dispenser is offline.
      */
-    private int Offline = JposConst.JPOS_PS_UNKNOWN;
+    int Offline = JposConst.JPOS_PS_UNKNOWN;
 
     /**
      * Indicates whether we are in error recovery state
@@ -149,24 +172,65 @@ public class SampleCoinDispenser extends JposDevice implements Runnable{
     static private final int Slot50 = 5;
     static private final int Slot100 = 6;
     static private final int Slot200 = 7;
-    /*
-     Coin values for indexed virtual slots
+    /**
+     * Coin values for indexed virtual slots
      */
-    static private final long[] SlotCoinValues = new long[]{1, 2, 5, 10, 20, 50, 100, 200};
-    /*
-     Hardware slot indices
+    final long[] SlotCoinValues = new long[]{1, 2, 5, 10, 20, 50, 100, 200};
+
+    /**
+     * Hardware slot index 1 minimum unit
      */
-    static private final int HWSlot1 = 1;
-    static private final int HWSlot2a = 2;
-    static private final int HWSlot2b = 3;
-    static private final int HWSlot10 = 4;
-    static private final int HWSlot5 = 5;
-    static private final int HWSlot20a = 6;
-    static private final int HWSlot20b = 7;
-    static private final int HWSlot100 = 8;
-    static private final int HWSlot50 = 9;
-    static private final int HWSlot200a = 10;
-    static private final int HWSlot200b = 11;
+    static final int HWSlot1 = 1;
+
+    /**
+     * First hardware slot index 2 minimum units
+     */
+    static final int HWSlot2a = 2;
+
+    /**
+     * Second hardware slot index 2 minimum units
+     */
+    static final int HWSlot2b = 3;
+
+    /**
+     * Hardware slot index 10 minimum units
+     */
+    static final int HWSlot10 = 4;
+
+    /**
+     * Hardware slot index 5 minimum units
+     */
+    static final int HWSlot5 = 5;
+
+    /**
+     * First hardware slot index 20 minimum units
+     */
+    static final int HWSlot20a = 6;
+
+    /**
+     * Second hardware slot index 20 minimum units
+     */
+    static final int HWSlot20b = 7;
+
+    /**
+     * Hardware slot index 100 minimum units
+     */
+    static final int HWSlot100 = 8;
+
+    /**
+     * Hardware slot index 50 minimum units
+     */
+    static final int HWSlot50 = 9;
+
+    /**
+     * First hardware slot index 200 minimum units
+     */
+    static final int HWSlot200a = 10;
+
+    /**
+     * Second hardware slot index 200 minimum units
+     */
+    static final int HWSlot200b = 11;
 
     /**
      * Constructor. Stores port and baud rate
@@ -245,7 +309,14 @@ public class SampleCoinDispenser extends JposDevice implements Runnable{
         }
     }
 
-    private int handleStatusChanges(int dispenserState, int offline) {
+    /**
+     * Checks whether the state has been changed. If so, StatusUpdateEvents signalling the new state will be
+     * generated.
+     * @param dispenserState    State returned by handleResponse.
+     * @param offline           Previous offline state.
+     * @return                  New offline state.
+     */
+    int handleStatusChanges(int dispenserState, int offline) {
         try {
             JposCommonProperties props = getClaimingInstance(ClaimedCoinDispenser, 0);
             if (props != null && (dispenserState != DispenserState || Offline != offline)) {
@@ -266,7 +337,12 @@ public class SampleCoinDispenser extends JposDevice implements Runnable{
         return offline;
     }
 
-    private int handleResponse(String[] response) {
+    /**
+     * Computes new status value from response of simulator.
+     * @param response Frame received from simulator.
+     * @return  New device status.
+     */
+    int handleResponse(String[] response) {
         int state = CoinDispenserConst.COIN_STATUS_JAM;
         if (response != null && response.length == 12 && response[0].equals("OK")) {
             Offline = JposConst.JPOS_PS_ONLINE;
@@ -335,170 +411,7 @@ public class SampleCoinDispenser extends JposDevice implements Runnable{
 
     @Override
     public CoinDispenserProperties getCoinDispenserProperties(int index) {
-        return new SampleCoinDispenserAccessor(index);
-    }
-    public class SampleCoinDispenserAccessor extends CoinDispenserProperties {
-        SampleCoinDispenserAccessor(int index) {
-            super(index);
-        }
-
-        @Override
-        public void claim(int timeout) throws JposException {
-            if (timeout < MinClaimTimeout)
-                timeout = MinClaimTimeout;
-            super.claim(timeout);
-            SyncObject initsync = new SyncObject();
-            ToBeFinished = false;
-            WaitInitialized = initsync;
-            (StateWatcher = new Thread(SampleCoinDispenser.this)).start();
-            initsync.suspend(timeout);
-            if (WaitInitialized != null || InIOError) {
-                release();
-                throw new JposException(JposConst.JPOS_E_NOHARDWARE, "No coin dispenser detected");
-            }
-        }
-
-        @Override
-        public void release() throws JposException {
-            ToBeFinished = true;
-            WaitObj.signal();
-            while (ToBeFinished) {
-                try {
-                    StateWatcher.join();
-                } catch (Exception e) {}
-                break;
-            }
-            JposException e = closePort(true);
-            Offline = JposConst.JPOS_PS_UNKNOWN;
-            InIOError = false;
-            super.release();
-        }
-
-        @Override
-        public void deviceEnabled(boolean enable) throws JposException {
-            super.deviceEnabled(enable);
-            if (enable) {
-                PowerState = InIOError ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
-                DispenserStatus = DispenserState;
-            }
-        }
-        @Override
-        public void adjustCashCounts(String cashCounts) throws JposException {
-            // UPOS spec: Call will be ignored because sample coin dispenser can detect the exact amount of cash in it.
-            super.adjustCashCounts(cashCounts);
-        }
-
-        @Override
-        public void readCashCounts(String[] cashCounts, boolean[] discrepancy) throws JposException {
-            super.readCashCounts(cashCounts, discrepancy);
-            if (Offline != JposConst.JPOS_PS_ONLINE)
-                throw new JposException(JposConst.JPOS_E_OFFLINE, "Coin dispenser not connected");
-            if (DispenserState == CoinDispenserConst.COIN_STATUS_JAM)
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Coin dispenser not ready");
-            if (!ReadArgumentCheck || cashCounts[0] == null)
-                cashCounts[0] = "1:0,2:0,5:0,10:0,20:0,50:0,100:0,200:0";
-            String[] counts = cashCounts[0].split(",");
-            String res = null;
-            int[][] values = new int[counts.length][];
-            for (int i = counts.length - 1; i >= 0; --i) {
-                String[] valueStrings = counts[i].split(":");
-                try {
-                    values[i] = new int[]{Integer.parseInt(valueStrings[0]), -1};
-                }
-                catch (NumberFormatException e) {
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Bad cash count format");
-                }
-                int j;
-                for (j = SlotCoinValues.length - 1; j >= 0; --j) {
-                    if (SlotCoinValues[j] == values[i][0]) {
-                        values[i][1] = SlotCount[j];
-                        break;
-                    }
-                }
-                check(values[i][1] < 0, JposConst.JPOS_E_ILLEGAL, "Invalid coin value");
-                res = valueStrings[0] + (res == null ? ":" + values[i][1] : ":" + values[i][1] + "," + res);
-            }
-            discrepancy[0] = checkDiscrepancy(values);
-            cashCounts[0] = res;
-        }
-
-        private boolean checkDiscrepancy(int[][] values) {
-            int sum1 = 0, sum2 = 0;
-            for (int[] value : values)
-                sum1 += value[1];
-            for (int value : SlotCount)
-                sum2 += value;
-            return sum1 != sum2;
-        }
-
-        @Override
-        public void dispenseChange(int amount) throws JposException {
-            check (amount > 610, JposConst.JPOS_E_ILLEGAL, "Amount too big");
-            int val;
-            int[] array = new int[HWSlotCount.length];
-            if ((val = amount / 200) == 2)
-                array[HWSlot200a] = array[HWSlot200b] = 1;
-            else if (val == 1)
-                array[HWSlotCount[HWSlot200a] > HWSlotCount[HWSlot200b] ? HWSlot200a : HWSlot200b] = 1;
-            array[HWSlot100] = (amount %= 200) / 100;
-            array[HWSlot50] = (amount %= 100) / 50;
-            if ((val = (amount %= 50) / 20) == 2)
-                array[HWSlot20a] = array[HWSlot20b] = 1;
-            else if (val == 1)
-                array[HWSlotCount[HWSlot20a] > HWSlotCount[HWSlot20b] ? HWSlot20a : HWSlot20b] = 1;
-            array[HWSlot10] = (amount %= 20) / 10;
-            array[HWSlot5] = (amount %= 10) / 5;
-            if ((val = (amount %= 5) / 2) == 2)
-                array[HWSlot2a] = array[HWSlot2b] = 1;
-            else if (val == 1)
-                array[HWSlotCount[HWSlot2a] > HWSlotCount[HWSlot2b] ? HWSlot2a : HWSlot2b] = 1;
-            array[HWSlot1] = amount % 2;
-            String command = "";
-            for (int i = 1; i < array.length; i++) {
-                command += array[i] > 0 ? " 1" : " 0";
-            }
-            int result;
-            synchronized (SlotCount) {
-                int offline = Offline;
-                handleStatusChanges(result = handleResponse(sendCommand("O" + command)), offline);
-            }
-            if (result == CoinDispenserConst.COIN_STATUS_JAM) {
-                if (Offline == JposConst.JPOS_PS_ONLINE)
-                    throw new JposException(JposConst.JPOS_E_FAILURE, "Coin dispenser error, check slots");
-                else
-                    throw new JposException(JposConst.JPOS_E_OFFLINE, "Coin dispenser offline");
-            }
-        }
-
-        @Override
-        public void checkHealth(int level) throws JposException {
-            String healthError = "";
-
-            if (level == JposConst.JPOS_CH_INTERACTIVE) {
-                synchronizedMessageBox("Press OK to start health test.", "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
-            }
-            if (level != JposConst.JPOS_CH_INTERNAL) {
-                healthError = (level == JposConst.JPOS_CH_INTERACTIVE) ? "Interactive CheckHealth: " : "External CheckHealth: ";
-                String result = "";
-                try {
-                    ((CoinDispenserService) EventSource).dispenseChange(499);
-                    result = "OK";
-                    if (DispenserStatus != CoinDispenserConst.COIN_STATUS_OK) {
-                        result = DispenserStatus == CoinDispenserConst.COIN_STATUS_NEAREMPTY ? "Nearly Empty" : "Empty";
-                        healthError += result + ": ";
-                    }
-                } catch (JposException e) {
-                    result = Offline != JposConst.JPOS_PS_ONLINE ? "Offline" : (DispenserState == CoinDispenserConst.COIN_STATUS_JAM ? "Jam" : "Missing Coins");
-                    healthError += " CheckHealth: " + result + ": ";
-                }
-                if (level == JposConst.JPOS_CH_INTERACTIVE) {
-                    synchronizedMessageBox("Interactive check health result: " + result, "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
-                }
-            } else
-                healthError = "Internal CheckHealth: ";
-            CheckHealthText = healthError + (CheckHealthText.matches(".*Fail.*") ? "ERROR." : "OK.");
-            EventSource.logSet("CheckHealthText");
-        }
+        return new SampleCoinDispenserDispenser(index, this);
     }
 
     /**
@@ -506,7 +419,7 @@ public class SampleCoinDispenser extends JposDevice implements Runnable{
      * @param doFlush Specifies whether the output stream shall be flushed befor close.
      * @return In case of an IO error, the corresponding exception. Otherwise null
      */
-    private JposException closePort(boolean doFlush) {
+    JposException closePort(boolean doFlush) {
         JposException e = null;
         if (OutStream != null) {
             for (int i = 0; i < 2; i++) {
@@ -532,7 +445,7 @@ public class SampleCoinDispenser extends JposDevice implements Runnable{
      * Port initialization.
      * @return In case of initialization error, the exception. Otherwise null.
      */
-    private JposException initPort() {
+    JposException initPort() {
         try {
             OutStream = new TcpClientIOProcessor(this, ID);
             OutStream.setParam(OwnPort);

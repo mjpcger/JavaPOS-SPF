@@ -36,24 +36,25 @@ public class SampleCoinDispenserFactory extends Factory implements JposServiceIn
             String deviceClass = jposEntry.getPropertyValue("deviceCategory").toString();
             String port = jposEntry.getPropertyValue("ComPort").toString();
 
-            if (deviceClass.equals("CoinDispenser")) {
-                JposDevice any = getDevice(port);
-                SampleCoinDispenser dev;
-                boolean created = any != null;
-                if (!created) {
-                    dev = new SampleCoinDispenser(port);
+            synchronized(Devices) {
+                if (deviceClass.equals("CoinDispenser")) {
+                    JposDevice any = getDevice(port);
+                    SampleCoinDispenser dev;
+                    boolean created = any != null;
+                    if (!created) {
+                        dev = new SampleCoinDispenser(port);
+                    } else if (!(any instanceof SampleCoinDispenser))
+                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
+                    else {
+                        dev = (SampleCoinDispenser) any;
+                    }
+                    dev.checkRange(index, 0, dev.CoinDispensers.length - 1, JposConst.JPOS_E_ILLEGAL, "Coin dispender index out of range");
+                    dev.checkProperties(jposEntry);
+                    JposServiceInstance srv = addDevice(index, dev);
+                    if (!created)
+                        putDevice(port, dev);
+                    return srv;
                 }
-                else if (!(any instanceof SampleCoinDispenser))
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
-                else {
-                    dev = (SampleCoinDispenser) any;
-                }
-                dev.checkRange(index, 0, dev.CoinDispensers.length - 1, JposConst.JPOS_E_ILLEGAL, "Coin dispender index out of range");
-                dev.checkProperties(jposEntry);
-                JposServiceInstance srv = addDevice(index, dev);
-                if (!created)
-                    putDevice(port, dev);
-                return srv;
             }
             throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
