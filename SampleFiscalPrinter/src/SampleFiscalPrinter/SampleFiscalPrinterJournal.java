@@ -32,7 +32,7 @@ import java.util.Date;
 import static SampleFiscalPrinter.SampleFiscalPrinter.*;
 
 /**
- * Class implementing the JposElectronicJournalInterface for the sample fiscal printer.
+ * Class implementing the ElectronicJournalInterface for the sample fiscal printer.
  */
 class SampleFiscalPrinterJournal extends ElectronicJournalProperties implements SampleFiscalPrinterStatusUpdater {
     private SampleFiscalPrinter Dev;

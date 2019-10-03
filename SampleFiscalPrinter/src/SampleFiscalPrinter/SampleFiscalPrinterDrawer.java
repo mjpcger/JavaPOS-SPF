@@ -28,7 +28,7 @@ import java.awt.*;
 import static SampleFiscalPrinter.SampleFiscalPrinter.*;
 
 /**
- * Class implementing the JposDrawerInterface for the sample fiscal printer.
+ * Class implementing the CashDrawerInterface for the sample fiscal printer.
  */
 class SampleFiscalPrinterDrawer extends CashDrawerProperties implements SampleFiscalPrinterStatusUpdater {
     private SampleFiscalPrinter Dev;

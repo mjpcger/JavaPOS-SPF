@@ -27,7 +27,7 @@ import static SampleFiscalPrinter.SampleFiscalPrinter.*;
 import javax.swing.*;
 
 /**
- * Class implementing the JposDisplayInterface for the sample fiscal printer.
+ * Class implementing the LineDisplayInterface for the sample fiscal printer.
  */
 class SampleFiscalPrinterDisplay extends LineDisplayProperties implements SampleFiscalPrinterStatusUpdater {
     private SampleFiscalPrinter Dev;
