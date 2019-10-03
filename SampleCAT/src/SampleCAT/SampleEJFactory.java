@@ -22,24 +22,25 @@ public class SampleEJFactory extends Factory implements JposServiceInstanceFacto
             String deviceClass = jposEntry.getPropertyValue("deviceCategory").toString();
             String port = jposEntry.getPropertyValue("Port").toString();
 
-            if (deviceClass.equals("ElectronicJournal")) {
-                JposDevice any = getDevice(port);
-                SampleCAT dev;
-                boolean created = any != null;
-                if (!created) {
-                    dev = new SampleCAT(port);
+            synchronized(Devices) {
+                if (deviceClass.equals("ElectronicJournal")) {
+                    JposDevice any = getDevice(port);
+                    SampleCAT dev;
+                    boolean created = any != null;
+                    if (!created) {
+                        dev = new SampleCAT(port, jposEntry.getPropertyValue("DisplayName"), jposEntry.getPropertyValue("JournalPath"));
+                    } else if (!(any instanceof SampleCAT))
+                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
+                    else {
+                        dev = (SampleCAT) any;
+                    }
+                    dev.checkRange(index, 0, dev.ElectronicJournals.length - 1, JposConst.JPOS_E_ILLEGAL, "Electronic journal index out of range");
+                    dev.checkProperties(jposEntry);
+                    JposServiceInstance srv = addDevice(index, dev);
+                    if (!created)
+                        putDevice(port, dev);
+                    return srv;
                 }
-                else if (!(any instanceof SampleCAT))
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
-                else {
-                    dev = (SampleCAT) any;
-                }
-                dev.checkRange(index, 0, dev.ElectronicJournals.length - 1, JposConst.JPOS_E_ILLEGAL, "Electronic journal index out of range");
-                dev.checkProperties(jposEntry);
-                JposServiceInstance srv = addDevice(index, dev);
-                if (!created)
-                    putDevice(port, dev);
-                return srv;
             }
             throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {

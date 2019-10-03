@@ -39,29 +39,31 @@ public class SampleCATFactory extends Factory implements JposServiceInstanceFact
             String deviceClass = jposEntry.getPropertyValue("deviceCategory").toString();
             String port = jposEntry.getPropertyValue("Port").toString();
 
-            if (deviceClass.equals("CAT")) {
-                JposDevice any = getDevice(port);
-                SampleCAT dev;
-                boolean created = any != null;
-                if (!created) {
-                    dev = new SampleCAT(port);
+            synchronized(Devices) {
+                if (deviceClass.equals("CAT")) {
+                    JposDevice any = getDevice(port);
+                    SampleCAT dev;
+                    boolean created = any != null;
+                    if (!created) {
+                        dev = new SampleCAT(port, jposEntry.getPropertyValue("DisplayName"), jposEntry.getPropertyValue("JournalPath"));
+                    } else if (!(any instanceof SampleCAT))
+                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
+                    else {
+                        dev = (SampleCAT) any;
+                    }
+                    dev.checkRange(index, 0, dev.CATs.length - 1, JposConst.JPOS_E_ILLEGAL, "Credit authorization terminal index out of range");
+                    dev.checkProperties(jposEntry);
+                    JposServiceInstance srv = addDevice(index, dev);
+                    if (!created)
+                        putDevice(port, dev);
+                    return srv;
                 }
-                else if (!(any instanceof SampleCAT))
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
-                else {
-                    dev = (SampleCAT) any;
-                }
-                dev.checkRange(index, 0, dev.CATs.length - 1, JposConst.JPOS_E_ILLEGAL, "Credit authorization terminal index out of range");
-                dev.checkProperties(jposEntry);
-                JposServiceInstance srv = addDevice(index, dev);
-                if (!created)
-                    putDevice(port, dev);
-                return srv;
             }
             throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
+            e.printStackTrace();
             throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
         }
     }

@@ -594,7 +594,7 @@ proc service {fd addr port} {
 #		c%d\2%d\3		Commit operation. Parameters: No. of transaction to be committed, result (0: Verification
 #						error, 1: Signature verified). Mandatory after sign-based sale operations.
 #		r%f\3			Set return amount. Parameters: Amount.
-#		v%d\3		Void transaction. Parameters: No. of transaction to be voided.
+#		v%d\3		    Void transaction. Parameters: No. of transaction to be voided.
 #		a\3				Abort operation.
 
 # Frames sent by the simulator will be terminated with ETX (03h). They have one of the following formats:

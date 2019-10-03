@@ -90,7 +90,7 @@
 		<prop name="Target" value="127.0.0.1:45654"/>
 	</JposEntry>
 	<!-- Test CAT (Credit Authorization Terminal) Entry, implements CAT and ElectronicJournal(2x) devices -->
-	<JposEntry logicalName="TestCAT">
+	<JposEntry logicalName="TestEjCAT">
 		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cat.CATService" factoryClass="SampleCAT.SampleCATFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos version="1.14.1" category="CAT"/>
@@ -107,6 +107,46 @@
 		<prop name="DevIndex" value="0"/>
 		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
 		<prop name="JournalPath" value="Journal"/>
+		<prop name="DisplayName" value="TestDisplay"/>
+		<prop name="RequestTimeout" value="1000000"/>
+	</JposEntry>
+	<JposEntry logicalName="TestDioCAT">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cat.CATService" factoryClass="SampleCAT.SampleCATFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="CAT"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For CAT of Sample CAT" description="Sample CAT Service For CAT Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="Port" value="127.0.0.1:54545"/>
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="JournalPath" value=""/>
+		<prop name="DisplayName" value=""/>
+		<prop name="RequestTimeout" value="1000000"/>
+	</JposEntry>
+	<JposEntry logicalName="TestPrtCAT">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cat.CATService" factoryClass="SampleCAT.SampleCATFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="CAT"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For CAT of Sample CAT" description="Sample CAT Service For CAT Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="Port" value="127.0.0.1:54545"/>
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="JournalPath" value="TestPrinter"/>
 		<prop name="DisplayName" value="TestDisplay"/>
 		<prop name="RequestTimeout" value="1000000"/>
 	</JposEntry>
