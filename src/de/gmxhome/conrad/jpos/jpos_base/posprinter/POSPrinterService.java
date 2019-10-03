@@ -599,7 +599,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService114 
 
     @Override
     public String getCharacterSetList() throws JposException {
-        checkFirstEnabled();
+        checkOpened();
         logGet("CharacterSetList");
         return Data.CharacterSetList;
     }
@@ -1183,7 +1183,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService114 
 
     @Override
     public String getSlpLineCharsList() throws JposException {
-        checkFirstEnabled();
+        checkOpened();
         logGet("SlpLineCharsList");
         return Data.SlpLineCharsList;
     }

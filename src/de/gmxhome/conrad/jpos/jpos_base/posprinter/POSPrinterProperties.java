@@ -495,16 +495,11 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     public int JrnLineChars;
 
     /**
-     * Default value of JrnLineCharsList property. Default: "". Should be overwritten
+     * UPOS property JrnLineCharsList property. Default: "". Should be overwritten
      * by objects derived from JposDevice within the changeDefaults method. If not empty,
      * the first specified value is the default for JrnLineChars, too.
      */
-    public String JrnLineCharsListDef = "";
-
-    /**
-     * UPOS property JrnLineCharsList.
-     */
-    public String JrnLineCharsList;
+    public String JrnLineCharsList = "";
 
     /**
      * Default value of JrnLineHeight property. Default: 0. Should be overwritten
@@ -635,16 +630,11 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     public int RecLineChars;
 
     /**
-     * Default value of RecLineCharsList property. Default: "". Should be overwritten
+     * UPOS property RecLineCharsList property. Default: "". Should be overwritten
      * by objects derived from JposDevice within the changeDefaults method. If not empty,
      * the first value is the default for RecLineChars, too.
      */
-    public String RecLineCharsListDef = "";
-
-    /**
-     * UPOS property RecLineCharsList.
-     */
-    public String RecLineCharsList;
+    public String RecLineCharsList = "";
 
     /**
      * Default value of RecLineHeight property. Default: 0. Should be overwritten
@@ -766,16 +756,11 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     public int SlpLineChars;
 
     /**
-     * Default value of RecLineCharsList property. Default: "". Should be overwritten
+     * UPOS property SlpLineCharsList property. Default: "". Should be overwritten
      * by objects derived from JposDevice within the changeDefaults method. If no empty,
      * the first value is the default for RecLineChars, too.
      */
-    public String SlpLineCharsListDef = "";
-
-    /**
-     * UPOS property SlpLineCharsList.
-     */
-    public String SlpLineCharsList;
+    public String SlpLineCharsList = "";
 
     /**
      * Default value of SlpLineHeight property. Default: 0. Should be overwritten
@@ -900,8 +885,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
             CharacterSet = CharacterSetDef;
             JrnCurrentCartridge = JrnCurrentCartridgeDef;
             JrnLetterQuality = false;
-            JrnLineChars = JrnLineCharsListDef.length() > 0 ? (int)Device.stringArrayToLongArray(JrnLineCharsListDef.split(","))[0] : 0;
-            JrnLineCharsList = JrnLineCharsListDef;
+            JrnLineChars = JrnLineCharsList.length() > 0 ? (int)Device.stringArrayToLongArray(JrnLineCharsList.split(","))[0] : 0;
             JrnLineHeight = JrnLineHeightDef;
             JrnLineSpacing = JrnLineSpacingDef;
             JrnLineWidth = JrnLineWidthDef;
@@ -909,8 +893,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
             PageModePrintDirection = POSPrinterConst.PTR_PD_LEFT_TO_RIGHT;
             RecCurrentCartridge = RecCurrentCartridgeDef;
             RecLetterQuality = false;
-            RecLineChars = RecLineCharsListDef.length() > 0 ? (int)Device.stringArrayToLongArray(RecLineCharsListDef.split(","))[0] : 0;
-            RecLineCharsList = RecLineCharsListDef;
+            RecLineChars = RecLineCharsList.length() > 0 ? (int)Device.stringArrayToLongArray(RecLineCharsList.split(","))[0] : 0;
             RecLineHeight = RecLineHeightDef;
             RecLineSpacing = RecLineSpacingDef;
             RecLinesToPaperCut = RecLinesToPaperCutDef;
@@ -919,8 +902,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
             RecSidewaysMaxLines = RecSidewaysMaxLinesDef;
             SlpCurrentCartridge = SlpCurrentCartridgeDef;
             SlpLetterQuality = false;
-            SlpLineChars = SlpLineCharsListDef.length() > 0 ? (int)Device.stringArrayToLongArray(SlpLineCharsListDef.split(","))[0] : 0;
-            SlpLineCharsList = SlpLineCharsListDef;
+            SlpLineChars = SlpLineCharsList.length() > 0 ? (int)Device.stringArrayToLongArray(SlpLineCharsList.split(","))[0] : 0;
             SlpLineHeight = SlpLineHeightDef;
             SlpLinesNearEndToEnd = SlpLinesNearEndToEndDef;
             SlpLineSpacing = SlpLineSpacingDef;
