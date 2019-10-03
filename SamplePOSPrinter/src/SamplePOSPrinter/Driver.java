@@ -230,7 +230,7 @@ public class Driver extends JposDevice{
         props.CharacterSetDef = CharSetListVals[0];
         props.MapCharacterSet = MapCharacterSet;
         props.CharacterSetList = CharSetList;
-        props.RecLineCharsListDef = LineCharsList;
+        props.RecLineCharsList = LineCharsList;
         props.RecLineHeightDef = LineHeights[CurrentFontIndex];
         props.RecLineWidthDef = (LineWidth / CharWidths[CurrentFontIndex]) * CharWidths[CurrentFontIndex];
         props.RecLineSpacingDef = LineSpacings[CurrentFontIndex];
