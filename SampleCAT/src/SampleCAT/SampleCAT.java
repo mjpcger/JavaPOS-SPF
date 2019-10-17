@@ -1301,7 +1301,7 @@ public class SampleCAT extends JposDevice implements Runnable{
 
     @Override
     public CATProperties getCATProperties(int index) {
-        return new SampleCATerminal(index, this);
+        return new SampleCATerminal(this);
     }
 
     @Override

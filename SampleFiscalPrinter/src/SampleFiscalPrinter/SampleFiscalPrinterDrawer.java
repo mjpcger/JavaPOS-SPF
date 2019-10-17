@@ -34,12 +34,12 @@ class SampleFiscalPrinterDrawer extends CashDrawerProperties implements SampleFi
     private SampleFiscalPrinter Dev;
 
     /**
-     * Constructor.
-     * @param index     Device index.
+     * Constructor. Gets instance of SampleFiscalPrinter to be used as communication object. Device index
+     * for sample is always 0.
      * @param dev Instance of SampleFiscalPrinter this object belongs to.
      */
-    SampleFiscalPrinterDrawer(int index, SampleFiscalPrinter dev) {
-        super(index);
+    SampleFiscalPrinterDrawer(SampleFiscalPrinter dev) {
+        super(0);
         Dev = dev;
     }
     @Override

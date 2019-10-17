@@ -35,12 +35,12 @@ class SampleCoinDispenserDispenser extends CoinDispenserProperties {
     private SampleCoinDispenser Dev;
 
     /**
-     * Constructor.
-     * @param index Device index
+     * Constructor. Gets instance of SampleCoinDispenser to be used as communication object. Device index for sample is
+     * always 0.
      * @param dev   Instance of SampleCoinDispenser this object belongs to.
      */
-    SampleCoinDispenserDispenser(int index, SampleCoinDispenser dev) {
-        super(index);
+    SampleCoinDispenserDispenser(SampleCoinDispenser dev) {
+        super(0);
         Dev = dev;
     }
 

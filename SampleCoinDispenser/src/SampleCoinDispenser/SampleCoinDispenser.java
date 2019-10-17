@@ -411,7 +411,7 @@ public class SampleCoinDispenser extends JposDevice implements Runnable{
 
     @Override
     public CoinDispenserProperties getCoinDispenserProperties(int index) {
-        return new SampleCoinDispenserDispenser(index, this);
+        return new SampleCoinDispenserDispenser(this);
     }
 
     /**

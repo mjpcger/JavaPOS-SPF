@@ -1205,27 +1205,23 @@ public class SampleFiscalPrinter extends JposDevice implements Runnable {
         return commands;
     }
 
-    /**
-     * This was the general part. Device specific parts follow now.
-     */
-
     @Override
     public CashDrawerProperties getCashDrawerProperties(int index) {
-        return new SampleFiscalPrinterDrawer(index, this);
+        return new SampleFiscalPrinterDrawer(this);
     }
 
     @Override
     public LineDisplayProperties getLineDisplayProperties(int index) {
-        return new SampleFiscalPrinterDisplay(index, this);
+        return new SampleFiscalPrinterDisplay(this);
     }
 
     @Override
     public FiscalPrinterProperties getFiscalPrinterProperties(int index) {
-        return new SampleFiscalPrinterPrinter(index, this);
+        return new SampleFiscalPrinterPrinter(this);
     }
 
     @Override
     public ElectronicJournalProperties getElectronicJournalProperties(int index) {
-        return new SampleFiscalPrinterJournal(index, this);
+        return new SampleFiscalPrinterJournal(this);
     }
 }

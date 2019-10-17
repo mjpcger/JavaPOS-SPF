@@ -37,12 +37,12 @@ class SampleFiscalPrinterPrinter extends FiscalPrinterProperties implements Samp
     private SampleFiscalPrinter Dev;
 
     /**
-     * Constructor.
-     * @param index     Device index.
+     * Constructor. Gets instance of SampleFiscalPrinter to be used as communication object. Device
+     * index for sample is always 0.
      * @param dev Instance of SampleFiscalPrinter this object belongs to.
      */
-    SampleFiscalPrinterPrinter(int index, SampleFiscalPrinter dev) {
-        super(index);
+    SampleFiscalPrinterPrinter(SampleFiscalPrinter dev) {
+        super(0);
         Dev = dev;
     }
 

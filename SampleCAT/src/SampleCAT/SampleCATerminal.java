@@ -61,12 +61,11 @@ public class SampleCATerminal extends CATProperties {
     private SampleCAT Dev;
 
     /**
-     * Constructor.
-     * @param index Property set index used by this accessor.
+     * Constructor. Gets instance of SampleCAT to be used as communication object. Device index for sample is always 0.
      * @param dev   Instance of SampleCAT that controls the communication with the terminal.
      */
-    public SampleCATerminal(int index, SampleCAT dev) {
-        super(index);
+    public SampleCATerminal(SampleCAT dev) {
+        super(0);
         Dev = dev;
     }
 
