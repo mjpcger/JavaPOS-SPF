@@ -35,24 +35,25 @@ public class SampleMICRFactory extends Factory implements JposServiceInstanceFac
             String deviceClass = jposEntry.getPropertyValue("deviceCategory").toString();
             String port = jposEntry.getPropertyValue("Target").toString();
 
-            if (deviceClass.equals("MICR")) {
-                JposDevice any = getDevice(port);
-                SampleMICR dev;
-                boolean created = any != null;
-                if (!created) {
-                    dev = new SampleMICR(port);
+            synchronized(Devices) {
+                if (deviceClass.equals("MICR")) {
+                    JposDevice any = getDevice(port);
+                    SampleMICR dev;
+                    boolean created = any != null;
+                    if (!created) {
+                        dev = new SampleMICR(port);
+                    } else if (!(any instanceof SampleMICR))
+                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
+                    else {
+                        dev = (SampleMICR) any;
+                    }
+                    dev.checkRange(index, 0, dev.MICRs.length - 1, JposConst.JPOS_E_ILLEGAL, "MICRs index out of range");
+                    dev.checkProperties(jposEntry);
+                    JposServiceInstance obj = addDevice(index, dev);
+                    if (!created)
+                        putDevice(port, dev);
+                    return obj;
                 }
-                else if (!(any instanceof SampleMICR))
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
-                else {
-                    dev = (SampleMICR) any;
-                }
-                dev.checkRange(index, 0, dev.MICRs.length - 1, JposConst.JPOS_E_ILLEGAL, "MICRs index out of range");
-                dev.checkProperties(jposEntry);
-                JposServiceInstance obj = addDevice(index, dev);
-                if (!created)
-                    putDevice(port, dev);
-                return obj;
             }
             throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {

@@ -26,24 +26,45 @@ import org.apache.log4j.Level;
 
 /**
  * Implementation of a JposDevice based implementation of a MICR driver that becomes
- * a JavaPOS MICR service in combination with the JposMICR class
+ * a JavaPOS MICR service in combination with the SampleMICRImpl class.
  */
 public class SampleMICR extends JposDevice implements Runnable {
+    private int OwnPort = 0;
+    private int CharacterTimeout = 20;
+    private int MinClaimTimeout = 200;
+    private String SubstituteCharacters = "tao-";
+
     /**
      * IO processor to be used for communication with scale.
      */
     UniqueIOProcessor Target = null;
 
-    private int OwnPort = 0;
-    private int CharacterTimeout = 20;
-    private int MinClaimTimeout = 200;
-    private int PollDelay = 500;
-    private String SubstituteCharacters = "tao-";
+    /**
+     * Delay between status polls.
+     */
+    int PollDelay = 500;
 
-    private boolean ToBeFinished;
-    private int Offline = JposConst.JPOS_SUE_POWER_OFF_OFFLINE;
-    private Thread CommandProcessor;
-    private SyncObject PollWaiter = new SyncObject();
+    /**
+     * Communication handler termination request flag.
+     */
+    boolean ToBeFinished;
+
+    /**
+     * Current power state of the device. For the sample device, the values SUE_POWER_OFF_OFFLINE and SUE_POWER_ONLINE
+     * are supported.
+     */
+    int Offline = JposConst.JPOS_SUE_POWER_OFF_OFFLINE;
+
+    /**
+     * Communication handler thread object.
+     */
+    Thread CommandProcessor;
+
+    /**
+     * Synchronization object used to wait for the specified poll delay. Will be signalled to abort the wait whenever
+     * the communication handler shall stop.
+     */
+    SyncObject PollWaiter = new SyncObject();
 
     /**
      * Constructor. id specifies either the COM port to be used or the server to be connected in format host:port
@@ -103,7 +124,7 @@ public class SampleMICR extends JposDevice implements Runnable {
      *
      * @return In case of initialization error, the exception. Otherwise null.
      */
-    private JposException initPort() {
+    JposException initPort() {
         try {
             ((TcpClientIOProcessor) (Target = new TcpClientIOProcessor(this, ID))).setParam(OwnPort, PollDelay);
             Target.open(Offline == JposConst.JPOS_SUE_POWER_OFF_OFFLINE);
@@ -120,7 +141,7 @@ public class SampleMICR extends JposDevice implements Runnable {
      *
      * @return In case of an IO error, the corresponding exception. Otherwise null
      */
-    private JposException closePort() {
+    JposException closePort() {
         JposException e = null;
         if (Target != null) {
             for (int i = 0; i < 2; i++) {
@@ -141,7 +162,7 @@ public class SampleMICR extends JposDevice implements Runnable {
      * @param command Command to be sent. Must be "I" (Insert cheque) or "R" (Release cheque )
      * @return true on success, false if I/O error occurred.
      */
-    synchronized private boolean sendCommand(String command) {
+    synchronized boolean sendCommand(String command) {
         if (connectionOffline())
             return false;
         try {
@@ -156,7 +177,11 @@ public class SampleMICR extends JposDevice implements Runnable {
         return false;
     }
 
-    private boolean connectionOffline() {
+    /**
+     * Checks whether the sample device is currently not online (offline or error state).
+     * @return True if device is offline or in error state, otherwise false.
+     */
+    boolean connectionOffline() {
         if (Target == null) {
             JposException e = initPort();
             if (e != null) {
@@ -199,7 +224,7 @@ public class SampleMICR extends JposDevice implements Runnable {
     }
 
     /**
-     * Thread main, used for MICR data retrieval.
+     * Communication handler, used for MICR data retrieval and status check.
      */
     @Override
     public void run() {
@@ -297,103 +322,6 @@ public class SampleMICR extends JposDevice implements Runnable {
 
     @Override
     public MICRProperties getMICRProperties(int index) {
-        return new SampleMICRAccessor(index);
-    }
-    /**
-     * The sample MICR accessor implementation class.
-     */
-    public class SampleMICRAccessor extends MICRProperties {
-        private SampleMICRAccessor(int index) {
-            super(index);
-        }
-
-        @Override
-        public void claim(int timeout) throws JposException {
-            JposException e = initPort();
-            if (e != null)
-                throw e;
-            super.claim(timeout);
-            ToBeFinished = false;
-            (CommandProcessor = new Thread(SampleMICR.this)).start();
-        }
-
-        @Override
-        public void release() throws JposException {
-            ToBeFinished = true;
-            synchronized (SampleMICR.this) {
-                if (Target != null)
-                    closePort();
-                else
-                    PollWaiter.signal();
-            }
-            while (true) {
-                try {
-                    CommandProcessor.join();
-                    break;
-                } catch (Exception e) {}
-            }
-            super.release();
-        }
-
-        @Override
-        public void deviceEnabled(boolean enable) throws JposException {
-            super.deviceEnabled(enable);
-            if (enable) {
-                handleEvent(new JposStatusUpdateEvent(EventSource, Offline));
-            }
-            else if (PowerNotify == JposConst.JPOS_PN_ENABLED){
-                PowerState = JposConst.JPOS_PS_UNKNOWN;
-                EventSource.logSet("PowerState");
-            }
-        }
-
-        @Override
-        public void checkHealth(int level) throws JposException {
-            if (level == JposConst.JPOS_CH_INTERNAL) {
-                CheckHealthText = "Internal CheckHealth: ";
-                CheckHealthText += Offline == JposConst.JPOS_SUE_POWER_OFF_OFFLINE ? "Failed" : "OK";
-            }
-            else {
-                CheckHealthText = level == JposConst.JPOS_CH_EXTERNAL ? "External" : "Interactive";
-                CheckHealthText += " Checkhealth: Failed (Not supported)";
-            }
-            EventSource.logSet("CheckHealthText");
-            super.checkHealth(level);
-        }
-
-        @Override
-        public void beginInsertion(int timeout) throws JposException {
-            long starttime = System.currentTimeMillis();
-            do {
-                if (!connectionOffline()) {
-                    return;
-                }
-                new SyncObject().suspend(PollDelay);
-            } while (timeout == JposConst.JPOS_FOREVER || System.currentTimeMillis() - starttime < timeout);
-            check(true, JposConst.JPOS_E_FAILURE, "No connection to MICR device");
-        }
-
-        @Override
-        public void endInsertion() throws JposException {
-            check(!sendCommand("I"), JposConst.JPOS_E_FAILURE, "No connection to MICR device");
-        }
-
-        @Override
-        public void beginRemoval(int timeout) throws JposException {
-            long starttime = System.currentTimeMillis();
-            do {
-                if (sendCommand("R"))
-                    return;
-                new SyncObject().suspend(PollDelay);
-            } while (System.currentTimeMillis() - starttime < timeout);
-            check(true, JposConst.JPOS_E_FAILURE, "No connection to MICR device");
-        }
-
-        @Override
-        public void directIO(int command, int[] data, Object obj) throws JposException {
-            if (command == 1) {
-                EventSource.setDataEventEnabled(true);
-            }
-        }
+        return new SampleMICRImpl(this);
     }
 }
