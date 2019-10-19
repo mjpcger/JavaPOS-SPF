@@ -26,14 +26,11 @@ import jpos.events.*;
 import org.apache.log4j.Level;
 
 import javax.swing.*;
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 /**
- * Implementation of CAT based for the sample implemented in SampleCAT.tcl.
+ * Implementation of CAT based for the sample implemented in Device.tcl.
  * Supported features are:
  * <ul>
  *     <li>Sale, refund and void.</li>
@@ -125,7 +122,7 @@ import java.util.Arrays;
  *         receipt.</li>
  * </ul>
  */
-public class SampleCAT extends JposDevice implements Runnable{
+public class Device extends JposDevice implements Runnable{
     /**
      * EventNumber of DirectIOEvent for display data. Property Data contains line number (starting from 1), Obj contains
      * String object with the display contents.
@@ -426,14 +423,14 @@ public class SampleCAT extends JposDevice implements Runnable{
 
     // Implementation for POSPrinter based operation.
 
-    private class TicketViaPrt extends SampleCAT.TicketOutput implements StatusUpdateListener {
+    private class TicketViaPrt extends Device.TicketOutput implements StatusUpdateListener {
         private POSPrinter Printer;
         private String Conversion = new String("");
         private String Contents;
         private int Count;
         private boolean HasCartridgeSensor;
         private SyncObject CleaningEndWaiter = null;
-        TicketViaPrt(SampleCAT sampleCAT) throws JposException {
+        TicketViaPrt(Device device) throws JposException {
             super();
             Printer = new POSPrinter();
             Printer.addStatusUpdateListener(this);
@@ -744,7 +741,7 @@ public class SampleCAT extends JposDevice implements Runnable{
      * @param displayName Value of Jpos.xml property DisplayName (default: null).
      * @param journalPath Value of Jpos.xml property JournalPath (default: null).
      */
-    protected SampleCAT(String id, Object displayName, Object journalPath) {
+    protected Device(String id, Object displayName, Object journalPath) {
         super(id);
         DisplayName = displayName == null ? "" : displayName.toString();
         JournalPath = journalPath == null ? "" : journalPath.toString();
@@ -756,7 +753,7 @@ public class SampleCAT extends JposDevice implements Runnable{
         try {
             Ticket = new TicketViaPrt(this);
         } catch (Exception e) {
-            Ticket = SampleCATJournal.getTicketOutput(this);
+            Ticket = ElectronicJournal.getTicketOutput(this);
         }
         cATInit(1);
         electronicJournalInit(JournalPath.length() == 0 || Ticket instanceof TicketViaPrt ? 0 : 2);
@@ -1301,11 +1298,11 @@ public class SampleCAT extends JposDevice implements Runnable{
 
     @Override
     public CATProperties getCATProperties(int index) {
-        return new SampleCATerminal(this);
+        return new CAT(this);
     }
 
     @Override
     public ElectronicJournalProperties getElectronicJournalProperties(int index) {
-        return new SampleCATJournal(index, this);
+        return new ElectronicJournal(index, this);
     }
 }

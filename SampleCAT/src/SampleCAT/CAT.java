@@ -57,14 +57,14 @@ import jpos.JposException;
  * </ul>
  * The device will be connected via TCP.
  */
-public class SampleCATerminal extends CATProperties {
-    private SampleCAT Dev;
+public class CAT extends CATProperties {
+    private Device Dev;
 
     /**
-     * Constructor. Gets instance of SampleCAT to be used as communication object. Device index for sample is always 0.
-     * @param dev   Instance of SampleCAT that controls the communication with the terminal.
+     * Constructor. Gets instance of Device to be used as communication object. Device index for sample is always 0.
+     * @param dev   Instance of Device that controls the communication with the terminal.
      */
-    public SampleCATerminal(SampleCAT dev) {
+    public CAT(Device dev) {
         super(0);
         Dev = dev;
     }

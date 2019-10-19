@@ -46,10 +46,10 @@ import java.util.Arrays;
  *         property MediumFreeSpace is 0.</li>
  * </ul>
  */
-public class SampleCATJournal extends ElectronicJournalProperties {
-    static private class TicketViaDirectIO extends SampleCAT.TicketOutput {
-        private SampleCAT Dev;
-        private TicketViaDirectIO(SampleCAT dev) {
+public class ElectronicJournal extends ElectronicJournalProperties {
+    static private class TicketViaDirectIO extends Device.TicketOutput {
+        private Device Dev;
+        private TicketViaDirectIO(Device dev) {
             super();
             Dev = dev;
         }
@@ -64,8 +64,8 @@ public class SampleCATJournal extends ElectronicJournalProperties {
         }
     }
 
-    static private class TicketViaEJ extends SampleCAT.TicketOutput {
-        private SampleCAT Dev;
+    static private class TicketViaEJ extends Device.TicketOutput {
+        private Device Dev;
         private static final int MARKSIZE = 14; // YYYYmmddHHMMSS
         private int FRAMESIZE = 0;
         private String Contents;
@@ -74,7 +74,7 @@ public class SampleCATJournal extends ElectronicJournalProperties {
         private RandomAccessFile[] DataFile = new RandomAccessFile[]{null, null};
         private String[][] LastMarkers = new String[][]{new String[]{null, null}, new String[]{null, null}};
         private long[][] LastPos = new long[][]{new long[]{0, 0}, new long[]{0, 0}};
-        private TicketViaEJ(SampleCAT dev) {
+        private TicketViaEJ(Device dev) {
             super();
             Dev = dev;
         }
@@ -370,7 +370,7 @@ public class SampleCATJournal extends ElectronicJournalProperties {
         }
     }
 
-    private SampleCAT Dev;
+    private Device Dev;
 
     /**
      * Constructor.
@@ -378,7 +378,7 @@ public class SampleCATJournal extends ElectronicJournalProperties {
      * @param index Property set used by this accessor.
      * @param dev   Device communication handler object.
      */
-    public SampleCATJournal(int index, SampleCAT dev) {
+    public ElectronicJournal(int index, Device dev) {
         super(index);
         Dev = dev;
     }
@@ -391,7 +391,7 @@ public class SampleCATJournal extends ElectronicJournalProperties {
      * @param dev Device implementation instance to be initialized.
      * @return    TicketOutput object to be used during CAT transactions.
      */
-    static SampleCAT.TicketOutput getTicketOutput(SampleCAT dev) {
+    static Device.TicketOutput getTicketOutput(Device dev) {
         return dev.JournalPath.equals("") ? new TicketViaDirectIO(dev) : new TicketViaEJ(dev);
     }
 
