@@ -25,9 +25,9 @@ import jpos.loader.JposServiceInstance;
 import jpos.loader.JposServiceInstanceFactory;
 
 /**
- * Factory class for SampleMICR sample implementation
+ * Factory class for Device sample implementation
  */
-public class SampleMICRFactory extends Factory implements JposServiceInstanceFactory {
+public class MICRFactory extends Factory implements JposServiceInstanceFactory {
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
@@ -37,14 +37,14 @@ public class SampleMICRFactory extends Factory implements JposServiceInstanceFac
             synchronized(Devices) {
                 if (deviceClass.equals("MICR")) {
                     JposDevice any = getDevice(port);
-                    SampleMICR dev;
+                    Device dev;
                     boolean created = any != null;
                     if (!created) {
-                        dev = new SampleMICR(port);
-                    } else if (!(any instanceof SampleMICR))
+                        dev = new Device(port);
+                    } else if (!(any instanceof Device))
                         throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
                     else {
-                        dev = (SampleMICR) any;
+                        dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
                     JposServiceInstance obj = addDevice(0, dev);

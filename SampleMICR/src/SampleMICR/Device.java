@@ -26,9 +26,9 @@ import org.apache.log4j.Level;
 
 /**
  * Implementation of a JposDevice based implementation of a MICR driver that becomes
- * a JavaPOS MICR service in combination with the SampleMICRImpl class.
+ * a JavaPOS MICR service in combination with the MICR class.
  */
-public class SampleMICR extends JposDevice implements Runnable {
+public class Device extends JposDevice implements Runnable {
     private int OwnPort = 0;
     private int CharacterTimeout = 20;
     private int MinClaimTimeout = 200;
@@ -71,7 +71,7 @@ public class SampleMICR extends JposDevice implements Runnable {
      *
      * @param id COM port or IP target address and port
      */
-    protected SampleMICR(String id) {
+    protected Device(String id) {
         super(id);
         mICRInit(1);
         PhysicalDeviceDescription = "MICR simulator";
@@ -322,6 +322,6 @@ public class SampleMICR extends JposDevice implements Runnable {
 
     @Override
     public MICRProperties getMICRProperties(int index) {
-        return new SampleMICRImpl(this);
+        return new MICR(this);
     }
 }

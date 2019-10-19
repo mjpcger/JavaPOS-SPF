@@ -44,15 +44,15 @@ import jpos.*;
  *     <li>LF: A newline character (0Ah), used as frame terminator.</li>
  * </ul>
  */
-public class SampleMICRImpl extends MICRProperties {
-    private SampleMICR Dev;
+public class MICR extends MICRProperties {
+    private SampleMICR.Device Dev;
 
     /**
-     * The constructor. Gets the SampleMICR object that implements the device communication as parameter. The
+     * The constructor. Gets the Device object that implements the device communication as parameter. The
      * device index used by the sample device is always 0.
      * @param dev
      */
-    public SampleMICRImpl(SampleMICR dev) {
+    public MICR(SampleMICR.Device dev) {
         super(0);
         Dev = dev;
     }

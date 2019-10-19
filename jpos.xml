@@ -73,7 +73,7 @@
 	</JposEntry>
 	<!-- Test MICR Entry -->
 	<JposEntry logicalName="TestMICR">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.micr.MICRService" factoryClass="SampleMICR.SampleMICRFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.micr.MICRService" factoryClass="SampleMICR.MICRFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos version="1.14.1" category="MICR"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Sample MICR" description="Sample Service For MICR Simulator"/>
