@@ -24,11 +24,10 @@ import jpos.config.JposEntry;
 import jpos.loader.JposServiceInstance;
 import jpos.loader.JposServiceInstanceFactory;
 
-import java.util.*;
 /**
- * Factory class for SampleCoinDispenser sample implementation
+ * Factory class for Device sample implementation
  */
-public class SampleCoinDispenserFactory extends Factory implements JposServiceInstanceFactory {
+public class CoinDispenserFactory extends Factory implements JposServiceInstanceFactory {
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
@@ -38,14 +37,14 @@ public class SampleCoinDispenserFactory extends Factory implements JposServiceIn
             synchronized(Devices) {
                 if (deviceClass.equals("CoinDispenser")) {
                     JposDevice any = getDevice(port);
-                    SampleCoinDispenser dev;
+                    Device dev;
                     boolean created = any != null;
                     if (!created) {
-                        dev = new SampleCoinDispenser(port);
-                    } else if (!(any instanceof SampleCoinDispenser))
+                        dev = new Device(port);
+                    } else if (!(any instanceof Device))
                         throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
                     else {
-                        dev = (SampleCoinDispenser) any;
+                        dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
                     JposServiceInstance srv = addDevice(0, dev);

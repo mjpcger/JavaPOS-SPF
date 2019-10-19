@@ -31,15 +31,15 @@ import javax.swing.*;
  * counts for coins with the same value will be added. Inside dispense operation, the service prioritises the slots,
  * givin the slot with the higher count a higher priority.
  */
-class SampleCoinDispenserDispenser extends CoinDispenserProperties {
-    private SampleCoinDispenser Dev;
+class CoinDispenser extends CoinDispenserProperties {
+    private Device Dev;
 
     /**
-     * Constructor. Gets instance of SampleCoinDispenser to be used as communication object. Device index for sample is
+     * Constructor. Gets instance of Device to be used as communication object. Device index for sample is
      * always 0.
-     * @param dev   Instance of SampleCoinDispenser this object belongs to.
+     * @param dev   Instance of Device this object belongs to.
      */
-    SampleCoinDispenserDispenser(SampleCoinDispenser dev) {
+    CoinDispenser(Device dev) {
         super(0);
         Dev = dev;
     }

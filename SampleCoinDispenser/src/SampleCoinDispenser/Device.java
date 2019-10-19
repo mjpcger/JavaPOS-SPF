@@ -24,12 +24,6 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.coindispenser.*;
 import org.apache.log4j.Level;;
 
-import javax.swing.*;
-import java.awt.*;
-import java.util.Arrays;
-
-import static de.gmxhome.conrad.jpos.jpos_base.UniqueIOProcessor.IOProcessorError;
-
 /**
  * Implementation of a JposDevice based implementation of a coin dispenser driver that becomes
  * a JavaPOS CoinDispenser service in combination with the CoinDispenserService class.<br>
@@ -56,7 +50,7 @@ import static de.gmxhome.conrad.jpos.jpos_base.UniqueIOProcessor.IOProcessorErro
  *     </li>
  * </ul>
  */
-public class SampleCoinDispenser extends JposDevice implements Runnable{
+public class Device extends JposDevice implements Runnable{
     /**
      * Server port of sample CoinDispenser.
      */
@@ -237,7 +231,7 @@ public class SampleCoinDispenser extends JposDevice implements Runnable{
      * @param port COM port
      * @throws JposException If COM port is invalid
      */
-    public SampleCoinDispenser(String port) throws JposException {
+    public Device(String port) throws JposException {
         super(port);
         coinDispenserInit(1);
         PhysicalDeviceDescription = "Coin Dispenser Simulator for TCP";
@@ -411,7 +405,7 @@ public class SampleCoinDispenser extends JposDevice implements Runnable{
 
     @Override
     public CoinDispenserProperties getCoinDispenserProperties(int index) {
-        return new SampleCoinDispenserDispenser(this);
+        return new CoinDispenser(this);
     }
 
     /**
