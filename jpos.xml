@@ -3,7 +3,7 @@
 <JposEntries>
 	<!-- Test FiscalPrinter Entry, implements FiscalPrinter, ElectronicJournal, LineDisplay and CashDrawer -->
 	<JposEntry logicalName="TestFiscalDrawer">
-		<creation factoryClass="SampleFiscalPrinter.SampleFiscalPrinterCDFactory" serviceClass="de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerService"/>
+		<creation factoryClass="SampleFiscalPrinter.CashDrawerFactory" serviceClass="de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerService"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos category="CashDrawer" version="1.14.1"/>
 		<product description="JASPAR based service implementation for CashDrawer of sample fiscal printer" name="JPOS Services For CashDrawer of sample fiscal printer" />
@@ -20,7 +20,7 @@
 		<prop name="DevIndex" value="0"/>
 	</JposEntry>
 	<JposEntry logicalName="TestFiscalDisplay">
-		<creation factoryClass="SampleFiscalPrinter.SampleFiscalPrinterLDFactory" serviceClass="de.gmxhome.conrad.jpos.jpos_base.linedisplay.LineDisplayService"/>
+		<creation factoryClass="SampleFiscalPrinter.LineDisplayFactory" serviceClass="de.gmxhome.conrad.jpos.jpos_base.linedisplay.LineDisplayService"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos category="LineDisplay" version="1.14.1"/>
 		<product description="JASPAR based service implementation for LineDisplay of sample fiscal printer" name="JPOS Services For LineDisplay of sample fiscal printer" />
@@ -37,7 +37,7 @@
 		<prop name="DevIndex" value="0"/>
 	</JposEntry>
 	<JposEntry logicalName="TestFiscalPrinter">
-		<creation factoryClass="SampleFiscalPrinter.SampleFiscalPrinterFactory" serviceClass="de.gmxhome.conrad.jpos.jpos_base.fiscalprinter.FiscalPrinterService"/>
+		<creation factoryClass="SampleFiscalPrinter.FiscalPrinterFactory" serviceClass="de.gmxhome.conrad.jpos.jpos_base.fiscalprinter.FiscalPrinterService"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos category="FiscalPrinter" version="1.14.1"/>
 		<product description="JASPAR based service implementation for FiscalPrinter of sample fiscal printer" name="JPOS Services For FiscalPrinter of sample fiscal printer" />
@@ -55,7 +55,7 @@
 		<prop name="NonFiscalReceiptWithTrailer" value="0"/>
 	</JposEntry>
 	<JposEntry logicalName="TestFiscalJournal">
-		<creation factoryClass="SampleFiscalPrinter.SampleFiscalPrinterEJFactory" serviceClass="de.gmxhome.conrad.jpos.jpos_base.electronicjournal.ElectronicJournalService"/>
+		<creation factoryClass="SampleFiscalPrinter.ElectronicJournalFactory" serviceClass="de.gmxhome.conrad.jpos.jpos_base.electronicjournal.ElectronicJournalService"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos category="ElectronicJournal" version="1.14.1"/>
 		<product description="JASPAR based service implementation for ElectronicJournal of sample fiscal printer" name="JPOS Services For ElectronicJournal of sample fiscal printer" />

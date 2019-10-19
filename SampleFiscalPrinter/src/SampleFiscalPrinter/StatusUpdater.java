@@ -19,7 +19,7 @@ package SampleFiscalPrinter;
 /**
  * Interface for status updating forced by driver implementation.
  */
-interface SampleFiscalPrinterStatusUpdater {
+interface StatusUpdater {
     /**
      * Update status properties to match the current device state.
      * @param fromDeviceEnabled true if called from somewhere in DeviceEnabled, false otherwise.

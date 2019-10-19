@@ -22,15 +22,15 @@ import jpos.JposConst;
 import jpos.JposException;
 import jpos.LineDisplayConst;
 
-import static SampleFiscalPrinter.SampleFiscalPrinter.*;
+import static SampleFiscalPrinter.Device.*;
 
 import javax.swing.*;
 
 /**
  * Class implementing the LineDisplayInterface for the sample fiscal printer.
  */
-class SampleFiscalPrinterDisplay extends LineDisplayProperties implements SampleFiscalPrinterStatusUpdater {
-    private SampleFiscalPrinter Dev;
+class LineDisplay extends LineDisplayProperties implements StatusUpdater {
+    private SampleFiscalPrinter.Device Dev;
 
     private char Lines[][];
 
@@ -53,11 +53,11 @@ class SampleFiscalPrinterDisplay extends LineDisplayProperties implements Sample
     }
 
     /**
-     * Constructor. Gets instance of SampleFiscalPrinter to be used as communication object. Device index for
+     * Constructor. Gets instance of Device to be used as communication object. Device index for
      * sample is always 0.
-     * @param dev Instance of SampleFiscalPrinter this object belongs to.
+     * @param dev Instance of Device this object belongs to.
      */
-    SampleFiscalPrinterDisplay(SampleFiscalPrinter dev) {
+    LineDisplay(SampleFiscalPrinter.Device dev) {
         super(0);
         Dev = dev;
     }

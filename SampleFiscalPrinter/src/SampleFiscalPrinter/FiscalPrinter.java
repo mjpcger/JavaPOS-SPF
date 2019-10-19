@@ -28,20 +28,20 @@ import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static SampleFiscalPrinter.SampleFiscalPrinter.*;
+import static SampleFiscalPrinter.Device.*;
 
 /**
  * Class implementing the JposFiscalPrinterInterface for the sample fiscal printer.
  */
-class SampleFiscalPrinterPrinter extends FiscalPrinterProperties implements SampleFiscalPrinterStatusUpdater {
-    private SampleFiscalPrinter Dev;
+class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
+    private SampleFiscalPrinter.Device Dev;
 
     /**
-     * Constructor. Gets instance of SampleFiscalPrinter to be used as communication object. Device
+     * Constructor. Gets instance of Device to be used as communication object. Device
      * index for sample is always 0.
-     * @param dev Instance of SampleFiscalPrinter this object belongs to.
+     * @param dev Instance of Device this object belongs to.
      */
-    SampleFiscalPrinterPrinter(SampleFiscalPrinter dev) {
+    FiscalPrinter(SampleFiscalPrinter.Device dev) {
         super(0);
         Dev = dev;
     }

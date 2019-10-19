@@ -31,7 +31,7 @@ import static de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties.ExclusiveAll
 
 /**
  * Implementation of CashDrawer, FiscalPrinter, LineDisplay and ElectronicJournal based on the sample implemented in
- * SampleFiscalPrinter.tcl.
+ * Device.tcl.
  * Supported features are:
  * <br>FiscalPrinter:
  * <ul>
@@ -66,8 +66,8 @@ import static de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties.ExclusiveAll
  *     <li>Drawer status reporting.</li>
  * </ul>
  */
-public class SampleFiscalPrinter extends JposDevice implements Runnable {
-    protected SampleFiscalPrinter(String id) {
+public class Device extends JposDevice implements Runnable {
+    protected Device(String id) {
         super(id);
         fiscalPrinterInit(1);
         lineDisplayInit(1);
@@ -939,7 +939,7 @@ public class SampleFiscalPrinter extends JposDevice implements Runnable {
     private void handlePrinterState() {
         JposCommonProperties props = getClaimingInstance(ClaimedFiscalPrinter, 0);
         if (props != null && props.DeviceEnabled) {
-            ((SampleFiscalPrinterStatusUpdater)props).updateState(false);
+            ((StatusUpdater)props).updateState(false);
         }
     }
 
@@ -1098,7 +1098,7 @@ public class SampleFiscalPrinter extends JposDevice implements Runnable {
      */
     void updateStates(JposCommonProperties dev, boolean enable) {
         if (enable) {
-            ((SampleFiscalPrinterStatusUpdater) dev).updateState(true);
+            ((StatusUpdater) dev).updateState(true);
         }
     }
 
@@ -1207,21 +1207,21 @@ public class SampleFiscalPrinter extends JposDevice implements Runnable {
 
     @Override
     public CashDrawerProperties getCashDrawerProperties(int index) {
-        return new SampleFiscalPrinterDrawer(this);
+        return new CashDrawer(this);
     }
 
     @Override
     public LineDisplayProperties getLineDisplayProperties(int index) {
-        return new SampleFiscalPrinterDisplay(this);
+        return new LineDisplay(this);
     }
 
     @Override
     public FiscalPrinterProperties getFiscalPrinterProperties(int index) {
-        return new SampleFiscalPrinterPrinter(this);
+        return new FiscalPrinter(this);
     }
 
     @Override
     public ElectronicJournalProperties getElectronicJournalProperties(int index) {
-        return new SampleFiscalPrinterJournal(this);
+        return new ElectronicJournal(this);
     }
 }

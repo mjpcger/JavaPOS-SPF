@@ -25,20 +25,20 @@ import jpos.JposException;
 import javax.swing.*;
 import java.awt.*;
 
-import static SampleFiscalPrinter.SampleFiscalPrinter.*;
+import static SampleFiscalPrinter.Device.*;
 
 /**
  * Class implementing the CashDrawerInterface for the sample fiscal printer.
  */
-class SampleFiscalPrinterDrawer extends CashDrawerProperties implements SampleFiscalPrinterStatusUpdater {
-    private SampleFiscalPrinter Dev;
+class CashDrawer extends CashDrawerProperties implements StatusUpdater {
+    private SampleFiscalPrinter.Device Dev;
 
     /**
-     * Constructor. Gets instance of SampleFiscalPrinter to be used as communication object. Device index
+     * Constructor. Gets instance of Device to be used as communication object. Device index
      * for sample is always 0.
-     * @param dev Instance of SampleFiscalPrinter this object belongs to.
+     * @param dev Instance of Device this object belongs to.
      */
-    SampleFiscalPrinterDrawer(SampleFiscalPrinter dev) {
+    CashDrawer(SampleFiscalPrinter.Device dev) {
         super(0);
         Dev = dev;
     }

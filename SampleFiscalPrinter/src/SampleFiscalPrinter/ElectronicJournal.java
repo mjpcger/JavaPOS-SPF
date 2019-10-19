@@ -29,20 +29,20 @@ import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static SampleFiscalPrinter.SampleFiscalPrinter.*;
+import static SampleFiscalPrinter.Device.*;
 
 /**
  * Class implementing the ElectronicJournalInterface for the sample fiscal printer.
  */
-class SampleFiscalPrinterJournal extends ElectronicJournalProperties implements SampleFiscalPrinterStatusUpdater {
-    private SampleFiscalPrinter Dev;
+class ElectronicJournal extends ElectronicJournalProperties implements StatusUpdater {
+    private SampleFiscalPrinter.Device Dev;
 
     /**
-     * Constructor. Gets instance of SampleFiscalPrinter to be used as communication object. Device index
+     * Constructor. Gets instance of Device to be used as communication object. Device index
      * for sample is always 0.
-     * @param dev Instance of SampleFiscalPrinter this object belongs to.
+     * @param dev Instance of Device this object belongs to.
      */
-    SampleFiscalPrinterJournal(SampleFiscalPrinter dev) {
+    ElectronicJournal(SampleFiscalPrinter.Device dev) {
         super(0);
         Dev = dev;
     }
