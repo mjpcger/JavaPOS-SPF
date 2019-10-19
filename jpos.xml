@@ -281,7 +281,7 @@
 	</JposEntry>
 	<!-- Test Combi Device Entries. Values referencing the port must match -->
 	<JposEntry logicalName="TestDrawer">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerService" factoryClass="SampleCombiDevice.DrawerFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerService" factoryClass="SampleCombiDevice.CashDrawerFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos version="1.14.1" category="CashDrawer"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Standard Drawer" description="Sample Service For Drawer of Combined Device Simulator"/>
@@ -336,7 +336,7 @@
 		<prop name="OwnPort" value="54321"/>		<!-- Any free local tcp port -->
 	</JposEntry>
 	<JposEntry logicalName="TestDisplay">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.linedisplay.LineDisplayService" factoryClass="SampleCombiDevice.DisplayFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.linedisplay.LineDisplayService" factoryClass="SampleCombiDevice.LineDisplayFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="M. Conrad"/>
 		<jpos version="1.14.1" category="LineDisplay"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample Display Service For Combined Device Simulator"/>
@@ -372,7 +372,7 @@
 		<prop name="OwnPort" value="54321"/>		<!-- Any free local tcp port -->
 	</JposEntry>
 	<JposEntry logicalName="TestKeyboard">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.poskeyboard.POSKeyboardService" factoryClass="SampleCombiDevice.KeyboardFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.poskeyboard.POSKeyboardService" factoryClass="SampleCombiDevice.POSKeyboardFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="M. Conrad"/>
 		<jpos version="1.14.1" category="POSKeyboard"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample Keyboard Service For Combined Device Simulator"/>

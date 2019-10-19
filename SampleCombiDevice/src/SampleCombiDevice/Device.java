@@ -40,7 +40,7 @@ import static de.gmxhome.conrad.jpos.jpos_base.UniqueIOProcessor.IOProcessorErro
  * Implementation of a JposDevice based implementation of a combined driver that becomes
  * several JavaPOS device service in combination with the JposXxxx class in jpos_base
  */
-public class Driver extends JposDevice implements Runnable{
+public class Device extends JposDevice implements Runnable{
     private UniqueIOProcessor OutStream;
     private Thread StateWatcher;
     private SyncObject WaitObj;
@@ -143,7 +143,7 @@ public class Driver extends JposDevice implements Runnable{
          * Constructor for internal use within communication handler (without symchronization)
          */
         CommandHelper() {
-            Command = Driver.CmdStatusRequest;
+            Command = Device.CmdStatusRequest;
             Response = 0;
             Signalizer = null;
         }
@@ -171,7 +171,7 @@ public class Driver extends JposDevice implements Runnable{
      * @param port COM port or TCP target.
      * @throws JposException if Communication target invalid.
      */
-    public Driver(String port) throws JposException {
+    public Device(String port) throws JposException {
         super(port);
         lineDisplayInit(1);
         cashDrawerInit(1);
@@ -182,7 +182,7 @@ public class Driver extends JposDevice implements Runnable{
         toneIndicatorInit(1);
         ProcessProperties();
         PhysicalDeviceDescription = "Combined device simulator for virtual COM ports";
-        PhysicalDeviceName = "Combined Driver Simulator";
+        PhysicalDeviceName = "Combined Device Simulator";
         CapPowerReporting = JposConst.JPOS_PR_ADVANCED;
         WaitObj = new SyncObject();
         // Set property defaults, can be overwritten in every jpos.xml entry
@@ -976,7 +976,7 @@ public class Driver extends JposDevice implements Runnable{
      */
     protected Byte sendCommand(JposCommonProperties dev, byte[] request, byte responseType) throws JposException {
         if (InIOError || DeviceIsOffline) {
-            throw  new JposException(JposConst.JPOS_E_ILLEGAL, "Driver not available");
+            throw  new JposException(JposConst.JPOS_E_ILLEGAL, "Device not available");
         }
         CommandHelper helper = new CommandHelper(request, responseType);
         enterCommand(helper);

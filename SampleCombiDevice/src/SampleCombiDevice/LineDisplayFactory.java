@@ -17,7 +17,7 @@
 package SampleCombiDevice;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.*;
+import de.gmxhome.conrad.jpos.jpos_base.linedisplay.*;
 import jpos.JposConst;
 import jpos.JposException;
 import jpos.config.JposEntry;
@@ -25,9 +25,9 @@ import jpos.loader.JposServiceInstance;
 import jpos.loader.JposServiceInstanceFactory;
 
 /**
- * Factory class for combined device sample drawer implementation
+ * Factory class for combined device sample display implementation
  */
-public class DrawerFactory extends Factory implements JposServiceInstanceFactory {
+public class LineDisplayFactory extends Factory implements JposServiceInstanceFactory {
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
@@ -35,23 +35,23 @@ public class DrawerFactory extends Factory implements JposServiceInstanceFactory
             String port = jposEntry.getPropertyValue("ComPort").toString();
 
             synchronized(Devices) {
-                if (deviceClass.equals("CashDrawer")) {
+                if (deviceClass.equals("LineDisplay")) {
                     JposDevice any = getDevice(port);
-                    Driver dev;
+                    Device dev;
                     boolean create = any == null;
                     if (create) {
-                        dev = new Driver(port);
-                    } else if (!(any instanceof Driver))
+                        dev = new Device(port);
+                    } else if (!(any instanceof Device))
                         throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
                     else {
-                        dev = (Driver) any;
+                        dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
-                    JposServiceInstance drw = addDevice(0, dev);
+                    JposServiceInstance disp = addDevice(0, dev);
                     if (create) {
                         putDevice(port, dev);
                     }
-                    return drw;
+                    return disp;
                 }
             }
             throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);

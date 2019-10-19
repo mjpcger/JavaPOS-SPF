@@ -37,14 +37,14 @@ public class ScannerFactory extends Factory implements JposServiceInstanceFactor
             synchronized(Devices) {
                 if (deviceClass.equals("Scanner")) {
                     JposDevice any = getDevice(port);
-                    Driver dev;
+                    Device dev;
                     boolean create = any == null;
                     if (create) {
-                        dev = new Driver(port);
-                    } else if (!(any instanceof Driver))
+                        dev = new Device(port);
+                    } else if (!(any instanceof Device))
                         throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
                     else {
-                        dev = (Driver) any;
+                        dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
                     JposServiceInstance scanner = addDevice(0, dev);

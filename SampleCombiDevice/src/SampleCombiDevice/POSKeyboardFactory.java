@@ -27,7 +27,7 @@ import jpos.loader.JposServiceInstanceFactory;
 /**
  * Factory class for combined device sample keyboard implementation
  */
-public class KeyboardFactory extends Factory implements JposServiceInstanceFactory{
+public class POSKeyboardFactory extends Factory implements JposServiceInstanceFactory{
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
@@ -37,14 +37,14 @@ public class KeyboardFactory extends Factory implements JposServiceInstanceFacto
             synchronized(Devices) {
                 if (deviceClass.equals("POSKeyboard")) {
                     JposDevice any = getDevice(port);
-                    Driver dev;
+                    Device dev;
                     boolean create = any == null;
                     if (create) {
-                        dev = new Driver(port);
-                    } else if (!(any instanceof Driver))
+                        dev = new Device(port);
+                    } else if (!(any instanceof Device))
                         throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
                     else {
-                        dev = (Driver) any;
+                        dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
                     JposServiceInstance kbd = addDevice(0, dev);

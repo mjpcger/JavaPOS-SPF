@@ -38,14 +38,14 @@ public class KeylockFactory extends Factory implements JposServiceInstanceFactor
             synchronized(Devices) {
                 if (deviceClass.equals("Keylock")) {
                     JposDevice any = getDevice(port);
-                    Driver dev;
+                    Device dev;
                     boolean create = any == null;
                     if (create) {
-                        dev = new Driver(port);
-                    } else if (!(any instanceof Driver))
+                        dev = new Device(port);
+                    } else if (!(any instanceof Device))
                         throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
                     else {
-                        dev = (Driver) any;
+                        dev = (Device) any;
                     }
                     dev.checkRange(index, 0, dev.Keylocks.length - 1, JposConst.JPOS_E_ILLEGAL, "Keylock index out of range");
                     dev.checkProperties(jposEntry);
