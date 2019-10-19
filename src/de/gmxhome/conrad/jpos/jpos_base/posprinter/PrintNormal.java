@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Output request executor for POSPrinter method PrintNormal.
  */
-public class PrintNormal extends OutputRequest {
+public class PrintNormal extends OutputPrintRequest {
     /**
      * POSPrinter method PrintNormal parameter station, see UPOS specification.
      * @return PrintNormal parameter <i>station</i>.

@@ -1343,6 +1343,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService114 
         checkStationPresent(station);
         extendedErrorCheck(station);
         PrintImmediate request = POSPrinterInterface.printImmediate(station, data == null ? "" : data);
+        OutputPrintRequest.setSynchronousPrinting(request);
         request.enqueueSynchronous();
         if (request.Exception != null)
             throw request.Exception;
@@ -3205,6 +3206,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService114 
     }
 
     private void doIt(OutputRequest request, String what) throws JposException {
+        OutputPrintRequest.setSynchronousPrinting(request);
         if (callNowOrLater(request))
             logAsyncCall(what);
         else
@@ -3241,9 +3243,12 @@ public class POSPrinterService extends JposBase implements POSPrinterService114 
             TransactionCommand[stationIndex].addMethod(request);
         else if (PagemodeCommand[stationIndex] != null)
             PagemodeCommand[stationIndex].addMethod(request);
-        else  if (!callNowOrLater(request)) {
-            logCall(what);
-            return;
+        else {
+            OutputPrintRequest.setSynchronousPrinting(request);
+            if (!callNowOrLater(request)) {
+                logCall(what);
+                return;
+            }
         }
         logAsyncCall(what);
     }
