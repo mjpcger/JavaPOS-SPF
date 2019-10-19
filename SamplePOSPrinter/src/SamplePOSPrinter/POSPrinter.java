@@ -29,8 +29,8 @@ import java.util.*;
 /**
  * Class implementing the POSPrinterInterface for the sample pos printer.
  */
-public class Printer extends POSPrinterProperties {
-    private Driver Dev;
+public class POSPrinter extends POSPrinterProperties {
+    private SamplePOSPrinter.Device Dev;
     private static final int LineCharsListVals[] = {42, 56};
     private static final byte[] CodePages = { '6', '0', '6', '0', '1', '2', '3', '4', '5' };    // Default encoding of Java is UFT-8
     private static final byte[] Fonts = { 'A', 'B' };
@@ -51,11 +51,11 @@ public class Printer extends POSPrinterProperties {
     private final int[][] FactorMatrix;
 
     /**
-     * Constructor. Gets instance of Driver to be used as communication object. Device index for
+     * Constructor. Gets instance of Device to be used as communication object. Device index for
      * sample is always 0.
-     * @param dev Instance of Driver this object belongs to.
+     * @param dev Instance of Device this object belongs to.
      */
-    public Printer(Driver dev) {
+    public POSPrinter(SamplePOSPrinter.Device dev) {
         super(0);
         Dev = dev;
         FactorMatrix = new int[][]{
@@ -341,8 +341,8 @@ public class Printer extends POSPrinterProperties {
 
     private void checkInError() throws JposException {
         Dev.check(Dev.InIOError, JposConst.JPOS_E_FAILURE, "No connection to device");
-        Dev.check(Dev.PrinterError, JposConst.JPOS_E_FAILURE, "Printer not operational");
-        Dev.checkext(CoverOpen, POSPrinterConst.JPOS_EPTR_COVER_OPEN, "Printer cover open");
+        Dev.check(Dev.PrinterError, JposConst.JPOS_E_FAILURE, "POSPrinter not operational");
+        Dev.checkext(CoverOpen, POSPrinterConst.JPOS_EPTR_COVER_OPEN, "POSPrinter cover open");
         Dev.checkext(Dev.PaperState == Dev.PaperEnd, POSPrinterConst.JPOS_EPTR_REC_EMPTY, "Paper end");
     }
 

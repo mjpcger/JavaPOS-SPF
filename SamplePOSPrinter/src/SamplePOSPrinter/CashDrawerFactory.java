@@ -27,7 +27,7 @@ import jpos.loader.JposServiceInstanceFactory;
 /**
  * Factory class for sample printer device CashDrawer implementation
  */
-public class DrawerFactory extends Factory implements JposServiceInstanceFactory {
+public class CashDrawerFactory extends Factory implements JposServiceInstanceFactory {
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
@@ -37,14 +37,14 @@ public class DrawerFactory extends Factory implements JposServiceInstanceFactory
             synchronized(Devices) {
                 if (deviceClass.equals("CashDrawer")) {
                     JposDevice any = getDevice(port);
-                    Driver dev;
+                    Device dev;
                     boolean create = any == null;
                     if (create) {
-                        dev = new Driver(port);
-                    } else if (!(any instanceof Driver))
+                        dev = new Device(port);
+                    } else if (!(any instanceof Device))
                         throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
                     else {
-                        dev = (Driver) any;
+                        dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
                     JposServiceInstance drw = addDevice(0, dev);

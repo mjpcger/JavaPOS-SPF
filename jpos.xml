@@ -228,7 +228,7 @@
 	</JposEntry>
 	<!-- Test Sample Printer with drawer Entries -->
 	<JposEntry logicalName="TestPrinterDrawer">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerService" factoryClass="SamplePOSPrinter.DrawerFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerService" factoryClass="SamplePOSPrinter.CashDrawerFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos version="1.14.1" category="CashDrawer"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Drawer of Sample POSPrinter" description="Sample Drawer Service For Printer Simulator"/>
@@ -245,7 +245,7 @@
 		<prop name="Port" value="127.0.0.1:65432"/>
 	</JposEntry>
 	<JposEntry logicalName="TestPrinter">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.posprinter.POSPrinterService" factoryClass="SamplePOSPrinter.PrinterFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.posprinter.POSPrinterService" factoryClass="SamplePOSPrinter.POSPrinterFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos version="1.14.1" category="POSPrinter"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Sample POSPrinter" description="Sample POSPrinter Service For Printer Simulator"/>

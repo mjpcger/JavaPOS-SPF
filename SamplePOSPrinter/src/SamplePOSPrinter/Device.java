@@ -32,7 +32,7 @@ import java.util.*;
  * JavaPOS CashDrawer and POSPrinter device services in combination with the CashDrawerServer
  * and POSPrinterServer classes.
  */
-public class Driver extends JposDevice{
+public class Device extends JposDevice{
     private UniqueIOProcessor OutStream;
     private boolean ToBeFinished;
     private static final String CharSetList = "997,998,999,1250,1251,1252,1253,1254,1257";
@@ -196,13 +196,13 @@ public class Driver extends JposDevice{
      * @param port COM port or TCP target.
      * @throws JposException if Communication target invalid.
      */
-    public Driver(String port) throws JposException {
+    public Device(String port) throws JposException {
         super(port);
         pOSPrinterInit(1);
         cashDrawerInit(1);
         setCapPowerReportingDef();
         PhysicalDeviceDescription = "Sample printer simulator for virtual COM ports or TCP";
-        PhysicalDeviceName = "Sample Printer Simulator";
+        PhysicalDeviceName = "Sample POSPrinter Simulator";
         OpenCount[0] = 0;
     }
 
@@ -312,7 +312,7 @@ public class Driver extends JposDevice{
 
     @Override
     public void changeDefaults(CashDrawerProperties props) {
-        props.DeviceServiceDescription = "Drawer service for combined device simulator";
+        props.DeviceServiceDescription = "CashDrawer service for combined device simulator";
         props.DeviceServiceVersion = 1014001;
     }
 
@@ -684,11 +684,11 @@ public class Driver extends JposDevice{
 
     @Override
     public POSPrinterProperties getPOSPrinterProperties(int index) {
-        return new Printer(this);
+        return new POSPrinter(this);
     }
 
     @Override
     public CashDrawerProperties getCashDrawerProperties(int index) {
-        return new Drawer(this);
+        return new CashDrawer(this);
     }
 }

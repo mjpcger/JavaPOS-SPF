@@ -27,15 +27,15 @@ import java.awt.*;
 /**
  * Class implementing the CashDrawerInterface for the sample pos printer.
  */
-class Drawer extends CashDrawerProperties {
-    private Driver Dev;
+class CashDrawer extends CashDrawerProperties {
+    private SamplePOSPrinter.Device Dev;
 
     /**
-     * Constructor. Gets instance of Driver to be used as communication object. Device index for
+     * Constructor. Gets instance of Device to be used as communication object. Device index for
      * sample is always 0.
-     * @param dev Instance of Driver this object belongs to.
+     * @param dev Instance of Device this object belongs to.
      */
-    Drawer(Driver dev) {
+    CashDrawer(SamplePOSPrinter.Device dev) {
         super(0);
         Dev = dev;
     }
@@ -107,7 +107,7 @@ class Drawer extends CashDrawerProperties {
     @Override
     public void openDrawer() throws JposException {
         if (!Dev.Online)
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Drawer not accessible");
+            throw new JposException(JposConst.JPOS_E_ILLEGAL, "CashDrawer not accessible");
         Dev.sendCommand(Dev.CmdDrawerOpen);
         Dev.PollWaiter.signal();
         Dev.waitStatusChange(true, Dev.RequestTimeout);

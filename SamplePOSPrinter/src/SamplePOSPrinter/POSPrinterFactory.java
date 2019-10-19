@@ -27,7 +27,7 @@ import jpos.loader.JposServiceInstanceFactory;
 /**
  * Factory class for sample printer device POSPrinter implementation
  */
-public class PrinterFactory extends Factory implements JposServiceInstanceFactory {
+public class POSPrinterFactory extends Factory implements JposServiceInstanceFactory {
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
@@ -37,14 +37,14 @@ public class PrinterFactory extends Factory implements JposServiceInstanceFactor
             synchronized(Devices) {
                 if (deviceClass.equals("POSPrinter")) {
                     JposDevice any = getDevice(port);
-                    Driver dev;
+                    Device dev;
                     boolean create = any == null;
                     if (create) {
-                        dev = new Driver(port);
-                    } else if (!(any instanceof Driver))
+                        dev = new Device(port);
+                    } else if (!(any instanceof Device))
                         throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
                     else {
-                        dev = (Driver) any;
+                        dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
                     JposServiceInstance srv = addDevice(0, dev);
