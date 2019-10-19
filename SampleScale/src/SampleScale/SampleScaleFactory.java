@@ -32,28 +32,27 @@ public class SampleScaleFactory extends Factory implements JposServiceInstanceFa
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
-            int index = Integer.parseInt(jposEntry.getPropertyValue("DevIndex").toString());
             String deviceClass = jposEntry.getPropertyValue("deviceCategory").toString();
             String port = jposEntry.getPropertyValue("Target").toString();
 
-            if (deviceClass.equals("Scale")) {
-                JposDevice any = getDevice(port);
-                SampleScale dev;
-                boolean created = any != null;
-                if (!created) {
-                    dev = new SampleScale(port);
+            synchronized(Devices) {
+                if (deviceClass.equals("Scale")) {
+                    JposDevice any = getDevice(port);
+                    SampleScale dev;
+                    boolean created = any != null;
+                    if (!created) {
+                        dev = new SampleScale(port);
+                    } else if (!(any instanceof SampleScale))
+                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
+                    else {
+                        dev = (SampleScale) any;
+                    }
+                    dev.checkProperties(jposEntry);
+                    JposServiceInstance srv = addDevice(0, dev);
+                    if (!created)
+                        putDevice(port, dev);
+                    return srv;
                 }
-                else if (!(any instanceof SampleScale))
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
-                else {
-                    dev = (SampleScale) any;
-                }
-                dev.checkRange(index, 0, dev.Scales.length - 1, JposConst.JPOS_E_ILLEGAL, "Scales index out of range");
-                dev.checkProperties(jposEntry);
-                JposServiceInstance srv = addDevice(index, dev);
-                if (!created)
-                    putDevice(port, dev);
-                return srv;
             }
             throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {

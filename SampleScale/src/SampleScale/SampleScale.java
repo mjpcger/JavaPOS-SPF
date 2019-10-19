@@ -272,15 +272,16 @@ public class SampleScale extends JposDevice implements Runnable {
 
     @Override
     public ScaleProperties getScaleProperties(int index) {
-        return new SampleScaleAccessor(index);
+        return new SampleScaleAccessor();
     }
 
     /**
-     * The sample scale accessor implementation class.
+     * The sample scale interface implementation class. Implementation as inner class only recommended for small
+     * classes. However, using inner classes makes things sometimes easier.
      */
     public class SampleScaleAccessor extends ScaleProperties {
-        SampleScaleAccessor(int index) {
-            super(index);
+        SampleScaleAccessor() {
+            super(0);
         }
 
         @Override

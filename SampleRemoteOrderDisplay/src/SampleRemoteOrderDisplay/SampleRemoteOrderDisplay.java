@@ -369,7 +369,7 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
 
     @Override
     public RemoteOrderDisplayProperties getRemoteOrderDisplayProperties(int index) {
-        return new SampleRODisplayAccessor(index);
+        return new SampleRODisplayAccessor();
     }
 
     @Override
@@ -408,12 +408,10 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
      */
     class SampleRODisplayAccessor extends RemoteOrderDisplayProperties {
         /**
-         * Constructor.
-         *
-         * @param index Property set used by this accessor.
+         * Constructor. Uses device index 0 implicitly because sample implementation supports only one base station.
          */
-        public SampleRODisplayAccessor(int index) {
-            super(index);
+        public SampleRODisplayAccessor() {
+            super(0);
         }
 
         @Override

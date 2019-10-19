@@ -31,32 +31,30 @@ public class ToneIndicatorFactory extends Factory implements JposServiceInstance
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
-            int index = Integer.parseInt(jposEntry.getPropertyValue("DevIndex").toString());
             String deviceClass = jposEntry.getPropertyValue("deviceCategory").toString();
             String port = jposEntry.getPropertyValue("ComPort").toString();
 
-            if (deviceClass.equals("ToneIndicator")) {
-                JposDevice any = getDevice(port);
-                Driver dev;
-                boolean create = any == null;
-                if (create) {
-                    dev = new Driver(port);
+            synchronized(Devices) {
+                if (deviceClass.equals("ToneIndicator")) {
+                    JposDevice any = getDevice(port);
+                    Driver dev;
+                    boolean create = any == null;
+                    if (create) {
+                        dev = new Driver(port);
+                    } else if (!(any instanceof Driver))
+                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
+                    else {
+                        dev = (Driver) any;
+                    }
+                    dev.checkProperties(jposEntry);
+                    JposServiceInstance tone = addDevice(0, dev);
+                    if (create) {
+                        putDevice(port, dev);
+                    }
+                    return tone;
                 }
-                else if (!(any instanceof Driver))
-                    throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
-                else {
-                    dev = (Driver) any;
-                }
-                dev.checkRange(index, 0, dev.ToneIndicators.length - 1, JposConst.JPOS_E_ILLEGAL, "Tone indicator index out of range");
-                dev.checkProperties(jposEntry);
-                JposServiceInstance tone = addDevice(index, dev);
-                if (create) {
-                    putDevice(port, dev);
-                }
-                return tone;
             }
-            else
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {

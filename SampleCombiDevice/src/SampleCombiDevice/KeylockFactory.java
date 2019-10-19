@@ -35,28 +35,28 @@ public class KeylockFactory extends Factory implements JposServiceInstanceFactor
             String deviceClass = jposEntry.getPropertyValue("deviceCategory").toString();
             String port = jposEntry.getPropertyValue("ComPort").toString();
 
-            if (deviceClass.equals("Keylock")) {
-                JposDevice any = getDevice(port);
-                Driver dev;
-                boolean create = any == null;
-                if (create) {
-                    dev = new Driver(port);
+            synchronized(Devices) {
+                if (deviceClass.equals("Keylock")) {
+                    JposDevice any = getDevice(port);
+                    Driver dev;
+                    boolean create = any == null;
+                    if (create) {
+                        dev = new Driver(port);
+                    } else if (!(any instanceof Driver))
+                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
+                    else {
+                        dev = (Driver) any;
+                    }
+                    dev.checkRange(index, 0, dev.Keylocks.length - 1, JposConst.JPOS_E_ILLEGAL, "Keylock index out of range");
+                    dev.checkProperties(jposEntry);
+                    JposServiceInstance lock = addDevice(index, dev);
+                    if (create) {
+                        putDevice(port, dev);
+                    }
+                    return lock;
                 }
-                else if (!(any instanceof Driver))
-                    throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
-                else {
-                    dev = (Driver) any;
-                }
-                dev.checkRange(index, 0, dev.Keylocks.length - 1, JposConst.JPOS_E_ILLEGAL, "Keylock index out of range");
-                dev.checkProperties(jposEntry);
-                JposServiceInstance lock = addDevice(index, dev);
-                if (create) {
-                    putDevice(port, dev);
-                }
-                return lock;
             }
-            else
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {

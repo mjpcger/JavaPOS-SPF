@@ -31,32 +31,30 @@ public class KeyboardFactory extends Factory implements JposServiceInstanceFacto
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
-            int index = Integer.parseInt(jposEntry.getPropertyValue("DevIndex").toString());
             String deviceClass = jposEntry.getPropertyValue("deviceCategory").toString();
             String port = jposEntry.getPropertyValue("ComPort").toString();
 
-            if (deviceClass.equals("POSKeyboard")) {
-                JposDevice any = getDevice(port);
-                Driver dev;
-                boolean create = any == null;
-                if (create) {
-                    dev = new Driver(port);
+            synchronized(Devices) {
+                if (deviceClass.equals("POSKeyboard")) {
+                    JposDevice any = getDevice(port);
+                    Driver dev;
+                    boolean create = any == null;
+                    if (create) {
+                        dev = new Driver(port);
+                    } else if (!(any instanceof Driver))
+                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
+                    else {
+                        dev = (Driver) any;
+                    }
+                    dev.checkProperties(jposEntry);
+                    JposServiceInstance kbd = addDevice(0, dev);
+                    if (create) {
+                        putDevice(port, dev);
+                    }
+                    return kbd;
                 }
-                else if (!(any instanceof Driver))
-                    throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
-                else {
-                    dev = (Driver) any;
-                }
-                dev.checkRange(index, 0, dev.POSKeyboards.length - 1, JposConst.JPOS_E_ILLEGAL, "Keyboard index out of range");
-                dev.checkProperties(jposEntry);
-                JposServiceInstance kbd = addDevice(index, dev);
-                if (create) {
-                    putDevice(port, dev);
-                }
-                return kbd;
             }
-            else
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {

@@ -35,7 +35,6 @@ public class SampleCATFactory extends Factory implements JposServiceInstanceFact
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
-            int index = Integer.parseInt(jposEntry.getPropertyValue("DevIndex").toString());
             String deviceClass = jposEntry.getPropertyValue("deviceCategory").toString();
             String port = jposEntry.getPropertyValue("Port").toString();
 
@@ -51,9 +50,8 @@ public class SampleCATFactory extends Factory implements JposServiceInstanceFact
                     else {
                         dev = (SampleCAT) any;
                     }
-                    dev.checkRange(index, 0, dev.CATs.length - 1, JposConst.JPOS_E_ILLEGAL, "Credit authorization terminal index out of range");
                     dev.checkProperties(jposEntry);
-                    JposServiceInstance srv = addDevice(index, dev);
+                    JposServiceInstance srv = addDevice(0, dev);
                     if (!created)
                         putDevice(port, dev);
                     return srv;

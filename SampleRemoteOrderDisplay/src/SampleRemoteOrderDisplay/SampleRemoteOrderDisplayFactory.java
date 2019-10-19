@@ -32,28 +32,27 @@ public class SampleRemoteOrderDisplayFactory extends Factory implements JposServ
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
-            int index = Integer.parseInt(jposEntry.getPropertyValue("DevIndex").toString());
             String deviceClass = jposEntry.getPropertyValue("deviceCategory").toString();
             String port = jposEntry.getPropertyValue("Port").toString();
 
-            if (deviceClass.equals("RemoteOrderDisplay")) {
-                JposDevice any = getDevice(port);
-                SampleRemoteOrderDisplay dev;
-                boolean created = any != null;
-                if (!created) {
-                    dev = new SampleRemoteOrderDisplay(port);
+            synchronized(Devices) {
+                if (deviceClass.equals("RemoteOrderDisplay")) {
+                    JposDevice any = getDevice(port);
+                    SampleRemoteOrderDisplay dev;
+                    boolean created = any != null;
+                    if (!created) {
+                        dev = new SampleRemoteOrderDisplay(port);
+                    } else if (!(any instanceof SampleRemoteOrderDisplay))
+                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
+                    else {
+                        dev = (SampleRemoteOrderDisplay) any;
+                    }
+                    dev.checkProperties(jposEntry);
+                    JposServiceInstance srv = addDevice(0, dev);
+                    if (!created)
+                        putDevice(port, dev);
+                    return srv;
                 }
-                else if (!(any instanceof SampleRemoteOrderDisplay))
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
-                else {
-                    dev = (SampleRemoteOrderDisplay) any;
-                }
-                dev.checkRange(index, 0, dev.RemoteOrderDisplays.length - 1, JposConst.JPOS_E_ILLEGAL, "Remote order display index out of range");
-                dev.checkProperties(jposEntry);
-                JposServiceInstance srv = addDevice(index, dev);
-                if (!created)
-                    putDevice(port, dev);
-                return srv;
             }
             throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {

@@ -31,7 +31,6 @@ public class SampleFiscalPrinterLDFactory extends Factory implements JposService
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
-            int index = Integer.parseInt(jposEntry.getPropertyValue("DevIndex").toString());
             String deviceClass = jposEntry.getPropertyValue("deviceCategory").toString();
             String port = jposEntry.getPropertyValue("Port").toString();
 
@@ -47,9 +46,8 @@ public class SampleFiscalPrinterLDFactory extends Factory implements JposService
                     else {
                         dev = (SampleFiscalPrinter) any;
                     }
-                    dev.checkRange(index, 0, dev.LineDisplays.length - 1, JposConst.JPOS_E_ILLEGAL, "Line display index out of range");
                     dev.checkProperties(jposEntry);
-                    JposServiceInstance disp = addDevice(index, dev);
+                    JposServiceInstance disp = addDevice(0, dev);
                     if (!created)
                         putDevice(port, dev);
                     return disp;
