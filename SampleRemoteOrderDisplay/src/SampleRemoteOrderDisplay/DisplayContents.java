@@ -22,7 +22,7 @@ import jpos.RemoteOrderDisplayConst;
 /**
  * Class that holds display contents for all remote order display units supported by sample device
  */
-public class SampleRemoteOrderDisplayContents {
+public class DisplayContents {
     /**
      * Pseudo color value for non-present border lines.
      */

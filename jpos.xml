@@ -263,7 +263,7 @@
 	</JposEntry>
 	<!-- Test Sample Remote Order Display Entries. Values referencing the port must match -->
 	<JposEntry logicalName="TestRODisplay">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay.RemoteOrderDisplayService" factoryClass="SampleRemoteOrderDisplay.SampleRemoteOrderDisplayFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay.RemoteOrderDisplayService" factoryClass="SampleRemoteOrderDisplay.RemoteOrderDisplayFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos version="1.14.1" category="RemoteOrderDisplay"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For RemoteOrderDisplay of Sample Remote Order Display" description="Sample Remote Order Display Service For Remote Order Display Simulator"/>

@@ -23,15 +23,14 @@ import jpos.JposConst;
 import jpos.JposException;
 import jpos.RemoteOrderDisplayConst;
 import jpos.config.JposEntry;
-import jpos.services.RemoteOrderDisplayService110;
 import org.apache.log4j.Level;
 
 import java.util.Arrays;
 
-import static SampleRemoteOrderDisplay.SampleRemoteOrderDisplayContents.*;
+import static SampleRemoteOrderDisplay.DisplayContents.*;
 
 /**
- * Implementation of RemoteOrderDisplay based for the sample implemented in SampleRemoteOrderDisplay.tcl.
+ * Implementation of RemoteOrderDisplay based for the sample implemented in Device.tcl.
  * Supported features are:
  * <br>- One clock per display unit.
  * <br>- One buffer per display unit.
@@ -49,7 +48,7 @@ import static SampleRemoteOrderDisplay.SampleRemoteOrderDisplayContents.*;
  * below, on the left or right side of the character, the line color will be stored as well. This is necessary to be
  * able to implement save, restore, copy and move instructions, for normal text as well as for the clock.
  */
-public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
+public class Device extends JposDevice implements Runnable {
     /**
      * Extended error code that has not yet defined within the JavaPOS framework. The value (200) must be replaced by
      * RemoteOrderDisplayConst.JPOS_EROD_NOUNITS when this constant will be defined in future.
@@ -68,7 +67,7 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
     private final static int MAX_UNITS = 5;     // Simulator supports up to 5 displays
     private final static int MAX_LINES = 20;    // Simulator supports up to 20 lines per unit
     private final static int MAX_COLUMNS = 25;  // Simulator supports up to 25 characters per line for each unit
-    private SampleRemoteOrderDisplayContents Display = new SampleRemoteOrderDisplayContents();
+    private DisplayContents Display = new DisplayContents();
     // colors are the same as specified by UPOS, plus intensity, resulting in 16 colors, where only 8 colors are allowd
     // for background (configurable intensity).
     private int BackgroundIntensity = RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
@@ -99,7 +98,7 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
      * touch events, some might support tone output, all might support completely different dimensions.
      * @param id    Network address of the display controller.
      */
-    protected SampleRemoteOrderDisplay(String id) {
+    protected Device(String id) {
         super(id);
         remoteOrderDisplayInit(1);
         PhysicalDeviceDescription = "Coin Dispenser Simulator for TCP";
@@ -429,7 +428,7 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
             ToBeFinished = false;
             WaitInitialized = initsync;
             UnitOnline = 0;
-            (StateWatcher = new Thread(SampleRemoteOrderDisplay.this)).start();
+            (StateWatcher = new Thread(SampleRemoteOrderDisplay.Device.this)).start();
             initsync.suspend(timeout);
             if (WaitInitialized != null || InIOError) {
                 release();
@@ -454,7 +453,7 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
         @Override
         public void release() throws JposException {
             ToBeFinished = true;
-            synchronized (SampleRemoteOrderDisplay.this) {
+            synchronized (SampleRemoteOrderDisplay.Device.this) {
                 closePort(false);
             }
             while (ToBeFinished) {
@@ -630,13 +629,13 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
             int units = request.getUnits();
             for (int u = 0; u < Display.Unit.length; u++) {
                 if ((units & (1 << u)) != 0) {
-                    SampleRemoteOrderDisplayContents.CharAttributes[][] range = getRange(u, request.getRow(), request.getColumn(), request.getWidth(), request.getHeight());
+                    DisplayContents.CharAttributes[][] range = getRange(u, request.getRow(), request.getColumn(), request.getWidth(), request.getHeight());
                     updateRegion(request, u, range, request.getTargetRow(), request.getTargetColumn(), false);
                 }
             }
         }
 
-        private void updateRegion(OutputRequest request, int u, SampleRemoteOrderDisplayContents.CharAttributes[][] range, int targetRow, int targetColumn, boolean clock) throws JposException {
+        private void updateRegion(OutputRequest request, int u, DisplayContents.CharAttributes[][] range, int targetRow, int targetColumn, boolean clock) throws JposException {
             for (int l = 0; l < range.length; l++) {
                 for (int c = 0; c < range[l].length; c++) {
                     String s = "";
@@ -734,12 +733,12 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
             }
         }
 
-        private SampleRemoteOrderDisplayContents.CharAttributes[][] getRange(int unit, int row, int column, int width, int height) {
-            SampleRemoteOrderDisplayContents.CharAttributes[][] result = new SampleRemoteOrderDisplayContents.CharAttributes[height][];
+        private DisplayContents.CharAttributes[][] getRange(int unit, int row, int column, int width, int height) {
+            DisplayContents.CharAttributes[][] result = new DisplayContents.CharAttributes[height][];
             for (int l = 0; l < result.length; l++) {
-                result[l] = new SampleRemoteOrderDisplayContents.CharAttributes[width];
+                result[l] = new DisplayContents.CharAttributes[width];
                 for (int c = 0; c < result[l].length; c++) {
-                    result[l][c] = new SampleRemoteOrderDisplayContents.CharAttributes();
+                    result[l][c] = new DisplayContents.CharAttributes();
                     result[l][c].Value = Display.Unit[unit].Attribute[row + l][column + c].Value;
                     result[l][c].ForegroundColor = Display.Unit[unit].Attribute[row + l][column + c].ForegroundColor;
                     result[l][c].BackgroundColor = Display.Unit[unit].Attribute[row + l][column + c].BackgroundColor;
@@ -809,7 +808,7 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
             int units = request.getUnits();
             for (int u = 0; u < Display.Unit.length; u++) {
                 if ((units & (1 << u)) != 0) {
-                    SampleRemoteOrderDisplayContents.CharAttributes[][] range = getRange(u, request.getRow(), request.getColumn(), request.getWidth(), request.getHeight());
+                    DisplayContents.CharAttributes[][] range = getRange(u, request.getRow(), request.getColumn(), request.getWidth(), request.getHeight());
                     switch (request.getFunction()) {
                         case RemoteOrderDisplayConst.ROD_UA_SET: {
                             setAttributes(request, range);
@@ -842,11 +841,11 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
             }
         }
 
-        private void setAttributes(UpdateVideoRegionAttribute request, SampleRemoteOrderDisplayContents.CharAttributes[][] range) {
+        private void setAttributes(UpdateVideoRegionAttribute request, DisplayContents.CharAttributes[][] range) {
             int fgcolor = (request.getAttributes() & 0xf) | ((request.getAttributes() & 0x80) == 0 ? 0 : BLINKING);
             int bgcolor = ((request.getAttributes() >> 4) & 7) | BackgroundIntensity;
-            for (SampleRemoteOrderDisplayContents.CharAttributes[] line : range) {
-                for (SampleRemoteOrderDisplayContents.CharAttributes column : line) {
+            for (DisplayContents.CharAttributes[] line : range) {
+                for (DisplayContents.CharAttributes column : line) {
                     column.ForegroundColor = fgcolor;
                     column.BackgroundColor = bgcolor;
                     if (column.LeftBorderColor != NOT_PRESENT)
@@ -861,9 +860,9 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
             }
         }
 
-        private void switchIntensityOn(SampleRemoteOrderDisplayContents.CharAttributes[][] range) {
-            for (SampleRemoteOrderDisplayContents.CharAttributes[] line : range) {
-                for (SampleRemoteOrderDisplayContents.CharAttributes column : line) {
+        private void switchIntensityOn(DisplayContents.CharAttributes[][] range) {
+            for (DisplayContents.CharAttributes[] line : range) {
+                for (DisplayContents.CharAttributes column : line) {
                     column.ForegroundColor |= RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
                     if (column.LeftBorderColor != NOT_PRESENT)
                         column.LeftBorderColor |= RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
@@ -877,9 +876,9 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
             }
         }
 
-        private void switchIntensityOff(SampleRemoteOrderDisplayContents.CharAttributes[][] range) {
-            for (SampleRemoteOrderDisplayContents.CharAttributes[] line : range) {
-                for (SampleRemoteOrderDisplayContents.CharAttributes column : line) {
+        private void switchIntensityOff(DisplayContents.CharAttributes[][] range) {
+            for (DisplayContents.CharAttributes[] line : range) {
+                for (DisplayContents.CharAttributes column : line) {
                     column.ForegroundColor &= ~RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
                     if (column.LeftBorderColor != NOT_PRESENT)
                         column.LeftBorderColor &= ~RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
@@ -893,9 +892,9 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
             }
         }
 
-        private void doReverseVideo(SampleRemoteOrderDisplayContents.CharAttributes[][] range) {
-            for (SampleRemoteOrderDisplayContents.CharAttributes[] line : range) {
-                for (SampleRemoteOrderDisplayContents.CharAttributes column : line) {
+        private void doReverseVideo(DisplayContents.CharAttributes[][] range) {
+            for (DisplayContents.CharAttributes[] line : range) {
+                for (DisplayContents.CharAttributes column : line) {
                     int color = column.ForegroundColor % BLINKING;
                     column.ForegroundColor &= BLINKING;
                     column.ForegroundColor |= column.BackgroundColor;
@@ -912,9 +911,9 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
             }
         }
 
-        private void switchBlinkingOn(SampleRemoteOrderDisplayContents.CharAttributes[][] range) {
-            for (SampleRemoteOrderDisplayContents.CharAttributes[] line : range) {
-                for (SampleRemoteOrderDisplayContents.CharAttributes column : line) {
+        private void switchBlinkingOn(DisplayContents.CharAttributes[][] range) {
+            for (DisplayContents.CharAttributes[] line : range) {
+                for (DisplayContents.CharAttributes column : line) {
                     column.ForegroundColor |= BLINKING;
                     if (column.LeftBorderColor != NOT_PRESENT)
                         column.LeftBorderColor |= BLINKING;
@@ -928,9 +927,9 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
             }
         }
 
-        private void swichtBlinkingOff(SampleRemoteOrderDisplayContents.CharAttributes[][] range) {
-            for (SampleRemoteOrderDisplayContents.CharAttributes[] line : range) {
-                for (SampleRemoteOrderDisplayContents.CharAttributes column : line) {
+        private void swichtBlinkingOff(DisplayContents.CharAttributes[][] range) {
+            for (DisplayContents.CharAttributes[] line : range) {
+                for (DisplayContents.CharAttributes column : line) {
                     column.ForegroundColor &= ~BLINKING;
                     if (column.LeftBorderColor != NOT_PRESENT)
                         column.LeftBorderColor &= ~BLINKING;
@@ -1123,7 +1122,7 @@ public class SampleRemoteOrderDisplay extends JposDevice implements Runnable {
                     sendCheckCommand(units, String.format("%02dVC", i + 1));
                     for (int l = 0; l < Display.Unit[i].Attribute.length; l++) {
                         for (int c = 0; c < Display.Unit[i].Attribute[l].length; c++) {
-                            Display.Unit[i].Attribute[l][c] = new SampleRemoteOrderDisplayContents.CharAttributes();
+                            Display.Unit[i].Attribute[l][c] = new DisplayContents.CharAttributes();
                         }
                     }
                     Display.Unit[i].SaveBuffer[0] = null;

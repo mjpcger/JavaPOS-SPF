@@ -26,9 +26,9 @@ import jpos.loader.JposServiceInstance;
 import jpos.loader.JposServiceInstanceFactory;
 
 /**
- * Factory class for SampleRemoteOrderDisplay sample implementation
+ * Factory class for Device sample implementation
  */
-public class SampleRemoteOrderDisplayFactory extends Factory implements JposServiceInstanceFactory {
+public class RemoteOrderDisplayFactory extends Factory implements JposServiceInstanceFactory {
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
@@ -38,14 +38,14 @@ public class SampleRemoteOrderDisplayFactory extends Factory implements JposServ
             synchronized(Devices) {
                 if (deviceClass.equals("RemoteOrderDisplay")) {
                     JposDevice any = getDevice(port);
-                    SampleRemoteOrderDisplay dev;
+                    Device dev;
                     boolean created = any != null;
                     if (!created) {
-                        dev = new SampleRemoteOrderDisplay(port);
-                    } else if (!(any instanceof SampleRemoteOrderDisplay))
+                        dev = new Device(port);
+                    } else if (!(any instanceof Device))
                         throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
                     else {
-                        dev = (SampleRemoteOrderDisplay) any;
+                        dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
                     JposServiceInstance srv = addDevice(0, dev);
