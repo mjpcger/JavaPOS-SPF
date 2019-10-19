@@ -91,7 +91,7 @@
 	</JposEntry>
 	<!-- Test CAT (Credit Authorization Terminal) Entry, implements CAT and ElectronicJournal(2x) devices -->
 	<JposEntry logicalName="TestEjCAT">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cat.CATService" factoryClass="SampleCAT.SampleCATFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cat.CATService" factoryClass="SampleCAT.CATFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos version="1.14.1" category="CAT"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For CAT of Sample CAT" description="Sample CAT Service For CAT Simulator"/>
@@ -111,7 +111,7 @@
 		<prop name="RequestTimeout" value="1000000"/>
 	</JposEntry>
 	<JposEntry logicalName="TestDioCAT">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cat.CATService" factoryClass="SampleCAT.SampleCATFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cat.CATService" factoryClass="SampleCAT.CATFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos version="1.14.1" category="CAT"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For CAT of Sample CAT" description="Sample CAT Service For CAT Simulator"/>
@@ -131,7 +131,7 @@
 		<prop name="RequestTimeout" value="1000000"/>
 	</JposEntry>
 	<JposEntry logicalName="TestPrtCAT">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cat.CATService" factoryClass="SampleCAT.SampleCATFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.cat.CATService" factoryClass="SampleCAT.CATFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos version="1.14.1" category="CAT"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For CAT of Sample CAT" description="Sample CAT Service For CAT Simulator"/>
@@ -151,7 +151,7 @@
 		<prop name="RequestTimeout" value="1000000"/>
 	</JposEntry>
 	<JposEntry logicalName="TestCustomerJournal">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.electronicjournal.ElectronicJournalService" factoryClass="SampleCAT.SampleEJFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.electronicjournal.ElectronicJournalService" factoryClass="SampleCAT.ElectronicJournalFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos version="1.14.1" category="ElectronicJournal"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For electronic journal for Sample CAT customer tickets" description="Electronic journal for Sample CAT customer tickets"/>
@@ -171,7 +171,7 @@
 		<prop name="RequestTimeout" value="1000000"/>
 	</JposEntry>
 	<JposEntry logicalName="TestMerchantJournal">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.electronicjournal.ElectronicJournalService" factoryClass="SampleCAT.SampleEJFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.electronicjournal.ElectronicJournalService" factoryClass="SampleCAT.ElectronicJournalFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos version="1.14.1" category="ElectronicJournal"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For electronic journal for Sample CAT merchant tickets" description="Electronic journal for Sample CAT merchant tickets"/>
@@ -192,7 +192,7 @@
 	</JposEntry>
 	<!-- Test Coin Dispenser Entry-->
 	<JposEntry logicalName="TestCoinDispenser">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.coindispenser.CoinDispenserService" factoryClass="SampleCoinDispenser.SampleCoinDispenserFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.coindispenser.CoinDispenserService" factoryClass="SampleCoinDispenser.CoinDispenserFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos version="1.14.1" category="CoinDispenser"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Standard Coin Dispenser" description="Sample Service For Coin Dispenser Simulator"/>
