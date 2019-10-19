@@ -210,7 +210,7 @@
 	</JposEntry>
 	<!-- Test Scale Entry-->
 	<JposEntry logicalName="TestScale">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.scale.ScaleService" factoryClass="SampleScale.SampleScaleFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.scale.ScaleService" factoryClass="SampleScale.ScaleFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos version="1.14.1" category="Scale"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Standard Scale" description="Sample Service For Scale Simulator"/>

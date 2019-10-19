@@ -15,7 +15,7 @@ import java.nio.charset.Charset;
  * Implementation of a JposDevice based implementation of a scales driver that becomes
  * a JavaPOS Scales service in combination with the JposScale class
  */
-public class SampleScale extends JposDevice implements Runnable {
+public class Device extends JposDevice implements Runnable {
     /**
      * IO processor to be used for communication with scale.
      */
@@ -25,7 +25,7 @@ public class SampleScale extends JposDevice implements Runnable {
      *
      * @param id COM port or IP target address and port
      */
-    protected SampleScale(String id) {
+    protected Device(String id) {
         super(id);
         try {
             Target = new TcpClientIOProcessor(this, id);
@@ -290,7 +290,7 @@ public class SampleScale extends JposDevice implements Runnable {
                 int timeout = (MaxRetry + 2) * RequestTimeout;
                 CommandFinalizer finalizer = Finalizer = new CommandFinalizer("\2" + "08\3", timeout, true);
                 ToBeFinished = false;
-                (CommandProcessor = new Thread(SampleScale.this)).start();
+                (CommandProcessor = new Thread(SampleScale.Device.this)).start();
                 finalizer.WaitResult.suspend(timeout);
                 PowerState = Finalizer != null || InIOError ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
             }

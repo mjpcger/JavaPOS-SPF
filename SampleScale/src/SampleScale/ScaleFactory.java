@@ -24,11 +24,10 @@ import jpos.config.JposEntry;
 import jpos.loader.JposServiceInstance;
 import jpos.loader.JposServiceInstanceFactory;
 
-import java.util.*;
 /**
- * Factory class for SampleScale sample implementation
+ * Factory class for Device sample implementation
  */
-public class SampleScaleFactory extends Factory implements JposServiceInstanceFactory {
+public class ScaleFactory extends Factory implements JposServiceInstanceFactory {
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
@@ -38,14 +37,14 @@ public class SampleScaleFactory extends Factory implements JposServiceInstanceFa
             synchronized(Devices) {
                 if (deviceClass.equals("Scale")) {
                     JposDevice any = getDevice(port);
-                    SampleScale dev;
+                    Device dev;
                     boolean created = any != null;
                     if (!created) {
-                        dev = new SampleScale(port);
-                    } else if (!(any instanceof SampleScale))
+                        dev = new Device(port);
+                    } else if (!(any instanceof Device))
                         throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
                     else {
-                        dev = (SampleScale) any;
+                        dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
                     JposServiceInstance srv = addDevice(0, dev);
