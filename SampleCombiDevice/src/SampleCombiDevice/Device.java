@@ -46,13 +46,26 @@ public class Device extends JposDevice implements Runnable{
     private SyncObject WaitObj;
     private boolean ToBeFinished;
     private Properties PropertySet;
-    private static byte[] CmdScannerEnable = {'R','E'};
-    private static byte[] CmdScannerDisable = {'R','D'};
-    private static byte[] CmdStatusRequest = {'S','R'};
-    private static byte[] CmdDrawerOpen = {'D','O'};
-    private static byte[] CmdBeepOn = {'B', '1'};
-    private static byte[] CmdBeepOff = {'B', '0'};
-    private static final byte NoResponse = 0;
+
+    /**
+     * Status request command.
+     */
+    static byte[] CmdStatusRequest = {'S','R'};
+
+    /**
+     * Beep activation command.
+     */
+    static byte[] CmdBeepOn = {'B', '1'};
+
+    /**
+     * Beep deactivation command.
+     */
+    static byte[] CmdBeepOff = {'B', '0'};
+
+    /**
+     * Dummy character value, replacing first byte of response for commands which will not be responded.
+     */
+    static final byte NoResponse = 0;
     private static final byte RespFromDrawer = 'D';
     private static final int DrawerStatePos = 1;
     private static final int DrawerStateLen = 1;
@@ -83,15 +96,15 @@ public class Device extends JposDevice implements Runnable{
     private static final int LabelEan8Flag = 'F';
     private static final int Ean8Len = 9;
     private static final int Ean13Len = 13;
-    private static final byte RespFromStatus = 'S';
+
+    /**
+     * First byte of response on status request
+     */
+    static final byte RespFromStatus = 'S';
     private static final byte StatusLen = 15;
     private static final byte StatusDrawerPos = 1;
     private static final byte StatusLockPos = 2;
     private static final byte StatusEKeyPos = 3;
-    private static final byte CmdTextOutPrefix = 'T';
-    private static final int TextLinePos = 1;
-    private static final int TextLengthPos = 2;
-    private static final int TextStartPos = 4;
     private static int LockIndex = 0;
     private static int EKeyIndex = 1;
     private int Baudrate = SerialIOProcessor.BAUDRATE_9600;
@@ -103,20 +116,38 @@ public class Device extends JposDevice implements Runnable{
     private int RequestTimeout = 500;
     private int CharacterTimeout = 10;
     private int PollDelay = 50;
-    private int MaxRetry = 2;
+
+    /**
+     * Jpos.xml property MaxRetry specifies the maximum number of retries. Should be &gt; 0 only for RS232 (real COM ports)
+     * where characters can become lost or corrupted on the communication line.
+     */
+    int MaxRetry = 2;
     private boolean UsbToSerial = false;
     private boolean InIOError = true;
-    private boolean DrawerIsOpen = false;
+
+    /**
+     * Flag showing the current drawer state (true = drawer is open).
+     */
+    boolean DrawerIsOpen = false;
     private boolean DeviceIsOffline = true;
     private byte LockPosition = DefaultLockPos;
     private Map<Integer, Integer> LockMapping = new HashMap<Integer, Integer>();
     private byte[] EKeyValue = DefaultEKeyPos;
-    private char[][] DisplayContents = new char[2][20];
-    private char[][] DisplayAttributes = new char[2][20];
-    private final char NormalChar = 'n';
-    private final char ReverseChar = 'r';
-    private final char BlinkChar = 'b';
-    private final char BlinkReverseChar = 'a';
+
+    /**
+     * Contents of LineDisplay.
+     */
+    char[][] DisplayContents = new char[2][20];
+
+    /**
+     * Attributes of characters on LineDisplay.
+     */
+    char[][] DisplayAttributes = new char[2][20];
+
+    /**
+     * Attribute value for normal display output.
+     */
+    final char NormalChar = 'n';
     private int[][] KeyValueTable = new int[10][16];
     private int OpenCount = 0;
     private List<CommandHelper> Commands = new ArrayList<CommandHelper>();
@@ -1047,7 +1078,16 @@ public class Device extends JposDevice implements Runnable{
         return OpenCount;
     }
 
-    private void updateKeylockStates(JposCommonProperties dev, boolean enable) throws JposException {
+    /**
+     * Updates keyposition  or electronic key value, depending on the lock type: The first Keylock is a
+     * central lock with positions 0, I, II, X, Z, P and T, the second Keylock is for electronic keys with
+     * 48-bit values (all bits 0 means no key present).
+     *
+     * @param dev   Property set
+     * @param enable True if DeviceEnabled will be set.
+     * @throws JposException If current Keylock position is invalid.
+     */
+    void updateKeylockStates(JposCommonProperties dev, boolean enable) throws JposException {
         KeylockProperties props = (KeylockProperties) dev;
         if (enable) {
             if (dev.Index == EKeyIndex) {
@@ -1064,13 +1104,23 @@ public class Device extends JposDevice implements Runnable{
         }
     }
 
-    private void updateDrawerStates(CashDrawerProperties dev, boolean enable) {
+    /**
+     * Updates DrawerOpen property while setting DeviceEnabled.
+     * @param dev   Property set
+     * @param enable    True if DeviceEnabled will be set.
+     */
+    void updateDrawerStates(CashDrawerProperties dev, boolean enable) {
         if (enable) {
             dev.DrawerOpened = DrawerIsOpen;
         }
     }
 
-    private void updateCommonStates(JposCommonProperties dev, boolean enable) {
+    /**
+     * Updates PowerState property if power notifications are enabled while setting DeviceEnabled to true.
+     * @param dev       Property set
+     * @param enable    True if DeviceEnabled will be set.
+     */
+    void updateCommonStates(JposCommonProperties dev, boolean enable) {
         if (enable) {
             if (dev.PowerNotify == JposConst.JPOS_PN_ENABLED) {
                 dev.PowerState = InIOError ? JposConst.JPOS_PS_OFF : (DeviceIsOffline ? JposConst.JPOS_PS_OFFLINE : JposConst.JPOS_PS_ONLINE);
@@ -1079,7 +1129,10 @@ public class Device extends JposDevice implements Runnable{
         }
     }
 
-    private void startCommunication() {
+    /**
+     * Increments open count. If incremented to 1, starts communication handler.
+     */
+    void startCommunication() {
         if (changeOpenCount(1) == 1) {
             ToBeFinished = false;
             (StateWatcher = new Thread(this)).start();
@@ -1087,7 +1140,10 @@ public class Device extends JposDevice implements Runnable{
         }
     }
 
-    private void stopCommunication() {
+    /**
+     * Decrements open count. If decremented to 0, stops communication handler.
+     */
+    void stopCommunication() {
         if (changeOpenCount(-1) == 0) {
             ToBeFinished = true;
             while (ToBeFinished) {
@@ -1101,256 +1157,50 @@ public class Device extends JposDevice implements Runnable{
 
     @Override
     public CashDrawerProperties getCashDrawerProperties(int index) {
-        return new CombinedDrawerAccessor(index);
-    }
-
-    private class CombinedDrawerAccessor extends CashDrawerProperties {
-        CombinedDrawerAccessor(int index) {
-            super(index);
-        }
-
-        @Override
-        public void deviceEnabled(boolean enable) throws JposException {
-            super.deviceEnabled(enable);
-            updateCommonStates(this, enable);
-            updateDrawerStates(this, enable);
-        }
-
-        @Override
-        public void open() throws JposException {
-            startCommunication();
-            super.open();
-        }
-
-        @Override
-        public void close() throws JposException {
-            super.close();
-            stopCommunication();
-        }
-
-        @Override
-        public void checkHealth(int level) throws JposException {
-            if (internalCheckHealth(this, level, true))
-                return;
-            try {
-                do {
-                    if (level == JposConst.JPOS_CH_EXTERNAL) {
-                        CheckHealthText = "External check: Error";
-                        ((CashDrawerService)EventSource).openDrawer();
-                        new SyncObject().suspend(200);
-                        ((CashDrawerService)EventSource).waitForDrawerClose(5000, 500, 300, 2000);
-                        CheckHealthText = "External check: OK";
-                        break;
-                    }
-                    if (drawerCheckHealthInteractive())
-                        break;
-                } while (false);
-            } catch (JposException e) {}
-            super.checkHealth(level);
-        }
-
-        private boolean drawerCheckHealthInteractive() throws JposException {
-            SyncObject waiter = new SyncObject();
-            CheckHealthText = "Interactive check: Error";
-            synchronizedMessageBox("Press OK to open the drawer", "CheckHealth Drawer", JOptionPane.INFORMATION_MESSAGE);
-            ((CashDrawerService)EventSource).openDrawer();
-            for (int i = 0; i > 10 && !DrawerOpened; i++) {
-                waiter.suspend(200);
-                if (DrawerIsOpen)
-                    break;
-            }
-            if (!DrawerIsOpen) {
-                synchronizedMessageBox("Drawer could not be opened", "CheckHealth Drawer", JOptionPane.ERROR_MESSAGE);
-                return true;
-            }
-            synchronizedMessageBox("Close drawer to finish drawer check", "CheckHealth Drawer", JOptionPane.INFORMATION_MESSAGE);
-            waiter.suspend(200);
-            if (DrawerIsOpen) {
-                synchronizedMessageBox("Drawer could not be closed", "CheckHealth Drawer", JOptionPane.ERROR_MESSAGE);
-                return true;
-            }
-            synchronizedMessageBox("Drawer check finished successfully", "CheckHealth Drawer", JOptionPane.INFORMATION_MESSAGE);
-            CheckHealthText = "Interactive check: OK";
-            return false;
-        }
-
-        @Override
-        public void openDrawer() throws JposException {
-            int retry = 0;
-            do {
-                sendCommand(this, CmdDrawerOpen, NoResponse);
-                if (sendCommand(this, CmdStatusRequest, RespFromStatus) == 0)
-                    continue;
-                super.openDrawer();
-                return;
-            } while (++retry < MaxRetry);
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "No response on drawer open request");
-        }
-
-        @Override
-        public void waitForDrawerClose(int beepTimeout, int beepFrequency, int beepDuration, int beepDelay) throws JposException {
-            long timeout = beepTimeout;
-            boolean beeping = false;
-
-            attachWaiter();
-            if (DrawerOpened) {
-                while (!waitWaiter(timeout)) {
-                    if (beeping) {
-                        timeout = beepDelay;
-                        sendCommand(this, CmdBeepOff, NoResponse);
-                    } else {
-                        timeout = beepDuration;
-                        sendCommand(this, CmdBeepOn, NoResponse);
-                    }
-                    beeping = !beeping;
-                }
-                if (beeping)
-                    sendCommand(this, CmdBeepOff, NoResponse);
-            }
-            releaseWaiter();
-            super.waitForDrawerClose(beepTimeout, beepFrequency, beepDuration, beepDelay);
-        }
+        return new CashDrawer(this);
     }
 
     @Override
     public KeylockProperties getKeylockProperties(int index) {
-        return new CombinedKeylockAccessor(index);
-    }
-
-    private class CombinedKeylockAccessor extends KeylockProperties {
-        CombinedKeylockAccessor(int index) {
-            super(index);
-        }
-
-        @Override
-        public void deviceEnabled(boolean enable) throws JposException {
-            super.deviceEnabled(enable);
-            updateCommonStates(this, enable);
-            updateKeylockStates(this, enable);
-        }
-
-        @Override
-        public void open() throws JposException {
-            startCommunication();
-            super.open();
-        }
-
-        @Override
-        public void close() throws JposException {
-            super.close();
-            stopCommunication();
-        }
-
-        @Override
-        public void checkHealth(int level) throws JposException {
-            if (internalCheckHealth(this, level, true))
-                return;
-            // TOBEIMPLEMENTED
-            super.checkHealth(level);
-        }
-
-        @Override
-        public void waitForKeylockChange(int pos, int timeout) throws JposException {
-            long startTime = System.currentTimeMillis();
-            long occurredTime = 0;
-            long tio = timeoutToLong(timeout);
-            if (pos != KeyPosition || pos == KeylockConst.LOCK_KP_ANY) {
-                attachWaiter();
-                while (occurredTime < tio && waitWaiter(tio - occurredTime)) {
-                    if (pos == KeylockConst.LOCK_KP_ANY || pos == KeyPosition) {
-                        occurredTime = tio - 1;
-                        break;
-                    }
-                    occurredTime = System.currentTimeMillis() - startTime;
-                }
-                releaseWaiter();
-                if (occurredTime == tio)
-                    throw new JposException(JposConst.JPOS_E_TIMEOUT, "No keylock change");
-            }
-            super.waitForKeylockChange(pos, timeout);
-        }
+        return new Keylock(index, this);
     }
 
     @Override
     public ToneIndicatorProperties getToneIndicatorProperties(int index) {
-        return new CombinedToneIndicatorAccessor(index);
-    }
-
-    private class CombinedToneIndicatorAccessor extends ToneIndicatorProperties {
-        CombinedToneIndicatorAccessor(int index) {
-            super(index);
-        }
-
-        @Override
-        public void deviceEnabled(boolean enable) throws JposException {
-            super.deviceEnabled(enable);
-            updateCommonStates(this, enable);
-        }
-
-        @Override
-        public void open() throws JposException {
-            startCommunication();
-            super.open();
-        }
-
-        @Override
-        public void close() throws JposException {
-            super.close();
-            stopCommunication();
-        }
-
-        @Override
-        public void checkHealth(int level) throws JposException {
-            if (internalCheckHealth(this, level, true))
-                return;
-            super.checkHealth(level);
-        }
-
-        @Override
-        public void sound(Sound request) throws JposException {
-            if ((Tone1Duration | Tone2Duration) != 0) {
-                while (request.Count == JposConst.JPOS_FOREVER || request.Count-- > 0) {
-                    if (soundAndDelay(request, Tone1Duration, InterToneWait))
-                        break;
-                    if (soundAndDelay(request, Tone2Duration, request.Delay))
-                        break;
-                }
-            }
-        }
-
-        private boolean soundAndDelay(JposOutputRequest request, int duration, int delay) throws JposException {
-            ToneIndicatorProperties props = (ToneIndicatorProperties)request.Props;
-            if (request.Abort != null) {
-                JposCommonProperties claimer = props.getClaimingInstance();
-                if (request.EndSync != null && claimer != null && claimer != props)
-                    throw new JposException(JposConst.JPOS_E_CLAIMED, "Claimed by other instance");
-                return true;
-            }
-            if (duration > 0) {
-                sendCommand(request.Props, CmdBeepOn, NoResponse);
-                request.Waiting.suspend(duration);
-                if (request.Abort != null)
-                    return true;
-                sendCommand(request.Props, CmdBeepOff, NoResponse);
-                if (request.Abort != null)
-                    return true;
-            }
-            if (delay > 0) {
-                request.Waiting.suspend(delay);
-            }
-            return false;
-        }
+        return new ToneIndicator(this);
     }
 
     @Override
     public LineDisplayProperties getLineDisplayProperties(int index) {
-        return new CombinedDisplayAccessor(index);
+        return new LineDisplay(this);
     }
 
-    static private class DisplayCoordinates {
+    /**
+     * Helper class for AdditionalData property of DisplayText class used for synchronous or asynchronous processing.
+     * Holds volatile parameters.
+     */
+    static class DisplayCoordinates {
+        /**
+         * Contents of CursorUpdate property when the method request has been enqueued for processing.
+         */
         boolean Update;
+
+        /**
+         * Contents of CursorRow property when the method request has been enqueued for processing.
+         */
         int Line;
+
+        /**
+         * Contents of CursorColumn property when the method request has been enqueued for processing.
+         */
         int Column;
+
+        /**
+         * Constructor. Sets properties to given values.
+         * @param row       Value for property Line.
+         * @param column    Value for property Column.
+         * @param update    Value for property Update.
+         */
         DisplayCoordinates(int row, int column, boolean update) {
             Line = row;
             Column = column;
@@ -1358,303 +1208,32 @@ public class Device extends JposDevice implements Runnable{
         }
     }
 
-    private class CombinedDisplayAccessor extends LineDisplayProperties {
-        CombinedDisplayAccessor(int index) {
-            super(index);
-        }
-
-        @Override
-        public void deviceEnabled(boolean enable) throws JposException {
-            super.deviceEnabled(enable);
-            updateCommonStates(this, enable);
-        }
-
-        @Override
-        public void claim(int timeout) throws JposException {
-            startCommunication();
-
-            super.claim(timeout);
-        }
-
-        @Override
-        public void release() throws JposException {
-            super.release();
-            stopCommunication();
-        }
-
-        @Override
-        public void checkHealth(int level) throws JposException {
-            if (internalCheckHealth(this, level, true))
-                return;
-            CheckHealthText = (level == JposConst.JPOS_CH_EXTERNAL ? "Externel" : "Internal") + " CheckHealth: ";
-            try {
-                ((LineDisplayService) EventSource).clearText();
-                ((LineDisplayService) EventSource).displayTextAt(1, 3, "CheckHealth: OK!", LineDisplayConst.DISP_DT_NORMAL);
-                CheckHealthText += "OK";
-            } catch (JposException e) {
-                CheckHealthText += "Failed, " + e.getMessage();
-            }
-            super.checkHealth(level);
-        }
-
-        @Override
-        public void clearText() throws JposException {
-            int row, column;
-            for (row = 0; row < DisplayContents.length; row++) {
-                for (column = 0; column < DisplayContents[row].length; column++) {
-                    DisplayAttributes[row][column] = NormalChar;
-                    DisplayContents[row][column] = ' ';
-                }
-            }
-            CursorRow = CursorColumn = 0;
-            refreshWindow(0);
-            super.clearText();
-        }
-
-        @Override
-        public void deviceBrightness(int b) throws JposException {
-            super.deviceBrightness(b);
-            refreshWindow(0);
-        }
-
-        @Override
-        public void scrollText(int direction, int units) throws JposException {
-            boolean otherDirection = false;
-            switch (direction) {
-                case LineDisplayConst.DISP_ST_DOWN:
-                    otherDirection = true;
-                case LineDisplayConst.DISP_ST_UP:
-                    scrollVertical(units, otherDirection);
-                    break;
-                case LineDisplayConst.DISP_ST_LEFT:
-                    otherDirection = true;
-                case LineDisplayConst.DISP_ST_RIGHT:
-                    scrollHorizontal(units, otherDirection);
-                    break;
-            }
-            super.scrollText(direction, units);
-        }
-
-        @Override
-        public DisplayText displayText(String text, int attribute) throws JposException {
-            DisplayText request = super.displayText(text, attribute);
-            LineDisplayService.DisplayDataPart[] data = request.getData();
-            request.AdditionalData = new DisplayCoordinates(CursorRow, CursorColumn, CursorUpdate);
-            if (CursorUpdate && InterCharacterWait > 0 && MarqueeType == LineDisplayConst.DISP_MT_NONE) {
-                // We update the coordinates here
-                ((DisplayCoordinates)request.AdditionalData).Update = false;
-                for (Object o : data) {
-                    if (o instanceof LineDisplayService.DisplayData) {
-                        LineDisplayService.DisplayData dd = (LineDisplayService.DisplayData)o;
-                        CursorColumn += dd.getData().length();
-                        while (CursorColumn > Columns) {
-                            CursorColumn -= Columns;
-                            if (CursorRow < Rows - 1)
-                                CursorRow++;
-                        }
-                    }
-                    else if (o instanceof LineDisplayService.ControlChar) {
-                        CursorColumn = 0;
-                        if (CursorRow < Rows - 1 && ((LineDisplayService.ControlChar) o).getControlCharacter() == '\n')
-                            CursorRow++;
-                    }
-                }
-            }
-            return request;
-        }
-
-        private SyncObject InterCharacterWaiter = new SyncObject();
-
-        @Override
-        public void interCharacterWait(int b) throws JposException {
-            int prev = InterCharacterWait;
-            super.interCharacterWait(b);
-            if (prev != b && b == 0)
-                InterCharacterWaiter.signal();
-        }
-
-        @Override
-        public void displayText(DisplayText request) throws  JposException {
-            char attribute = NormalChar;
-            DisplayCoordinates coordinates = (DisplayCoordinates)request.AdditionalData;
-            InterCharacterWaiter = new SyncObject();
-            for(Object o : request.getData()) {
-                if (o instanceof LineDisplayService.DisplayData){
-                    String data = ((LineDisplayService.DisplayData) o).getData();
-                    for (int i = 0; i < data.length(); i++) {
-                        processChar(coordinates, data.charAt(i), attribute);
-                        if (InterCharacterWait > 0 && MarqueeType == LineDisplayConst.DISP_MT_NONE) {
-                            refreshWindow(0);
-                            InterCharacterWaiter.suspend(InterCharacterWait);
-                        }
-                    }
-                }
-                else if (o instanceof LineDisplayService.ControlChar)
-                    processChar(coordinates, ((LineDisplayService.ControlChar) o).getControlCharacter(), attribute);
-                else if (o instanceof LineDisplayService.EscNormalize)
-                    attribute = NormalChar;
-                else if (o instanceof LineDisplayService.EscSimple && attribute != BlinkReverseChar) {
-                    LineDisplayService.EscSimple esc = (LineDisplayService.EscSimple) o;
-                    if ((esc.getBlinking() && (esc.getReverse() || attribute == ReverseChar)) || (esc.getReverse() && attribute == BlinkChar))
-                        attribute = BlinkReverseChar;
-                    else
-                        attribute = esc.getReverse() ? ReverseChar : BlinkChar;
-                }
-            }
-            if (coordinates.Update) {
-                CursorRow = coordinates.Line;
-                CursorColumn = coordinates.Column;
-            }
-            refreshWindow(0);
-        }
-
-        @Override
-        public void refreshWindow(int index) throws JposException {
-            byte[][] lines = new byte[2][];
-            if (DeviceBrightness < 50) {
-                sendTextLine(this, " ", '0');
-                sendTextLine(this, " ", '1');
-            } else {
-                sendTextLine(this, new String(DisplayContents[0]) + new String(DisplayAttributes[0]), '0');
-                sendTextLine(this, new String(DisplayContents[1]) + new String(DisplayAttributes[1]), '1');
-            }
-            super.refreshWindow(index);
-        }
-
-        private void scrollHorizontal(int units, boolean otherDirection) throws JposException {
-            if (units >= 20) {
-                clearText();
-                return;
-            }
-            if (units > 0) {
-                int i;
-                for (i = 0; i < 20 - units; i++) {
-                    if (otherDirection) {
-                        DisplayContents[0][i] = DisplayContents[0][i + units];
-                        DisplayContents[1][i] = DisplayContents[1][i + units];
-                        DisplayAttributes[0][i] = DisplayAttributes[0][i + units];
-                        DisplayAttributes[1][i] = DisplayAttributes[1][i + units];
-                    } else {
-                        DisplayContents[0][19 - i] = DisplayContents[0][19 - i - units];
-                        DisplayContents[0][19 - i] = DisplayContents[0][19 - i - units];
-                        DisplayAttributes[0][19 - i] = DisplayAttributes[0][19 - i - units];
-                        DisplayAttributes[0][19 - i] = DisplayAttributes[0][19 - i - units];
-                    }
-                }
-                while (i < 20) {
-                    if (otherDirection) {
-                        DisplayContents[0][i] = DisplayContents[1][i] = ' ';
-                        DisplayAttributes[0][i] = DisplayAttributes[1][i] = NormalChar;
-                    }
-                    else {
-                        DisplayContents[0][19 - i] = DisplayContents[1][19 - i] = ' ';
-                        DisplayAttributes[0][19 - i] = DisplayAttributes[1][19 - i] = NormalChar;
-                    }
-                }
-                refreshWindow(0);
-            }
-        }
-
-        private void scrollVertical(int units, boolean otherDirection) throws JposException {
-            if (units >= 2) {
-                clearText();
-                return;
-            }
-            if (units == 1) {
-                for (int i = 0; i < 20; i++) {
-                    if (otherDirection) {
-                        DisplayContents[1][i] = DisplayContents[0][i];
-                        DisplayContents[0][i] = ' ';
-                        DisplayAttributes[1][i] = DisplayAttributes[0][i];
-                        DisplayAttributes[0][i] = NormalChar;
-                    } else {
-                        DisplayContents[0][i] = DisplayContents[1][i];
-                        DisplayContents[1][i] = ' ';
-                        DisplayAttributes[0][i] = DisplayAttributes[1][i];
-                        DisplayAttributes[1][i] = NormalChar;
-                    }
-                }
-                refreshWindow(0);
-            }
-        }
-    }
-
-    private void processChar(DisplayCoordinates coordinates, char c, char attribute) {
-        if (c == '\r') {
-            coordinates.Column = 0;
-            return;
-        }
-        if (c == '\n' || coordinates.Column == 20) {
-            coordinates.Column = 0;
-            if (coordinates.Line == 0) {
-                coordinates.Line++;
-            } else {
-                for (int i = 0; i < 20; i++) {
-                    DisplayContents[0][i] = DisplayContents[1][i];
-                    DisplayContents[1][i] = ' ';
-                    DisplayAttributes[0][i] = DisplayAttributes[1][i];
-                    DisplayAttributes[1][i] = NormalChar;
-                }
-            }
-            if (c == '\n')
-                return;
-        }
-        DisplayContents[coordinates.Line][coordinates.Column] = c;
-        DisplayAttributes[coordinates.Line][coordinates.Column] = attribute;
-        coordinates.Column++;
-    }
-
-    private void sendTextLine(LineDisplayProperties props, String linestr, char row) throws JposException {
-        byte[] line;
-        try {
-            line = linestr.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, e.getMessage(), e);
-        }
-        byte[] buffer = Arrays.copyOf(new byte[]{CmdTextOutPrefix}, line.length + TextStartPos);
-        System.arraycopy(line,0, buffer, TextStartPos, line.length);
-        buffer[TextLinePos] = (byte)row;
-        for (int i = TextStartPos, len = linestr.length(); --i >= TextLengthPos; len /= 10)
-            buffer[i] = (byte)(len % 10 + '0');
-        sendCommand(props, buffer, NoResponse);
-    }
-
     @Override
     public POSKeyboardProperties getPOSKeyboardProperties(int index) {
-        return new CombinedKeyboardAccessor(index);
+        return new POSKeyboard(this);
     }
 
-    private class CombinedKeyboardAccessor extends POSKeyboardProperties {
-        CombinedKeyboardAccessor(int index) {
-            super(index);
-        }
-
-        @Override
-        public void claim(int timeout) throws JposException {
-            startCommunication();
-            super.claim(timeout);
-        }
-
-        @Override
-        public void release() throws JposException {
-            super.release();
-            stopCommunication();
-        }
-
-        @Override
-        public void checkHealth(int level) throws JposException {
-            if (internalCheckHealth(this, level, true))
-                return;
-            // TOBEIMPLEMENTED
-            super.checkHealth(level);
-        }
-    }
-
-    private static class TrackData {
+    /**
+     * Helper class that stores MSR track data.
+     */
+    static class TrackData {
+        /**
+         * Contents of currently valid tracks. Up to 3 tracks are supported by the sample device.
+         */
         byte[][] Tracks;
+
+        /**
+         * Constructor.
+         * @param tracks    Initial value for tracks read before.
+         */
         TrackData(byte[][] tracks) {
             Tracks = tracks;
         }
+
+        /**
+         * Special toString method, used to translate the track values into readable character strings.
+         * @return String representing the contents of the tracks.
+         */
         @Override
         public String toString() {
             String data = "";
@@ -1668,112 +1247,24 @@ public class Device extends JposDevice implements Runnable{
 
     @Override
     public MSRProperties getMSRProperties(int index) {
-        return new CombinedMSRAccessor(index);
-    }
-
-    private class CombinedMSRAccessor extends MSRProperties {
-        CombinedMSRAccessor(int index) {
-            super(index);
-        }
-
-        @Override
-        public void claim(int timeout) throws JposException {
-            startCommunication();
-            super.claim(timeout);
-        }
-
-        @Override
-        public void release() throws JposException {
-            super.release();
-            stopCommunication();
-        }
-
-        @Override
-        public void checkHealth(int level) throws JposException {
-            if (internalCheckHealth(this, level, true))
-                return;
-            // TOBEIMPLEMENTED
-            super.checkHealth(level);
-        }
-
-        @Override
-        public void setDataProperties(Object o) {
-            if (o instanceof TrackData) {
-                byte[][] tracks = ((TrackData) o).Tracks;
-                if (tracks.length == 3) {
-                    Track1Data = storeData(tracks[0], 0x20, 0x3f);
-                    Track2Data = storeData(tracks[1], 0x30, 0xf);
-                    Track3Data = storeData(tracks[2], 0x30, 0xf);
-                }
-            }
-        }
-        private byte[] storeData(byte[] source, int subtractor, int maxvalue) {
-            if (!TransmitSentinels && source.length > 1)
-                source = Arrays.copyOfRange(source, 1, source.length);
-            if (DecodeData)
-                return source;
-            byte[] target = new byte[source.length];
-            int i = target.length;
-            while (--i >= 0) {
-                if ((target[i] = (byte)(source[i] - subtractor)) < 0 || target[i] > maxvalue)
-                    break;
-            }
-            return i < 0 ? target : source;
-        }
+        return new MSR(this);
     }
 
     @Override
     public ScannerProperties getScannerProperties(int index) {
-        return new CombinedScannerAccessor(index);
+        return new Scanner(this);
     }
 
-    private class CombinedScannerAccessor extends ScannerProperties {
-        CombinedScannerAccessor(int index) {
-            super(index);
-        }
-
-        @Override
-        public void claim(int timeout) throws JposException {
-            startCommunication();
-            super.claim(timeout);
-        }
-
-        @Override
-        public void release() throws JposException {
-            super.release();
-            stopCommunication();
-        }
-
-        @Override
-        public void checkHealth(int level) throws JposException {
-            if (internalCheckHealth(this, level, true))
-                return;
-            super.checkHealth(level);
-        }
-    }
-
-    private boolean internalCheckHealth(JposCommonProperties dev, int level, boolean claimed) {
+    /**
+     * Performs internal CheckHealth, equal processing for all device classes.
+     * @param dev   Property set to be used.
+     * @param level CheckHealth level parameter.
+     * @return true if level = CH_INTERNAL.
+     */
+    boolean internalCheckHealth(JposCommonProperties dev, int level) {
         if (level == JposConst.JPOS_CH_INTERNAL) {
-            try {
-                dev.CheckHealthText = "Internal CheckHealth: ";
-                if (!claimed) {
-                    dev.EventSource.claim(RequestTimeout * (MaxRetry + 2));
-                    dev.CheckHealthText += "Claimed ";
-                }
-                dev.CheckHealthText += InIOError || DeviceIsOffline ? "Failed" : "OK";
-                if (!claimed) {
-                    dev.EventSource.release();
-                    dev.CheckHealthText += " Released";
-                }
-            } catch (JposException e) {
-                if (!claimed && dev.Claimed) {
-                    dev.CheckHealthText += "Failed";
-                    try {
-                        dev.EventSource.release();
-                        dev.CheckHealthText += " Released";
-                    } catch (JposException ee) {}
-                }
-            }
+            dev.CheckHealthText = "Internal CheckHealth: ";
+            dev.CheckHealthText += InIOError || DeviceIsOffline ? "Failed" : "OK";
             dev.CheckHealthText += ".";
             log(Level.DEBUG, dev.LogicalName + ": CheckHealthText <- " + dev.CheckHealthText);
             return true;
@@ -1781,7 +1272,12 @@ public class Device extends JposDevice implements Runnable{
         return false;
     }
 
-    private long timeoutToLong(int timeout) {
+    /**
+     * Converts timeout value to long.
+     * @param timeout Timeout as integer value.
+     * @return For positive values, timeout. For JPOS_FOREVER -1. Otherwise 2 * (Integer.MAX_VALUE + 1) + timeout.
+     */
+    long timeoutToLong(int timeout) {
         long subtractor = Integer.MAX_VALUE;
         if (timeout == JposConst.JPOS_FOREVER)
             return -1l;
