@@ -1,7 +1,7 @@
 What Is It
 ==========
-The sample combi device simulator is a sample implementation for some kind of operator module, considting of a line
-display (2two lines, each 20 characters), an operator lock, an electronic key lock, a cash drawer, a scanner, a
+The sample combi device simulator is a sample implementation for some kind of operator module, consisting of a line
+display (two lines, each 20 characters), an operator lock, an electronic key lock, a cash drawer, a scanner, a
 magnetic stripe reader and a POS keyboard.
 
 How To Connect The Simulator To The POS Application
@@ -14,7 +14,7 @@ the Tcl/Tk interpreter. The COM port can be a real COM port or a virtual COM por
 com0com driver for Windows.
 
 If a TCP port will be used, the mode value will not be used. The simulator provides a TCP server (IPv4) with the
-specified port (the port must be an unused port, numerical, between 1 and 65535). Only one connection at atime is
+specified port (the port must be an unused port, numerical, between 1 and 65535). Only one connection at a time is
 possible. Further connections will be rejected.
 
 The communication protocol is the same for COM and TCP connections.
@@ -25,7 +25,7 @@ The UPOS specification advises the service developer to provide a way to map key
 key values. The property file must have the name <packet name>.<class name>.properties
 (SampleCombiDevice.Device.properties) and it must contain one line per enabled key.
 
-The keyboard has 10x16 keys. If the key in row 7, column 12 shall generate a data event with kea value 1234,
+The keyboard has 10x16 keys. If the key in row 7, column 12 shall generate a data event with key value 1234,
 the property file must contain the following line:
 
 Key07-12Value = 1234
