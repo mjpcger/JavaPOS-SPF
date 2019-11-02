@@ -311,4 +311,13 @@ public interface JposBaseInterface {
      * should not be necessary.
      */
     public void retryOutput() throws JposException;
+
+    /**
+     * Will be called whenever DeviceEnabled will be set to true if power notification is enabled
+     * (PowerNotify = PN_ENABLED). Should update the PowerState property. Further processing like firing a
+     * StatusUpdateEvent is not necessary, this will be made by the framework automatically.
+     *
+     * @throws JposException If an error occurs.
+     */
+    public void handlePowerStateOnEnable() throws JposException;
 }

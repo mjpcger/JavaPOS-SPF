@@ -80,10 +80,16 @@ class CoinDispenser extends CoinDispenserProperties {
     public void deviceEnabled(boolean enable) throws JposException {
         super.deviceEnabled(enable);
         if (enable) {
-            PowerState = Dev.InIOError ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
             DispenserStatus = Dev.DispenserState;
         }
     }
+
+    @Override
+    public void handlePowerStateOnEnable() throws JposException {
+        PowerState = Dev.InIOError ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
+        super.handlePowerStateOnEnable();
+    }
+
     @Override
     public void adjustCashCounts(String cashCounts) throws JposException {
         // UPOS spec: Call will be ignored because sample coin dispenser can detect the exact amount of cash in it.

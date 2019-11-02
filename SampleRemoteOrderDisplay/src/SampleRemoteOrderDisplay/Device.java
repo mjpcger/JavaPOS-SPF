@@ -371,23 +371,6 @@ public class Device extends JposDevice implements Runnable {
         return new SampleRODisplayAccessor();
     }
 
-    @Override
-    public void handlePowerStateOnEnable(JposCommonProperties dev) throws JposException {
-        int state;
-        RemoteOrderDisplayProperties props = (RemoteOrderDisplayProperties) dev;
-        if (props.UnitsOnline == 0)
-            state = JposConst.JPOS_SUE_POWER_OFF_OFFLINE;
-        else
-            state = JposConst.JPOS_SUE_POWER_ONLINE;
-
-        JposStatusUpdateEvent event = new RemoteOrderDisplayStatusUpdateEvent(dev.EventSource, state, props.UnitsOnline);
-        synchronized (dev.EventList) {
-            dev.EventList.add(event);
-            log(Level.DEBUG, dev.LogicalName + ": Buffer StatusUpdateEvent: [" + event.toLogString() + "]");
-            processEventList(dev);
-        }
-    }
-
     /**
      * Sample device specific accessor class. The device is very simple:
      * <br>- Connect via TCP
@@ -448,6 +431,17 @@ public class Device extends JposDevice implements Runnable {
                     }
                 }
             }
+        }
+
+        @Override
+        public void handlePowerStateOnEnable() throws JposException {
+            int nowoffline = UnitsOnline & ~UnitOnline;
+            int nowonline = ~UnitsOnline & UnitOnline;
+            UnitsOnline = UnitOnline;
+            if (nowoffline != 0)
+                handleEvent(new RemoteOrderDisplayStatusUpdateEvent(EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE, nowoffline));
+            if (nowonline != 0)
+                handleEvent(new RemoteOrderDisplayStatusUpdateEvent(EventSource, JposConst.JPOS_SUE_POWER_ONLINE, nowonline));
         }
 
         @Override

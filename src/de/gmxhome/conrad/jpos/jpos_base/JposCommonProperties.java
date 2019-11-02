@@ -585,5 +585,10 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     @Override
     public void updateStatistics(String statisticsBuffer) throws JposException {
     }
+
+    @Override
+    public void handlePowerStateOnEnable() throws JposException {
+        Device.handlePowerStateOnEnable(this);
+    }
 }
 

@@ -557,7 +557,7 @@ public class JposBase implements BaseService {
         logSet("DeviceEnabled");
         if (Props.PowerNotify == JposConst.JPOS_PN_ENABLED) {
             if (enable)
-                Device.handlePowerStateOnEnable(Props);
+                DeviceInterface.handlePowerStateOnEnable();
             else {
                 Props.PowerState = JposConst.JPOS_PS_UNKNOWN;
                 logSet("PowerState");

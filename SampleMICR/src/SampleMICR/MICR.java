@@ -85,15 +85,9 @@ public class MICR extends MICRProperties {
     }
 
     @Override
-    public void deviceEnabled(boolean enable) throws JposException {
-        super.deviceEnabled(enable);
-        if (enable) {
-            Dev.handleEvent(new JposStatusUpdateEvent(EventSource, Dev.Offline));
-        }
-        else if (PowerNotify == JposConst.JPOS_PN_ENABLED){
-            PowerState = JposConst.JPOS_PS_UNKNOWN;
-            EventSource.logSet("PowerState");
-        }
+    public void handlePowerStateOnEnable() throws JposException {
+        PowerState = Dev.Offline == JposConst.JPOS_SUE_POWER_OFF_OFFLINE ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
+        super.handlePowerStateOnEnable();
     }
 
     @Override
