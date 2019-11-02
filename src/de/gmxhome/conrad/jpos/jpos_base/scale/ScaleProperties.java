@@ -215,6 +215,10 @@ public class ScaleProperties extends JposCommonProperties implements ScaleInterf
     }
 
     @Override
+    public void doPriceCalculating(DoPriceCalculating request) throws JposException {
+    }
+
+    @Override
     public void freezeValue(int item, boolean freeze) throws JposException {
     }
 
@@ -223,7 +227,15 @@ public class ScaleProperties extends JposCommonProperties implements ScaleInterf
     }
 
     @Override
+    public void readLiveWeightWithTare(ReadLiveWeightWithTare request) throws JposException {
+    }
+
+    @Override
     public void readWeight(int[] weightData, int timeout) throws JposException {
+    }
+
+    @Override
+    public void readWeight(ReadWeight request) throws JposException {
     }
 
     @Override

@@ -92,21 +92,30 @@ public interface ScaleInterface extends JposBaseInterface {
     public void displayText(String data) throws JposException;
 
     /**
-     * Final part of DoPriceCalculating method. Can be overwritten within derived classes, if necessary.
+     * Validation part of DoPriceCalculating method. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>The device state is not S_BUSY,</li>
-     *     <li>In case of AsyncMode = false: The timeout is &ge; 0 or JPOS_FOREVER,</li>
-     *     <li>The dimension of the given array parameters is 1.</li>
+     *     <li>The dimension of the given array parameters is 1,</li>
+     *     <li>In case of AsyncMode = false: The timeout is &ge; 0 or JPOS_FOREVER.</li>
      * </ul>
      * If AsyncMode = true, setting weightData[0], tare[0], unitPrice[0] and price[0] to 0 will not be necessary
      * because this will be done within the calling method.<p>
      * Since the UPOS specification is very unclear for this method, further
      * checks might be necessary and must be implemented within this method in derived classes:
-     * - CapPriceCalculation check,
-     * - CapSetUnitPriceWithWeightUnit check,
-     * - Check whether SetUnitPriceWithWeightUnit has been called previously.
+     * <ul>
+     *     <li>CapPriceCalculation check,</li>
+     *     <li>CapSetUnitPriceWithWeightUnit check,</li>
+     *     <li>Check whether SetUnitPriceWithWeightUnit has been called previously.</li>
+     * </ul>
+     * <br>In addition, this method must return the current values for initPriceX, weightUnitX,
+     * weightNumeratorX and weightDenominatorX as set via method SetUnitPriceWithWeightUnit.
+     * <br>A service may perform the full weight process inside this method, but this is not recommended, especially
+     * in asynchronous operation. The recommended functionality is to perform only validation in this method and
+     * to perform weighing inside the final part. If implemented the latter way, it must throw a JposException with
+     * ErrorCode = 0 to signal successful operation and optional an additional data object, derived from Exception,
+     * passed as original exception.
      *
      * @param weightData         The value for the net weight in the price calculation algorithm.
      * @param tare               The value used to determine the item net weight in the price calculation algorithm.
@@ -117,9 +126,26 @@ public interface ScaleInterface extends JposBaseInterface {
      * @param weightDenominatorX See UPOS specification, chapter Scale - Methods - doPriceCalculating Method.
      * @param price              The calculated monetary value for the item on the scale.
      * @param timeout            The number of milliseconds to wait for a settled weight before failing the method.
-     * @throws JposException    See UPOS specification, method DoPriceCalculating.
+     * @throws JposException    See UPOS specification, method DoPriceCalculating. To signal successful validation,
+     *                          property ErrorCode will be 0.
      */
     public void doPriceCalculating(int[] weightData, int[] tare, long[] unitPrice, long[] unitPriceX, int[] weightUnitX, int[] weightNumeratorX, int[] weightDenominatorX, long[] price, int timeout) throws JposException;
+
+    /**
+     * Final part of DoPriceCalculating method. Can be overwritten within derived classes, if necessary.
+     * The parameters of the method will be passed via a DoPriceCalculating object. This method will be called
+     * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
+     * checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>Timeout &ge; 0 or JPOS_FOREVER.</li>
+     * </ul>
+     * <br>This method will only be called if the validation method threw a JposException with ErrorCode = 0.
+     *
+     * @param request           Input request object that contains all parameters to be used by DoPriceCalculating.
+     * @throws JposException    If an error occurs.
+     */
+    public void doPriceCalculating(DoPriceCalculating request) throws JposException;
 
     /**
      * Final part of FreezeValue method. Can be overwritten within derived classes, if necessary.
@@ -139,42 +165,86 @@ public interface ScaleInterface extends JposBaseInterface {
     public void freezeValue(int item, boolean freeze) throws JposException;
 
     /**
-     * Final part of ReadLiveWeightWithTare method. Can be overwritten within derived classes, if necessary.
+     * Validation part of ReadLiveWeightWithTare method. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>CapReadLiveWeigthWithTare is true,</li>
+     *     <li>CapReadLiveWeightWithTare is true,</li>
      *     <li>Device state is not S_BUSY,</li>
-     *     <li>If AsyncMode = false: timeout &ge; 0 or JPOS_FOREVER,</li>
-     *     <li>The dimension of weigtData and tare is 1.</li>
+     *     <li>The dimension of weightData and tare is 1,</li>
+     *     <li>If AsyncMode = false: timeout &ge; 0 or JPOS_FOREVER.</li>
      * </ul>
      * If AsyncMode = true, setting weightData[0] and tare[0] to 0 will not be necessary
      * because this will be done within the calling method.
+     * <br>A service may perform the full weight process inside this method, but this is not recommended, especially
+     * in asynchronous operation. The recommended functionality is to perform only validation in this method and
+     * to perform weighing inside the final part. If implemented the latter way, it must throw a JposException with
+     * ErrorCode = 0 to signal successful operation and optional an additional data object, derived from Exception,
+     * passed as original exception.
      *
      * @param weightData    On return, net weight calculated by the scale.
-     * @param tare          On return, tare weigth used to calculate the net weight.
+     * @param tare          On return, tare weight used to calculate the net weight.
      * @param timeout       Number of milliseconds to wait for a settled weight before failing the method.
-     * @throws JposException    See UPOS specification, method ReadLiveWeightWithTare.
+     * @throws JposException    See UPOS specification, method ReadLiveWeightWithTare. To signal successful validation,
+     *                          property ErrorCode will be 0.
      */
     public void readLiveWeightWithTare(int[] weightData, int[] tare, int timeout) throws JposException;
 
     /**
-     * Final part of ReadWeight method. Can be overwritten within derived classes, if necessary.
+     * Final part of ReadLiveWeightWithTare method. Can be overwritten within derived classes, if necessary.
+     * The parameters of the method will be passed via a ReadLiveWeightWithTare object. This method will be called
+     * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
+     * checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>Timeout &ge; 0 or JPOS_FOREVER.</li>
+     * </ul>
+     * <br>This method will only be called if the validation method threw a JposException with ErrorCode = 0.
+     *
+     * @param request           Output request object that contains all parameters to be used by ReadLiveWeightWithTare.
+     * @throws JposException    If an error occurs.
+     */
+    public void readLiveWeightWithTare(ReadLiveWeightWithTare request) throws JposException;
+
+    /**
+     * Validation part of ReadWeight method. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>Device state is not S_BUSY,</li>
-     *     <li>If AsyncMode = false: timeout &ge; 0 or JPOS_FOREVER,</li>
-     *     <li>The dimension of weigtData is 1.</li>
+     *     <li>The dimension of weightData is 1,</li>
+     *     <li>If AsyncMode = false: timeout &ge; 0 or JPOS_FOREVER.</li>
      * </ul>
      * If AsyncMode = true, setting weightData[0] to 0 will not be necessary
      * because this will be done within the calling method.
+     * <br>A service may perform the full weight process inside this method, but this is not recommended, especially
+     * in asynchronous operation. The recommended functionality is to perform only validation in this method and
+     * to perform weighing inside the final part. If implemented the latter way, it must throw a JposException with
+     * ErrorCode = 0 to signal successful operation and optional an additional data object, derived from Exception,
+     * passed as original exception.
      *
      * @param weightData The weight measured by the scale.
      * @param timeout    The number of milliseconds to wait for a settled weight before failing the method.
-     * @throws JposException    See UPOS specification, method ReadWeight.
+     * @throws JposException    See UPOS specification, method ReadWeight. To signal successful validation,
+     *                          property ErrorCode will be 0.
      */
     public void readWeight(int[] weightData, int timeout) throws JposException;
+
+    /**
+     * Final part of ReadWeight method. Can be overwritten within derived classes, if necessary.
+     * The parameters of the method will be passed via a ReadWeight object. This method will be called
+     * when the corresponding operation shall be performed, either synchronously or asynchronously. All plausibility
+     * checks have been made before, only runtime errors can occur.
+     * <br>In case of asynchronous processing, the following additional checks have been made before as well:
+     * <ul>
+     *     <li>Timeout &ge; 0 or JPOS_FOREVER.</li>
+     * </ul>
+     * <br>This method will only be called if the validation method threw a JposException with ErrorCode = 0.
+     *
+     * @param request           Output request object that contains all parameters to be used by ReadWeight.
+     * @throws JposException    If an error occurs.
+     */
+    public void readWeight(ReadWeight request) throws JposException;
 
     /**
      * Final part of SetPriceCalculationMode method. Can be overwritten within derived classes, if necessary.
