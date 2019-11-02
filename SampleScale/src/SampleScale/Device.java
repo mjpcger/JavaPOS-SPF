@@ -1,6 +1,7 @@
 package SampleScale;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
+import de.gmxhome.conrad.jpos.jpos_base.micr.Data;
 import de.gmxhome.conrad.jpos.jpos_base.scale.*;
 import jpos.JposConst;
 import jpos.JposException;
@@ -64,12 +65,6 @@ public class Device extends JposDevice implements Runnable {
     int PollDelay = 500;
 
     /**
-     * Minimum timeout for claim. If a lower claim timeout will be specified, it will be replaced by the given value to
-     * ensure that claim does not fail whenever the scale is available.
-     */
-    int MinClaimTimeout = 200;
-
-    /**
      * Maximum weight supported by the scale. Any higher weight results in an overweight condition.
      */
     int MaximumWeight = 5000;
@@ -113,9 +108,6 @@ public class Device extends JposDevice implements Runnable {
             if ((o = entry.getPropertyValue("PollDelay")) != null) {
                 PollDelay = Integer.parseInt(o.toString());
             }
-            if ((o = entry.getPropertyValue("MinClaimTimeout")) != null) {
-                MinClaimTimeout = Integer.parseInt(o.toString());
-            }
             if ((o = entry.getPropertyValue("MaximumWeight")) != null) {
                 MaximumWeight = (int) Double.parseDouble(o.toString()) * 1000;
             }
@@ -145,8 +137,7 @@ public class Device extends JposDevice implements Runnable {
     }
 
     private Thread CommandProcessor;
-    private CommandFinalizer Finalizer;
-    private CommandFinalizer InErrorFinalizer = null;
+    private SyncObject SignalStatusUpdated = null;
     private SyncObject WaitCommand = new SyncObject();
     private boolean ToBeFinished;
     private int Offline = JposConst.JPOS_PS_UNKNOWN;
@@ -159,15 +150,7 @@ public class Device extends JposDevice implements Runnable {
         int offline = Offline;
         while (!ToBeFinished) {
             long timeval = System.currentTimeMillis();
-            CommandFinalizer finalizer = new PollFinalizer();
-            synchronized (CommandProcessor) {
-                if (Finalizer != null)
-                    finalizer = Finalizer;
-            }
-            finalizer.Response = sendCommand(finalizer.Command, finalizer.Timeout);
-            if (finalizer.synchronously()) {
-                finalizer.finish();
-            }
+            String response = sendCommand("\2" + "08\3", (MaxRetry + 1) * (RequestTimeout + CharacterTimeout) + 70);
             JposCommonProperties props = getClaimingInstance(ClaimedScale, 0);
             if (!ToBeFinished && offline != Offline && Offline == JposConst.JPOS_PS_ONLINE) {
                 try {
@@ -176,8 +159,11 @@ public class Device extends JposDevice implements Runnable {
                 }
                 offline = Offline;
             }
-            if (!finalizer.synchronously()) {
-                finalizer.finish();
+            synchronized(CommandProcessor) {
+                if (SignalStatusUpdated != null) {
+                    SignalStatusUpdated.signal();
+                    SignalStatusUpdated = null;
+                }
             }
             if (!ToBeFinished && offline != Offline) {
                 try {
@@ -189,84 +175,6 @@ public class Device extends JposDevice implements Runnable {
             timeval = System.currentTimeMillis() - timeval;
             if (timeval < PollDelay)
                 WaitCommand.suspend(PollDelay - timeval);
-        }
-    }
-
-    /**
-     * Finalizer for any synchronous command. Simply passes result to calling method which must perform the remaining
-     * steps.
-     */
-    private class CommandFinalizer {
-        /**
-         * Object the waiting method uses to wait until command has been executed
-         */
-        public SyncObject WaitResult;
-
-        /**
-         * Command to be executed.
-         */
-        String Command;
-
-        /**
-         * Timeout for command to be executed
-         */
-        int Timeout;
-
-        /**
-         * Response to command, in case of NAK the result of the following status request
-         */
-        String Response;
-
-        /**
-         * The constructor.
-         * @param command Command to be processed.
-         * @param timeout Timeout for command execution
-         * @param wait    true if initiator is waiting
-         */
-        CommandFinalizer(String command, int timeout, boolean wait) {
-            Command = command;
-            Timeout = timeout;
-            WaitResult = wait ? new SyncObject() : null;
-        }
-
-        /**
-         * Function to be called whenever command result has been retrieved.
-         */
-        void finish() {
-            if (WaitResult != null)
-                WaitResult.signal();
-            synchronized (CommandProcessor) {
-                Finalizer = null;
-            }
-        }
-
-        /**
-         * Specifies whether it is a synchronous or asynchronous function.
-         * @return true if synchronous, false otherwise.
-         */
-        boolean synchronously() {
-            return WaitResult != null;
-        }
-    }
-
-    /**
-     * Finalizer for status polls performed by command processor.
-     */
-    private class PollFinalizer extends CommandFinalizer {
-        /**
-         * Fixed command for status request.
-         */
-        PollFinalizer() {
-            super("\2" + "08\3", (MaxRetry + 1) * (RequestTimeout + CharacterTimeout) + 70, false);
-        }
-
-        /**
-         * Poll finalizer will alwasy be executed synchronously.
-         * @return
-         */
-        @Override
-        boolean synchronously() {
-            return true;
         }
     }
 
@@ -288,11 +196,11 @@ public class Device extends JposDevice implements Runnable {
         public void deviceEnabled(boolean enable) throws JposException {
             if (enable) {
                 int timeout = (MaxRetry + 2) * RequestTimeout;
-                CommandFinalizer finalizer = Finalizer = new CommandFinalizer("\2" + "08\3", timeout, true);
+                SyncObject waiter = SignalStatusUpdated = new SyncObject();
                 ToBeFinished = false;
                 (CommandProcessor = new Thread(SampleScale.Device.this)).start();
-                finalizer.WaitResult.suspend(timeout);
-                PowerState = Finalizer != null || InIOError ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
+                CommandProcessor.setName(LogicalName +".StatusHandler");
+                waiter.suspend(timeout);
             }
             else {
                 ToBeFinished = true;
@@ -311,6 +219,12 @@ public class Device extends JposDevice implements Runnable {
         }
 
         @Override
+        public void handlePowerStateOnEnable() throws JposException {
+            PowerState = SignalStatusUpdated != null || InIOError ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
+            super.handlePowerStateOnEnable();
+        }
+
+        @Override
         public void checkHealth(int level) throws JposException {
             if (level == JposConst.JPOS_CH_INTERNAL) {
                 CheckHealthText = "Internal CheckHealth: ";
@@ -322,6 +236,7 @@ public class Device extends JposDevice implements Runnable {
         }
 
         private void nonInternalCheckHealth(int level) {
+            ScaleService srv = (ScaleService)EventSource;
             long price = UnitPrice;
             String text = ScaleText;
             boolean async = AsyncMode;
@@ -332,10 +247,10 @@ public class Device extends JposDevice implements Runnable {
                 if (async)
                     asyncMode(false);
                 UnitPrice = 123400;  // 12.34
-                displayText("WEIGHING");
+                srv.displayText("WEIGHING");
                 if (level == JposConst.JPOS_CH_INTERACTIVE)
                     synchronizedMessageBox("Put something on scale", "CheckHealth Scale", msgtype);
-                readWeight(weight, level == JposConst.JPOS_CH_EXTERNAL ? Integer.MAX_VALUE : MaxRetry * RequestTimeout);
+                srv.readWeight(weight, level == JposConst.JPOS_CH_EXTERNAL ? Integer.MAX_VALUE : MaxRetry * RequestTimeout);
                 CheckHealthText += "OK";
             } catch (JposException e) {
                 CheckHealthText += "Failed (" +e.getMessage() + ")";
@@ -403,188 +318,59 @@ public class Device extends JposDevice implements Runnable {
         }
 
         @Override
-        public void readWeight(int[] weightData, int timeout) throws JposException {
-            if (timeout == JposConst.JPOS_FOREVER)
-                timeout = Integer.MAX_VALUE;
-            ReadFinalizer finalizer = AsyncMode ? new ReadAsyncFinalizer() : new ReadSyncFinalizer(timeout);
+        public void readWeight(int[] weight, int timeout) throws JposException {
+            check(State == JposConst.JPOS_S_ERROR, JposConst.JPOS_E_BUSY, "Device busy (in error)");
+            throw new JposException(0, "");
+        }
+
+        @Override
+        public void readWeight(ReadWeight request) throws JposException {
+            int timeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
+            if (timeout < (MaxRetry + 2) * RequestTimeout)
+                timeout = (MaxRetry + 2) * RequestTimeout;
+            long startTime = System.currentTimeMillis();
             while (true) {
-                boolean wait;
-                synchronized (CommandProcessor) {
-                    if (State != JposConst.JPOS_S_BUSY && State != JposConst.JPOS_S_ERROR && Finalizer == null) {
-                        Finalizer = finalizer;
-                        if (AsyncMode)
-                            State = JposConst.JPOS_S_BUSY;
-                        wait = false;
+                String response = sendCommand("\5", timeout);
+                try {
+                    Device.check(response.length() != 7 && response.length() != 26, JposConst.JPOS_E_FAILURE, "Bad frame size");
+                    if (response.length() == 7 && response.charAt(0) == STX && response.charAt(6) == ETX && response.charAt(3) == ESC && response.substring(1, 3).equals("09")) {
+                        int state = Integer.parseInt(response.substring(4, 6), 10);
+                        switch (state) {
+                            case 20:    // Still in motion: Do it again (no remove of finalizer)
+                            case 30:    // Weight less than minimum (zero weight)
+                            case 31:    // Scale less than zero
+                                Device.check(System.currentTimeMillis() - startTime > timeout, JposConst.JPOS_E_TIMEOUT, "No valid weight within time limit");
+                                break;
+                            case 21:    // Not in motion since last weighing
+                                throw new JposException(JposConst.JPOS_E_EXTENDED, ScaleConst.JPOS_ESCAL_SAME_WEIGHT, "Not in motion since last weighing");
+                            case 22:    // No price calculation (unit price 0), should never occur
+                                throw new JposException(JposConst.JPOS_E_ILLEGAL, 0, "UnitPrice has not been set");
+                            case 32:    // Scale is overloaded
+                                throw new JposException(JposConst.JPOS_E_EXTENDED, ScaleConst.JPOS_ESCAL_OVERWEIGHT, "Scale overloaded");
+                            default:
+                                throw new JposException(JposConst.JPOS_E_FAILURE, 0, "Unknown scale status: " + state);
+                        }
+                        new SyncObject().suspend(PollDelay);
+                    } else if (response.length() == 26 && response.charAt(0) == STX && response.charAt(3) == ESC && response.charAt(5) == ESC &&
+                            response.charAt(11) == ESC && response.charAt(18) == ESC && response.charAt(25) == ETX &&
+                            response.substring(1, 3).equals("02") && response.charAt(4) == 0x33) {
+                        Device.check(Long.parseLong(response.substring(12, 18), 10) * 100 != UnitPrice, JposConst.JPOS_E_FAILURE, "Unexpected unit price");
+                        request.WeightData = Integer.parseInt(response.substring(6, 11), 10);
+                        request.SalesPrice = Long.parseLong(response.substring(19, 25), 10) * 100;
+                        return;
                     } else
-                        wait = true;
-                }
-                if (wait) {
-                    if (AsyncMode)
-                        throw new JposException(JposConst.JPOS_E_BUSY, 0, "Asynchronous operation in progress");
-                    finalizer.WaitResult.suspend(CharacterTimeout);
-                    if (System.currentTimeMillis() - finalizer.StartTime > timeout)
-                        throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "Synchronous operation delayed");
-                }
-                else {
-                    finalizer.waitResult(weightData);
-                    return;
+                        throw new JposException(JposConst.JPOS_E_FAILURE, 0, "Invalid frame structure");
+                } catch (NumberFormatException e) {
+                    Device.check(System.currentTimeMillis() - startTime < timeout, JposConst.JPOS_E_TIMEOUT, "No valid weight within time limit");
+                } catch (NullPointerException e) {
+                    throw new JposException(JposConst.JPOS_E_FAILURE, 0, "Offline");
                 }
             }
         }
 
         @Override
         public void doPriceCalculating(int[] weightData, int[] tare, long[] unitPrice, long[] unitPriceX, int[] weightUnitX, int[] weightNumeratorX, int[] weightDenominatorX, long[] price, int timeout) throws JposException {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Parameters values for unitPriceX, weightUnitX, weightNumeratorx and weightDenominatorX are not available.");
-        }
-
-        @Override
-        public void retryInput() throws JposException {
-            if (InErrorFinalizer != null) {
-                State = JposConst.JPOS_S_BUSY;
-                log(Level.DEBUG, LogicalName + ": State <- " + State);
-                log(Level.DEBUG, LogicalName + ": Enter Retry input...");
-                synchronized(CommandProcessor) {
-                    Finalizer = InErrorFinalizer;
-                    InErrorFinalizer = null;
-                }
-                WaitCommand.signal();
-            }
-        }
-    }
-
-    /**
-     * Finalizer for weighing command. Common part for synchronous and asynchronous operation.
-     */
-    private abstract class ReadFinalizer extends CommandFinalizer {
-        /**
-         * Fixed command for status request.
-         *
-         * @param timeout Maximum time the command may need.
-         */
-        ReadFinalizer(int timeout) {
-            super("\5", timeout, true);
-            StartTime = System.currentTimeMillis();
-        }
-
-        long StartTime;
-        JposException ErrorObject = null;
-        ScaleDataEvent DataObject = null;
-
-        @Override
-        void finish() {
-            try {
-                ScaleProperties scale = (ScaleProperties)getClaimingInstance(ClaimedScale, 0);
-                if (Response.length() != 7 && Response.length() != 26)
-                    ErrorObject = new JposException(JposConst.JPOS_E_FAILURE, 0, "Bad frame size");
-                if (Response.length() == 7 && Response.charAt(0) == STX && Response.charAt(6) == ETX && Response.charAt(3) == ESC && Response.substring(1, 3).equals("09")) {
-                    int state = Integer.parseInt(Response.substring(4, 6), 10);
-                    switch (state) {
-                        case 20:    // Still in motion: Do it again (no remove of finalizer)
-                        case 30:    // Weight less than minimum (zero weight)
-                        case 31:    // Scale less than zero
-                            if (System.currentTimeMillis() - StartTime < Timeout)
-                                return;
-                            ErrorObject = new JposException(JposConst.JPOS_E_TIMEOUT, 0, "No valid weight within time limit");
-                            break;
-                        case 21:    // Not in motion since last weighing
-                            ErrorObject = new JposException(JposConst.JPOS_E_EXTENDED, ScaleConst.JPOS_ESCAL_SAME_WEIGHT, "Not in motion since last weighing");
-                            break;
-                        case 22:    // No price calculation (unit price 0), should never occur
-                            ErrorObject = new JposException(JposConst.JPOS_E_ILLEGAL, 0, "UnitPrice has not been set");
-                            break;
-                        case 32:    // Scale is overloaded
-                            ErrorObject = new JposException(JposConst.JPOS_E_EXTENDED, ScaleConst.JPOS_ESCAL_OVERWEIGHT, "Scale overloaded");
-                            break;
-                        default:
-                            ErrorObject = new JposException(JposConst.JPOS_E_FAILURE, 0, "Unknown scale status: " + state);
-                    }
-                } else if (Response.length() == 26 && Response.charAt(0) == STX && Response.charAt(3) == ESC && Response.charAt(5) == ESC &&
-                        Response.charAt(11) == ESC && Response.charAt(18) == ESC && Response.charAt(25) == ETX &&
-                        Response.substring(1, 3).equals("02") && Response.charAt(4) == 0x33) {
-                    DataObject = new ScaleDataEvent(scale.EventSource,
-                            Integer.parseInt(Response.substring(6, 11), 10),
-                            scale.TareWeight,
-                            Long.parseLong(Response.substring(19, 25), 10) * 100,
-                            Long.parseLong(Response.substring(12, 18), 10)* 100);
-                } else
-                    ErrorObject = new JposException(JposConst.JPOS_E_FAILURE, 0, "Invalid frame structure");
-            } catch (NumberFormatException e) {
-                if (System.currentTimeMillis() - StartTime < Timeout)
-                    return;
-                ErrorObject = new JposException(JposConst.JPOS_E_TIMEOUT, 0, "No valid weight within time limit");
-            } catch (NullPointerException e) {
-                ErrorObject = new JposException(JposConst.JPOS_E_FAILURE, 0, "Offline");
-            }
-            super.finish();
-        }
-
-        /**
-         * Waits for the result of operation. In case of async mode, waitResult returns immediately.
-         *
-         * @param  weight Array to store the weight that the scale returned.
-         * @throws JposException In case of an error condition
-         */
-        void waitResult(int[] weight) throws JposException {}
-    }
-
-    /**
-     * Finalizer for synchronous weighing command.
-     */
-    private class ReadSyncFinalizer extends ReadFinalizer {
-        /**
-         * Fixed command for status request.
-         *
-         * @param timeout Maximum time the command may need.
-         */
-        ReadSyncFinalizer(int timeout) {
-            super(timeout);
-        }
-
-        @Override
-        void finish() {
-            super.finish();
-        }
-
-        @Override
-        void waitResult(int[] weight) throws JposException {
-            ScaleProperties scale = (ScaleProperties)getClaimingInstance(ClaimedScale, 0);
-            WaitResult.suspend(-1);
-            if (ErrorObject != null)
-                throw ErrorObject;
-            if (DataObject != null) {
-                weight[0] = DataObject.getStatus();
-                scale.UnitPrice = DataObject.UnitPrice;
-                scale.SalesPrice = DataObject.Price;
-            }
-        }
-    }
-
-    /**
-     * Finalizer for asynchronous weighing command.
-     */
-    private class ReadAsyncFinalizer extends ReadFinalizer {
-        /**
-         * Fixed command for status request.
-         */
-        ReadAsyncFinalizer() {
-            super(Integer.MAX_VALUE);
-        }
-
-        @Override
-        void finish(){
-            super.finish();
-            try {
-                JposCommonProperties props = getClaimingInstance(ClaimedScale, 0);
-                if (ErrorObject != null)
-                    handleEvent(new JposErrorEvent(props.EventSource, ErrorObject.getErrorCode(), ErrorObject.getErrorCodeExtended(), JposConst.JPOS_EL_INPUT));
-                else if (DataObject != null) {
-                    synchronized (CommandProcessor) {
-                        props.State = JposConst.JPOS_S_IDLE;
-                    }
-                    handleEvent(DataObject);
-                }
-            }
-            catch (JposException e) {}
+            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Parameter values for unitPriceX, weightUnitX, weightNumeratorX and weightDenominatorX are not available.");
         }
     }
 
@@ -673,6 +459,7 @@ public class Device extends JposDevice implements Runnable {
         try {
             for (int retry = 0; !ToBeFinished && System.currentTimeMillis() - starttime <= timeout && retry <= MaxRetry; retry++) {
                 byte[] request = ("\4" + command).getBytes(AsciiCoder);
+                Target.flush();
                 Target.write(request);
                 Target.setTimeout(RequestTimeout);
                 byte[] part = Target.read(1);
