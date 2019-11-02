@@ -42,9 +42,11 @@ public class ScaleDataEvent extends JposDataEvent {
      *
      * @param source Source, for services implemented with this framework, the (scale.)ScaleService object.
      * @param weight Status, in case of Scale the weight, see UPOS specification.
-     * @param tara   Tare weight used during last scale operation.
+     * @param tara   Tare weight used during last scale operation. In negative, properties ScaleLifeWeight,
+     *               TareWeight and UnitPrice will not be updated.
      * @param price  Computed price of last scale operation.
-     * @param unitprice  Unit price used during last scale operation.
+     * @param unitprice  Unit price used during last scale operation. If negative, property UnitPrice will
+     *                   not be updated.
      */
     public ScaleDataEvent(JposBase source, int weight, int tara, long price, long unitprice) {
         super(source, weight);
@@ -59,11 +61,15 @@ public class ScaleDataEvent extends JposDataEvent {
         ScaleProperties dev = (ScaleProperties) getPropertySet();
         dev.SalesPrice = Price;
         dev.EventSource.logSet("SalesPrice");
-        dev.UnitPrice = UnitPrice;
-        dev.EventSource.logSet("UnitPrice");
-        dev.ScaleLiveWeight = getStatus();
-        dev.EventSource.logSet("ScaleLiveWeight");
-        dev.TareWeight = TareWeight;
-        dev.EventSource.logSet("TareWeight");
+        if (TareWeight >= 0) {
+            if (UnitPrice >= 0) {
+                dev.UnitPrice = UnitPrice;
+                dev.EventSource.logSet("UnitPrice");
+            }
+            dev.ScaleLiveWeight = getStatus();
+            dev.EventSource.logSet("ScaleLiveWeight");
+            dev.TareWeight = TareWeight;
+            dev.EventSource.logSet("TareWeight");
+        }
     }
 }
