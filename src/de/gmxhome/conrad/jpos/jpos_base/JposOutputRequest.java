@@ -342,6 +342,7 @@ public class JposOutputRequest implements Runnable {
     @Override
     public void run() {
         JposOutputRequest current;
+        JposOutputRequest thelastone = null;
         while ((current = dequeue()) != null) {
             try {
                 current.invoke();
@@ -370,21 +371,29 @@ public class JposOutputRequest implements Runnable {
                         synchronized (Device.AsyncProcessorRunning) {
                             current.finished();
                             JposOutputCompleteEvent ocevent = current.createOutputEvent();
-                            if (current.OutputID == current.Props.OutputID) {
-                                current.Props.State = JposConst.JPOS_S_IDLE;
-                                current.Props.EventSource.logSet("State");
-                                if (ocevent != null)
-                                    Device.handleEvent(ocevent);
-                                if (current.Props.FlagWhenIdle) {
-                                    current.Props.FlagWhenIdle = false;
-                                    current.Props.EventSource.logSet("FlagWhenIdle");
-                                    Device.handleEvent(current.createIdleEvent());
-                                }
-                            } else if (ocevent != null)
+                            if (ocevent != null) {
                                 Device.handleEvent(ocevent);
+                            }
+                            thelastone = current;
                         }
                     }
                 } catch (JposException e1) {
+                }
+            }
+        }
+        checkIdle(thelastone);
+    }
+
+    private void checkIdle(JposOutputRequest thelastone) {
+        if (thelastone != null && thelastone.Props.State == JposConst.JPOS_S_BUSY) {
+            thelastone.Props.State = JposConst.JPOS_S_IDLE;
+            thelastone.Props.EventSource.logSet("State");
+            if (thelastone.Props.FlagWhenIdle) {
+                thelastone.Props.FlagWhenIdle = false;
+                thelastone.Props.EventSource.logSet("FlagWhenIdle");
+                try {
+                    Device.handleEvent(thelastone.createIdleEvent());
+                } catch (JposException e) {
                 }
             }
         }
