@@ -1005,6 +1005,14 @@ public class Device extends JposDevice implements Runnable {
         CurrentJournalSize = newjournalsize;
         try {
             ElectronicJournalProperties jrn = (ElectronicJournalProperties)getClaimingInstance(ClaimedElectronicJournal, 0);
+            if (newjournalsize > oldsize) {
+                if (jrn != null) {
+                    if (jrn.DeviceEnabled)
+                        jrn.MediumFreeSpace = (newjournalsize > MaxJournalSize ? 0 : MaxJournalSize - newjournalsize) * 10000;
+                    else
+                        jrn.MediumFreeSpaceDef = (newjournalsize > MaxJournalSize ? 0 : MaxJournalSize - newjournalsize) * 10000;
+                }
+            }
             if (oldsize <= JournalSizeNearFull && newjournalsize > JournalSizeNearFull) {
                 handleEvent(new ElectronicJournalStatusUpdateEvent(jrn.EventSource, ElectronicJournalConst.EJ_SUE_MEDIUM_NEAR_FULL));
             }
@@ -1014,14 +1022,6 @@ public class Device extends JposDevice implements Runnable {
                 }
                 synchronized (CurrentState) {
                     CurrentState[FISCAL] = FISCALBLOCK;
-                }
-            }
-            if (newjournalsize > oldsize) {
-                if (jrn != null) {
-                    if (jrn.DeviceEnabled)
-                        jrn.MediumFreeSpace = newjournalsize > MaxJournalSize ? 0 : MaxJournalSize - newjournalsize;
-                    else
-                        jrn.MediumFreeSpaceDef = newjournalsize > MaxJournalSize ? 0 : MaxJournalSize - newjournalsize;
                 }
             }
         } catch (JposException e) {
