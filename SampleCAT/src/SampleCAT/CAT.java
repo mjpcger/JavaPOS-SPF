@@ -116,15 +116,16 @@ public class CAT extends CATProperties {
     public void authorizeSales(AuthorizeSales request) throws JposException  {
         Dev.Display.init();
         Dev.Ticket.init();
+        int timeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
         try {
             long starttime = System.currentTimeMillis();
-            Dev.beginAuthorization(request.getTimeout());
+            Dev.beginAuthorization(timeout);
             long deltatime = System.currentTimeMillis() - starttime;
-            if (deltatime < request.getTimeout()) {
-                Dev.sale(false, request.getAmount() + request.getTaxOthers(), (int) (request.getTimeout() - deltatime));
+            if (deltatime < timeout) {
+                Dev.sale(false, request.getAmount() + request.getTaxOthers(), (int) (timeout - deltatime));
                 deltatime = System.currentTimeMillis() - starttime;
-                if (Integer.parseInt(CenterResultCode) != 0 && deltatime < request.getTimeout()) {
-                    Dev.confirm(Integer.parseInt(AdditionalSecurityInformation), true, (int) (request.getTimeout() - deltatime));
+                if (Integer.parseInt(CenterResultCode) != 0 && deltatime < timeout) {
+                    Dev.confirm(Integer.parseInt(AdditionalSecurityInformation), true, (int) (timeout - deltatime));
                 }
                 SequenceNumber = request.getSequenceNumber();
             }
@@ -152,12 +153,13 @@ public class CAT extends CATProperties {
     public void authorizeVoid(AuthorizeVoid request) throws JposException  {
         Dev.Display.init();
         Dev.Ticket.init();
+        int timeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
         try {
             long starttime = System.currentTimeMillis();
-            Dev.beginAuthorization(request.getTimeout());
+            Dev.beginAuthorization(timeout);
             long deltatime = System.currentTimeMillis() - starttime;
-            if (deltatime < request.getTimeout()) {
-                Dev.rollback(Integer.parseInt(request.getAdditionalSecurityInformation()), (int) (request.getTimeout() - deltatime));
+            if (deltatime < timeout) {
+                Dev.rollback(Integer.parseInt(request.getAdditionalSecurityInformation()), (int) (timeout - deltatime));
                 SequenceNumber = request.getSequenceNumber();
             }
         } finally {
@@ -171,12 +173,13 @@ public class CAT extends CATProperties {
     public void authorizeRefund(AuthorizeRefund request) throws JposException  {
         Dev.Display.init();
         Dev.Ticket.init();
+        int timeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
         try {
             long starttime = System.currentTimeMillis();
-            Dev.beginAuthorization(request.getTimeout());
+            Dev.beginAuthorization(timeout);
             long deltatime = System.currentTimeMillis() - starttime;
-            if (deltatime < request.getTimeout()) {
-                Dev.sale(true, request.getAmount() + request.getTaxOthers(), (int) (request.getTimeout() - deltatime));
+            if (deltatime < timeout) {
+                Dev.sale(true, request.getAmount() + request.getTaxOthers(), (int) (timeout - deltatime));
                 SequenceNumber = request.getSequenceNumber();
             }
         } finally {

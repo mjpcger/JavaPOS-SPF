@@ -21,6 +21,9 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.electronicjournal.*;
 import jpos.*;
 import java.io.*;
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 
 /**
@@ -466,6 +469,7 @@ public class ElectronicJournal extends ElectronicJournalProperties {
         Dev.check((mark = ej.retrieveMarker(Index, type)).equals(""), JposConst.JPOS_E_NOEXIST, "Marker not found");
         marker[0] = mark;
     }
+
     @Override
     public void retrieveMarkerByDateTime(int type, String date, String count, String[] marker) throws JposException {
         TicketViaEJ ej = (TicketViaEJ) Dev.Ticket;
@@ -473,5 +477,14 @@ public class ElectronicJournal extends ElectronicJournalProperties {
         Dev.check(type != ElectronicJournalConst.EJ_MT_DOCUMENT, JposConst.JPOS_E_NOEXIST, "Unsupported marker type: " + type);
         Dev.check((mark = ej.retrieveMarker(Index, Integer.parseInt(count), date, new long[1])).equals(""), JposConst.JPOS_E_NOEXIST, "Marker not found");
         marker[0] = mark;
+    }
+
+    @Override
+    public void retrieveMarkersDateTime(String marker, String[] date) throws JposException {
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
+        format.setLenient(false);
+        Dev.check(format.parse(marker, new ParsePosition(0)) == null, JposConst.JPOS_E_ILLEGAL, "Bad marker format");
+        Dev.check((((TicketViaEJ)Dev.Ticket).retrieveMarker(Index, Integer.parseInt("1"), marker, new long[1])).equals(""), JposConst.JPOS_E_NOEXIST, "Marker not found");
+        date[0] = marker;
     }
 }

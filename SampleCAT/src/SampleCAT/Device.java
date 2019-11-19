@@ -816,6 +816,7 @@ public class Device extends JposDevice implements Runnable{
         props.CapErasableMedium = true;
         props.CapRetrieveCurrentMarker = true;
         props.CapRetrieveMarkerByDateTime = true;
+        props.CapRetrieveMarkersDateTime = true;
         props.MediumSizeDef = (JournalMaxSize * JournalWidth * JRN_MAX_LINE_COUNT + Ticket.HEADSIZE) * CURRENCYFACTOR;
     }
 
