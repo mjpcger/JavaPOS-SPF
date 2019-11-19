@@ -294,7 +294,10 @@ public class Device extends JposDevice implements Runnable {
 
     private final static int Version = 1014001;
 
-    private int RequestTimeout = 2000;      // Maximum time between acknowledge and response frame.
+    /**
+     * Maximum time between acknowledge and response frame. Default: 2000. Can be set via jpos.xml.
+     */
+    public  int RequestTimeout = 2000;
     private int CharacterTimeout = 50;      // Maximum delay between two characters of the same frame.
     private int AckTimeout = 1000;          // Maximum time between a command and the corresponding response.
     private int PollDelay = 500;            // Delay between status poll cycles
@@ -315,7 +318,10 @@ public class Device extends JposDevice implements Runnable {
 
     private char[] CurrentState = new char[0];      // Updated when receiving a response
 
-    private int MaxRetry = 2;
+    /**
+     * Maximum number of retries. Default: 2. Can be set via jpos.xml.
+     */
+    int MaxRetry = 2;
     private boolean UsbToSerial = false;
     private int[] OpenCount = new int[]{0};
 
@@ -874,6 +880,7 @@ public class Device extends JposDevice implements Runnable {
                 String[] result = sendrecv(commands[index]);
                 if (result == null || result.length < 1 || result[0].length() < DRAWER + 2) {
                     index = 1;
+                    newstate = new char[0];
                 } else {
                     newstate = result[0].substring(1).toCharArray();
                     if (index == 0) {
@@ -885,10 +892,13 @@ public class Device extends JposDevice implements Runnable {
                         if (result.length > 2) {
                             CurrentPeriod = Integer.parseInt(result[2]);
                         }
-                        handleStates(newstate, newserno, newjournalsize);
-                        signalStatusWaits();
-                        PollWaiter.suspend(PollDelay);
                     }
+                }
+                if (index == 1) {
+                    handleStates(newstate, newserno, newjournalsize);
+                    StartPollingWaiter.signalWaiter();
+                    signalStatusWaits(FiscalPrinters[0]);
+                    PollWaiter.suspend(PollDelay);
                 }
             } catch (Exception e) {
                 index = 1 - index;      // try it again
@@ -900,15 +910,18 @@ public class Device extends JposDevice implements Runnable {
         char[] oldstate = CurrentState;
         if ((newstate.length <= DRAWER) != (oldstate.length <= DRAWER) || InitializeVatTable) {
             newstate = fillVatTable(newstate);
-            if ((newstate.length <= DRAWER) != (oldstate.length <= DRAWER))
+            if ((newstate.length <= DRAWER) != (oldstate.length <= DRAWER)) {
                 handlePowerState(newstate);
+                signalStatusWaits(CashDrawers[0]);
+            }
             if (oldstate.length <= DRAWER)
                 oldstate = "9999999".toCharArray();
         }
         if (!newserno.equals(SerialNumber) && !SerialNumber.equals("")) {
             log(Level.ERROR, ID + ": Serial number does not match the expected number: " + SerialNumber + " - " + newserno);
-            if (newstate.length > RECEIPT)
+            if (newstate.length > RECEIPT) {
                 newstate[RECEIPT] = BLOCKED;
+            }
         }
         synchronized (CurrentState) {
             CurrentState = newstate;
@@ -919,6 +932,7 @@ public class Device extends JposDevice implements Runnable {
             }
             if (newstate[DRAWER] != oldstate[DRAWER]) {
                 handleDrawerState(newstate[DRAWER]);
+                signalStatusWaits(CashDrawers[0]);
             }
             handlePrinterState();
         }
@@ -964,41 +978,6 @@ public class Device extends JposDevice implements Runnable {
         return null;
     }
 
-
-    /**
-     * Retrieves <i>SyncObject</i> that will be signalled when the drawer has been closed.
-     * @return
-     */
-    SyncObject getDrawerClosedWaiter() {
-        synchronized(DrawerClosedWaiter) {
-            SyncObject ret = new SyncObject();
-            DrawerClosedWaiter.add(ret);
-            return ret;
-        }
-    }
-
-    private void signalStatusWaits() {
-        synchronized(StatusWaiter) {
-            while (StatusWaiter.size() > 0) {
-                StatusWaiter.getFirst().signal();
-                StatusWaiter.removeFirst();
-            }
-            PollWaiter.suspend(0);
-        }
-    }
-
-    /**
-     * Retrieves <i>SyncObject</i> that will be signalled when a status value has been changed.
-     * @return
-     */
-    SyncObject getStatusWaitObj() {
-        synchronized(StatusWaiter) {
-            SyncObject ret = new SyncObject();
-            StatusWaiter.add(ret);
-            PollWaiter.signal();
-            return ret;
-        }
-    }
 
     private JposException handleEJState(long newjournalsize) {
         long oldsize = CurrentJournalSize;
@@ -1108,21 +1087,26 @@ public class Device extends JposDevice implements Runnable {
      * enable (shareable devices) or during claim (exclusive use devices).
      * @return The new open count.
      */
-    int startPolling() {
+    int startPolling(JposCommonProperties props) {
         synchronized (OpenCount) {
             if (OpenCount[0] == 0) {
                 ToBeFinished = false;
-                SyncObject obj = PollWaiter = new SyncObject();
+                PollWaiter = new SyncObject();
+                StartPollingWaiter = props;
                 (StateWatcher = new Thread(this)).start();
                 StateWatcher.setName("StatusUpdater");
                 OpenCount[0] = 1;
-                getStatusWaitObj().suspend(MaxRetry * (RequestTimeout + AckTimeout));
+                props.attachWaiter();
+                props.waitWaiter(MaxRetry * (RequestTimeout + AckTimeout));
+                props.releaseWaiter();
             }
             else
                 OpenCount[0] = OpenCount[0] + 1;
             return OpenCount[0];
         }
     }
+
+    private JposCommonProperties StartPollingWaiter = null;
 
     /**
      * Major part of device release operation. Decrements open count. If open count becomes zero, stops atatus
@@ -1140,6 +1124,7 @@ public class Device extends JposDevice implements Runnable {
                         break;
                     } catch (InterruptedException e) {}
                 }
+                StartPollingWaiter = null;
                 closePort();
             }
             if (OpenCount[0] > 0)

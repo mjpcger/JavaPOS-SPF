@@ -57,7 +57,7 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
     @Override
     public void claim(int timeout) throws JposException {
         Dev.InitializeVatTable = true;
-        Dev.startPolling();
+        Dev.startPolling(this);
         super.claim(timeout);
     }
 
@@ -125,9 +125,10 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
                 if (Dev.executeCommands(0, cmd) != 1) {
                     commandErrorException(cmd, new long[]{CLOSED});
                 }
-                SyncObject waitStateChanged = Dev.getStatusWaitObj();
+                attachWaiter();
                 Dev.PollWaiter.signal();
-                waitStateChanged.suspend(SyncObject.INFINITE);
+                waitWaiter(SyncObject.INFINITE);
+                releaseWaiter();
                 break;
         }
     }
@@ -196,9 +197,10 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
             Object e = processCommand(new String[]{"setTrainingMode", "1"});
             if (e instanceof JposException)
                 throw new JposException (JposConst.JPOS_E_FAILURE, "Setting training mode failed: " + ((JposException)e).getMessage(), (JposException) e);
-            SyncObject waitStateChanged = Dev.getStatusWaitObj();
+            attachWaiter();
             Dev.PollWaiter.signal();
-            waitStateChanged.suspend(SyncObject.INFINITE);
+            waitWaiter(SyncObject.INFINITE);
+            releaseWaiter();
             Dev.check(!TrainingModeActive, JposConst.JPOS_E_FAILURE, "Could not activate training mode");
         }
     }
@@ -212,9 +214,10 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
             Object e = processCommand(new String[]{"setTrainingMode", "0"});
             if (e instanceof JposException)
                 throw new JposException (JposConst.JPOS_E_FAILURE, "Setting training mode failed: " + ((JposException)e).getMessage(), (JposException) e);
-            SyncObject waitStateChanged = Dev.getStatusWaitObj();
+            attachWaiter();
             Dev.PollWaiter.signal();
-            waitStateChanged.suspend(SyncObject.INFINITE);
+            waitWaiter(SyncObject.INFINITE);
+            releaseWaiter();
             Dev.check(TrainingModeActive, JposConst.JPOS_E_FAILURE, "Could not deactivate training mode");
         }
     }
@@ -287,9 +290,10 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
             for (String[][]cmd : cmds)
                 commandErrorException(cmd, new long[]{NONFISCAL});
         }
-        SyncObject waitStateChanged = Dev.getStatusWaitObj();
+        attachWaiter();
         Dev.PollWaiter.signal();
-        waitStateChanged.suspend(SyncObject.INFINITE);
+        waitWaiter(SyncObject.INFINITE);
+        releaseWaiter();
         Dev.check(PrinterState != targetstate, JposConst.JPOS_E_FAILURE, "Could not enter " + receiptType + " receipt");
     }
 
@@ -318,9 +322,10 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
             for (String[][]cmd : cmds)
                 commandErrorException(cmd, new long[]{NONFISCAL});
         }
-        SyncObject waitStateChanged = Dev.getStatusWaitObj();
+        attachWaiter();
         Dev.PollWaiter.signal();
-        waitStateChanged.suspend(SyncObject.INFINITE);
+        waitWaiter(SyncObject.INFINITE);
+        releaseWaiter();
         Dev.check(PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, JposConst.JPOS_E_FAILURE, "Could not leave " + receiptType + " receipt");
     }
 
@@ -343,9 +348,10 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
             for (String[][]cmd : cmds)
                 commandErrorException(cmd, new long[]{CLOSED});
         }
-        SyncObject waitStateChanged = Dev.getStatusWaitObj();
+        attachWaiter();
         Dev.PollWaiter.signal();
-        waitStateChanged.suspend(SyncObject.INFINITE);
+        waitWaiter(SyncObject.INFINITE);
+        releaseWaiter();
         Dev.check(PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, JposConst.JPOS_E_FAILURE, "Could not enter fiscal receipt");
         Dev.VoidOnEndFiscal = true;
         Dev.SubtotalAdjustment = null;
@@ -370,9 +376,10 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
                 commandErrorException(cmd, new long[]{CLOSED, FINALIZING});
             }
         }
-        SyncObject waitStateChanged = Dev.getStatusWaitObj();
+        attachWaiter();
         Dev.PollWaiter.signal();
-        waitStateChanged.suspend(SyncObject.INFINITE);
+        waitWaiter(SyncObject.INFINITE);
+        releaseWaiter();
         Dev.check(PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, JposConst.JPOS_E_FAILURE, "Could not leave fiscal receipt");
         Dev.SubtotalAdjustment = null;
     }
@@ -650,17 +657,19 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
             Dev.check(state[PRINTER] == COVERORERROR, JposConst.JPOS_E_FAILURE, "Print station error");
             throw new JposException(JposConst.JPOS_E_FAILURE, "Unknown error");
         }
-        SyncObject waitStateChanged = Dev.getStatusWaitObj();
+        attachWaiter();
         Dev.PollWaiter.signal();
-        waitStateChanged.suspend(SyncObject.INFINITE);
+        waitWaiter(SyncObject.INFINITE);
+        releaseWaiter();
         Dev.check(PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR || DayOpened, JposConst.JPOS_E_FAILURE, "Could not close fiscal day");
     }
 
     @Override
     public void resetPrinter() throws JposException {
-        SyncObject waitStateChanged = Dev.getStatusWaitObj();
+        attachWaiter();
         Dev.PollWaiter.signal();
-        waitStateChanged.suspend(SyncObject.INFINITE);
+        waitWaiter(SyncObject.INFINITE);
+        releaseWaiter();
         synchronized (Dev) {
             String[][][]  commands = new String[0][][];
             char[] state = Dev.getCurrentState();
@@ -687,9 +696,10 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
             }
             Dev.executeCommands(0, commands);
         }
-        waitStateChanged = Dev.getStatusWaitObj();
+        attachWaiter();
         Dev.PollWaiter.signal();
-        waitStateChanged.suspend(SyncObject.INFINITE);
+        waitWaiter(SyncObject.INFINITE);
+        releaseWaiter();
         Dev.check(PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR || TrainingModeActive, JposConst.JPOS_E_FAILURE, "Printer reset failed");
     }
 
@@ -1465,9 +1475,10 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
             for (String[][]cmd : cmds)
                 commandErrorException(cmd, new long[]{ITEMIZING});
         }
-        SyncObject waitStateChanged = Dev.getStatusWaitObj();
+        attachWaiter();
         Dev.PollWaiter.signal();
-        waitStateChanged.suspend(SyncObject.INFINITE);
+        waitWaiter(SyncObject.INFINITE);
+        releaseWaiter();
         Dev.checkMember(PrinterState, allowedStates, JposConst.JPOS_E_FAILURE, "Could not leave itemizing state");
     }
 
@@ -1486,9 +1497,10 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
         String[][]cmd = new String[][]{new String[]{"fAbort", request.getDescription()}, null};
         if (Dev.executeCommands(0, cmd) != 1)
             commandErrorException(cmd, new long[]{ITEMIZING, PAYING, FINALIZING});
-        SyncObject waitStateChanged = Dev.getStatusWaitObj();
+        attachWaiter();
         Dev.PollWaiter.signal();
-        waitStateChanged.suspend(SyncObject.INFINITE);
+        waitWaiter(SyncObject.INFINITE);
+        releaseWaiter();
         Dev.check(PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT_ENDING, JposConst.JPOS_E_FAILURE, "Could not enter receipt ending state");
         Dev.VoidOnEndFiscal = false;
     }

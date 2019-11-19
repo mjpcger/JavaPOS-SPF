@@ -39,7 +39,8 @@ class LineDisplay extends LineDisplayProperties implements StatusUpdater {
         char[] state = Dev.getCurrentState();
         if (PowerNotify == JposConst.JPOS_PN_ENABLED) {
             int value = state.length <= DRAWER ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
-            new JposStatusUpdateEvent(EventSource, value).setAndCheckStatusProperties();
+            if (new JposStatusUpdateEvent(EventSource, value).setAndCheckStatusProperties())
+                Dev.signalStatusWaits(Dev.LineDisplays[Index]);
         }
     }
 
@@ -77,7 +78,7 @@ class LineDisplay extends LineDisplayProperties implements StatusUpdater {
 
     @Override
     public void claim(int timeout) throws JposException {
-        Dev.startPolling();
+        Dev.startPolling(this);
         super.claim(timeout);
     }
 

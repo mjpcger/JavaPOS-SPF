@@ -54,7 +54,7 @@ class ElectronicJournal extends ElectronicJournalProperties implements StatusUpd
 
     @Override
     public void claim(int timeout) throws JposException {
-        Dev.startPolling();
+        Dev.startPolling(this);
         MediumSizeDef = Dev.MaxJournalSize * 10000;
         MediumFreeSpaceDef = (Dev.MaxJournalSize > Dev.CurrentJournalSize ? Dev.MaxJournalSize - Dev.CurrentJournalSize : 0) * CURRENCYFACTOR;
         super.claim(timeout);

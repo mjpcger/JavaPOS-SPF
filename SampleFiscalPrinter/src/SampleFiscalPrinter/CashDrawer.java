@@ -23,7 +23,6 @@ import jpos.JposConst;
 import jpos.JposException;
 
 import javax.swing.*;
-import java.awt.*;
 
 import static SampleFiscalPrinter.Device.*;
 
@@ -42,23 +41,17 @@ class CashDrawer extends CashDrawerProperties implements StatusUpdater {
         super(0);
         Dev = dev;
     }
+
     @Override
     public void deviceEnabled(boolean enable) throws JposException {
+        if (enable) {
+            Dev.startPolling(this);
+        } else {
+            Dev.stopPolling();
+        }
         super.deviceEnabled(enable);
 
         Dev.updateStates(this, enable);
-    }
-
-    @Override
-    public void open() throws JposException {
-        super.open();
-        Dev.startPolling();
-    }
-
-    @Override
-    public void close() throws JposException {
-        super.close();
-        Dev.stopPolling();
     }
 
     @Override
@@ -105,33 +98,33 @@ class CashDrawer extends CashDrawerProperties implements StatusUpdater {
 
     @Override
     public void openDrawer() throws JposException {
-        String[] resp = Dev.sendrecv(new String[]{"openDrawer"});
-        Dev.check(resp == null || resp.length < 1, JposConst.JPOS_E_FAILURE, "Communication error");
-        Dev.check(resp[0].charAt(0) != SUCCESS, JposConst.JPOS_E_FAILURE, resp.length != 3 ? "Unknown printer error" : "Error " + resp[1] + " [" + resp[2] + "]");
-        Dev.getStatusWaitObj().suspend(1000000);
+        attachWaiter();
+        try {
+            String[] resp = Dev.sendrecv(new String[]{"openDrawer"});
+            Dev.check(resp == null || resp.length < 1, JposConst.JPOS_E_FAILURE, "Communication error");
+            Dev.check(resp[0].charAt(0) != SUCCESS, JposConst.JPOS_E_FAILURE, resp.length != 3 ? "Unknown printer error" : "Error " + resp[1] + " [" + resp[2] + "]");
+            char[] actstate = Dev.getCurrentState();
+            if (actstate.length > DRAWER && actstate[DRAWER] != OPENED)
+                waitWaiter(Dev.RequestTimeout * Dev.MaxRetry);
+            actstate = Dev.getCurrentState();
+            Dev.check(actstate.length <= DRAWER, JposConst.JPOS_E_OFFLINE, "Device offline");
+            Dev.check(actstate[DRAWER] != OPENED, JposConst.JPOS_E_FAILURE, "Could not open the drawer");
+        } finally {
+            releaseWaiter();
+        }
     }
 
     @Override
-    public void waitForDrawerClose(int beepTimeout, int beepFrequency, int beepDuration, int beepDelay) throws JposException {
-        int timeout = beepTimeout;
-        boolean beeping = false;
-        SyncObject waiter = Dev.getDrawerClosedWaiter();
-        char[] actstate = Dev.getCurrentState();
+    public void waitForDrawerClose() throws JposException {
+        attachWaiter();
+        char[] actstate;
 
-        if (actstate.length > DRAWER && actstate[DRAWER] != CLOSED) {
-            while (!waiter.suspend(timeout)) {
-                if (beeping) {
-                    timeout = beepDelay;
-                } else {
-                    timeout = beepDuration;
-                }
-                if (beeping = !beeping) {
-                    Toolkit.getDefaultToolkit().beep();
-                }
-            }
-
+        while ((actstate = Dev.getCurrentState()).length > DRAWER && actstate[DRAWER] != CLOSED) {
+            waitWaiter(SyncObject.INFINITE);
         }
-        super.waitForDrawerClose(beepTimeout, beepFrequency, beepDuration, beepDelay);
+        releaseWaiter();
+        check((actstate = Dev.getCurrentState()).length <= DRAWER, JposConst.JPOS_E_OFFLINE, "Device offline");
+        super.waitForDrawerClose();
     }
 
     @Override
@@ -140,6 +133,7 @@ class CashDrawer extends CashDrawerProperties implements StatusUpdater {
         if (PowerNotify == JposConst.JPOS_PN_ENABLED) {
             int value = state.length <= DRAWER ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
             new JposStatusUpdateEvent(EventSource, value).setAndCheckStatusProperties();
+            signalWaiter();
         }
         if (state.length > DRAWER) {
             int value = state.length >= DRAWER && state[DRAWER] == OPENED ? CashDrawerConst.CASH_SUE_DRAWEROPEN : CashDrawerConst.CASH_SUE_DRAWERCLOSED;
