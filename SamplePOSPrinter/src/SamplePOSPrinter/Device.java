@@ -58,7 +58,6 @@ public class Device extends JposDevice{
     private boolean MapCharacterSet = true;
     private boolean CoverOpen = false;
     private final Integer[] OpenCount = new Integer[1];
-    private List<SyncObject> StatusWaitList = new ArrayList<SyncObject>();
 
     /**
      * Byte arrays for printer normalization command.
@@ -340,37 +339,6 @@ public class Device extends JposDevice{
         }
     }
 
-    /**
-     * Method to wait for a specific drawer state.
-     * @param opened true to wait for drawer open, false to wait for drawer closed.
-     * @param timeout Maximum waiting time.
-     * @return true if status changed to the status specified by opened, false in case of timeout or offline
-     */
-    protected boolean waitStatusChange(boolean opened, int timeout) {
-        boolean ret = false;
-        long starttime = System.currentTimeMillis();
-        SyncObject obj = new SyncObject();
-        do {
-            synchronized (this) {
-                if (DrawerOpen == opened || !Online)
-                    return Online;
-                StatusWaitList.add(obj);
-            }
-            long currenttime = System.currentTimeMillis();
-            long tio = timeout == SyncObject.INFINITE ? timeout : currenttime - starttime >= timeout ? 1 : timeout + starttime - currenttime;
-            if (!obj.suspend(tio)) {
-                synchronized (this) {
-                    if (DrawerOpen == opened || !Online) {
-                        if (StatusWaitList.contains(obj))
-                            StatusWaitList.remove(obj);
-                        return Online;
-                    }
-                }
-                return false;
-            }
-        } while (true);
-    }
-
     private void handleCommunicationError(String msg) {
         synchronized(SocketSync) {
             closePort(false);
@@ -385,12 +353,6 @@ public class Device extends JposDevice{
         boolean oldstate = DrawerOpen;
         synchronized (this) {
             DrawerOpen = (val & RespDrawerBit) == RespDrawerBit;
-            if (oldstate != DrawerOpen) {
-                while (StatusWaitList.size() > 0) {
-                    StatusWaitList.get(0).signal();
-                    StatusWaitList.remove(0);
-                }
-            }
         }
         val &= ~RespDrawerBit;
         if (!(PrinterError = val == RespError)) {
@@ -533,12 +495,15 @@ public class Device extends JposDevice{
     }
 
     private void handleStatusChange(boolean offline, boolean inerror, boolean draweropen, boolean coveropen, int state) {
-        JposCommonProperties props = getPropertySetInstance(CashDrawers, 0, 0);
+        JposCommonProperties props;
         if (offline != Online || inerror != PrinterError) {
-            if (props != null) {
+            if ((props = getPropertySetInstance(CashDrawers, 0, 0)) != null) {
                 try {
                     handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, !Online ? JposConst.JPOS_SUE_POWER_OFF : (PrinterError ? JposConst.JPOS_SUE_POWER_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE)));
                 } catch (JposException e) {}
+                if (!Online) {
+                    signalStatusWaits(CashDrawers[0]);
+                }
             }
             if ((props = getClaimingInstance(ClaimedPOSPrinter, 0)) != null) {
                 try {
@@ -553,6 +518,7 @@ public class Device extends JposDevice{
                         handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, DrawerOpen ? CashDrawerConst.CASH_SUE_DRAWEROPEN : CashDrawerConst.CASH_SUE_DRAWERCLOSED));
                     } catch (JposException e) {}
                 }
+                signalStatusWaits(CashDrawers[0]);
             }
             if (coveropen != CoverOpen) {
                 if ((props = getClaimingInstance(ClaimedPOSPrinter, 0)) != null) {

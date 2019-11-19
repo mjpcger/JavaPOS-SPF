@@ -103,35 +103,34 @@ class CashDrawer extends CashDrawerProperties {
         super.checkHealth(level);
     }
 
-
     @Override
     public void openDrawer() throws JposException {
-        if (!Dev.Online)
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "CashDrawer not accessible");
-        Dev.sendCommand(Dev.CmdDrawerOpen);
-        Dev.PollWaiter.signal();
-        Dev.waitStatusChange(true, Dev.RequestTimeout);
-        DrawerOpened = Dev.DrawerOpen;
+        Dev.check(!Dev.Online, JposConst.JPOS_E_ILLEGAL, "CashDrawer not accessible");
+        if (!Dev.DrawerOpen) {
+            attachWaiter();
+            try {
+                Dev.sendCommand(Dev.CmdDrawerOpen);
+                Dev.PollWaiter.signal();
+                waitWaiter(Dev.RequestTimeout);
+                Dev.check(DrawerOpened != Dev.DrawerOpen, JposConst.JPOS_E_FAILURE, "Open drawer failed");
+            } finally {
+                releaseWaiter();
+            }
+        }
         super.openDrawer();
     }
 
     @Override
-    public void waitForDrawerClose(int beepTimeout, int beepFrequency, int beepDuration, int beepDelay) throws JposException {
-        int timeout = beepTimeout;
-        boolean beeping = false;
-
-        if (Dev.DrawerOpen) {
-            while (!Dev.waitStatusChange(false, timeout)) {
-                if (beeping) {
-                    timeout = beepDelay;
-                } else {
-                    timeout = beepDuration;
-                }
-                if (beeping = !beeping) {
-                    Toolkit.getDefaultToolkit().beep();
-                }
+    public void waitForDrawerClose() throws JposException {
+        attachWaiter();
+        try {
+            while (Dev.DrawerOpen && Dev.Online) {
+                waitWaiter(SyncObject.INFINITE);
             }
+            Dev.check(!Dev.Online, JposConst.JPOS_E_OFFLINE, "Device offline");
+        } finally {
+            releaseWaiter();
         }
-        super.waitForDrawerClose(beepTimeout, beepFrequency, beepDuration, beepDelay);
+        super.waitForDrawerClose();
     }
 }
