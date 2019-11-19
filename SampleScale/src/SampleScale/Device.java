@@ -320,7 +320,7 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public void readWeight(int[] weight, int timeout) throws JposException {
             check(State == JposConst.JPOS_S_ERROR, JposConst.JPOS_E_BUSY, "Device busy (in error)");
-            throw new JposException(0, "");
+            new ReadWeight(this, weight[0], timeout).throwRequest();
         }
 
         @Override
