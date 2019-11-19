@@ -480,6 +480,10 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     }
 
     @Override
+    public void directIO(DirectIO request) throws JposException {
+    }
+
+    @Override
     public void open() throws JposException {
         initOnOpen();
         State = JposConst.JPOS_S_IDLE;
@@ -572,6 +576,10 @@ public abstract class JposCommonProperties implements JposBaseInterface {
 
     @Override
     public void updateFirmware(String firmwareFileName) throws JposException {
+    }
+
+    @Override
+    public void updateFirmware(UpdateFirmware request) throws JposException {
     }
 
     @Override

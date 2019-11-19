@@ -100,7 +100,7 @@ public class DoPriceCalculating extends ReadLiveWeightWithTare {
 
     @Override
     public void invoke() throws JposException {
-        Props.Device.check(getTimeout() < 0  && getTimeout() != JposConst.JPOS_FOREVER && Props.AsyncMode == false, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + getTimeout());
+        Props.Device.check(getTimeout() < 0  && getTimeout() != JposConst.JPOS_FOREVER && EndSync != null, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + getTimeout());
         ((ScaleService)Props.EventSource).ScaleInterface.doPriceCalculating(this);
         if (EndSync == null) {
             ScaleProperties data = (ScaleProperties) Props;

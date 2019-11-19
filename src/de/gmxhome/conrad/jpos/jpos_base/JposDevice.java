@@ -81,6 +81,16 @@ public class JposDevice extends JposBaseDevice {
                 getCount(FiscalPrinters);
     }
 
+    /**
+     * Signals all SyncObject objects attached to any property set bound to the device.
+     *
+     */
+    public void signalStatusWaits(List<JposCommonProperties> propertylist) {
+        for (JposCommonProperties props : propertylist) {
+            props.signalWaiter();
+        }
+    }
+
     /*
      * CashDrawer specific implementations
      */
@@ -109,12 +119,13 @@ public class JposDevice extends JposBaseDevice {
      * @param maxDrawer Maximum number of cash drawers that can be controlled by the physical device
      */
     protected void cashDrawerInit(int maxDrawer) {
-        if (CashDrawers.length == 0) {
+        if (CashDrawers.length == 0 && maxDrawer > 0) {
             ClaimedCashDrawer = new CashDrawerProperties[maxDrawer];
             CashDrawers = (List<JposCommonProperties>[])new List[maxDrawer];
             for (int i = 0; i < maxDrawer; i++) {
                 CashDrawers[i] = new ArrayList<JposCommonProperties>(0);
             }
+            DrawerBeepVolume = 100; // The default volume
         }
     }
 
@@ -163,7 +174,7 @@ public class JposDevice extends JposBaseDevice {
      * @param maxKeylock Maximum number of keylocks that can be controlled by the physical device
      */
     protected void keylockInit(int maxKeylock) {
-        if (Keylocks.length == 0) {
+        if (Keylocks.length == 0 && maxKeylock > 0) {
             ClaimedKeylock = new KeylockProperties[maxKeylock];
             Keylocks = (List<JposCommonProperties>[])new List[maxKeylock];
             for (int i = 0; i < maxKeylock; i++) {
@@ -217,7 +228,7 @@ public class JposDevice extends JposBaseDevice {
      * @param maxKeyboard Maximum number of POS keyboards that can be controlled by the physical device
      */
     protected void pOSKeyboardInit(int maxKeyboard) {
-        if (POSKeyboards.length == 0) {
+        if (POSKeyboards.length == 0 && maxKeyboard > 0) {
             ClaimedPOSKeyboard = new POSKeyboardProperties[maxKeyboard];
             POSKeyboards = (List<JposCommonProperties>[])new List[maxKeyboard];
             for (int i = 0; i < maxKeyboard; i++) {
@@ -271,7 +282,7 @@ public class JposDevice extends JposBaseDevice {
      * @param maxScanner Maximum number of scanners that can be controlled by the physical device
      */
     protected void scannerInit(int maxScanner) {
-        if (Scanners.length == 0) {
+        if (Scanners.length == 0 && maxScanner > 0) {
             ClaimedScanner = new ScannerProperties[maxScanner];
             Scanners = (List<JposCommonProperties>[])new List[maxScanner];
             for (int i = 0; i < maxScanner; i++) {
@@ -325,7 +336,7 @@ public class JposDevice extends JposBaseDevice {
      * @param maxToneIndicator Maximum number of tone indicators that can be controlled by the physical device
      */
     protected void toneIndicatorInit(int maxToneIndicator) {
-        if (ToneIndicators.length == 0) {
+        if (ToneIndicators.length == 0 && maxToneIndicator > 0) {
             ClaimedToneIndicator = new ToneIndicatorProperties[maxToneIndicator];
             ToneIndicators = (List<JposCommonProperties>[])new List[maxToneIndicator];
             for (int i = 0; i < maxToneIndicator; i++) {
@@ -379,7 +390,7 @@ public class JposDevice extends JposBaseDevice {
      * @param maxDisplay Maximum number of line displays that can be controlled by the physical device
      */
     protected void lineDisplayInit(int maxDisplay) {
-        if (LineDisplays.length == 0) {
+        if (LineDisplays.length == 0 && maxDisplay > 0) {
             ClaimedLineDisplay = new LineDisplayProperties[maxDisplay];
             LineDisplays = (List<JposCommonProperties>[])new List[maxDisplay];
             for (int i = 0; i < maxDisplay; i++) {
@@ -442,7 +453,7 @@ public class JposDevice extends JposBaseDevice {
      * @param maxMsr Maximum number of magnetic stripe readers that can be controlled by the physical device
      */
     protected void mSRInit(int maxMsr) {
-        if (MSRs.length == 0) {
+        if (MSRs.length == 0 && maxMsr > 0) {
             ClaimedMSR = new MSRProperties[maxMsr];
             MSRs = (List<JposCommonProperties>[])new List[maxMsr];
             for (int i = 0; i < maxMsr; i++) {
@@ -497,7 +508,7 @@ public class JposDevice extends JposBaseDevice {
      * @param maxScales Maximum number of scales that can be controlled by the physical device
      */
     protected void scaleInit(int maxScales) {
-        if (Scales.length == 0) {
+        if (Scales.length == 0 && maxScales > 0) {
             ClaimedScale = new ScaleProperties[maxScales];
             Scales = (List<JposCommonProperties>[])new List[maxScales];
             for (int i = 0; i < maxScales; i++) {
@@ -552,7 +563,7 @@ public class JposDevice extends JposBaseDevice {
      * @param maxCoinDispenser Maximum number of coin dispensers that can be controlled by the physical device
      */
     protected void coinDispenserInit(int maxCoinDispenser) {
-        if (CoinDispensers.length == 0) {
+        if (CoinDispensers.length == 0 && maxCoinDispenser > 0) {
             ClaimedCoinDispenser = new CoinDispenserProperties[maxCoinDispenser];
             CoinDispensers = (List<JposCommonProperties>[])new List[maxCoinDispenser];
             for (int i = 0; i < maxCoinDispenser; i++) {
@@ -607,7 +618,7 @@ public class JposDevice extends JposBaseDevice {
      * @param maxPrinters Maximum number of POS printers that can be controlled by the physical device
      */
     protected void pOSPrinterInit(int maxPrinters) {
-        if (POSPrinters.length == 0) {
+        if (POSPrinters.length == 0 && maxPrinters > 0) {
             ClaimedPOSPrinter = new POSPrinterProperties[maxPrinters];
             POSPrinters = (List<JposCommonProperties>[])new List[maxPrinters];
             for (int i = 0; i < maxPrinters; i++) {
@@ -662,7 +673,7 @@ public class JposDevice extends JposBaseDevice {
      * @param maxRODisplay Maximum number of remote order displays that can be controlled by the physical device
      */
     protected void remoteOrderDisplayInit(int maxRODisplay) {
-        if (RemoteOrderDisplays.length == 0) {
+        if (RemoteOrderDisplays.length == 0 && maxRODisplay > 0) {
             ClaimedRemoteOrderDisplay = new RemoteOrderDisplayProperties[maxRODisplay];
             RemoteOrderDisplays = (List<JposCommonProperties>[])new List[maxRODisplay];
             for (int i = 0; i < maxRODisplay; i++) {
@@ -717,7 +728,7 @@ public class JposDevice extends JposBaseDevice {
      * @param maxCAT Maximum number of credit authorization terminals that can be controlled by the physical device
      */
     protected void cATInit(int maxCAT) {
-        if (CATs.length == 0) {
+        if (CATs.length == 0 && maxCAT > 0) {
             ClaimedCAT = new CATProperties[maxCAT];
             CATs = (List<JposCommonProperties>[])new List[maxCAT];
             for (int i = 0; i < maxCAT; i++) {
@@ -772,7 +783,7 @@ public class JposDevice extends JposBaseDevice {
      * @param maxElectronicJournal Maximum number of electronic journal devices that can be controlled by the physical device
      */
     protected void electronicJournalInit(int maxElectronicJournal) {
-        if (ElectronicJournals.length == 0) {
+        if (ElectronicJournals.length == 0 && maxElectronicJournal > 0) {
             ClaimedElectronicJournal = new ElectronicJournalProperties[maxElectronicJournal];
             ElectronicJournals = (List<JposCommonProperties>[])new List[maxElectronicJournal];
             for (int i = 0; i < maxElectronicJournal; i++) {
@@ -827,7 +838,7 @@ public class JposDevice extends JposBaseDevice {
      * @param maxMICR Maximum number of micr devices that can be controlled by the physical device
      */
     protected void mICRInit(int maxMICR) {
-        if (MICRs.length == 0) {
+        if (MICRs.length == 0 && maxMICR > 0) {
             ClaimedMICR = new MICRProperties[maxMICR];
             MICRs = (List<JposCommonProperties>[])new List[maxMICR];
             for (int i = 0; i < maxMICR; i++) {
@@ -882,7 +893,7 @@ public class JposDevice extends JposBaseDevice {
      * @param maxFiscalPrinter Maximum number of fiscal printers that can be controlled by the physical device
      */
     protected void fiscalPrinterInit(int maxFiscalPrinter) {
-        if (FiscalPrinters.length == 0) {
+        if (FiscalPrinters.length == 0 && maxFiscalPrinter > 0) {
             ClaimedFiscalPrinter = new FiscalPrinterProperties[maxFiscalPrinter];
             FiscalPrinters = (List<JposCommonProperties>[])new List[maxFiscalPrinter];
             for (int i = 0; i < maxFiscalPrinter; i++) {

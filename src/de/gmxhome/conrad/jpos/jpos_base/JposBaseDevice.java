@@ -377,22 +377,10 @@ public class JposBaseDevice {
     }
 
     /**
-     * The description of ClearInput and ClearOutput in the UPOS specification is unclear for RemoteOrderDisplay devices.
-     * This property can be set to true if ClearInput and ClearOutput clear all buffered events and not only those
-     * events that belong to units specified in CurrentUnitID. The default behavior in ClearInput and ClearOutput is as
-     * follows:<ul>
-     * <li> Only data events for the unit specified by CurrentUnitID will be cleared (ClearInput).</li>
-     * <li> All OutputCompleteEvents with the CurrentUnitID bit set in the corresponding value for EventUnits will be
-     * cleared (ClearOutput).</li>
-     * <li> All ErrorEvents with the CurrentUnitID bit set in the corresponding value for EventUnits will be cleared
-     * (ClearInput or ClearOutput).</li>
-     * <li> The CurrentUnitID bit will be cleared from the units value of all buffered asynchronous output requests. If
-     * the CurrentUnitID bit was the only bit set in the units parameter of a buffered asynchronous output request, this
-     * request will be removed from the list of asynchronous output requests.</li>
-     * </ul>Therefore, in case of clearing input or output as result of an error event, ClearInput or ClearOutput should
-     * be called for all bits set in EventUnits when the error event happened.
+     * Volume for drawer beep. Valid values are from 0 to 127. Will be initialized with an Integer object only for
+     * devices that support at least one CashDrawer device.
      */
-    boolean RemoteOrderDisplayClearClearsAllEvents = false;
+    public Integer DrawerBeepVolume = null;
 
     /**
      * Checks whether a JposEntry belongs to a predefined property value an if so,
@@ -404,8 +392,6 @@ public class JposBaseDevice {
     public void checkProperties(JposEntry entry) throws JposException {
         try {
             Object o;
-            if ((o = entry.getPropertyValue("RemoteOrderDisplayClearClearsAllEvents")) != null)
-                RemoteOrderDisplayClearClearsAllEvents = Boolean.parseBoolean(o.toString());
             if ((o = entry.getPropertyValue("LoggerName")) != null)
                 LoggerName = o.toString();
             if ((o = entry.getPropertyValue("LoggerFormat")) != null)
@@ -433,6 +419,12 @@ public class JposBaseDevice {
                     LogLevel = Level.OFF;
                 else
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid warning level");
+            }
+            // Device class specific entries, common for all implementations
+            if (DrawerBeepVolume != null && (o = entry.getPropertyValue("DrawerBeepVolume")) != null) {
+                DrawerBeepVolume = Integer.parseInt(o.toString());
+                if (DrawerBeepVolume < 0 || DrawerBeepVolume > 127)
+                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Drawer beep value not between 0 and 127: " + DrawerBeepVolume);
             }
         } catch (JposException e) {
             throw e;

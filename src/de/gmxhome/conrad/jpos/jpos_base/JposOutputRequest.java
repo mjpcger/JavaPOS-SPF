@@ -52,7 +52,7 @@ public class JposOutputRequest implements Runnable {
 
     /**
      * For synchronous processing, this object can be used to signal termination of the
-     * command invokation.
+     * command invocation.
      */
     public SyncObject EndSync = null;
 
@@ -391,8 +391,14 @@ public class JposOutputRequest implements Runnable {
             if (thelastone.Props.FlagWhenIdle) {
                 thelastone.Props.FlagWhenIdle = false;
                 thelastone.Props.EventSource.logSet("FlagWhenIdle");
+                JposStatusUpdateEvent event;
+                synchronized (Device.AsyncProcessorRunning) {
+                    JposOutputRequest savedCommand = Device.CurrentCommand;
+                    event = (Device.CurrentCommand = thelastone).createIdleEvent();
+                    Device.CurrentCommand = savedCommand;
+                }
                 try {
-                    Device.handleEvent(thelastone.createIdleEvent());
+                    Device.handleEvent(event);
                 } catch (JposException e) {
                 }
             }
@@ -400,10 +406,10 @@ public class JposOutputRequest implements Runnable {
     }
 
     /**
-     * Factory for error events generated from JposExceptions. Must be overwritten whenever more than standard error
-     * handling becomes necessary. For example, in case of cash printer methods, the print station that generated the
-     * error should be passed via the JposException parameter (which must be an object derived from JposException with
-     * an additional parameter for the print station)
+     * Factory for error events generated from JposExceptions. Must be overwritten whenever a device specific error
+     * event shall be created. For example, in case of cash printer methods, this method should return a
+     * POSPrinterErrorEvent (which is an object derived from JposException) that contains additional values to be
+     * stored in printer properties before the event will be fired.
      *
      * @param ex JposException which is the originator of an error event.
      * @return  The resulting error event.
@@ -412,11 +418,42 @@ public class JposOutputRequest implements Runnable {
         return new JposErrorEvent(Props.EventSource, ex.getErrorCode(), ex.getErrorCodeExtended(), JposConst.JPOS_EL_OUTPUT, ex.getMessage());
     }
 
+    /**
+     * Factory for output complete events. Must be overwritten whenever a device specific output complete event
+     * shall be created.
+     * @return  The resulting output complete event or null if no output complete event shall be enqueued.
+     */
     public JposOutputCompleteEvent createOutputEvent() {
         return new JposOutputCompleteEvent(Props.EventSource, OutputID);
     }
 
+    /**
+     * Factory for status update event with FlagWhenIdle status value. Must be overwritten whenever a device specific
+     * status update event shall be created.
+     * @return  The resulting status update event.
+     */
     public JposStatusUpdateEvent createIdleEvent() {
         return new JposStatusUpdateEvent(Props.EventSource, Props.FlagWhenIdleStatusValue);
+    }
+
+    public class OkException extends JposException {
+        /**
+         * get JposOutputRequest this exception belongs to.
+         * @return The request object.
+         */
+        public JposOutputRequest getOutputRequest() {
+            return JposOutputRequest.this;
+        }
+
+        /**
+         * The constructor. Sets error code 0.
+         */
+        public OkException() {
+            super(0);
+        }
+    }
+
+    public void throwRequest() throws JposException {
+        throw new OkException();
     }
 }

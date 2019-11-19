@@ -61,7 +61,7 @@ public class ReadWeight extends JposInputRequest {
 
     @Override
     public void invoke() throws JposException {
-        Props.Device.check(Timeout < 0  && Timeout != JposConst.JPOS_FOREVER && Props.AsyncMode == false, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + Timeout);
+        Props.Device.check(Timeout < 0  && Timeout != JposConst.JPOS_FOREVER && EndSync != null, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + Timeout);
         ((ScaleService)Props.EventSource).ScaleInterface.readWeight(this);
         if (EndSync == null) {
             ScaleProperties data = (ScaleProperties) Props;

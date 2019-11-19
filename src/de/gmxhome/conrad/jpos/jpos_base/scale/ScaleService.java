@@ -259,42 +259,26 @@ public class ScaleService extends JposBase implements ScaleService114 {
         Device.check(weightNumeratorX.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid dimension of weightNumeratorX");
         Device.check(weightDenominatorX.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid dimension of weightDenominatorX");
         Device.check(price.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid dimension of price");
-        JposException exception = doPriceCalculatingValidation(weightData, tare, unitPrice, unitPriceX, weightUnitX, weightNumeratorX, weightDenominatorX, price, timeout);
-        DoPriceCalculating request = new DoPriceCalculating(Data, weightData[0], tare[0], unitPrice[0], unitPriceX[0], weightUnitX[0], weightNumeratorX[0], weightDenominatorX[0], price[0], timeout);
-        if (doPriceCalculatingFinalization(exception, request)) {
-            unitPrice[0] = price[0] = weightData[0] = tare[0] = 0;
-            logAsyncCall("DoPriceCalculating(" + weightData[0] + ", " + tare[0] + ", " + unitPrice[0] + ", " + unitPriceX[0] + ", " + weightUnitX[0] + ", " + weightNumeratorX[0] + ", " + weightDenominatorX[0] + ", " + price[0] + ")");
-        } else {
-            Data.ScaleLiveWeight = weightData[0] = request.WeightData;
-            logSet("ScaleLiveWeight");
-            Data.TareWeight = tare[0] = request.Tare;
-            logSet("TareWeight");
-            Data.SalesPrice = request.SalesPrice;
-            logSet("SalesPrice");
-            Data.UnitPrice = unitPrice[0] = request.UnitPrice;
-            logCall("DoPriceCalculating", "" + weightData[0] + ", " + tare[0] + ", " + unitPrice[0] + ", " + unitPriceX[0] + ", " + weightUnitX[0] + ", " + weightNumeratorX[0] + ", " + weightDenominatorX[0] + ", " + price[0]);
-        }
-    }
-
-    private boolean doPriceCalculatingFinalization(JposException exception, DoPriceCalculating request) throws JposException {
-        boolean async = Data.AsyncMode;
-        if (exception != null) {
-            request.AdditionalData = exception.getOrigException();
-            async = callNowOrLater(request);
-        }
-        return async;
-    }
-
-    private JposException doPriceCalculatingValidation(int[] weightData, int[] tare, long[] unitPrice, long[] unitPriceX, int[] weightUnitX, int[] weightNumeratorX, int[] weightDenominatorX, long[] price, int timeout) throws JposException {
-        JposException exception = null;
         try {
             ScaleInterface.doPriceCalculating(weightData, tare, unitPrice, unitPriceX, weightUnitX, weightNumeratorX, weightDenominatorX, price, timeout);
-        } catch (JposException e) {
-            if (e.getErrorCode() != 0)
-                throw e;
-            exception = e;
+            logCall("DoPriceCalculating", "" + weightData[0] + ", " + tare[0] + ", " + unitPrice[0] + ", " + unitPriceX[0] + ", " + weightUnitX[0] + ", " + weightNumeratorX[0] + ", " + weightDenominatorX[0] + ", " + price[0]);
+        } catch (JposOutputRequest.OkException e) {
+            DoPriceCalculating request = (DoPriceCalculating) e.getOutputRequest();
+            if (callNowOrLater(request)) {
+                unitPrice[0] = price[0] = weightData[0] = tare[0] = 0;
+                logAsyncCall("DoPriceCalculating(" + weightData[0] + ", " + tare[0] + ", " + unitPrice[0] + ", " + unitPriceX[0] + ", " + weightUnitX[0] + ", " + weightNumeratorX[0] + ", " + weightDenominatorX[0] + ", " + price[0] + ")");
+            }
+            else {
+                Data.ScaleLiveWeight = weightData[0] = request.WeightData;
+                logSet("ScaleLiveWeight");
+                Data.TareWeight = tare[0] = request.Tare;
+                logSet("TareWeight");
+                Data.SalesPrice = request.SalesPrice;
+                logSet("SalesPrice");
+                Data.UnitPrice = unitPrice[0] = request.UnitPrice;
+                logCall("DoPriceCalculating", "" + weightData[0] + ", " + tare[0] + ", " + unitPrice[0] + ", " + unitPriceX[0] + ", " + weightUnitX[0] + ", " + weightNumeratorX[0] + ", " + weightDenominatorX[0] + ", " + price[0]);
+            }
         }
-        return exception;
     }
 
     @Override
@@ -316,43 +300,26 @@ public class ScaleService extends JposBase implements ScaleService114 {
         Device.check(timeout < 0  && timeout != JposConst.JPOS_FOREVER && Props.AsyncMode == false, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         Device.check(weightData.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid dimension of weightData");
         Device.check(tare.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid dimension of tare");
-        JposException exception = readLiveWeightWithTareValidation(weightData, tare, timeout);
-        ReadLiveWeightWithTare request = new ReadLiveWeightWithTare(Data, weightData[0], tare[0], timeout);
-        if (readLiveWeightWithTareFinalization(exception, request)) {
-            weightData[0] = 0;
-            tare[0] = 0;
-            logAsyncCall("ReadWeight(0, 0)");
-        }
-        else {
-            Data.ScaleLiveWeight = weightData[0] = request.WeightData;
-            logSet("ScaleLiveWeight");
-            Data.TareWeight = tare[0] = request.Tare;
-            logSet("TareWeight");
-            Data.SalesPrice = request.SalesPrice;
-            logSet("SalesPrice");
-            logCall("ReadLiveWeightWithTare", "" + weightData[0] + ", " + tare[0]);
-        }
-    }
-
-    private boolean readLiveWeightWithTareFinalization(JposException exception, ReadLiveWeightWithTare request) throws JposException {
-        boolean async = Data.AsyncMode;
-        if (exception != null) {
-            request.AdditionalData = exception.getOrigException();
-            async = callNowOrLater(request);
-        }
-        return async;
-    }
-
-    private JposException readLiveWeightWithTareValidation(int[] weightData, int[] tare, int timeout) throws JposException {
-        JposException exception = null;
         try {
             ScaleInterface.readLiveWeightWithTare(weightData, tare, timeout);
-        } catch (JposException e) {
-            if (e.getErrorCode() != 0)
-                throw e;
-            exception = e;
+            logCall("ReadLiveWeightWithTare", "" + weightData[0] + ", " + tare[0]);
+        } catch (JposOutputRequest.OkException e) {
+            ReadLiveWeightWithTare request = (ReadLiveWeightWithTare) e.getOutputRequest();
+            if (callNowOrLater(request)) {
+                weightData[0] = 0;
+                tare[0] = 0;
+                logAsyncCall("ReadLiveWeightWithTare(0, 0)");
+            }
+            else {
+                Data.ScaleLiveWeight = weightData[0] = request.WeightData;
+                logSet("ScaleLiveWeight");
+                Data.TareWeight = tare[0] = request.Tare;
+                logSet("TareWeight");
+                Data.SalesPrice = request.SalesPrice;
+                logSet("SalesPrice");
+                logCall("ReadLiveWeightWithTare", "" + weightData[0] + ", " + tare[0]);
+            }
         }
-        return exception;
     }
 
     @Override
@@ -362,38 +329,22 @@ public class ScaleService extends JposBase implements ScaleService114 {
         Device.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Device busy");
         Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER && Props.AsyncMode == false, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         Device.check(weightData.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid dimension of weightData");
-        JposException exception = readWeightValidation(weightData, timeout);
-        ReadWeight request = new ReadWeight(Data, weightData[0], timeout);
-        if (readWeightFinalization(exception, request)){
-            weightData[0] = 0;
-            logAsyncCall("ReadWeight(0)");
-        } else {
-            weightData[0] = request.WeightData;
-            Data.SalesPrice = request.SalesPrice;
-            logSet("SalesPrice");
-            logCall("ReadWeight", "" + weightData[0]);
-        }
-    }
-
-    private boolean readWeightFinalization(JposException exception, ReadWeight request) throws JposException {
-        boolean async = Data.AsyncMode;
-        if (exception != null) {
-            request.AdditionalData = exception.getOrigException();
-            async = callNowOrLater(request);
-        }
-        return async;
-    }
-
-    private JposException readWeightValidation(int[] weightData, int timeout) throws JposException {
-        JposException exception = null;
         try {
             ScaleInterface.readWeight(weightData, timeout);
-        } catch (JposException e) {
-            if (e.getErrorCode() != 0)
-                throw e;
-            exception = e;
+            logCall("ReadWeight", "" + weightData[0]);
+        } catch (JposOutputRequest.OkException e) {
+            ReadWeight request = (ReadWeight) e.getOutputRequest();
+            if (callNowOrLater(request)) {
+                weightData[0] = 0;
+                logAsyncCall("ReadWeight(0)");
+            }
+            else {
+                weightData[0] = request.WeightData;
+                Data.SalesPrice = request.SalesPrice;
+                logSet("SalesPrice");
+                logCall("ReadWeight", "" + weightData[0]);
+            }
         }
-        return exception;
     }
 
     @Override

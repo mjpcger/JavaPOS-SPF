@@ -443,10 +443,15 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, method updateFirmware
      */
     public void updateFirmware(String firmwareFileName) throws JposException {
-        logPreCall("UpdateFirmware");
+        logPreCall("UpdateFirmware", firmwareFileName);
         checkEnabled();
         Device.check(!Device.CapUpdateFirmware, JposConst.JPOS_E_ILLEGAL, "Device does not support update firmware");
-        DeviceInterface.updateFirmware(firmwareFileName);
+        try {
+            DeviceInterface.updateFirmware(firmwareFileName);
+        } catch (JposOutputRequest.OkException e) {
+            e.getOutputRequest().enqueue();
+            logAsyncCall("UpdateFirmware");
+        }
         logCall("UpdateFirmware", firmwareFileName);
     }
 
@@ -646,7 +651,12 @@ public class JposBase implements BaseService {
     @Override
     public void directIO(int command, int[] data, Object object) throws JposException {
         logPreCall("DirectIO", "" + command + ", " + data[0] + ", " + object);
-        DeviceInterface.directIO(command, data, object);
+        try {
+            DeviceInterface.directIO(command, data, object);
+        } catch (JposOutputRequest.OkException e) {
+            e.getOutputRequest().enqueue();
+            logAsyncCall("DirectIO");
+        }
         logCall("DirectIO", "" + command + ", " + data[0] + ", " + object);
     }
 

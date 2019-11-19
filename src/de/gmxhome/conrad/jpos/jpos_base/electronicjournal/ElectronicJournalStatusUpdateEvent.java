@@ -87,9 +87,6 @@ public class ElectronicJournalStatusUpdateEvent extends JposStatusUpdateEvent {
         int status = props.State;
         if (super.setAndCheckStatusProperties())
             return true;
-        switch (getStatus()) {
-
-        }
         if (status != props.State)
             props.EventSource.logSet("State");
         if (suspended != props.Suspended)

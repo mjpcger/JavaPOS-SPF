@@ -88,7 +88,7 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
         JposCommonProperties props = getPropertySet();
         int state = props.PowerState;
         if (!setStatusProperties())
-            return true;
+            return false;
         if (state != props.PowerState) {
             props.EventSource.logSet("PowerState");
             return true;

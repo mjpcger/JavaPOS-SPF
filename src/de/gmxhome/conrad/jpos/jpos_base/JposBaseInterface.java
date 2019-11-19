@@ -164,16 +164,31 @@ public interface JposBaseInterface {
     public void checkHealth(int level) throws JposException;
 
     /**
-     * Final part of DirectIO method. Can be overwritten in derived class, if necessary.
+     * Final or validation part of DirectIO method. Can be overwritten in derived class, if necessary.
      * This method will be called whenever the service's directIO method will be called.
      * All checks, if necessary, must be implemented within the derived service implementation.
+     * <br>In case of validation only (asynchronous mode), a DirectIO object must be be created with
+     * command, data[0] and object as parameters. Last action in validation must be to call its throwRequest
+     * method.
      *
      * @param command See UPOS specification, method DirectIO
      * @param data    See UPOS specification, method DirectIO
      * @param object  See UPOS specification, method DirectIO
-     * @throws JposException See UPOS specification, method DirectIO
+     * @throws JposException See UPOS specification, method DirectIO.
      */
     public void directIO(int command, int[] data, Object object) throws JposException;
+
+    /**
+     * Final part of DirectIO method. Can be overwritten within derived classes, if necessary.
+     * The parameters of the method will be passed via a DirectIO object. This method will be called
+     * when the corresponding operation shall be performed asynchronously. All plausibility
+     * checks have been made before, only runtime errors can occur.
+     * <br>This method will only be called if the validation method threw a JposException with ErrorCode = 0.
+     *
+     * @param request           Output request object that contains all parameters to be used by ReadWeight.
+     * @throws JposException    If an error occurs.
+     */
+    public void directIO(DirectIO request) throws JposException;
 
     /**
      * Final part of open method. Can be overwritten in derived class, if necessary. sets <b>State</b> property and
@@ -243,17 +258,45 @@ public interface JposBaseInterface {
     public void compareFirmwareVersion(String firmwareFileName, int[] result) throws JposException;
 
     /**
-     * Final part of UpdateFirmware method. Can be overwritten in derived class, if necessary.
+     * Final or validation part of UpdateFirmware method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapUpdateFirmware is true.</li>
      * </ul>
+     * In case of validation only (asynchronous mode), an UpdateFirmware object must be created with
+     * firmwareFileName as parameters. Last action in validation must be to call its throwRequest method.
+     * Otherwise, the service must implement the necessary functionality to perform the firmware update
+     * in background.
      *
      * @param firmwareFileName See UPOS specification, method UpdateFirmware
      * @throws JposException See UPOS specification, method UpdateFirmware
      */
     public void updateFirmware(String firmwareFileName) throws JposException;
+
+    /**
+     * Final part of UpdateFirmware method. Can be overwritten within derived classes, if necessary.
+     * The parameters of the method will be passed via an UpdateFirmware object. All plausibility
+     * checks have been made before, only runtime errors can occur.
+     * <br>The result of this method will always be provided by the framework via StatusUpdateEvent.
+     * Its Status property can be set as follows:
+     * <ul>
+     *     <li>If the method ends normally, Status will be SUE_UF_COMPLETE.</li>
+     *     <li>If the method ends with a JposException with ErrorCodeExtended set to SUE_UF_COMPLETE,
+     *         SUE_UF_COMPLETE_DEV_NOT_RESTORED, SUE_UF_FAILED_DEV_OK, SUE_UF_FAILED_DEV_UNRECOVERABLE,
+     *         SUE_UF_FAILED_DEV_NEEDS_FIRMWARE or SUE_UF_FAILED_DEV_UNKNOWN, Status will be set to
+     *         ErrorCodeExtended.
+     *     </li>
+     *     <li>In case of any other exception, Status will be set to the value stored in the Result
+     *         property of request. The default is SUE_UF_FAILED_DEV_UNKNOWN, but can be changed via
+     *         method setResult of request.
+     *     </li>
+     * </ul>
+     *
+     * @param request           Output request object that contains all parameters to be used by ReadWeight.
+     * @throws JposException    If an error occurs.
+     */
+    public void updateFirmware(UpdateFirmware request) throws JposException;
 
     /**
      * Final part of ResetStatistics method. Can be overwritten in derived class, if necessary.

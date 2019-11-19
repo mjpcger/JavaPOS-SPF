@@ -113,9 +113,10 @@ public interface ScaleInterface extends JposBaseInterface {
      * weightNumeratorX and weightDenominatorX as set via method SetUnitPriceWithWeightUnit.
      * <br>A service may perform the full weight process inside this method, but this is not recommended, especially
      * in asynchronous operation. The recommended functionality is to perform only validation in this method and
-     * to perform weighing inside the final part. If implemented the latter way, it must throw a JposException with
-     * ErrorCode = 0 to signal successful operation and optional an additional data object, derived from Exception,
-     * passed as original exception.
+     * to perform weighing inside the final part. If implemented the latter way, a DoPriceCalculating object must be
+     * created with weightData[0], tare[0], unitPrice[0], unitPriceX[0], weightUnitX[0], weightNumeratorX[0],
+     * weightDenominatorX[0], price[0] and imeout as parameters. Last action in validation must be to call its
+     * throwRequest method.
      *
      * @param weightData         The value for the net weight in the price calculation algorithm.
      * @param tare               The value used to determine the item net weight in the price calculation algorithm.
@@ -178,9 +179,9 @@ public interface ScaleInterface extends JposBaseInterface {
      * because this will be done within the calling method.
      * <br>A service may perform the full weight process inside this method, but this is not recommended, especially
      * in asynchronous operation. The recommended functionality is to perform only validation in this method and
-     * to perform weighing inside the final part. If implemented the latter way, it must throw a JposException with
-     * ErrorCode = 0 to signal successful operation and optional an additional data object, derived from Exception,
-     * passed as original exception.
+     * to perform weighing inside the final part. If implemented the latter way, a ReadLiveWeightWithTare object must be
+     * created with weightData[0], tare[0] and timeout as parameters. Last action in validation must be to call its
+     * throwRequest method.
      *
      * @param weightData    On return, net weight calculated by the scale.
      * @param tare          On return, tare weight used to calculate the net weight.
@@ -219,9 +220,8 @@ public interface ScaleInterface extends JposBaseInterface {
      * because this will be done within the calling method.
      * <br>A service may perform the full weight process inside this method, but this is not recommended, especially
      * in asynchronous operation. The recommended functionality is to perform only validation in this method and
-     * to perform weighing inside the final part. If implemented the latter way, it must throw a JposException with
-     * ErrorCode = 0 to signal successful operation and optional an additional data object, derived from Exception,
-     * passed as original exception.
+     * to perform weighing inside the final part. If implemented the latter way, a ReadWeight object must be created with
+     * weightData[0] and timeout as parameters. Last action in validation must be to call its throwRequest method.
      *
      * @param weightData The weight measured by the scale.
      * @param timeout    The number of milliseconds to wait for a settled weight before failing the method.

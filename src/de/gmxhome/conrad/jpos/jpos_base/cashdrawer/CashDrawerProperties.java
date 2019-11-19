@@ -64,4 +64,8 @@ public class CashDrawerProperties extends JposCommonProperties implements CashDr
     @Override
     public void waitForDrawerClose(int beepTimeout, int beepFrequency, int beepDuration, int beepDelay) throws JposException {
     }
+
+    @Override
+    public void waitForDrawerClose() throws JposException {
+    }
 }

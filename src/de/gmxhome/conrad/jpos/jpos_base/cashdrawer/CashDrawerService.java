@@ -24,7 +24,7 @@ import jpos.services.CashDrawerService114;
  * CashDrawer service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class CashDrawerService extends JposBase implements CashDrawerService114 {
+public class CashDrawerService extends JposBase implements CashDrawerService114, Runnable {
     /**
      * Instance of a class implementing the CashDrawerInterface for cash drawer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
@@ -32,6 +32,7 @@ public class CashDrawerService extends JposBase implements CashDrawerService114 
     public CashDrawerInterface CashDrawerInterface;
 
     private CashDrawerProperties Data;
+    private MySoundPlayer Sound;
 
     /**
      * Constructor. Stores property set and device implementation object.
@@ -73,17 +74,65 @@ public class CashDrawerService extends JposBase implements CashDrawerService114 
         logCall("OpenDrawer");
     }
 
+    private class MySoundPlayer extends SoundPlayer {
+        private int BeepTimeout;
+        private int BeepFrequency;
+        private int BeepDuration;
+        private int BeepDelay;
+
+        MySoundPlayer(int beepTimeout, int beepFrequency, int beepDuration, int beepDelay) {
+            super(Data.LogicalName);
+            BeepTimeout = beepTimeout;
+            BeepFrequency = beepFrequency;
+            BeepDuration = beepDuration;
+            BeepDelay = beepDelay;
+        }
+    }
+
     @Override
     public void waitForDrawerClose(int beepTimeout, int beepFrequency, int beepDuration, int beepDelay) throws JposException {
         logPreCall("WaitForDrawerClose", "" + beepTimeout + ", " + beepFrequency + ", " + beepDuration + ", " + beepDelay);
         checkEnabledUnclaimed();
         if (!Data.CapStatus)
             return;
-        Device.check(beepTimeout < 0, JposConst.JPOS_E_CLOSED, "Negative beep timeout");
-        Device.checkRange(beepFrequency, 10, 40000 , JposConst.JPOS_E_CLOSED, "beep frequency out of range: " + beepFrequency);
-        Device.check(beepDuration < 0, JposConst.JPOS_E_CLOSED, "Negative beep duration");
-        Device.check(beepDelay < 0, JposConst.JPOS_E_CLOSED, "Negative beep delay");
+        Device.check(beepTimeout < 0 && beepTimeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_CLOSED, "Negative beep timeout");
+        Device.checkRange(beepFrequency, 10, 24000 , JposConst.JPOS_E_CLOSED, "beep frequency out of range: " + beepFrequency);
+        Device.check(beepDuration < 0 && beepDuration != JposConst.JPOS_FOREVER, JposConst.JPOS_E_CLOSED, "Negative beep duration");
+        Device.check(beepDelay < 0 && beepDelay != JposConst.JPOS_FOREVER, JposConst.JPOS_E_CLOSED, "Negative beep delay");
         CashDrawerInterface.waitForDrawerClose(beepTimeout, beepFrequency, beepDuration, beepDelay);
+        if (Data.DrawerOpened) {
+            Sound = new MySoundPlayer(beepTimeout, beepFrequency, beepDuration, beepDelay);
+            new Thread(this, Data.LogicalName + ".WaitForDrawerCloseHandler").start();
+            try {
+                CashDrawerInterface.waitForDrawerClose();
+            } finally {
+                synchronized (this) {
+                    if (Sound != null) {
+                        Sound.clear();
+                        Sound = null;
+                    }
+                }
+            }
+        }
         logCall("WaitForDrawerClose");
+    }
+
+    /**
+     * Beeper thread: Waits at least 10 milliseconds, then starts beeping as requested until stopped. To stop the
+     * thread, call Sound.clear() and set Sound = null.
+     */
+    @Override
+    public void run() {
+        try {
+            if (Sound.BeepTimeout != JposConst.JPOS_FOREVER) {
+                Thread.sleep(Sound.BeepTimeout > 10 ? Sound.BeepTimeout : 10);
+                while (true) {
+                    Sound.startSound(Sound.BeepFrequency, Sound.BeepDuration, Device.DrawerBeepVolume);
+                    Sound.waitFinished();
+                    Thread.sleep(Sound.BeepDelay);
+                }
+            }
+        }
+        catch (Exception e) {}
     }
 }

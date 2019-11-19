@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE JposEntries PUBLIC "JposEntries" "jcl.dtd">
+<!DOCTYPE JposEntries PUBLIC "-//JavaPOS//DTD//EN" "jcl.dtd">
 <JposEntries>
 	<!-- Test FiscalPrinter Entry, implements FiscalPrinter, ElectronicJournal, LineDisplay and CashDrawer -->
 	<JposEntry logicalName="TestFiscalDrawer">

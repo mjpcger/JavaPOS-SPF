@@ -53,5 +53,25 @@ public interface CashDrawerInterface extends JposBaseInterface {
      * @param beepDelay     Number of milliseconds between the sounding of beeper tones.
      * @throws JposException If an error occurs.
      */
+    @Deprecated
     public void waitForDrawerClose(int beepTimeout, int beepFrequency, int beepDuration, int beepDelay) throws JposException;
+
+    /**
+     * Final part of WaitForDrawerClose method. Can be overwritten in derived class, if necessary.
+     * The parameters beepTimeout, beepDuration, beepFrequency and beepDelay will not be used by
+     * this method because beeping will be performed directly by the service.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>CapStatus is true,</li>
+     *     <li>The parameters beepTimeout, beepDuration and beepDelay of the calling
+     *         method are positive or FOREVER,</li>
+     *     <li>The parameter beepFrequency is between 10 and 24000.</li>
+     * </ul>
+     * If the deprecated waitForDrawerClose method (which must handle beeping itself) shall be used,
+     * this method must throw a JposException with ErrorCode = 0.
+     *
+     * @throws JposException If an error occurs.
+     */
+    public void waitForDrawerClose() throws JposException;
 }
