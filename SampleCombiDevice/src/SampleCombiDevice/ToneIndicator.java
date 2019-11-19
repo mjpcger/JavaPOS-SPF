@@ -85,11 +85,11 @@ public class ToneIndicator extends ToneIndicatorProperties {
             return true;
         }
         if (duration > 0) {
-            Dev.sendCommand(request.Props, Dev.CmdBeepOn, Dev.NoResponse);
+            Dev.sendCommand(Dev.CmdBeepOn, Dev.NoResponse);
             request.Waiting.suspend(duration);
             if (request.Abort != null)
                 return true;
-            Dev.sendCommand(request.Props, Dev.CmdBeepOff, Dev.NoResponse);
+            Dev.sendCommand(Dev.CmdBeepOff, Dev.NoResponse);
             if (request.Abort != null)
                 return true;
         }

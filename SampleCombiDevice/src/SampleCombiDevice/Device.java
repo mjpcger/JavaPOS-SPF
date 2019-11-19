@@ -129,7 +129,11 @@ public class Device extends JposDevice implements Runnable{
      * Flag showing the current drawer state (true = drawer is open).
      */
     boolean DrawerIsOpen = false;
-    private boolean DeviceIsOffline = true;
+
+    /**
+     * Flag showing the current device state (true = offline, false = online).
+     */
+    boolean DeviceIsOffline = true;
     private byte LockPosition = DefaultLockPos;
     private Map<Integer, Integer> LockMapping = new HashMap<Integer, Integer>();
     private byte[] EKeyValue = DefaultEKeyPos;
@@ -609,8 +613,8 @@ public class Device extends JposDevice implements Runnable{
 
     private void processMaxRetryReached(int[] retry) {
         if (!DeviceIsOffline) {
-            handlePowerStateEvent(JposConst.JPOS_SUE_POWER_OFFLINE);
             DeviceIsOffline = true;
+            handlePowerStateEvent(JposConst.JPOS_SUE_POWER_OFFLINE);
         }
         retry[0] = 0;
     }
@@ -756,7 +760,7 @@ public class Device extends JposDevice implements Runnable{
             if (e == null)
                 e = handleLockChange(next[StatusLockPos]);
             if (e == null)
-                e = handleEKeyChange(Arrays.copyOfRange(next, StatusEKeyPos, EKeyValueLen + StatusEKeyPos));
+                e =  handleEKeyChange(Arrays.copyOfRange(next, StatusEKeyPos, EKeyValueLen + StatusEKeyPos));
             return e == null ? head : e;
         }
         return null;
@@ -935,6 +939,8 @@ public class Device extends JposDevice implements Runnable{
                     handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, DrawerIsOpen ? CashDrawerConst.CASH_SUE_DRAWEROPEN : CashDrawerConst.CASH_SUE_DRAWERCLOSED));
                 } catch (JposException e) {
                     return e;
+                } finally {
+                    signalStatusWaits(CashDrawers[0]);
                 }
             }
         }
@@ -950,6 +956,8 @@ public class Device extends JposDevice implements Runnable{
                     handleEvent(new KeylockStatusUpdateEvent(props.EventSource, KeylockConst.LOCK_KP_ELECTRONIC, EKeyValue));
                 } catch (JposException e) {
                     return e;
+                } finally {
+                    signalStatusWaits(Keylocks[EKeyIndex]);
                 }
             }
         }
@@ -965,6 +973,8 @@ public class Device extends JposDevice implements Runnable{
                     handleEvent(new KeylockStatusUpdateEvent(props.EventSource, LockMapping.get(new Integer(LockPosition)), new byte[0]));
                 } catch (JposException e) {
                     return e;
+                } finally {
+                    signalStatusWaits(Keylocks[LockIndex]);
                 }
             }
         }
@@ -993,21 +1003,26 @@ public class Device extends JposDevice implements Runnable{
         }
         catch (JposException e) {
             return e;
+        } finally {
+            if (status != JposConst.JPOS_SUE_POWER_ONLINE) {
+                signalStatusWaits(CashDrawers[0]);
+                signalStatusWaits(Keylocks[0]);
+                signalStatusWaits(Keylocks[1]);
+            }
         }
         return null;
     }
 
     /**
      * Method to perform any command
-     * @param dev property set to be used for logging, if enabled.
      * @param request Data to be sent
      * @param responseType type of response frame (first byte)
      * @return null on timeout, Byte(responseType) on success
      * @throws JposException in error case
      */
-    protected Byte sendCommand(JposCommonProperties dev, byte[] request, byte responseType) throws JposException {
+    protected Byte sendCommand(byte[] request, byte responseType) throws JposException {
         if (InIOError || DeviceIsOffline) {
-            throw  new JposException(JposConst.JPOS_E_ILLEGAL, "Device not available");
+            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Device not available");
         }
         CommandHelper helper = new CommandHelper(request, responseType);
         enterCommand(helper);
@@ -1015,7 +1030,7 @@ public class Device extends JposDevice implements Runnable{
         helper.Signalizer.suspend(SyncObject.INFINITE);
         if (helper.Response != responseType)
             return null;
-        return new Byte(responseType);
+        return responseType;
     }
 
     /**

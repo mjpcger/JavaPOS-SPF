@@ -231,7 +231,7 @@ public class LineDisplay extends LineDisplayProperties {
         buffer[TextLinePos] = (byte)row;
         for (int i = TextStartPos, len = linestr.length(); --i >= TextLengthPos; len /= 10)
             buffer[i] = (byte)(len % 10 + '0');
-        Dev.sendCommand(this, buffer, Dev.NoResponse);
+        Dev.sendCommand(buffer, Dev.NoResponse);
     }
 
     @Override

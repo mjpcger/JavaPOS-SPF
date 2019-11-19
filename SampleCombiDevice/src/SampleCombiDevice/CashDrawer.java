@@ -108,8 +108,8 @@ public class CashDrawer extends CashDrawerProperties {
     public void openDrawer() throws JposException {
         int retry = 0;
         do {
-            Dev.sendCommand(this, CmdDrawerOpen, Dev.NoResponse);
-            if (Dev.sendCommand(this, Dev.CmdStatusRequest, Dev.RespFromStatus) == 0)
+            Dev.sendCommand(CmdDrawerOpen, Dev.NoResponse);
+            if (Dev.sendCommand(Dev.CmdStatusRequest, Dev.RespFromStatus) == 0)
                 continue;
             super.openDrawer();
             return;
@@ -118,26 +118,13 @@ public class CashDrawer extends CashDrawerProperties {
     }
 
     @Override
-    public void waitForDrawerClose(int beepTimeout, int beepFrequency, int beepDuration, int beepDelay) throws JposException {
-        long timeout = beepTimeout;
-        boolean beeping = false;
-
+    public void waitForDrawerClose() throws JposException {
         attachWaiter();
-        if (DrawerOpened) {
-            while (!waitWaiter(timeout)) {
-                if (beeping) {
-                    timeout = beepDelay;
-                    Dev.sendCommand(this, Dev.CmdBeepOff, Dev.NoResponse);
-                } else {
-                    timeout = beepDuration;
-                    Dev.sendCommand(this, Dev.CmdBeepOn, Dev.NoResponse);
-                }
-                beeping = !beeping;
-            }
-            if (beeping)
-                Dev.sendCommand(this, Dev.CmdBeepOff, Dev.NoResponse);
+        while (DrawerOpened && !Dev.DeviceIsOffline) {
+            waitWaiter(SyncObject.INFINITE);
         }
         releaseWaiter();
-        super.waitForDrawerClose(beepTimeout, beepFrequency, beepDuration, beepDelay);
+        Dev.check(Dev.DeviceIsOffline, JposConst.JPOS_E_OFFLINE, "Device offline");
+        super.waitForDrawerClose();
     }
 }

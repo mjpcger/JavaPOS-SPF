@@ -45,14 +45,14 @@ public class Scanner extends ScannerProperties {
     public void claim(int timeout) throws JposException {
         Dev.startCommunication();
         if (DataEventEnabled)
-            Dev.sendCommand(this, CmdScannerEnable, Dev.NoResponse);
+            Dev.sendCommand(CmdScannerEnable, Dev.NoResponse);
         super.claim(timeout);
     }
 
     @Override
     public void release() throws JposException {
         if (DataEventEnabled)
-            Dev.sendCommand(this, CmdScannerDisable, Dev.NoResponse);
+            Dev.sendCommand(CmdScannerDisable, Dev.NoResponse);
         super.release();
         Dev.stopCommunication();
     }
@@ -68,7 +68,7 @@ public class Scanner extends ScannerProperties {
     @Override
     public void dataEventEnabled(boolean enable) throws JposException {
         if (DataEventEnabled != enable)
-            Dev.sendCommand(this, enable ? CmdScannerEnable : CmdScannerDisable, Dev.NoResponse);
+            Dev.sendCommand(enable ? CmdScannerEnable : CmdScannerDisable, Dev.NoResponse);
         super.dataEventEnabled(enable);
     }
 }
