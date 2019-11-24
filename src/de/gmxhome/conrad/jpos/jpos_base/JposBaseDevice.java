@@ -552,6 +552,16 @@ public class JposBaseDevice {
     }
 
     /**
+     * Signals all SyncObject objects attached to any property set bound to the device.
+     *
+     */
+    public void signalStatusWaits(List<JposCommonProperties> propertylist) {
+        for (JposCommonProperties props : propertylist) {
+            props.signalWaiter();
+        }
+    }
+
+    /**
      * Sets PowerState property to its current value and fires status update event, passing this state to the application.
      *
      * @param dev Device property set

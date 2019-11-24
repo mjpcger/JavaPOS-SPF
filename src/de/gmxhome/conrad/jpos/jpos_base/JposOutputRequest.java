@@ -408,7 +408,7 @@ public class JposOutputRequest implements Runnable {
     /**
      * Factory for error events generated from JposExceptions. Must be overwritten whenever a device specific error
      * event shall be created. For example, in case of cash printer methods, this method should return a
-     * POSPrinterErrorEvent (which is an object derived from JposException) that contains additional values to be
+     * POSPrinterErrorEvent (which is an object derived from JposErrorEvent) that contains additional values to be
      * stored in printer properties before the event will be fired.
      *
      * @param ex JposException which is the originator of an error event.

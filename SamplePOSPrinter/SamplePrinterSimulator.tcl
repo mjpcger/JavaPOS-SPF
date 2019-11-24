@@ -64,7 +64,7 @@ pack [ttk::combobox .a.m.b -state disabled -values {"9600,n,8,2" "9600,e,8,1" "9
 pack [ttk::button .a.dbg -text "Debug On" -width 5 -command setDebug] -fill both -expand 1 -side left
 pack [ttk::button .a.st -text Start -width 5 -command startstop] -fill both -expand 1 -side left
 
-set Port 65432
+set Port 45678
 set Modes {
 	"9600,n,8,2" "9600,e,8,1" "9600,o,8,1"
 	"38400,n,8,2" "38400,e,8,1" "38400,o,8,1"

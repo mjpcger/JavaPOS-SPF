@@ -263,6 +263,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
             ScaleInterface.doPriceCalculating(weightData, tare, unitPrice, unitPriceX, weightUnitX, weightNumeratorX, weightDenominatorX, price, timeout);
             logCall("DoPriceCalculating", "" + weightData[0] + ", " + tare[0] + ", " + unitPrice[0] + ", " + unitPriceX[0] + ", " + weightUnitX[0] + ", " + weightNumeratorX[0] + ", " + weightDenominatorX[0] + ", " + price[0]);
         } catch (JposOutputRequest.OkException e) {
+            Device.check(!(e.getOutputRequest() instanceof DoPriceCalculating), JposConst.JPOS_E_FAILURE, "Bad request from validation: " + e.getOutputRequest().getClass().getName());
             DoPriceCalculating request = (DoPriceCalculating) e.getOutputRequest();
             if (callNowOrLater(request)) {
                 unitPrice[0] = price[0] = weightData[0] = tare[0] = 0;
@@ -304,6 +305,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
             ScaleInterface.readLiveWeightWithTare(weightData, tare, timeout);
             logCall("ReadLiveWeightWithTare", "" + weightData[0] + ", " + tare[0]);
         } catch (JposOutputRequest.OkException e) {
+            Device.check(!(e.getOutputRequest() instanceof ReadLiveWeightWithTare), JposConst.JPOS_E_FAILURE, "Bad request from validation: " + e.getOutputRequest().getClass().getName());
             ReadLiveWeightWithTare request = (ReadLiveWeightWithTare) e.getOutputRequest();
             if (callNowOrLater(request)) {
                 weightData[0] = 0;
@@ -333,6 +335,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
             ScaleInterface.readWeight(weightData, timeout);
             logCall("ReadWeight", "" + weightData[0]);
         } catch (JposOutputRequest.OkException e) {
+            Device.check(!(e.getOutputRequest() instanceof ReadWeight), JposConst.JPOS_E_FAILURE, "Bad request from validation: " + e.getOutputRequest().getClass().getName());
             ReadWeight request = (ReadWeight) e.getOutputRequest();
             if (callNowOrLater(request)) {
                 weightData[0] = 0;

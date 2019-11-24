@@ -115,7 +115,7 @@ public interface ScaleInterface extends JposBaseInterface {
      * in asynchronous operation. The recommended functionality is to perform only validation in this method and
      * to perform weighing inside the final part. If implemented the latter way, a DoPriceCalculating object must be
      * created with weightData[0], tare[0], unitPrice[0], unitPriceX[0], weightUnitX[0], weightNumeratorX[0],
-     * weightDenominatorX[0], price[0] and imeout as parameters. Last action in validation must be to call its
+     * weightDenominatorX[0], price[0] and timeout as parameters. Last action in validation must be to call its
      * throwRequest method.
      *
      * @param weightData         The value for the net weight in the price calculation algorithm.

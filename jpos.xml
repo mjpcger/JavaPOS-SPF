@@ -10,7 +10,7 @@
 		<!-- For TCP communication tests, add the following lines to the other non JavaPOS required property sections -->
 		<prop name="Port" value="127.0.0.1:65432"/> <!-- Replace with real target ip:port -->
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LoggerName" value="SampleFiscalPrinterTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -27,7 +27,7 @@
 		<!-- For TCP communication tests, add the following lines to the other non JavaPOS required property sections -->
 		<prop name="Port" value="127.0.0.1:65432"/> <!-- Replace with real target ip:port -->
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposDisplayTest"/>
+		<prop name="LoggerName" value="SampleFiscalPrinterTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -44,7 +44,7 @@
 		<!-- For TCP communication tests, add the following lines to the other non JavaPOS required property sections -->
 		<prop name="Port" value="127.0.0.1:65432"/> <!-- Replace with real target ip:port -->
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposPrinterTest"/>
+		<prop name="LoggerName" value="SampleFiscalPrinterTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -62,7 +62,7 @@
 		<!-- For TCP communication tests, add the following lines to the other non JavaPOS required property sections -->
 		<prop name="Port" value="127.0.0.1:65432"/> <!-- Replace with real target ip:port -->
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposJournalTest"/>
+		<prop name="LoggerName" value="SampleFiscalPrinterTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -78,7 +78,7 @@
 		<jpos version="1.14.1" category="MICR"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Sample MICR" description="Sample Service For MICR Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposMICRTest"/>
+		<prop name="LoggerName" value="SampleMICRTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -96,7 +96,7 @@
 		<jpos version="1.14.1" category="CAT"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For CAT of Sample CAT" description="Sample CAT Service For CAT Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LoggerName" value="SampleCATTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -116,7 +116,7 @@
 		<jpos version="1.14.1" category="CAT"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For CAT of Sample CAT" description="Sample CAT Service For CAT Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LoggerName" value="SampleCATTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -136,7 +136,7 @@
 		<jpos version="1.14.1" category="CAT"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For CAT of Sample CAT" description="Sample CAT Service For CAT Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LoggerName" value="SampleCATTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -156,7 +156,7 @@
 		<jpos version="1.14.1" category="ElectronicJournal"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For electronic journal for Sample CAT customer tickets" description="Electronic journal for Sample CAT customer tickets"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposCustomerEJTest"/>
+		<prop name="LoggerName" value="SampleCATTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -176,7 +176,7 @@
 		<jpos version="1.14.1" category="ElectronicJournal"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For electronic journal for Sample CAT merchant tickets" description="Electronic journal for Sample CAT merchant tickets"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposMerchantEJTest"/>
+		<prop name="LoggerName" value="SampleCATTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -197,7 +197,7 @@
 		<jpos version="1.14.1" category="CoinDispenser"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Standard Coin Dispenser" description="Sample Service For Coin Dispenser Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LoggerName" value="SampleCoinDispenserTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -215,7 +215,7 @@
 		<jpos version="1.14.1" category="Scale"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Standard Scale" description="Sample Service For Scale Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LoggerName" value="SampleScaleTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -233,7 +233,7 @@
 		<jpos version="1.14.1" category="CashDrawer"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Drawer of Sample POSPrinter" description="Sample Drawer Service For Printer Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LoggerName" value="SamplePOSPrinterTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -242,7 +242,7 @@
 		<!--Other JposDevice required properties, once for each logical device-->
 		<prop name="DevIndex" value="0"/>
 		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
-		<prop name="Port" value="127.0.0.1:65432"/>
+		<prop name="Port" value="127.0.0.1:45678"/>
 	</JposEntry>
 	<JposEntry logicalName="TestPrinter">
 		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.posprinter.POSPrinterService" factoryClass="SamplePOSPrinter.POSPrinterFactory"/>
@@ -250,7 +250,7 @@
 		<jpos version="1.14.1" category="POSPrinter"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Sample POSPrinter" description="Sample POSPrinter Service For Printer Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposPrinterTest"/>
+		<prop name="LoggerName" value="SamplePOSPrinterTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -259,7 +259,7 @@
 		<!--Other JposDevice required properties, once for each logical device-->
 		<prop name="DevIndex" value="0"/>
 		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
-		<prop name="Port" value="127.0.0.1:65432"/>
+		<prop name="Port" value="127.0.0.1:45678"/>
 	</JposEntry>
 	<!-- Test Sample Remote Order Display Entries. Values referencing the port must match -->
 	<JposEntry logicalName="TestRODisplay">
@@ -268,7 +268,7 @@
 		<jpos version="1.14.1" category="RemoteOrderDisplay"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For RemoteOrderDisplay of Sample Remote Order Display" description="Sample Remote Order Display Service For Remote Order Display Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LoggerName" value="SampleRemoteOrderDisplayTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -286,7 +286,7 @@
 		<jpos version="1.14.1" category="CashDrawer"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Standard Drawer" description="Sample Service For Drawer of Combined Device Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposDrawerTest"/>
+		<prop name="LoggerName" value="SampleCombiDeviceTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -305,7 +305,7 @@
 		<jpos version="1.14.1" category="Keylock"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample Keylock Service For Combined Device Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposCombiTest"/>
+		<prop name="LoggerName" value="SampleCombiDeviceTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -323,7 +323,7 @@
 		<jpos version="1.14.1" category="Keylock"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample Keylock Service For Combined Device Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposCombiTest"/>
+		<prop name="LoggerName" value="SampleCombiDeviceTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -341,7 +341,7 @@
 		<jpos version="1.14.1" category="LineDisplay"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample Display Service For Combined Device Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposCombiTest"/>
+		<prop name="LoggerName" value="SampleCombiDeviceTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -359,7 +359,7 @@
 		<jpos version="1.14.1" category="MSR"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample MSR Service For Combined Device Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposCombiTest"/>
+		<prop name="LoggerName" value="SampleCombiDeviceTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -377,7 +377,7 @@
 		<jpos version="1.14.1" category="POSKeyboard"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample Keyboard Service For Combined Device Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposCombiTest"/>
+		<prop name="LoggerName" value="SampleCombiDeviceTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -395,7 +395,7 @@
 		<jpos version="1.14.1" category="Scanner"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample Scanner Service For Combined Device Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposCombiTest"/>
+		<prop name="LoggerName" value="SampleCombiDeviceTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->
@@ -413,7 +413,7 @@
 		<jpos version="1.14.1" category="ToneIndicator"/>
 		<product url="http://conrad.gmxhome.de" name="JPOS Services For Combined Device" description="Sample Tone Indicator Service For Combined Device Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
-		<prop name="LoggerName" value="JposCombiTest"/>
+		<prop name="LoggerName" value="SampleCombiDeviceTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->

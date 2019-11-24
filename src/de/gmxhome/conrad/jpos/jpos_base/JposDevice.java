@@ -81,16 +81,6 @@ public class JposDevice extends JposBaseDevice {
                 getCount(FiscalPrinters);
     }
 
-    /**
-     * Signals all SyncObject objects attached to any property set bound to the device.
-     *
-     */
-    public void signalStatusWaits(List<JposCommonProperties> propertylist) {
-        for (JposCommonProperties props : propertylist) {
-            props.signalWaiter();
-        }
-    }
-
     /*
      * CashDrawer specific implementations
      */

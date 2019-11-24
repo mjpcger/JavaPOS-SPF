@@ -449,6 +449,7 @@ public class JposBase implements BaseService {
         try {
             DeviceInterface.updateFirmware(firmwareFileName);
         } catch (JposOutputRequest.OkException e) {
+            Device.check(!(e.getOutputRequest() instanceof UpdateFirmware), JposConst.JPOS_E_FAILURE, "Bad request from validation: " + e.getOutputRequest().getClass().getName());
             e.getOutputRequest().enqueue();
             logAsyncCall("UpdateFirmware");
         }
@@ -654,6 +655,7 @@ public class JposBase implements BaseService {
         try {
             DeviceInterface.directIO(command, data, object);
         } catch (JposOutputRequest.OkException e) {
+            Device.check(!(e.getOutputRequest() instanceof DirectIO), JposConst.JPOS_E_FAILURE, "Bad request from validation: " + e.getOutputRequest().getClass().getName());
             e.getOutputRequest().enqueue();
             logAsyncCall("DirectIO");
         }
