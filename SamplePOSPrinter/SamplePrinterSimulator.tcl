@@ -30,20 +30,20 @@
 #		"5" (35h): Code page 1257,
 #		"6" (36h): Unicode (UFT-8).
 # ESC s (1Bh 73h): State request. Simulator sends back one of:
-#		"S0" (30h): Printer in operational state, drawer closed,
-#		"S1" (31h): Printer in operational state, drawer open,
-#		"S2" (32h): Paper near end, drawer closed,
-#		"S3" (33h): Paper near end, drawer open,
-#		"S4" (34h): Paper end, drawer closed,
-#		"S5" (35h): Paper end, drawer open,
-#		"S6" (36h): Cover open, drawer closed,
-#		"S7" (37h): Cover open, drawer open,
-#		"S8" (38h): Printer error. drawer closed,
-#		"S9" (39h): Printer error, drawer open.
+#		"0" (30h): Printer in operational state, drawer closed,
+#		"1" (31h): Printer in operational state, drawer open,
+#		"2" (32h): Paper near end, drawer closed,
+#		"3" (33h): Paper near end, drawer open,
+#		"4" (34h): Paper end, drawer closed,
+#		"5" (35h): Paper end, drawer open,
+#		"6" (36h): Cover open, drawer closed,
+#		"7" (37h): Cover open, drawer open,
+#		"8" (38h): Printer error. drawer closed,
+#		"9" (39h): Printer error, drawer open.
 # ESC u n (1Bh 75h n): Underline off [n = "0"(30h)] or on [n = "1"(31h)].
 #
-# In case of a printer status change, the status bytes (see ESC s) will be sent automatically, but the prefix character
-# 'S' will be replaced by 's'. Initial values are:
+# In case of a printer status change, the status byte (see ESC s) will be sent automatically.
+# Initial values are:
 # Font A, color, underline and bold off, code page 1252, left oriented.
 # In addition, the printer status will be sent once after connection start. In case of TCP, this is after a connect,
 # in case of serial connection when CTS changes from inactive to active.
