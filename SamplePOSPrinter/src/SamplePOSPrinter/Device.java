@@ -35,7 +35,7 @@ import java.util.*;
 public class Device extends JposDevice{
     private UniqueIOProcessor OutStream;
     private boolean ToBeFinished;
-    private static final String CharSetList = "997,998,999,1250,1251,1252,1253,1254,1257";
+    private static final String CharSetList = "997,998,999,1250,1251,1252,1253,1254,1257,65001";
     private static final String LineCharsList = "42,56";
     // Constants for status response byte. Naming: "Resp" + printer state word + drawer state word
     private final static byte RespOk = '0';
@@ -60,9 +60,21 @@ public class Device extends JposDevice{
     private final Integer[] OpenCount = new Integer[1];
 
     /**
-     * Byte arrays for printer normalization command.
+     * Get byte array for printer normalization command.
+     * @param cartridge Color cartridge to be used
+     * @return Normalization command
      */
-    final static byte[] CmdNormalize = {'\33', 'b', '0', '\33', 'c', '0', '\33', 'o', 'l', '\33', 'u', '0'};
+    byte[] getCmdNormalize(int cartridge) {
+        byte[] retdata = Arrays.copyOf(CmdNormalize, CmdNormalize.length);
+        retdata[COLOR_INDEX] = (byte)(cartridge == POSPrinterConst.PTR_COLOR_PRIMARY ? '0' : '1');
+        return retdata;
+    }
+    private final static byte[] CmdNormalize = {'\33', 'b', '0', '\33', 'c', '0', '\33', 'o', 'l', '\33', 'u', '0'};
+
+    /**
+     * Index of color cartridge index within CmdNormalize.
+     */
+    final static int COLOR_INDEX = 5;
 
     /**
      * Byte array for drawer open command.
@@ -75,9 +87,15 @@ public class Device extends JposDevice{
     final static byte[] CmdStatusRequest = {'\33','s'};
 
     /**
+     * Code page constant for UTF-8 (65001). Seems to be some kond of standard
+     * for UFT-8.
+     */
+    static final int CS_UTF8 = 65001;
+
+    /**
      * List of supported character sets.
      */
-    static final int CharSetListVals[] = {POSPrinterConst.PTR_CS_UNICODE,POSPrinterConst.PTR_CS_ASCII, POSPrinterConst.PTR_CS_ANSI,1250,1251,1252,1253,1254,1257};
+    static final int CharSetListVals[] = {POSPrinterConst.PTR_CS_UNICODE,POSPrinterConst.PTR_CS_ASCII, POSPrinterConst.PTR_CS_ANSI,1250,1251,1252,1253,1254,1257,CS_UTF8};
 
     /**
      * Character width for font A and B in dots.
@@ -295,8 +313,10 @@ public class Device extends JposDevice{
         props.CapCharacterSet = POSPrinterConst.PTR_CCS_UNICODE;
         props.CapCoverSensor = true;
         props.CapRec2Color = true;
-        props.CapRecBold = true;
+        props.CapRecBarCode = false;
+        props.CapRecBitmap = false;
         props.CapRecColor = POSPrinterConst.PTR_COLOR_PRIMARY|POSPrinterConst.PTR_COLOR_CUSTOM1;
+        props.CapRecDwide = false;
         props.CapRecItalic = false;
         props.CapTransaction = true;
         props.CharacterSetDef = CharSetListVals[0];
@@ -389,7 +409,7 @@ public class Device extends JposDevice{
         public void run() {
             while (!ToBeFinished) {
                 try {
-                    sendCommand(Online ? CmdStatusRequest : getInitialSequence(CmdStatusRequest));
+                    sendCommand(CmdStatusRequest);
                 } catch (JposException e) {}
                 if (Handler == null) {
                     Handler = new StatusHandler();
@@ -485,13 +505,6 @@ public class Device extends JposDevice{
             }
             handleCommunicationError(msg);
         }
-    }
-
-
-    private byte[] getInitialSequence(byte[] data) {
-        byte[] retdata = Arrays.copyOf(CmdNormalize, CmdNormalize.length + data.length);
-        System.arraycopy(data, 0, retdata, CmdNormalize.length, data.length);
-        return retdata;
     }
 
     private void handleStatusChange(boolean offline, boolean inerror, boolean draweropen, boolean coveropen, int state) {

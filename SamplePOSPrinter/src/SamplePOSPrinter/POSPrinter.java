@@ -32,7 +32,7 @@ import java.util.*;
 public class POSPrinter extends POSPrinterProperties {
     private SamplePOSPrinter.Device Dev;
     private static final int LineCharsListVals[] = {42, 56};
-    private static final byte[] CodePages = { '6', '0', '6', '0', '1', '2', '3', '4', '5' };    // Default encoding of Java is UFT-8
+    private static final byte[] CodePages = { '6', '0', '6', '0', '1', '2', '3', '4', '5', '6' };    // Default encoding of Java is UFT-8
     private static final byte[] Fonts = { 'A', 'B' };
     private int CurrentCodePageIndex = 0;
 
@@ -115,6 +115,7 @@ public class POSPrinter extends POSPrinterProperties {
     }
 
     private class PrinterState {
+        int Cartridge = ((POSPrinterProperties)Dev.getClaimingInstance(Dev.ClaimedPOSPrinter, 0)).RecCurrentCartridge;
         int CharsetIndex = Dev.CurrentFontIndex;
         int CodeIndex = CurrentCodePageIndex;
     }
@@ -278,7 +279,7 @@ public class POSPrinter extends POSPrinterProperties {
     }
 
     private String getCharsetString(POSPrinterService.PrintData data) {
-        return data.getCharacterSet() == POSPrinterConst.PTR_CS_ASCII ? "ASCII" : (data.getCharacterSet() == POSPrinterConst.PTR_CS_UNICODE ? "UTF-8" : "cp" + data.getCharacterSet());
+        return data.getCharacterSet() == POSPrinterConst.PTR_CS_ASCII ? "ASCII" : (data.getCharacterSet() == POSPrinterConst.PTR_CS_UNICODE || data.getCharacterSet() == Dev.CS_UTF8 ? "UTF-8" : "cp" + data.getCharacterSet());
     }
 
     private boolean LastHasFed = false;
@@ -373,15 +374,17 @@ public class POSPrinter extends POSPrinterProperties {
         checkInError();
         List<POSPrinterService.PrintDataPart> dataparts = request.getData();
         boolean[] complete = new boolean[]{true};
-        byte[] binarydata = getBytes(dataparts, (PrinterState)request.AdditionalData, complete);
+        PrinterState printerstate = (PrinterState)request.AdditionalData;
+        byte[] binarydata = getBytes(dataparts, printerstate, complete);
         Dev.check(request.getSynchronousPrinting() && !complete[0], JposConst.JPOS_E_ILLEGAL, "Completing printer output impossible");
         if (binarydata.length > 0) {
-            if (Arrays.equals(Dev.CmdNormalize, Arrays.copyOf(binarydata, Dev.CmdNormalize.length)) || binarydata[0] == LineFeed) {
+            byte[] cmdnormalize = Dev.getCmdNormalize(printerstate.Cartridge);
+            if (Arrays.equals(cmdnormalize, Arrays.copyOf(binarydata, cmdnormalize.length)) || binarydata[0] == LineFeed) {
                 Dev.sendCommand(binarydata);
             }
             else {
-                byte[] tobesent = Arrays.copyOf(Dev.CmdNormalize, Dev.CmdNormalize.length + binarydata.length);
-                System.arraycopy(binarydata, 0, tobesent, Dev.CmdNormalize.length, binarydata.length);
+                byte[] tobesent = Arrays.copyOf(cmdnormalize, cmdnormalize.length + binarydata.length);
+                System.arraycopy(binarydata, 0, tobesent, cmdnormalize.length, binarydata.length);
                 Dev.sendCommand(tobesent);
             }
             if (request.getSynchronousPrinting()) {
@@ -406,19 +409,19 @@ public class POSPrinter extends POSPrinterProperties {
                 }
             }
             else if (data instanceof POSPrinterService.ControlChar) {
-                if ((parts[i] = getNewline()) != null && parts[i].limit() > 0) {
+                if ((parts[i] = getNewline(statusData)) != null && parts[i].limit() > 0) {
                     totalsize += parts[i].limit();
                     complete[0] = true;
                 }
             }
             else if (data instanceof POSPrinterService.EscCut) {
-                if ((parts[i] = getCut((POSPrinterService.EscCut) data)) != null && parts[i].limit() > 0) {
+                if ((parts[i] = getCut((POSPrinterService.EscCut) data, statusData)) != null && parts[i].limit() > 0) {
                     totalsize += parts[i].limit();
                     complete[0] = true;
                 }
             }
             else if (data instanceof POSPrinterService.EscNormalize) {
-                if ((parts[i] = getNormalize()) != null && parts[i].limit() > 0) {
+                if ((parts[i] = getNormalize(statusData)) != null && parts[i].limit() > 0) {
                     totalsize += parts[i].limit();
                     complete[0] = false;
                 }
@@ -428,7 +431,7 @@ public class POSPrinter extends POSPrinterProperties {
                     totalsize += parts[i].limit();
             }
             else if (data instanceof POSPrinterService.EscFeed) {
-                if ((parts[i] = getFeed((POSPrinterService.EscFeed) data)) != null && parts[i].limit() > 0) {
+                if ((parts[i] = getFeed((POSPrinterService.EscFeed) data, statusData)) != null && parts[i].limit() > 0) {
                     totalsize += parts[i].limit();
                     complete[0] = true;
                 }
@@ -475,7 +478,7 @@ public class POSPrinter extends POSPrinterProperties {
 
     private ByteBuffer getPrintData(POSPrinterService.PrintData data, PrinterState statusData) {
         ByteBuffer databuffer;
-        if (data.getServiceIsMapping()) {
+        if (data.getServiceIsMapping() || data.getCharacterSet() == POSPrinterConst.PTR_CS_UNICODE) {
             Charset charset = data.getCharacterSet() == POSPrinterConst.PTR_CS_ANSI ? Charset.defaultCharset() : Charset.forName(getCharsetString(data));
             CharsetEncoder encoder = charset.newEncoder();
             encoder.onMalformedInput(CodingErrorAction.IGNORE);
@@ -506,23 +509,25 @@ public class POSPrinter extends POSPrinterProperties {
         return databuffer;
     }
 
-    private ByteBuffer getNewline() {
-        return ByteBuffer.allocate(Dev.CmdNormalize.length + 1).put(LineFeed).put(Dev.CmdNormalize);
+    private ByteBuffer getNewline(PrinterState state) {
+        byte[] cmdnormalize = Dev.getCmdNormalize(state.Cartridge);
+        return ByteBuffer.allocate(cmdnormalize.length + 1).put(LineFeed).put(cmdnormalize);
     }
 
-    private ByteBuffer getCut(POSPrinterService.EscCut data) {
+    private ByteBuffer getCut(POSPrinterService.EscCut data, PrinterState state) {
         POSPrinterService.EscCut cut = data;
+        byte[] cmdnormalize = Dev.getCmdNormalize(state.Cartridge);
         if (cut.getFeed() || cut.getStamp()) {
-            ByteBuffer retbuffer = ByteBuffer.allocate(RecLinesToPaperCut + 1 + Dev.CmdNormalize.length);
+            ByteBuffer retbuffer = ByteBuffer.allocate(RecLinesToPaperCut + 1 + cmdnormalize.length);
             Arrays.fill(retbuffer.array(), 0, RecLinesToPaperCut, LineFeed);
             retbuffer.position(RecLinesToPaperCut);
-            return retbuffer.put(CmdCut).put(Dev.CmdNormalize);
+            return retbuffer.put(CmdCut).put(cmdnormalize);
         }
-        return ByteBuffer.allocate(1 + Dev.CmdNormalize.length).put(CmdCut).put(Dev.CmdNormalize);
+        return ByteBuffer.allocate(1 + cmdnormalize.length).put(CmdCut).put(cmdnormalize);
     }
 
-    private ByteBuffer getNormalize() {
-        return ByteBuffer.wrap(Dev.CmdNormalize);
+    private ByteBuffer getNormalize(PrinterState state) {
+        return ByteBuffer.wrap(Dev.getCmdNormalize(state.Cartridge));
     }
 
     private ByteBuffer getLogo(POSPrinterService.EscLogo data, PrinterState status, boolean[] complete) throws JposException {
@@ -533,7 +538,7 @@ public class POSPrinter extends POSPrinterProperties {
         return ByteBuffer.wrap(getBytes(logodata, status, complete));
     }
 
-    private ByteBuffer getFeed(POSPrinterService.EscFeed data) {
+    private ByteBuffer getFeed(POSPrinterService.EscFeed data, PrinterState state) {
         if (!data.getReverse()) {
             int count = data.getCount();
             if (data.getUnits()) {
@@ -541,10 +546,11 @@ public class POSPrinter extends POSPrinterProperties {
             }
             if (count == 0)
                 count++;
-            ByteBuffer retbuffer = ByteBuffer.allocate(count + Dev.CmdNormalize.length);
+            byte[] cmdnormalize = Dev.getCmdNormalize(state.Cartridge);
+            ByteBuffer retbuffer = ByteBuffer.allocate(count + cmdnormalize.length);
             Arrays.fill(retbuffer.array(), 0, count, LineFeed);
             retbuffer.position(count);
-            return retbuffer.put(Dev.CmdNormalize);
+            return retbuffer.put(cmdnormalize);
         }
         return null;
     }
