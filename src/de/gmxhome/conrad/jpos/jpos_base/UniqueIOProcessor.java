@@ -47,6 +47,11 @@ public class UniqueIOProcessor {
      */
     protected String Target;
     /**
+     * Initial communication target, used to check whether source (read) or
+     * target (write) shall be logged in read or write methods.
+     */
+    protected String InitialPort;
+    /**
      * Retrieves currently set target for writing data.
      * @return Current target device, null if target has not been specified.
      */
@@ -174,8 +179,9 @@ public class UniqueIOProcessor {
      */
     public UniqueIOProcessor(JposDevice dev, String port) throws JposException {
         Dev = dev;
-        Port = port;
+        Port = Source = Target = port;
         LoggingPrefix = port + ": ";
+        InitialPort = port;
     }
 
     /**
@@ -187,7 +193,7 @@ public class UniqueIOProcessor {
      * @throws  JposException if something goes wrong
      */
     public int write(byte[] buffer) throws JposException {
-        Dev.log(Level.TRACE, LoggingPrefix + "Write " + buffer.length + " byte: " + toLogString(buffer));
+        Dev.log(Level.TRACE, LoggingPrefix + "Write " + buffer.length + " byte" + location(false) +": " + toLogString(buffer));
         return buffer.length;
     }
 
@@ -202,7 +208,6 @@ public class UniqueIOProcessor {
             int count = Integer.parseInt(new String(LoggingData));
             Dev.log(Level.ALL, LoggingPrefix + "Available bytes: " + count);
             return count;
-
         } catch (Exception e) {
             throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, "Available implementation error, no LoggingData available.");
         }
@@ -220,8 +225,20 @@ public class UniqueIOProcessor {
     public byte[] read(int count) throws JposException {
         if (LoggingData == null)
             throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, "Read implementation error, no LoggingData available.");
-        Dev.log(Level.TRACE, LoggingPrefix + "Read " + LoggingData.length + " bytes: " + toLogString(LoggingData));
+        Dev.log(Level.TRACE, LoggingPrefix + "Read " + LoggingData.length + " bytes" + location(true) + ": " + toLogString(LoggingData));
         return LoggingData;
+    }
+
+    /**
+     * Generates string to be inserted into logging message whenever the source or target
+     * port does not match the initial port.
+     * @param from  True in case of reading date, false in case of writing data.
+     * @return      enpty string if current port matches initial port, " from <i>getSource()</i>" or
+     *              " to <i>getTarget()</i>" otherwise.
+     */
+    protected String location(boolean from) {
+        String port = from ? getSource() : getTarget();
+        return port.equals(InitialPort) ? "" : (from ? " from " : " to ") + port;
     }
 
     /**

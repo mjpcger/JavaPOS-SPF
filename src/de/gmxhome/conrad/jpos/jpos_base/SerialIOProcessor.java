@@ -96,7 +96,6 @@ public class SerialIOProcessor extends UniqueIOProcessor {
      */
     public SerialIOProcessor(JposDevice usingDevice, String portName) throws JposException {
         super(usingDevice, portName);
-        Source = Target = portName;
     }
 
     @Override

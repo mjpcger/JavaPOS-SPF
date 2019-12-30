@@ -52,10 +52,10 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
                 throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, splitaddr[1] + " invalid: Must be between 1 and 65535");
             TargetIP = InetAddress.getByName(splitaddr[0]);
             TargetPort = port;
+            InitialPort = getTarget();
         } catch (Exception e) {
             logerror("TcpClientIOProcessor", JposConst.JPOS_E_FAILURE, e);
         }
-        Source = Target = addr;
     }
 
     /**
@@ -97,11 +97,9 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
      * @throws JposException    If port address &lt; 0 or port address &gt; 65535
      */
     public void setParam(int ownport, int connectTimeout) throws JposException {
-        if (ownport < 0 || ownport > 0xffff)
-            logerror("SetParam", JposConst.JPOS_E_ILLEGAL, "Invalid port: " + ownport + ", must be between 0 and 65535");
         if (connectTimeout <= 0)
             logerror("SetParam", JposConst.JPOS_E_ILLEGAL, "Invalid connect timeout: " + connectTimeout + ", must be > 0");
-        OwnPort = ownport;
+        setParam(ownport);
         ConnectTimeout = connectTimeout;
     }
 
