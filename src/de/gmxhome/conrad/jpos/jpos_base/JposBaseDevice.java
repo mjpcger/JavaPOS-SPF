@@ -383,6 +383,13 @@ public class JposBaseDevice {
     public Integer DrawerBeepVolume = null;
 
     /**
+     * Holds the JavaPOS control version. Must be unique for all JavaPOS devices supported by a device implementation.
+     * For example, if an implementation for a device supports logical devices for a POSPrinter and two CashDrawers,
+     * the version must be the same for all logical devices (and it must be specified for all devices).
+     */
+    public Integer JposVersion = null;
+
+    /**
      * Checks whether a JposEntry belongs to a predefined property value an if so,
      * sets the corresponding driver value
      *
@@ -392,6 +399,23 @@ public class JposBaseDevice {
     public void checkProperties(JposEntry entry) throws JposException {
         try {
             Object o;
+            if ((o = entry.getPropertyValue("jposVersion")) != null) {
+                String[] versionparts = o.toString().split("\\.");
+                int version = 0;
+                for (int i = 0; i < 3; i++) {
+                    version *= 1000;
+                    if (i < versionparts.length) {
+                        int component = Integer.parseInt(versionparts[i]);
+                        checkRange(component, i == 0 ? 1 : 0, 999, JposConst.JPOS_E_ILLEGAL, "Bad JposVersion: " + o.toString());
+                        version += Integer.parseInt(versionparts[i]);
+                    }
+                }
+                if (JposVersion == null) {
+                    JposVersion = version;
+                }
+                else if (JposVersion != version)
+                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "JposVersions not unique");
+            }
             if ((o = entry.getPropertyValue("LoggerName")) != null)
                 LoggerName = o.toString();
             if ((o = entry.getPropertyValue("LoggerFormat")) != null)

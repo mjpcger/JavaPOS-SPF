@@ -540,10 +540,10 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     public boolean JrnNearEnd;
 
     /**
-     * UPOS property MapCharacterSet. Default: false. Should be overwritten
-     * by objects derived from JposDevice within the changeDefaults method.
+     * UPOS property MapCharacterSet. Default will be true if CapMapCharacterSet
+     * is true for jpos versions 1.7 and above, false otherwise.
      */
-    public boolean MapCharacterSet = false;
+    public Boolean MapCharacterSet = null;
 
     /**
      * UPOS property MapMode.
@@ -814,7 +814,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     public int SlpMaxLinesDef = 0;
 
     /**
-     * UPOS property MapCharacterSet.
+     * UPOS property SlpMaxLines.
      */
     public int SlpMaxLines;
 
@@ -841,7 +841,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     public int SlpSidewaysMaxCharsDef = 0;
 
     /**
-     * UPOS property MapCharacterSet.
+     * UPOS property SlpSidewaysMaxChars.
      */
     public int SlpSidewaysMaxChars;
 
@@ -852,7 +852,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     public int SlpSidewaysMaxLinesDef = 0;
 
     /**
-     * UPOS property MapCharacterSet.
+     * UPOS property SlpSidewaysMaxLines.
      */
     public int SlpSidewaysMaxLines;
 
@@ -877,6 +877,10 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
         RecCartridgeState = POSPrinterConst.PTR_CART_UNKNOWN;
         RotateSpecial = POSPrinterConst.PTR_RP_NORMAL;
         SlpCartridgeState = POSPrinterConst.PTR_CART_UNKNOWN;
+        if (Device.JposVersion != null && Device.JposVersion < 1007000)
+            MapCharacterSet = false;
+        else if (MapCharacterSet == null)
+            MapCharacterSet = CapMapCharacterSet && Device.JposVersion != null ? true : false;
     }
 
     @Override

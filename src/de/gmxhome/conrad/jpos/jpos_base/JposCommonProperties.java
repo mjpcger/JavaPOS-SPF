@@ -249,8 +249,6 @@ public abstract class JposCommonProperties implements JposBaseInterface {
      */
     JposBaseDevice.ErrorEventFirer ErrorEventProcessor = null;
 
-
-
     /**
      * Constructor.
      * @param dev Device index
