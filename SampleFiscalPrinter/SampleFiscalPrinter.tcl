@@ -27,7 +27,7 @@
 # with ETB, ETX and [] as for commands and ACK = 06h. While ACK will be sent immediately after starting command
 # processing, the remainder of the response follows when the command processing has been finished. The application
 # can assume a response for printing commands within 5 seconds and within 1 second for all other commands.
-# status is a -digit numerical value, where each digit represents one device status value:
+# status is a 8-digit numerical value, where each digit represents one device status value:
 # 	1st digit: 0: Command finished successfully, 1: Command aborted
 #	2nd digit: 0: Printer not fiscalized, 1: Printer fiscalized, 2: Fiscal block
 #	3rd digit: 0: Printer in normal mode, 1: Printer in training mode
@@ -1852,7 +1852,7 @@ proc processData {} {
 						set resp "[getState 1]$ETB$success"
 					} {
 					    global errorInfo
-						set resp "[getState 0]$ETB[lindex [split $errorInfo " "] 0]$ETB$success"
+						set resp "[getState 0]$ETB[lindex [split $errorInfo "\n"] 0]$ETB$success"
 					}
 				} elseif {$cmdname == "get" && $parlen > 1} {
 					set varname [lindex $params 1]
