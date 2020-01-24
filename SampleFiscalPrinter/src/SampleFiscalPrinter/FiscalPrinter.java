@@ -213,7 +213,7 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
         if (TrainingModeActive) {
             Object e = processCommand(new String[]{"setTrainingMode", "0"});
             if (e instanceof JposException)
-                throw new JposException (JposConst.JPOS_E_FAILURE, "Setting training mode failed: " + ((JposException)e).getMessage(), (JposException) e);
+                throw new JposException (JposConst.JPOS_E_FAILURE, "Resetting training mode failed: " + ((JposException)e).getMessage(), (JposException) e);
             attachWaiter();
             Dev.PollWaiter.signal();
             waitWaiter(SyncObject.INFINITE);
@@ -252,23 +252,24 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
      */
     private Object processCommand(String[] cmd) {
         String[] resp = Dev.sendrecv(cmd);
-        String reason = "Cannot process " + cmd[0];
+        String reason = "Cannot process internal command " + cmd[0];
+        int status = 99999999;
         if (resp == null)
-            return new JposException(JposConst.JPOS_E_FAILURE, reason + ": Command timed out");
+            return new JposException(JposConst.JPOS_E_FAILURE, status, reason + ": Command timed out");
         if (resp.length == 0)
-            return new JposException(JposConst.JPOS_E_FAILURE, reason + ": Invalid frame contents");
+            return new JposException(JposConst.JPOS_E_FAILURE, status, reason + ": Invalid frame contents");
         if (resp[0].charAt(0) != SUCCESS) {
-            int status = 99999999;
             if (resp.length == 2) {
                 long index;
                 try {
-                    index = -Long.parseLong(resp[1]);
                     status = Integer.parseInt(resp[0]) + 10000000;
+                    index = Long.parseLong(resp[1]);
                 } catch (Exception e) {
                     index = cmd.length;
                 }
                 if (index > 0 && index < cmd.length)
                     return new JposException(JposConst.JPOS_E_ILLEGAL, status, reason + ": Illegal parameter " + index + ": " + cmd[(int)index]);
+                return new JposException(JposConst.JPOS_E_FAILURE, status, reason + ": Check status (" + status + " - " + index + ")");
             }
             else if (resp.length == 3)
                 return new JposException(JposConst.JPOS_E_ILLEGAL, status, reason + ": " + resp[2]);
@@ -495,23 +496,25 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
     }
 
     private void getLastTicketDateOfPeriod(String[] date, int period, String what) throws JposException {
-        String[][] command;
-        int result;
         Dev.check(period == 0, JposConst.JPOS_E_ILLEGAL, "No " + what + " date available");
-        result = Dev.executeCommands(0, command = new String[][]{
-                new String[]{"get", "Memory", Long.toString(period - 1), "Normal", "Fiscal"}, null
-        });
-        Dev.check(result != 1 || command[1].length < 3, JposConst.JPOS_E_ILLEGAL, what + " date not available");
         try {
-            String recno = Long.toString(Long.parseLong(command[1][1]) + Long.parseLong(command[1][2]));
-            result = Dev.executeCommands(0, command = new String[][]{
-                    new String[]{"retrieveJournal", Long.toString(period - 1), recno, recno, "0"}, null
-            });
-        } catch (NumberFormatException e) {
+            date[0] = new SimpleDateFormat("ddMMyyyyHHmm").format(getLastTicketDate(period - 1));
+        }
+        catch (Exception e) {
             throw new JposException(JposConst.JPOS_E_ILLEGAL, what + " date not available", e);
         }
-        Dev.check(result != 1 || command[1].length < 3, JposConst.JPOS_E_ILLEGAL, what + " date not available");
-        date[0] = new SimpleDateFormat("ddMMyyyyHHmm").format(new Date(Long.parseLong(command[1][2]) * 1000));
+    }
+
+    private Date getLastTicketDate(int period) throws JposException {
+        String[][] command;
+        int result = Dev.executeCommands(0, command = new String[][]{
+                new String[]{"get", "Memory", Long.toString(period), "Normal", "Fiscal"}, null
+        });
+        String recno = Long.toString(Long.parseLong(command[1][1]) + Long.parseLong(command[1][2]));
+        result = Dev.executeCommands(0, command = new String[][]{
+                new String[]{"retrieveJournal", Long.toString(period), recno, recno, "0"}, null
+        });
+        return new Date(Long.parseLong(command[1][2]) * 1000L);
     }
 
     @Override
@@ -531,7 +534,8 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
                 return;
             }
         } catch (Exception ee) {
-            e = ee;
+            if (!(e instanceof JposException))
+                e = ee;
         }
         Exception ex = (Exception) e;
         throw new JposException(JposConst.JPOS_E_FAILURE, "Error getting VAT rate " + vatID + ": " + ex.getMessage(), ex);
@@ -540,19 +544,20 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
     @Override
     public void printPeriodicTotalsReport(String date1, String date2) throws JposException {
         int start = getStartPeriod(date1, 1);
-        Dev.check(start == 0, JposConst.JPOS_E_ILLEGAL, "No period starting after " + date1 + "found");
+        Dev.check(start == 0, JposConst.JPOS_E_ILLEGAL, "No period starting after " + date1 + " found");
         int end = getEndPeriod(date2, start);
-        Dev.check(end == 0, JposConst.JPOS_E_ILLEGAL, "No period ending before " + date2 + "found");
-        Dev.check(start > end, JposConst.JPOS_E_ILLEGAL, "No period starting before " + date1 + " and ending after " + date2 + "found");
+        Dev.check(end == 0, JposConst.JPOS_E_ILLEGAL, "No period ending before " + date2 + " found");
+        Dev.check(start > end, JposConst.JPOS_E_ILLEGAL, "No period starting before " + date1 + " and ending after " + date2 + " found");
         Object e = processCommand(new String[]{"report", Long.toString(start), Long.toString(end), "1"});
         if (e instanceof JposException) {
             char[] state = Integer.toString(((JposException) e).getErrorCodeExtended()).toCharArray();
             if (state[0] == '9' || state.length  != DRAWER + 2)
                 throw new JposException(JposConst.JPOS_E_FAILURE, "Communication error", (Exception) e);
-            Dev.checkext(state[RECEIPT] != CLOSED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Bad printer state");
-            Dev.checkext(state[PRINTER] == EMPTY, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "Paper end");
-            Dev.check(state[PRINTER] == COVERORERROR, JposConst.JPOS_E_FAILURE, "Print station error");
-            throw new JposException(JposConst.JPOS_E_FAILURE, "Unknown error");
+            Dev.checkext(state[RECEIPT + 1] != CLOSED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Bad printer state");
+            Dev.checkext(state[PRINTER + 1] == EMPTY, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "Paper end");
+            Dev.checkext(state[PRINTER + 1] == NEAREND, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "Paper near end");
+            Dev.check(state[PRINTER + 1] == COVERORERROR, JposConst.JPOS_E_FAILURE, "Print station error");
+            throw new JposException(JposConst.JPOS_E_FAILURE, "Mysterious error: " + ((JposException) e).getMessage(), (Exception)e);
         }
     }
 
@@ -584,22 +589,18 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
     }
 
     private int getEndPeriod (String date, int lower) {
-        int index = getStartPeriod(date, lower) - 1;
-        if (index <= 0)
+        int index = getStartPeriod(date, lower);
+        if (index <= 1)
             return 0;
         SimpleDateFormat format = new SimpleDateFormat("ddMMyyyyHHmm");
-        format.setLenient(false);
-        Date dateval = format.parse(date, new ParsePosition(0));
-        Date testval;
         try {
-            String[] resp = (String[]) processCommand(new String[]{"get", "Memory", Integer.toString(index), "Normal", "Fiscal"});
-            String recno = Integer.toString(Integer.parseInt(resp[1]) + Integer.parseInt(resp[2]));
-            resp = (String[]) processCommand(new String[]{"retrieveJournal", Integer.toString(index), recno, recno, "0"});
-            testval = new Date(Long.parseLong(resp[2]) * 1000);
-        } catch (Exception e) {
+            format.setLenient(false);
+            for (Date dateval = format.parse(date, new ParsePosition(0)); dateval.compareTo(getLastTicketDate(index)) < 0; --index) {}
+        }
+        catch (Exception e) {
             return 0;
         }
-        return testval.compareTo(dateval) <= 0 ? index : index - 1;
+        return index;
     }
 
     @Override
@@ -607,26 +608,28 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
         int start, end;
         if (reportType == FiscalPrinterConst.FPTR_RT_DATE) {
             start = getStartPeriod(startNum, 1);
-            Dev.check(start == 0, JposConst.JPOS_E_ILLEGAL, "No period starting after " + startNum + "found");
+            Dev.check(start == 0, JposConst.JPOS_E_ILLEGAL, "No period starting after " + startNum + " found");
             end = getEndPeriod(endNum, start);
-            Dev.check(end == 0, JposConst.JPOS_E_ILLEGAL, "No period ending before " + endNum + "found");
-            Dev.check(start > end, JposConst.JPOS_E_ILLEGAL, "No period starting before " + startNum + " and ending after " + endNum + "found");
+            Dev.check(end == 0, JposConst.JPOS_E_ILLEGAL, "No period ending before " + endNum + " found");
+            Dev.check(start > end, JposConst.JPOS_E_ILLEGAL, "No period starting before " + startNum + " and ending after " + endNum + " found");
             startNum = Long.toString(start);
             endNum = Long.toString(end);
         }
         else {
             if (Integer.parseInt(endNum) == 0)
                 endNum = startNum;
+            Dev.check(Integer.parseInt(endNum) >= Dev.CurrentPeriod, JposConst.JPOS_E_ILLEGAL, "Invalid period: " + endNum);
         }
         Object e = processCommand(new String[]{"report", startNum, endNum, "0"});
         if (e instanceof JposException) {
             char[] state = Integer.toString(((JposException) e).getErrorCodeExtended()).toCharArray();
             if (state[0] == '9' || state.length  != DRAWER + 2)
                 throw new JposException(JposConst.JPOS_E_FAILURE, "Communication error", (Exception) e);
-            Dev.checkext(state[RECEIPT] != CLOSED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Bad printer state");
-            Dev.checkext(state[PRINTER] == EMPTY, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "Paper end");
-            Dev.check(state[PRINTER] == COVERORERROR, JposConst.JPOS_E_FAILURE, "Print station error");
-            throw new JposException(JposConst.JPOS_E_FAILURE, "Unknown error");
+            Dev.checkext(state[RECEIPT + 1] != CLOSED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Bad printer state");
+            Dev.checkext(state[PRINTER + 1] == EMPTY, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "Paper end");
+            Dev.checkext(state[PRINTER + 1] == NEAREND, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "Paper near end");
+            Dev.check(state[PRINTER + 1] == COVERORERROR, JposConst.JPOS_E_FAILURE, "Print station error");
+            throw new JposException(JposConst.JPOS_E_FAILURE, "Mysterious error: " + ((JposException) e).getMessage(), (Exception)e);
         }
     }
 
@@ -637,10 +640,11 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
             char[] state = Integer.toString(((JposException) e).getErrorCodeExtended()).toCharArray();
             if (state[0] == '9' || state.length  != DRAWER + 2)
                 throw new JposException(JposConst.JPOS_E_FAILURE, "Communication error", (Exception) e);
-            Dev.checkext(state[RECEIPT] != CLOSED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Bad printer state");
-            Dev.checkext(state[PRINTER] == EMPTY, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "Paper end");
-            Dev.check(state[PRINTER] == COVERORERROR, JposConst.JPOS_E_FAILURE, "Print station error");
-            throw new JposException(JposConst.JPOS_E_FAILURE, "Unknown error");
+            Dev.checkext(state[RECEIPT + 1] != CLOSED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Bad printer state");
+            Dev.checkext(state[PRINTER + 1] == EMPTY, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "Paper end");
+            Dev.checkext(state[PRINTER + 1] == NEAREND, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "Paper near end");
+            Dev.check(state[PRINTER + 1] == COVERORERROR, JposConst.JPOS_E_FAILURE, "Print station error");
+            throw new JposException(JposConst.JPOS_E_FAILURE, "Mysterious error: " + ((JposException) e).getMessage(), (Exception)e);
         }
     }
 
@@ -652,10 +656,11 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
             char[] state = Integer.toString(((JposException) e).getErrorCodeExtended()).toCharArray();
             if (state[0] == '9' || state.length  != DRAWER + 2)
                 throw new JposException(JposConst.JPOS_E_FAILURE, "Communication error", (Exception) e);
-            Dev.checkext(state[RECEIPT] != CLOSED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Bad printer state");
-            Dev.checkext(state[PRINTER] == EMPTY, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "Paper end");
-            Dev.check(state[PRINTER] == COVERORERROR, JposConst.JPOS_E_FAILURE, "Print station error");
-            throw new JposException(JposConst.JPOS_E_FAILURE, "Unknown error");
+            Dev.checkext(state[RECEIPT + 1] != CLOSED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Bad printer state");
+            Dev.checkext(state[PRINTER + 1] == EMPTY, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "Paper end");
+            Dev.checkext(state[PRINTER + 1] == NEAREND, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "Paper near end");
+            Dev.check(state[PRINTER + 1] == COVERORERROR, JposConst.JPOS_E_FAILURE, "Print station error");
+            throw new JposException(JposConst.JPOS_E_FAILURE, "Mysterious error: " + ((JposException) e).getMessage(), (Exception)e);
         }
         attachWaiter();
         Dev.PollWaiter.signal();
@@ -925,7 +930,7 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
         Dev.PrintBuffer += removeControlCharacters(request.getData(), true);
         int nlindex;
         while (true) {
-            nlindex = Dev.PrintBuffer.lastIndexOf('\n');
+            nlindex = Dev.PrintBuffer.indexOf('\n');
             if (nlindex > MAXPRINTLINELENGTH || (nlindex < 0 && Dev.PrintBuffer.length() > MAXPRINTLINELENGTH)) {
                 String[][] cmd = new String[][]{new String[]{"nfPrint", Dev.PrintBuffer.substring(0, MAXPRINTLINELENGTH)}, null};
                 if (Dev.executeCommands(0, cmd) != 1)

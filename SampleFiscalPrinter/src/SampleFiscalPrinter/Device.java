@@ -1033,8 +1033,8 @@ public class Device extends JposDevice implements Runnable {
             if ((props = getClaimingInstance(ClaimedElectronicJournal, 0)) != null) {
                 handleEvent(new ElectronicJournalStatusUpdateEvent(props.EventSource, state));
             }
-            if ((props) != null) {
-                handleEvent(new FiscalPrinterStatusUpdateEvent(props.EventSource, state));
+            if ((prt) != null) {
+                handleEvent(new FiscalPrinterStatusUpdateEvent(prt.EventSource, state));
             }
         } catch (JposException e) {}
     }
