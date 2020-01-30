@@ -249,7 +249,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
     public void doPriceCalculating(int[] weightData, int[] tare, long[] unitPrice, long[] unitPriceX, int[] weightUnitX, int[] weightNumeratorX, int[] weightDenominatorX, long[] price, int timeout) throws JposException {
         logPreCall("DoPriceCalculating", "" + timeout);
         checkEnabled();
-        Device.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Device busy");
+        Device.check(Device.PendingCommands.size() > 0 || Device.CurrentCommand != null, JposConst.JPOS_E_BUSY, "Device busy");
         Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER && Props.AsyncMode == false, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         Device.check(weightData.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid dimension of weightData");
         Device.check(tare.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid dimension of tare");
@@ -297,7 +297,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
         logPreCall("ReadLiveWeightWithTare", "" + timeout);
         checkEnabled();
         Device.check(!Data.CapReadLiveWeightWithTare, JposConst.JPOS_E_ILLEGAL, "Reading live weight with tare not supported");
-        Device.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Device busy");
+        Device.check(Device.PendingCommands.size() > 0 || Device.CurrentCommand != null, JposConst.JPOS_E_BUSY, "Device busy");
         Device.check(timeout < 0  && timeout != JposConst.JPOS_FOREVER && Props.AsyncMode == false, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         Device.check(weightData.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid dimension of weightData");
         Device.check(tare.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid dimension of tare");
@@ -328,7 +328,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
     public void readWeight(int[] weightData, int timeout) throws JposException {
         logPreCall("ReadWeight", "" + timeout);
         checkEnabled();
-        Device.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Device busy");
+        Device.check(Device.PendingCommands.size() > 0 || Device.CurrentCommand != null, JposConst.JPOS_E_BUSY, "Device busy");
         Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER && Props.AsyncMode == false, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         Device.check(weightData.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid dimension of weightData");
         try {
@@ -410,7 +410,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
         logPreCall("ZeroScale");
         checkEnabled();
         Device.check(!Data.CapZeroScale, JposConst.JPOS_E_ILLEGAL, "Zeroing scale not supported");
-        Device.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Device busy");
+        Device.check(Device.PendingCommands.size() > 0 || Device.CurrentCommand != null, JposConst.JPOS_E_BUSY, "Device busy");
         ScaleInterface.zeroScale();
         logCall("ZeroScale");
     }

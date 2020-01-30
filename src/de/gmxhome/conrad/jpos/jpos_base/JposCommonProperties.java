@@ -387,6 +387,15 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     }
 
     /**
+     * Retrieves status waiter and resets it to null. The calling method must ensure that the status waiter
+     * will be signalled later to avoid deadlock situations.
+     * @return  attached SyncObject if attached, null otherwise.
+     */
+    synchronized SyncObject retrieveWaiter() {
+        return StatusWaiter;
+    }
+
+    /**
      * Retrieves the property set of the service instance that claims the device.
      * @return property set of claiming instance, null if no instance claims the device.
      */
@@ -562,9 +571,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
 
     @Override
     public void retryOutput() throws JposException {
-        State = JposConst.JPOS_S_BUSY;
         new JposOutputRequest(this).reactivate();
-        EventSource.logSet("State");
         Device.log(Level.DEBUG, LogicalName + ": Enter Retry output...");
     }
 

@@ -181,7 +181,6 @@ public class FiscalPrinterStatusUpdateEvent extends JposStatusUpdateEvent {
             case FiscalPrinterConst.FPTR_SUE_REC_COVER_OPEN:
             case FiscalPrinterConst.FPTR_SUE_SLP_COVER_OK:
             case FiscalPrinterConst.FPTR_SUE_SLP_COVER_OPEN:
-            case FiscalPrinterConst.FPTR_SUE_IDLE:
                 return true;
         }
         return false;

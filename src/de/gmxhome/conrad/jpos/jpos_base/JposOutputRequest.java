@@ -329,7 +329,12 @@ public class JposOutputRequest implements Runnable {
     public void reactivate() {
         synchronized (Device.AsyncProcessorRunning) {
             while (Props.SuspendedCommands.size() > 0) {
-                Device.PendingCommands.add(Props.SuspendedCommands.get(0));
+                JposOutputRequest current = Props.SuspendedCommands.get(0);
+                if (!(current instanceof JposInputRequest) && Props.State != JposConst.JPOS_S_BUSY) {
+                    Props.State = JposConst.JPOS_S_BUSY;
+                    Props.EventSource.logSet("State");
+                }
+                Device.PendingCommands.add(current);
                 Props.SuspendedCommands.remove(0);
             }
             if (Device.PendingCommands.size() > 0 && !Device.AsyncProcessorRunning[0]) {
@@ -374,6 +379,12 @@ public class JposOutputRequest implements Runnable {
                             if (ocevent != null) {
                                 Device.handleEvent(ocevent);
                             }
+                            if (current.OutputID == current.Props.OutputID) {
+                                if (current.Props.State == JposConst.JPOS_S_BUSY) {
+                                    current.Props.State = JposConst.JPOS_S_IDLE;
+                                    current.Props.EventSource.logSet("State");
+                                }
+                            }
                             thelastone = current;
                         }
                     }
@@ -385,9 +396,11 @@ public class JposOutputRequest implements Runnable {
     }
 
     private void checkIdle(JposOutputRequest thelastone) {
-        if (thelastone != null && thelastone.Props.State == JposConst.JPOS_S_BUSY) {
-            thelastone.Props.State = JposConst.JPOS_S_IDLE;
-            thelastone.Props.EventSource.logSet("State");
+        if (thelastone != null) {
+            if (thelastone.Props.State == JposConst.JPOS_S_BUSY) {
+                thelastone.Props.State = JposConst.JPOS_S_IDLE;
+                thelastone.Props.EventSource.logSet("State");
+            }
             if (thelastone.Props.FlagWhenIdle) {
                 thelastone.Props.FlagWhenIdle = false;
                 thelastone.Props.EventSource.logSet("FlagWhenIdle");

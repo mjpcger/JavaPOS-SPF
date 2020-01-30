@@ -92,7 +92,6 @@ public class ElectronicJournalStatusUpdateEvent extends JposStatusUpdateEvent {
         if (suspended != props.Suspended)
             props.EventSource.logSet("Suspended");
         switch (getStatus()) {
-            case ElectronicJournalConst.EJ_SUE_IDLE:
             case ElectronicJournalConst.EJ_SUE_MEDIUM_FULL:
             case ElectronicJournalConst.EJ_SUE_MEDIUM_NEAR_FULL:
             case ElectronicJournalConst.EJ_SUE_MEDIUM_INSERTED:

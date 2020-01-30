@@ -427,7 +427,12 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
         logPreCall("SuspendPrintContent");
         checkEnabled();
         Device.check(!Data.CapSuspendPrintContent, JposConst.JPOS_E_ILLEGAL, "Device does not support SuspendPrintContent method");
-        Device.check(Data.State != JposConst.JPOS_S_BUSY, JposConst.JPOS_E_ILLEGAL, "Device in idle state");
+        synchronized (Device.AsyncProcessorRunning) {
+            JposOutputRequest effective = Device.CurrentCommand;
+            if (Device.CurrentCommand == null && Device.PendingCommands.size() > 0)
+                effective = Device.PendingCommands.get(0);
+            Device.check(effective == null || (!(effective instanceof PrintContent) && !(effective instanceof PrintContentFile)), JposConst.JPOS_E_ILLEGAL, "Device not printing");
+        }
         Device.check(Data.Suspended, JposConst.JPOS_E_ILLEGAL, "Device just suspended");
         ElectronicJournalInterface.suspendPrintContent();
         logCall("SuspendPrintContent");
@@ -438,7 +443,12 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
         logPreCall("SuspendQueryContent");
         checkEnabled();
         Device.check(!Data.CapSuspendQueryContent, JposConst.JPOS_E_ILLEGAL, "Device does not support SuspendQueryContent method");
-        Device.check(Data.State != JposConst.JPOS_S_BUSY, JposConst.JPOS_E_ILLEGAL, "Device in idle state");
+        synchronized (Device.AsyncProcessorRunning) {
+            JposOutputRequest effective = Device.CurrentCommand;
+            if (Device.CurrentCommand == null && Device.PendingCommands.size() > 0)
+                effective = Device.PendingCommands.get(0);
+            Device.check(effective == null || !(effective instanceof QueryContent), JposConst.JPOS_E_ILLEGAL, "Device not querying content");
+        }
         Device.check(Data.Suspended, JposConst.JPOS_E_ILLEGAL, "Device just suspended");
         ElectronicJournalInterface.suspendQueryContent();
         logCall("SuspendQueryContent");

@@ -20,7 +20,9 @@ import jpos.*;
 import jpos.config.JposEntry;
 import jpos.events.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.*;
 import javax.swing.*;
@@ -532,7 +534,8 @@ public class JposBaseDevice {
                     if (dev.DeviceEnabled) {
                         JposStatusUpdateEvent ev;
                         ev = (dev == props) ? event : event.copyEvent((JposBase)event.getSource());
-                        if (!ev.block() && ev.setAndCheckStatusProperties()) {
+                        if (!ev.block()) {
+                            ev.setAndCheckStatusProperties();
                             dev.EventList.add(ev);
                             log(Level.DEBUG, dev.LogicalName + ": Buffer StatusUpdateEvent: [" + ev.toLogString() + "]");
                             processEventList(dev);
@@ -575,13 +578,51 @@ public class JposBaseDevice {
         }
     }
 
+    private Map<List<JposCommonProperties>, List<SyncObject>> StatusWaitingObjects = new HashMap();
+
     /**
-     * Signals all SyncObject objects attached to any property set bound to the device.
+     * Prepares device for later signalling status waits via signalStatusWaits method. Ensures that only those waiting
+     * instances will be signalled that are still waiting during preparation. In case of situations where status
+     * lookup and status changing commands can be invoked in different threads, this method should be called before
+     * invoking the status lookup to ensure that an invocation of signalStatusWaits after the lookup will only signal
+     * those threads that started waiting before the lookup started.
      *
+     * @param propertylist list of property sets to be used for SyncObject lookup.
+     */
+    public void prepareSignalStatusWaits(List<JposCommonProperties> propertylist) {
+        List<SyncObject> waitingObjects;
+        if (StatusWaitingObjects.containsKey(propertylist))
+            (waitingObjects = StatusWaitingObjects.get(propertylist)).clear();
+        else
+            StatusWaitingObjects.put(propertylist, waitingObjects = new ArrayList(0));
+        for(JposCommonProperties props : propertylist) {
+            synchronized(props) {
+                SyncObject obj = props.retrieveWaiter();
+                if (obj != null) {
+                    waitingObjects.add(obj);
+                }
+            }
+        }
+    }
+
+    /**
+     * Signals SyncObject objects attached to any property set bound to the device. If prepareSignalStatusWaits has been
+     * invoked for the same property set list previously, only those objects will be signalled that have been attached
+     * before the last call to prepareSignalStatusWaits. Otherwise, all attached objects will be signalled.
+     *
+     * @param propertylist list of property sets to be used for SyncObject lookup.
      */
     public void signalStatusWaits(List<JposCommonProperties> propertylist) {
-        for (JposCommonProperties props : propertylist) {
-            props.signalWaiter();
+        if (StatusWaitingObjects.containsKey(propertylist)) {
+            List<SyncObject> toBeSignalled = StatusWaitingObjects.get(propertylist);
+            for (SyncObject waiter : toBeSignalled) {
+                waiter.signal();
+            }
+        }
+        else {
+            for (JposCommonProperties props : propertylist) {
+                props.signalWaiter();
+            }
         }
     }
 

@@ -224,7 +224,8 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
         newJposOutputRequest().clearInput();
         State = JposConst.JPOS_S_IDLE;
         clearErrorProperties();
-        if (FlagWhenIdle) {
+        newJposOutputRequest().reactivate(false);
+        if (Device.CurrentCommand == null && Device.PendingCommands.size() == 0 && FlagWhenIdle) {
             FlagWhenIdle = false;
             EventSource.logSet("FlagWhenIdle");
             Device.handleEvent(new JposStatusUpdateEvent(EventSource, FlagWhenIdleStatusValue));
@@ -242,17 +243,16 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
             EventSource.logSet("State");
         }
         clearOutputErrorProperties();
-        if (FlagWhenIdle) {
+        newJposOutputRequest().reactivate(true);
+        if (Device.CurrentCommand == null && Device.PendingCommands.size() == 0 && FlagWhenIdle) {
             FlagWhenIdle = false;
             EventSource.logSet("FlagWhenIdle");
-            Device.handleEvent(new JposStatusUpdateEvent(EventSource, FlagWhenIdleStatusValue));
+            Device.handleEvent(new ElectronicJournalStatusUpdateEvent(EventSource, FlagWhenIdleStatusValue));
         }
     }
 
     @Override
     public void retryOutput() {
-        State = JposConst.JPOS_S_BUSY;
-        EventSource.logSet("State");
         clearErrorProperties();
         newJposOutputRequest().reactivate(false);
         Device.log(Level.DEBUG, LogicalName + ": Enter Retry output...");
@@ -260,8 +260,6 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
 
     @Override
     public void retryInput() {
-        State = JposConst.JPOS_S_BUSY;
-        EventSource.logSet("State");
         clearErrorProperties();
         newJposOutputRequest().reactivate(true);
         Device.log(Level.DEBUG, LogicalName + ": Enter Retry input...");

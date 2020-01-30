@@ -269,7 +269,6 @@ public class POSPrinterStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         }
         switch (getStatus()) {
-            case POSPrinterConst.PTR_SUE_IDLE:
             case POSPrinterConst.PTR_SUE_JRN_COVER_OK:
             case POSPrinterConst.PTR_SUE_JRN_COVER_OPEN:
             case POSPrinterConst.PTR_SUE_REC_COVER_OK:

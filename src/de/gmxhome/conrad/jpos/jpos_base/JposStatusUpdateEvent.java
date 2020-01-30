@@ -76,6 +76,10 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
             default:
                 if (state > JposConst.JPOS_SUE_UF_PROGRESS && state <= JposConst.JPOS_SUE_UF_PROGRESS + 100)
                     return true;
+                if (state == props.FlagWhenIdleStatusValue) {
+                    props.FlagWhenIdle = false;
+                    return true;
+                }
         }
         return false;
     }
@@ -87,10 +91,15 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
     public boolean setAndCheckStatusProperties() {
         JposCommonProperties props = getPropertySet();
         int state = props.PowerState;
+        boolean flag = props.FlagWhenIdle;
         if (!setStatusProperties())
             return false;
         if (state != props.PowerState) {
             props.EventSource.logSet("PowerState");
+            return true;
+        }
+        if (flag != props.FlagWhenIdle) {
+            props.EventSource.logSet("FlagWhenIdle");
             return true;
         }
         switch (getStatus()) {

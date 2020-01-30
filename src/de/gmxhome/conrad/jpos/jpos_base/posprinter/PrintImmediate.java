@@ -43,7 +43,7 @@ public class PrintImmediate extends PrintNormal {
             state = Props.State;
             if (state == JposConst.JPOS_S_IDLE)
                 Props.State = JposConst.JPOS_S_BUSY;
-            OutputID = 0;
+            OutputID = -1;
             int index = 0;
             while (Device.PendingCommands.size() > index) {
                 if (!(Device.PendingCommands.get(index) instanceof PrintImmediate))
