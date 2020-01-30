@@ -1,7 +1,6 @@
 package SampleScale;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import de.gmxhome.conrad.jpos.jpos_base.micr.Data;
 import de.gmxhome.conrad.jpos.jpos_base.scale.*;
 import jpos.JposConst;
 import jpos.JposException;
