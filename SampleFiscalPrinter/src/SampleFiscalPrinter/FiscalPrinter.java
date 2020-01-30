@@ -802,12 +802,13 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
         Dev.check(state[RECEIPT] == BLOCKED, JposConst.JPOS_E_FAILURE, "Print station error");
         Dev.checkext(!Dev.member(state[RECEIPT], allowed), FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Bad printer state");
         Dev.checkext(state[PRINTER] >= NEAREND, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "Change paper");
+        Dev.check(state[DRAWER] == OPENED, JposConst.JPOS_E_FAILURE, "Close cash drawer");
         if (cmd[1][0].charAt(0) != SUCCESS && Dev.member(cmd[1].length, new long[]{2, 3})) {
             String cmdstr = cmd[0][0];
             for (int i = 1; i < cmd[0].length; i++)
                 cmdstr = cmdstr + " ETB " + cmd[0][i];
             cmdstr = "Internal command [" + cmdstr + "] failed: ";
-            Dev.check(cmd[1].length == 2 && cmd[1][1].equals("0"), JposConst.JPOS_E_ILLEGAL, cmdstr + "Invalid in current state [" + state + "]");
+            Dev.check(cmd[1].length == 2 && cmd[1][1].equals("0"), JposConst.JPOS_E_ILLEGAL, cmdstr + "Check state [" + state.toString() + "]");
             Dev.check(cmd[1].length == 2, JposConst.JPOS_E_FAILURE, cmdstr + "Bad parameter " + cmd[1][1]);
             Dev.check(cmd[1].length == 3 , JposConst.JPOS_E_FAILURE, cmdstr + cmd[1][1] + " - " + cmd[1][2]);
         }
@@ -1443,6 +1444,11 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
     }
 
     @Override
+    public PrintRecTaxID printRecTaxID(String id) throws JposException {
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Printing tax ID not supported");
+    }
+
+    @Override
     public PrintRecTotal printRecTotal(long total, long payment, String description) throws JposException {
         Dev.checkext(!removeControlCharacters(description, false).equals(description), FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_DESCRIPTION, "Description contains invalid characters");
         Dev.checkext(description.length() > MAXDESCRIPTIONLENGTH, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_DESCRIPTION, "Description too long");
@@ -1588,16 +1594,19 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
     }
 
     private void updatePaperStates(char c, boolean fromDeviceEnabled) {
-        FiscalPrinterStatusUpdateEvent ev;
+        FiscalPrinterStatusUpdateEvent ev = null;
         switch (c) {
             case OK:
-                ev = new FiscalPrinterStatusUpdateEvent(EventSource, FiscalPrinterConst.FPTR_SUE_REC_PAPEROK);
+                if (RecEmpty || RecNearEnd)
+                    ev = new FiscalPrinterStatusUpdateEvent(EventSource, FiscalPrinterConst.FPTR_SUE_REC_PAPEROK);
                 break;
             case NEAREND:
-                ev = new FiscalPrinterStatusUpdateEvent(EventSource, FiscalPrinterConst.FPTR_SUE_REC_NEAREMPTY);
+                if (RecEmpty || !RecNearEnd)
+                    ev = new FiscalPrinterStatusUpdateEvent(EventSource, FiscalPrinterConst.FPTR_SUE_REC_NEAREMPTY);
                 break;
             default:
-                ev = new FiscalPrinterStatusUpdateEvent(EventSource, FiscalPrinterConst.FPTR_SUE_REC_EMPTY);
+                if (!RecEmpty)
+                    ev = new FiscalPrinterStatusUpdateEvent(EventSource, FiscalPrinterConst.FPTR_SUE_REC_EMPTY);
         }
         if (ev != null) {
             if (fromDeviceEnabled)

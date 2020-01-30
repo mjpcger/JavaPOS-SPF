@@ -312,8 +312,6 @@ public class Device extends JposDevice implements Runnable {
     private Thread StateWatcher = null;
     private boolean ToBeFinished;
 
-    private LinkedList<SyncObject> DrawerClosedWaiter = new LinkedList<SyncObject>();
-    private LinkedList<SyncObject> StatusWaiter = new LinkedList<SyncObject>();
     private boolean InIOError = false;
 
     private char[] CurrentState = new char[0];      // Updated when receiving a response
@@ -875,6 +873,7 @@ public class Device extends JposDevice implements Runnable {
         char[] newstate;
         String newserno = SerialNumber;
         long newjournalsize = CurrentJournalSize;
+        prepareStatusWaitingObjects();
         for (int index = 0; !ToBeFinished; index = 1 - index) {
             try {
                 String[] result = sendrecv(commands[index]);
@@ -896,14 +895,22 @@ public class Device extends JposDevice implements Runnable {
                 }
                 if (index == 1) {
                     handleStates(newstate, newserno, newjournalsize);
-                    StartPollingWaiter.signalWaiter();
                     signalStatusWaits(FiscalPrinters[0]);
+                    StartPollingWaiter.signalWaiter();
                     PollWaiter.suspend(PollDelay);
+                    prepareStatusWaitingObjects();
                 }
             } catch (Exception e) {
                 index = 1 - index;      // try it again
             }
         }
+    }
+
+    private void prepareStatusWaitingObjects() {
+        prepareSignalStatusWaits(CashDrawers[0]);
+        prepareSignalStatusWaits(ElectronicJournals[0]);
+        prepareSignalStatusWaits(FiscalPrinters[0]);
+        prepareSignalStatusWaits(LineDisplays[0]);
     }
 
     private void handleStates(char[] newstate, String newserno, long newjournalsize) {
@@ -963,14 +970,6 @@ public class Device extends JposDevice implements Runnable {
             if (props != null) {
                 int state = c == OPENED ? CashDrawerConst.CASH_SUE_DRAWEROPEN : CashDrawerConst.CASH_SUE_DRAWERCLOSED;
                 handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, state));
-                if (c != OPENED) {
-                    synchronized (DrawerClosedWaiter) {
-                        while (DrawerClosedWaiter.size() > 0) {
-                            DrawerClosedWaiter.getFirst().signal();
-                            DrawerClosedWaiter.removeFirst();
-                        }
-                    }
-                }
             }
         } catch (JposException e) {
             return e;

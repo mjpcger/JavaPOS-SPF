@@ -133,7 +133,7 @@ class CashDrawer extends CashDrawerProperties implements StatusUpdater {
         if (PowerNotify == JposConst.JPOS_PN_ENABLED) {
             int value = state.length <= DRAWER ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
             new JposStatusUpdateEvent(EventSource, value).setAndCheckStatusProperties();
-            signalWaiter();
+            Dev.signalStatusWaits(Dev.CashDrawers[0]);
         }
         if (state.length > DRAWER) {
             int value = state.length >= DRAWER && state[DRAWER] == OPENED ? CashDrawerConst.CASH_SUE_DRAWEROPEN : CashDrawerConst.CASH_SUE_DRAWERCLOSED;
