@@ -141,7 +141,6 @@ public class Device extends JposDevice implements Runnable {
         props.VideoModesListDef = "1:20x25x16C";
         props.EventTypeDef = RemoteOrderDisplayConst.ROD_DE_TOUCH_UP|RemoteOrderDisplayConst.ROD_DE_TOUCH_DOWN;
         props.TimeoutDef = RequestTimeout;
-        CapPowerReporting = JposConst.JPOS_PR_STANDARD;
         props.DeviceServiceVersion = 1014001;
     }
 

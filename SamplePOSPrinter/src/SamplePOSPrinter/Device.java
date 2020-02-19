@@ -217,13 +217,9 @@ public class Device extends JposDevice{
         super(port);
         pOSPrinterInit(1);
         cashDrawerInit(1);
-        setCapPowerReportingDef();
         PhysicalDeviceDescription = "Sample printer simulator for virtual COM ports or TCP";
         PhysicalDeviceName = "Sample POSPrinter Simulator";
         OpenCount[0] = 0;
-    }
-
-    private void setCapPowerReportingDef() {
         try {
             new TcpClientIOProcessor(this, ID);
         } catch (JposException e) {

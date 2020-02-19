@@ -131,7 +131,6 @@ public class Device extends JposDevice implements Runnable {
         props.TareWeightDef = DefaultTara;
         props.WeightUnit = WeightUnit;
         props.DeviceServiceDescription = "Scales service for Scales Dialog 02/04 simulator";
-        CapPowerReporting = JposConst.JPOS_PR_STANDARD;
         props.DeviceServiceVersion = 1014001;
     }
 
