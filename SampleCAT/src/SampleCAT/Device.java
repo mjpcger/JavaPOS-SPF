@@ -177,7 +177,7 @@ public class Device extends JposDevice implements Runnable{
     /**
      * Status watcher instance.
      */
-    Thread StateWatcher;
+    Thread StateWatcher = null;
 
     /**
      * Flag showing that status watcher shall be stopped.
@@ -241,8 +241,10 @@ public class Device extends JposDevice implements Runnable{
     private int OwnPort = 0;                // Default: OS generated random port
     private int CharacterTimeout = 50;      // Default: Service specific value for maximum delay between bytes belonging
                                             // to the same frame
-    // Communication properties
-    private TcpClientIOProcessor OutStream = null;
+    /**
+     * Communication object.
+     */
+    TcpClientIOProcessor OutStream = null;
 
     private SyncObject WaitInitialized;
 
@@ -801,7 +803,6 @@ public class Device extends JposDevice implements Runnable{
     @Override
     public void changeDefaults(CATProperties props) {
         props.DeviceServiceDescription = "CAT service for sample CAT";
-        CapPowerReporting = JposConst.JPOS_PR_STANDARD;
         props.DeviceServiceVersion = 1014001;
         props.CapAuthorizeRefund = true;
         props.CapAuthorizeVoid = true;
@@ -883,9 +884,10 @@ public class Device extends JposDevice implements Runnable{
                     FrameReader.signal();
                     break;
                 } catch (Exception e) {
-                    e.printStackTrace();;
+                    e.printStackTrace();
                 }
             }
+            ReadThread = null;
         }
 
         private void processFrame(String frame) {
@@ -1157,7 +1159,7 @@ public class Device extends JposDevice implements Runnable{
      * @throws JposException    Communication error or terminal in wrong state.
      */
     void sale(boolean refund, long amount, int timeout) throws JposException {
-        Object o = sendRecv(String.format("%c%f", refund ? 'r' : 's', (double)amount / 10000.0), 'E', timeout);
+        Object o = sendRecv((refund ? "r" : "s") + Double.toString((double)amount / 10000.0), 'E', timeout);
         if (o instanceof JposException)
             throw (JposException) o;
         String resp = (String) o;
@@ -1273,27 +1275,42 @@ public class Device extends JposDevice implements Runnable{
 
     @Override
     public void run() {
-        boolean oldInError = InIOError;
+        UniqueIOProcessor oldstream = null;
+        UniqueIOProcessor currentStream = null;
+        try {
+            oldstream = new UniqueIOProcessor(this, "");
+        } catch (JposException e) {}
         JposCommonProperties props;
         while (!ToBeFinished) {
-            try {
-                StreamReader reader = ReadThread;
-                if (reader != null) {
-                    reader.join();
-                }
-                else {
-                    new SyncObject().suspend(CharacterTimeout);
-                }
-                setPrintWidth(JournalWidth);
-                if (oldInError != InIOError) {
-                    oldInError = !oldInError;
-                    if ((props = getClaimingInstance(ClaimedCAT, 0)) != null)
-                        handleEvent(new JposStatusUpdateEvent(props.EventSource, oldInError ? JposConst.JPOS_SUE_POWER_OFF_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE));
-                }
-            } catch(Exception e) {
-                e.printStackTrace();
+            StreamReader reader;
+            synchronized (this) {
+                if (OutStream == null)
+                    initPort();
+                currentStream = OutStream;
+                reader = ReadThread;
             }
-
+            if (oldstream != currentStream) {
+                oldstream = currentStream;
+                if ((props = getClaimingInstance(ClaimedCAT, 0)) != null) {
+                    try {
+                        handleEvent(new JposStatusUpdateEvent(props.EventSource, oldstream == null ? JposConst.JPOS_SUE_POWER_OFF_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE));
+                    } catch (JposException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            if (reader != null) {
+                setPrintWidth(JournalWidth);
+                try {
+                    reader.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    reader = null;
+                }
+            }
+            if (reader == null) {
+                new SyncObject().suspend(CharacterTimeout);
+            }
         }
     }
 

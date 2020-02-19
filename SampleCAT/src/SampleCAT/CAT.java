@@ -17,6 +17,7 @@
 
 package SampleCAT;
 
+import de.gmxhome.conrad.jpos.jpos_base.UniqueIOProcessor;
 import de.gmxhome.conrad.jpos.jpos_base.cat.*;
 import jpos.JposConst;
 import jpos.JposException;
@@ -74,6 +75,10 @@ public class CAT extends CATProperties {
         if (timeout < Dev.MinClaimTimeout)
             timeout = Dev.MinClaimTimeout;
         super.claim(timeout);
+        if (Dev.StateWatcher == null) {
+            Dev.StateWatcher = new Thread(Dev, "StateWatcher");
+            Dev.StateWatcher.start();
+        }
         Dev.setPrintWidth(Dev.JournalWidth);
         if (Dev.InIOError) {
             release();
@@ -110,6 +115,14 @@ public class CAT extends CATProperties {
     public void deviceEnabled(boolean enable) throws JposException {
         Dev.lock(!enable, Dev.RequestTimeout);
         super.deviceEnabled(enable);
+    }
+
+    @Override
+    public void handlePowerStateOnEnable() throws JposException {
+        synchronized(Dev) {
+            PowerState = Dev.OutStream == null ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
+        }
+        super.handlePowerStateOnEnable();
     }
 
     @Override

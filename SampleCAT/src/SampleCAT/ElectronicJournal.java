@@ -438,6 +438,12 @@ public class ElectronicJournal extends ElectronicJournalProperties {
     }
 
     @Override
+    public void handlePowerStateOnEnable() throws JposException {
+        PowerState = JposConst.JPOS_PS_ONLINE;
+        super.handlePowerStateOnEnable();
+    }
+
+    @Override
     public void eraseMedium(EraseMedium request) throws JposException {
         TicketViaEJ ej = (TicketViaEJ) Dev.Ticket;
         synchronized(ej) {
