@@ -767,13 +767,12 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void setFiscalReceiptStation(int station) throws JposException {
         long[] allowed = new long[]{
                 FiscalPrinterConst.FPTR_RS_RECEIPT,
-                FiscalPrinterConst.FPTR_RS_SLIP
+                Data.CapFiscalReceiptStation ? FiscalPrinterConst.FPTR_RS_SLIP : FiscalPrinterConst.FPTR_RS_RECEIPT
         };
         logPreSet("FiscalReceiptStation");
         checkOpened();
-        Device.check(!Data.CapFiscalReceiptStation, JposConst.JPOS_E_ILLEGAL, "Invalid property 'FiscalReceiptStation'");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in monitor state");
         Device.checkMember(station, allowed, JposConst.JPOS_E_ILLEGAL, "Invalid station: " + station);
+        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR && Data.PrinterState != FiscalPrinterConst.FPTR_PS_LOCKED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Neither locked nor in monitor state");
         Device.check(station == FiscalPrinterConst.FPTR_RS_SLIP && !Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "No slip station");
         Device.check(station == FiscalPrinterConst.FPTR_RS_RECEIPT && !Data.CapRecPresent, JposConst.JPOS_E_ILLEGAL, "No receipt station");
         FiscalPrinterInterface.fiscalReceiptStation(station);
