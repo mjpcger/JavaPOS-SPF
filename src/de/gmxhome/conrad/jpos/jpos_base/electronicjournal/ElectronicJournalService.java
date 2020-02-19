@@ -231,8 +231,8 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
     @Override
     public void setStorageEnabled(boolean flag) throws JposException {
         logPreSet("StorageEnabled");
-        checkOpened();
-        Device.check(!Data.CapStorageEnabled && !flag, JposConst.JPOS_E_ILLEGAL, "Storage cannopt be disabled for device");
+        checkEnabled();
+        Device.check(!Data.CapStorageEnabled && !flag, JposConst.JPOS_E_ILLEGAL, "Storage cannot be disabled for device");
         ElectronicJournalInterface.storageEnabled(flag);
         logSet("StorageEnabled");
     }
@@ -255,7 +255,7 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
     public void setWaterMark(boolean flag) throws JposException {
         logPreSet("WaterMark");
         checkOpened();
-        Device.check(!Data.CapWaterMark && flag, JposConst.JPOS_E_ILLEGAL, "Storage cannopt be disabled for device");
+        Device.check(!Data.CapWaterMark && flag, JposConst.JPOS_E_ILLEGAL, "No watermark support for device");
         ElectronicJournalInterface.waterMark(flag);
         logSet("WaterMark");
     }

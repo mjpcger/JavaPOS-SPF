@@ -194,7 +194,6 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
     @Override
     public void initOnOpen() {
         super.initOnOpen();
-        StorageEnabled = false;
         Suspended = false;
     }
 
@@ -208,6 +207,14 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
             return false;
         }
         return true;
+    }
+
+    @Override
+    public void initOnEnable(boolean enable) {
+        super.initOnEnable(enable);
+        if (enable && !CapStorageEnabled) {
+            StorageEnabled = true;
+        }
     }
 
     @Override
