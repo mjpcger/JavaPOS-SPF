@@ -75,7 +75,12 @@ public class Device extends JposDevice implements Runnable {
         cashDrawerInit(1);
         PhysicalDeviceDescription = "Fiscal printer simulator for TCP and COM port";
         PhysicalDeviceName = "Fiscal printer Simulator";
-        setCapPowerReportingDef();
+        try {
+            new TcpClientIOProcessor(this, ID);
+        } catch (JposException e) {
+            TcpType = false;
+        }
+        CapPowerReporting = JposConst.JPOS_PR_ADVANCED;
     }
 
     @Override
@@ -174,15 +179,6 @@ public class Device extends JposDevice implements Runnable {
     String centeredLine(String text) {
         String format = "%" + ((MAXPRINTLINELENGTH + text.length()) / 2) + "s";
         return String.format(format, text);
-    }
-
-    private void setCapPowerReportingDef() {
-        try {
-            new TcpClientIOProcessor(this, ID);
-        } catch (JposException e) {
-            TcpType = false;
-        }
-        CapPowerReporting = JposConst.JPOS_PR_ADVANCED;
     }
 
     /**

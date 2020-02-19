@@ -49,7 +49,9 @@ class ElectronicJournal extends ElectronicJournalProperties implements StatusUpd
     @Override
     public void deviceEnabled(boolean enable) throws JposException {
         super.deviceEnabled(enable);
-        Dev.updateStates(this, enable);
+        synchronized (Dev) {
+            Dev.updateStates(this, enable);
+        }
     }
 
     @Override

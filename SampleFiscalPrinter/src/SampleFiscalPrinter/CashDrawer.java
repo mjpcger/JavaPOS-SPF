@@ -50,8 +50,9 @@ class CashDrawer extends CashDrawerProperties implements StatusUpdater {
             Dev.stopPolling();
         }
         super.deviceEnabled(enable);
-
-        Dev.updateStates(this, enable);
+        synchronized (Dev) {
+            Dev.updateStates(this, enable);
+        }
     }
 
     @Override
