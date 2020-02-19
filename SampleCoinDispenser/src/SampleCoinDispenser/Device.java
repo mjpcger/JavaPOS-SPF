@@ -275,7 +275,6 @@ public class Device extends JposDevice implements Runnable{
         props.CapEmptySensor = true;
         props.CapJamSensor = true;
         props.CapNearEmptySensor = true;
-        CapPowerReporting = JposConst.JPOS_PR_STANDARD;
         props.DeviceServiceVersion = 1014001;
     }
 
