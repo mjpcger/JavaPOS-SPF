@@ -134,9 +134,11 @@ public class Device extends JposDevice implements Runnable{
      * Flag showing the current device state (true = offline, false = online).
      */
     boolean DeviceIsOffline = true;
+
     private byte LockPosition = DefaultLockPos;
     private Map<Integer, Integer> LockMapping = new HashMap<Integer, Integer>();
     private byte[] EKeyValue = DefaultEKeyPos;
+    private boolean BinaryEKey = true;
 
     /**
      * Contents of LineDisplay.
@@ -295,6 +297,9 @@ public class Device extends JposDevice implements Runnable{
                 UsbToSerial = Boolean.parseBoolean(o.toString());
                 DeviceType = 1;
             }
+            if ((o = entry.getPropertyValue("BinaryEKey")) != null) {
+                BinaryEKey = Boolean.parseBoolean(o.toString());
+            }
         } catch (Exception e) {
             throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property", e);
         }
@@ -304,6 +309,7 @@ public class Device extends JposDevice implements Runnable{
     public void changeDefaults(LineDisplayProperties props) {
         props.DeviceServiceDescription = "Display service for combined device simulator";
         props.DeviceServiceVersion = 1014001;
+        props.CapMapCharacterSet = true;
         props.CapCharacterSet = LineDisplayConst.DISP_CCS_UNICODE;
         props.CharacterSetDef = LineDisplayConst.DISP_CS_UNICODE;
         props.CharacterSetList = "997";
@@ -948,6 +954,14 @@ public class Device extends JposDevice implements Runnable{
     }
 
     private Exception handleEKeyChange(byte[] newEkeyValue) {
+        if (BinaryEKey) {
+            byte[] binaryEKey = new byte[newEkeyValue.length / 2];
+            for (int i = 0; i < binaryEKey.length; i++) {
+                binaryEKey[i] = (byte)("0123456789ABCDEF".indexOf(newEkeyValue[i + i] & 0xff) * 0x10
+                        + (byte)"0123456789ABCDEF".indexOf(newEkeyValue[i + i + 1] & 0xff));
+            }
+            newEkeyValue = binaryEKey;
+        }
         if (!Arrays.equals(newEkeyValue, EKeyValue)) {
             EKeyValue = newEkeyValue;
             JposCommonProperties props = getPropertySetInstance(Keylocks, EKeyIndex, 0);

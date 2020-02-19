@@ -72,15 +72,15 @@ public class Keylock extends KeylockProperties {
         long tio = Dev.timeoutToLong(timeout);
         if (pos != KeyPosition || pos == KeylockConst.LOCK_KP_ANY) {
             attachWaiter();
-            while (occurredTime < tio && waitWaiter(tio - occurredTime)) {
+            while ((tio < 0 || occurredTime < tio) && waitWaiter(tio - occurredTime)) {
                 if (pos == KeylockConst.LOCK_KP_ANY || pos == KeyPosition || Dev.DeviceIsOffline) {
                     occurredTime = tio - 1;
                     break;
                 }
-                occurredTime = System.currentTimeMillis() - startTime;
+                occurredTime = tio >= 0 ? System.currentTimeMillis() - startTime : 0;
             }
             releaseWaiter();
-            Dev.check(occurredTime == tio, JposConst.JPOS_E_TIMEOUT, "No keylock change");
+            Dev.check(occurredTime >= tio, JposConst.JPOS_E_TIMEOUT, "No keylock change");
             Dev.check(Dev.DeviceIsOffline, JposConst.JPOS_E_OFFLINE, "Device offline");
         }
         super.waitForKeylockChange(pos, timeout);

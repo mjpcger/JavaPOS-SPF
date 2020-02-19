@@ -262,9 +262,9 @@ public class LineDisplay extends LineDisplayProperties {
                     Dev.DisplayAttributes[1][i] = Dev.DisplayAttributes[1][i + units];
                 } else {
                     Dev.DisplayContents[0][19 - i] = Dev.DisplayContents[0][19 - i - units];
-                    Dev.DisplayContents[0][19 - i] = Dev.DisplayContents[0][19 - i - units];
+                    Dev.DisplayContents[1][19 - i] = Dev.DisplayContents[1][19 - i - units];
                     Dev.DisplayAttributes[0][19 - i] = Dev.DisplayAttributes[0][19 - i - units];
-                    Dev.DisplayAttributes[0][19 - i] = Dev.DisplayAttributes[0][19 - i - units];
+                    Dev.DisplayAttributes[1][19 - i] = Dev.DisplayAttributes[1][19 - i - units];
                 }
             }
             while (i < 20) {
@@ -276,6 +276,7 @@ public class LineDisplay extends LineDisplayProperties {
                     Dev.DisplayContents[0][19 - i] = Dev.DisplayContents[1][19 - i] = ' ';
                     Dev.DisplayAttributes[0][19 - i] = Dev.DisplayAttributes[1][19 - i] = Dev.NormalChar;
                 }
+                i++;
             }
             refreshWindow(0);
         }

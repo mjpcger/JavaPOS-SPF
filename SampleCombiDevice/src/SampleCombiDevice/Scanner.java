@@ -58,6 +58,12 @@ public class Scanner extends ScannerProperties {
     }
 
     @Override
+    public void deviceEnabled(boolean enable) throws JposException {
+        super.deviceEnabled(enable);
+        Dev.updateCommonStates(this, enable);
+    }
+
+    @Override
     public void checkHealth(int level) throws JposException {
         if (Dev.internalCheckHealth(this, level))
             return;
