@@ -344,7 +344,7 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, property
      */
     public boolean getAsyncMode() throws JposException {
-        checkEnabled();
+        checkOpened();
         logGet("AsyncMode");
         return Props.AsyncMode;
     }
@@ -356,7 +356,7 @@ public class JposBase implements BaseService {
      */
     public void setAsyncMode(boolean b) throws JposException {
         logPreSet("AsyncMode");
-        checkEnabled();
+        checkOpened();
         DeviceInterface.asyncMode(b);
         logSet("AsyncMode");
     }
@@ -556,9 +556,6 @@ public class JposBase implements BaseService {
         checkClaimed();
         Device.check(!Props.DeviceEnabled && !enable, JposConst.JPOS_E_DISABLED, "Device just disabled");
         Device.check(Props.DeviceEnabled && enable, JposConst.JPOS_E_ILLEGAL, "Device just enabled");
-        if (enable && !Props.FirstEnableHappened) {
-            Props.AsyncMode = false;
-        }
         DeviceInterface.deviceEnabled(enable);
         logSet("DeviceEnabled");
         if (Props.PowerNotify == JposConst.JPOS_PN_ENABLED) {

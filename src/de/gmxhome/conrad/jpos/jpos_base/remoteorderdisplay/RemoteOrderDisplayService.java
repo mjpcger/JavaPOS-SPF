@@ -161,6 +161,21 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     }
 
     @Override
+    public boolean getAsyncMode() throws JposException {
+        checkEnabled();
+        logGet("AsyncMode");
+        return Props.AsyncMode;
+    }
+
+    @Override
+    public void setAsyncMode(boolean b) throws JposException {
+        logPreSet("AsyncMode");
+        checkEnabled();
+        DeviceInterface.asyncMode(b);
+        logSet("AsyncMode");
+    }
+
+    @Override
     public int getAutoToneDuration() throws JposException {
         checkFirstEnabled();
         logGet("AutoToneDuration");

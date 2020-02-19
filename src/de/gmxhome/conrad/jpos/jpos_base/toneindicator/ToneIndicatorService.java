@@ -45,6 +45,21 @@ public class ToneIndicatorService extends JposBase implements ToneIndicatorServi
     }
 
     @Override
+    public boolean getAsyncMode() throws JposException {
+        checkEnabled();
+        logGet("AsyncMode");
+        return Props.AsyncMode;
+    }
+
+    @Override
+    public void setAsyncMode(boolean b) throws JposException {
+        logPreSet("AsyncMode");
+        checkEnabled();
+        DeviceInterface.asyncMode(b);
+        logSet("AsyncMode");
+    }
+
+    @Override
     public int getCapMelody() throws JposException {
         checkOpened();
         logGet("CapMelody");
