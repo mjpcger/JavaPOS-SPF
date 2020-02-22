@@ -19,6 +19,7 @@ package SampleCombiDevice;
 
 import de.gmxhome.conrad.jpos.jpos_base.msr.*;
 import jpos.JposException;
+import jpos.MSRConst;
 
 import java.util.Arrays;
 
@@ -70,15 +71,62 @@ public class MSR extends MSRProperties {
         if (o instanceof Device.TrackData) {
             byte[][] tracks = ((Device.TrackData) o).Tracks;
             if (tracks.length == 3) {
-                Track1Data = storeData(tracks[0], 0x20, 0x3f);
-                Track2Data = storeData(tracks[1], 0x30, 0xf);
-                Track3Data = storeData(tracks[2], 0x30, 0xf);
+                Track1Data = (TracksToRead & MSRConst.MSR_TR_1) != 0 ? storeData(tracks[0], 0x20, 0x3f) : new byte[0];
+                Track2Data = (TracksToRead & MSRConst.MSR_TR_2) != 0 ? storeData(tracks[1], 0x30, 0xf) : new byte[0];
+                Track3Data = (TracksToRead & MSRConst.MSR_TR_3) != 0 ? storeData(tracks[2], 0x30, 0xf) : new byte[0];
             }
         }
     }
+
+    @Override
+    public void transmitSentinels(boolean transmit) throws JposException {
+        boolean previous = TransmitSentinels;
+        super.transmitSentinels(transmit);
+        if (previous != TransmitSentinels) {
+            Track1Data = changeTrack(Track1Data, "Track1Data", previous, (byte)'&');
+            Track2Data = changeTrack(Track2Data, "Track2Data", previous, (byte)';');
+            Track3Data = changeTrack(Track3Data, "Track3Data", previous, (byte)';');
+        }
+    }
+
+    @Override
+    public void decodeData(boolean decode) throws JposException {
+        boolean previous = DecodeData;
+        super.decodeData(decode);
+        if (previous != DecodeData) {
+            Track1Data = codeTrack(Track1Data, "Track1Data", previous ? -0x20 : 0x20);
+            Track2Data = codeTrack(Track2Data, "Track2Data", previous ? -0x30 : 0x30);
+            Track3Data = codeTrack(Track3Data, "Track3Data", previous ? -0x30 : 0x30);
+        }
+    }
+
+    private byte[] changeTrack(byte[] track, String name, boolean previous, byte start) {
+        if (track.length > 0) {
+            byte[] target;
+            if (previous)
+                track =  Arrays.copyOfRange(track, 1, track.length - 1);
+            else {
+                (target = new byte[track.length + 2])[0] = start;
+                System.arraycopy(track, 0, target, 1, track.length);
+                (track = target)[target.length - 1] = (byte)'?';
+            }
+            EventSource.logSet(name);
+        }
+        return track;
+    }
+
+    private byte[] codeTrack(byte[] data, String name, int delta) {
+        if (data != null && data.length > 0) {
+            for (int i = 0; i < data.length; i++)
+                data[i] += delta;
+            EventSource.logSet(name);
+        }
+        return data;
+    }
+
     private byte[] storeData(byte[] source, int subtractor, int maxvalue) {
         if (!TransmitSentinels && source.length > 1)
-            source = Arrays.copyOfRange(source, 1, source.length);
+            source = Arrays.copyOfRange(source, 1, source.length - 1);
         if (DecodeData)
             return source;
         byte[] target = new byte[source.length];
