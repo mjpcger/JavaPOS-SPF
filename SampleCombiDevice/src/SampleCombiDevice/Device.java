@@ -806,8 +806,12 @@ public class Device extends JposDevice implements Runnable{
                 data = Arrays.copyOfRange(next, LabelPos, targetOffset);
                 label = Arrays.copyOfRange(next, labelOffset, targetOffset);
                 ScannerProperties claimer = (ScannerProperties)getClaimingInstance(ClaimedScanner, 0);
-                if (claimer != null)
-                    handleEvent(new ScannerDataEvent(claimer.EventSource, 0, data, label, labelType));
+                if (claimer != null) {
+                    if (claimer.DecodeData)
+                        handleEvent(new ScannerDataEvent(claimer.EventSource, 0, data, label, labelType));
+                    else
+                        handleEvent(new ScannerDataEvent(claimer.EventSource, 0, data, new byte[0], ScannerConst.SCAN_SDT_UNKNOWN));
+                }
                 return true;
             }
         }
