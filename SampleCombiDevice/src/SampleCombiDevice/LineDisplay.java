@@ -21,6 +21,7 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.linedisplay.*;
 import jpos.*;
 
+import javax.swing.*;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
@@ -70,15 +71,18 @@ public class LineDisplay extends LineDisplayProperties {
 
     @Override
     public void checkHealth(int level) throws JposException {
-        if (Dev.internalCheckHealth(this, level))
-            return;
-        CheckHealthText = (level == JposConst.JPOS_CH_EXTERNAL ? "Externel" : "Internal") + " CheckHealth: ";
-        try {
-            ((LineDisplayService) EventSource).clearText();
-            ((LineDisplayService) EventSource).displayTextAt(1, 3, "CheckHealth: OK!", LineDisplayConst.DISP_DT_NORMAL);
-            CheckHealthText += "OK";
-        } catch (JposException e) {
-            CheckHealthText += "Failed, " + e.getMessage();
+        if (!Dev.internalCheckHealth(this, level)) {
+            try {
+                ((LineDisplayService) EventSource).clearText();
+                ((LineDisplayService) EventSource).displayTextAt(1, 3, "CheckHealth: OK!", LineDisplayConst.DISP_DT_NORMAL);
+                CheckHealthText = "OK";
+            } catch (JposException e) {
+                CheckHealthText = "Failed, " + e.getMessage();
+            }
+            if (level == JposConst.JPOS_CH_INTERACTIVE)
+                Dev.synchronizedMessageBox("LineDisplay check " + CheckHealthText + ".", "CheckHealth LineDisplay",
+                        (CheckHealthText.equals("OK") ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE));
+            CheckHealthText = (level == JposConst.JPOS_CH_EXTERNAL ? "Externel" : "Internal") + " CheckHealth: " + CheckHealthText;
         }
         super.checkHealth(level);
     }

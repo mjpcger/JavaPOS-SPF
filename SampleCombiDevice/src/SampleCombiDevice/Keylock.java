@@ -21,6 +21,10 @@ import de.gmxhome.conrad.jpos.jpos_base.keylock.*;
 
 import jpos.*;
 
+import javax.swing.*;
+
+import static SampleCombiDevice.Device.*;
+
 /**
  * Class implementing the KeylockInterface for the sample combi device.
  * External and interactive Checkhealth might be implemented in a later version.
@@ -43,6 +47,8 @@ public class Keylock extends KeylockProperties {
         super.deviceEnabled(enable);
         Dev.updateCommonStates(this, enable);
         Dev.updateKeylockStates(this, enable);
+        if (!enable)
+            signalWaiter();
     }
 
     @Override
@@ -59,10 +65,54 @@ public class Keylock extends KeylockProperties {
 
     @Override
     public void checkHealth(int level) throws JposException {
-        if (Dev.internalCheckHealth(this, level))
-            return;
-        // TOBEIMPLEMENTED
+        if (!Dev.internalCheckHealth(this, level) && !externalCheckHealth(level))
+            interactiveCheckHealth(level);
         super.checkHealth(level);
+    }
+
+    private void interactiveCheckHealth(int level) {
+        if (level == JposConst.JPOS_CH_INTERACTIVE) {
+            if (Dev.DeviceIsOffline || Dev.InIOError) {
+                CheckHealthText = "Interactive check: Error";
+                Dev.synchronizedMessageBox("Keylock not operational.", "CheckHealth Drawer", JOptionPane.ERROR_MESSAGE);
+            } else {
+                try {
+                    Dev.synchronizedMessageBox("Press OK, then change the key lock", "CheckHealth Keylock", JOptionPane.INFORMATION_MESSAGE);
+                    CheckHealthText = "Interactive check: Error";
+                    ((KeylockService) EventSource).waitForKeylockChange(KeylockConst.LOCK_KP_ANY, 10000);
+                    CheckHealthText = "Interactive check: OK";
+                    Dev.synchronizedMessageBox("Keylock change successful.", "CheckHealth Drawer", JOptionPane.INFORMATION_MESSAGE);
+                } catch (JposException e) {
+                    if (e.getErrorCode() == JposConst.JPOS_E_TIMEOUT) {
+                        CheckHealthText = "Interactive check: Timed out";
+                        Dev.synchronizedMessageBox("Keylock change timed out.", "CheckHealth Drawer", JOptionPane.ERROR_MESSAGE);
+                    } else {
+                        Dev.synchronizedMessageBox("Error occurred during wait for keylock change:\n"
+                                + e.getMessage(), "CheckHealth Drawer", JOptionPane.ERROR_MESSAGE);
+                        CheckHealthText += ", " + e.getMessage();
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean externalCheckHealth(int level) {
+        if (level == JposConst.JPOS_CH_EXTERNAL) {
+            CheckHealthText = "External check: Error";
+            if (!Dev.DeviceIsOffline && !Dev.InIOError) {
+                try {
+                    ((KeylockService) EventSource).waitForKeylockChange(KeylockConst.LOCK_KP_ANY, 10000);
+                    CheckHealthText = "External check: OK";
+                } catch (JposException e) {
+                    if (e.getErrorCode() == JposConst.JPOS_E_TIMEOUT)
+                        CheckHealthText = "External check: Timed out";
+                    else
+                        CheckHealthText += ", " + e.getMessage();
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -72,7 +122,7 @@ public class Keylock extends KeylockProperties {
         long tio = Dev.timeoutToLong(timeout);
         if (pos != KeyPosition || pos == KeylockConst.LOCK_KP_ANY) {
             attachWaiter();
-            while ((tio < 0 || occurredTime < tio) && waitWaiter(tio - occurredTime)) {
+            while ((tio < 0 || occurredTime < tio) && waitWaiter(tio - occurredTime) && DeviceEnabled) {
                 if (pos == KeylockConst.LOCK_KP_ANY || pos == KeyPosition || Dev.DeviceIsOffline) {
                     occurredTime = tio - 1;
                     break;
@@ -80,8 +130,9 @@ public class Keylock extends KeylockProperties {
                 occurredTime = tio >= 0 ? System.currentTimeMillis() - startTime : 0;
             }
             releaseWaiter();
-            Dev.check(occurredTime >= tio, JposConst.JPOS_E_TIMEOUT, "No keylock change");
+            Dev.check(occurredTime >= tio && tio != JposConst.JPOS_FOREVER, JposConst.JPOS_E_TIMEOUT, "No keylock change");
             Dev.check(Dev.DeviceIsOffline, JposConst.JPOS_E_OFFLINE, "Device offline");
+            check(!DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device not enabled");
         }
         super.waitForKeylockChange(pos, timeout);
     }

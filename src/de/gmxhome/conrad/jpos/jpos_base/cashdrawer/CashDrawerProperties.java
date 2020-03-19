@@ -49,6 +49,7 @@ public class CashDrawerProperties extends JposCommonProperties implements CashDr
     {
         super(dev);
         ExclusiveUse = ExclusiveAllowed;
+        FlagWhenIdleStatusValue = -1;   // To avoid FlagWhenIdle handling for CASH_SUE_DRAWERCLOSED
     }
 
     @Override

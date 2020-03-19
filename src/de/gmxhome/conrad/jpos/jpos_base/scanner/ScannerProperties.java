@@ -55,7 +55,6 @@ public class ScannerProperties extends JposCommonProperties implements ScannerIn
      */
     public ScannerProperties(int dev) {
         super(dev);
-        ExclusiveUse = ExclusiveYes;
     }
 
     @Override

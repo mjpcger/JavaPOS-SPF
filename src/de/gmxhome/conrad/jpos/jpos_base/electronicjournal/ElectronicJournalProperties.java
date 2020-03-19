@@ -189,6 +189,7 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
      */
     public ElectronicJournalProperties(int dev) {
         super(dev);
+        FlagWhenIdleStatusValue = ElectronicJournalConst.EJ_SUE_IDLE;
     }
 
     @Override

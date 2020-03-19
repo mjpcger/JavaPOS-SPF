@@ -287,7 +287,6 @@ public class    LineDisplayProperties extends JposCommonProperties implements Li
      */
     public LineDisplayProperties(int dev) {
         super(dev);
-        ExclusiveUse = ExclusiveYes;
     }
 
     @Override

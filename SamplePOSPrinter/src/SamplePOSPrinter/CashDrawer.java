@@ -24,6 +24,8 @@ import jpos.*;
 import javax.swing.*;
 import java.awt.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposBaseDevice.check;
+
 /**
  * Class implementing the CashDrawerInterface for the sample pos printer.
  */
@@ -44,6 +46,8 @@ class CashDrawer extends CashDrawerProperties {
     public void deviceEnabled(boolean enable) throws JposException {
         super.deviceEnabled(enable);
         updateStates(enable);
+        if (!enable)
+            signalWaiter();
     }
 
     private void updateStates(boolean enable) {
@@ -124,10 +128,11 @@ class CashDrawer extends CashDrawerProperties {
     public void waitForDrawerClose() throws JposException {
         attachWaiter();
         try {
-            while (Dev.DrawerOpen && Dev.Online) {
+            while (Dev.DrawerOpen && Dev.Online && DeviceEnabled) {
                 waitWaiter(SyncObject.INFINITE);
             }
             Dev.check(!Dev.Online, JposConst.JPOS_E_OFFLINE, "Device offline");
+            Dev.check(!DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device not enabled");
         } finally {
             releaseWaiter();
         }

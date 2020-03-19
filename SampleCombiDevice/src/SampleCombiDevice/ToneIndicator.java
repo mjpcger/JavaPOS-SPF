@@ -21,6 +21,8 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.toneindicator.*;
 import jpos.*;
 
+import javax.swing.*;
+
 /**
  * Class implementing the POSKeyboardInterface for the sample combi device.
  * External and interactive Checkhealth might be implemented in a later version.
@@ -58,10 +60,40 @@ public class ToneIndicator extends ToneIndicatorProperties {
 
     @Override
     public void checkHealth(int level) throws JposException {
-        if (Dev.internalCheckHealth(this, level))
-            return;
-        // TOBEIMPLEMENTED
+        if (!Dev.internalCheckHealth(this, level) || !externalCheckHealth(level)) {
+            interactiveCheckHealth(level);
+        }
         super.checkHealth(level);
+    }
+
+    private void interactiveCheckHealth(int level) {
+        if (level == JposConst.JPOS_CH_INTERACTIVE) {
+            String result;
+            try {
+                ((ToneIndicatorService) EventSource).soundImmediate();
+                result = "OK";
+            } catch (JposException e) {
+                result = "Error, " + e.getMessage();
+            }
+            Dev.synchronizedMessageBox("ToneIndicator check " + result + ".", "CheckHealth ToneIndicator",
+                    (result.equals("OK") ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE));
+            CheckHealthText = "Interactive check: " + result;
+        }
+    }
+
+    private boolean externalCheckHealth(int level) {
+        if (level == JposConst.JPOS_CH_EXTERNAL) {
+            String result;
+            try {
+                ((ToneIndicatorService) EventSource).soundImmediate();
+                result = "OK";
+            } catch (JposException e) {
+                result = "Error, " + e.getMessage();
+            }
+            CheckHealthText = "External check: " + result;
+            return true;
+        }
+        return false;
     }
 
     @Override

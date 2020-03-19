@@ -164,7 +164,6 @@ public class ScaleProperties extends JposCommonProperties implements ScaleInterf
      */
     public ScaleProperties(int dev) {
         super(dev);
-        ExclusiveUse = ExclusiveYes;
     }
 
     @Override

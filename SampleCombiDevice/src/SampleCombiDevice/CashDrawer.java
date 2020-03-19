@@ -21,7 +21,7 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.*;
 import jpos.*;
 import javax.swing.*;
-
+import static SampleCombiDevice.Device.*;
 /**
  * Class implementing the CashDrawerInterface for the sample combi device.
  */
@@ -44,6 +44,8 @@ public class CashDrawer extends CashDrawerProperties {
         super.deviceEnabled(enable);
         Dev.updateCommonStates(this, enable);
         Dev.updateDrawerStates(this, enable);
+        if (!enable)
+            signalWaiter();
     }
 
     @Override
@@ -60,22 +62,24 @@ public class CashDrawer extends CashDrawerProperties {
 
     @Override
     public void checkHealth(int level) throws JposException {
-        if (Dev.internalCheckHealth(this, level))
-            return;
-        try {
-            do {
-                if (level == JposConst.JPOS_CH_EXTERNAL) {
-                    CheckHealthText = "External check: Error";
-                    ((CashDrawerService)EventSource).openDrawer();
-                    new SyncObject().suspend(200);
-                    ((CashDrawerService)EventSource).waitForDrawerClose(5000, 500, 300, 2000);
-                    CheckHealthText = "External check: OK";
-                    break;
-                }
-                if (drawerCheckHealthInteractive())
-                    break;
-            } while (false);
-        } catch (JposException e) {}
+        if (!Dev.internalCheckHealth(this, level)) {
+            try {
+                do {
+                    if (level == JposConst.JPOS_CH_EXTERNAL) {
+                        CheckHealthText = "External check: Error";
+                        ((CashDrawerService) EventSource).openDrawer();
+                        new SyncObject().suspend(200);
+                        ((CashDrawerService) EventSource).waitForDrawerClose(5000, 500, 300, 2000);
+                        CheckHealthText = "External check: OK";
+                        break;
+                    }
+                    if (drawerCheckHealthInteractive())
+                        break;
+                } while (false);
+            } catch (JposException e) {
+                CheckHealthText += ", " + e.getMessage();
+            }
+        }
         super.checkHealth(level);
     }
 
@@ -83,7 +87,13 @@ public class CashDrawer extends CashDrawerProperties {
         SyncObject waiter = new SyncObject();
         CheckHealthText = "Interactive check: Error";
         Dev.synchronizedMessageBox("Press OK to open the drawer", "CheckHealth Drawer", JOptionPane.INFORMATION_MESSAGE);
-        ((CashDrawerService)EventSource).openDrawer();
+        try {
+            ((CashDrawerService) EventSource).openDrawer();
+        } catch (JposException e) {
+            CheckHealthText += ", " + e.getMessage();
+            Dev.synchronizedMessageBox("Drawer could not be opened:\n" + e.getMessage(), "CheckHealth Drawer", JOptionPane.ERROR_MESSAGE);
+            return true;
+        }
         for (int i = 0; i > 10 && !DrawerOpened; i++) {
             waiter.suspend(200);
             if (Dev.DrawerIsOpen)
@@ -120,11 +130,12 @@ public class CashDrawer extends CashDrawerProperties {
     @Override
     public void waitForDrawerClose() throws JposException {
         attachWaiter();
-        while (DrawerOpened && !Dev.DeviceIsOffline) {
+        while (DrawerOpened && !Dev.DeviceIsOffline && DeviceEnabled) {
             waitWaiter(SyncObject.INFINITE);
         }
         releaseWaiter();
-        Dev.check(Dev.DeviceIsOffline, JposConst.JPOS_E_OFFLINE, "Device offline");
+        check(Dev.DeviceIsOffline, JposConst.JPOS_E_OFFLINE, "Device offline");
+        check(!DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device not enabled");
         super.waitForDrawerClose();
     }
 }

@@ -433,6 +433,8 @@ public class JposBase implements BaseService {
         logPreCall("compareFirmwareVersion");
         checkEnabled();
         Device.check(!Device.CapCompareFirmwareVersion, JposConst.JPOS_E_ILLEGAL, "Device does not support compare firmware version");
+        Device.check(firmwareFileName == null, JposConst.JPOS_E_ILLEGAL, "Missing firmwareFileName");
+        Device.check(result == null || result.length <= 0, JposConst.JPOS_E_ILLEGAL, "Missing result");
         DeviceInterface.compareFirmwareVersion(firmwareFileName, result);
         logCall("compareFirmwareVersion", firmwareFileName + ", " + result[0]);
     }
@@ -443,9 +445,10 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, method updateFirmware
      */
     public void updateFirmware(String firmwareFileName) throws JposException {
-        logPreCall("UpdateFirmware", firmwareFileName);
+        logPreCall("UpdateFirmware", firmwareFileName == null ? "" : firmwareFileName);
         checkEnabled();
         Device.check(!Device.CapUpdateFirmware, JposConst.JPOS_E_ILLEGAL, "Device does not support update firmware");
+        Device.check(firmwareFileName == null, JposConst.JPOS_E_ILLEGAL, "Missing firmwareFileName");
         try {
             DeviceInterface.updateFirmware(firmwareFileName);
         } catch (JposOutputRequest.OkException e) {
@@ -453,7 +456,7 @@ public class JposBase implements BaseService {
             e.getOutputRequest().enqueue();
             logAsyncCall("UpdateFirmware");
         }
-        logCall("UpdateFirmware", firmwareFileName);
+        logCall("UpdateFirmware");
     }
 
     /**
@@ -462,6 +465,8 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, method resetStatistics
      */
     public void resetStatistics(String statisticsBuffer) throws JposException {
+        if (statisticsBuffer == null)
+            statisticsBuffer = "";
         logPreCall("ResetStatistics");
         checkEnabled();
         Device.check(!Props.CapUpdateStatistics || !Props.CapStatisticsReporting, JposConst.JPOS_E_ILLEGAL, "Device does not support resetting statistics");
@@ -475,9 +480,12 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, method retrieveStatistics
      */
     public void retrieveStatistics(String[] statisticsBuffer) throws JposException {
-        logPreCall("RetrieveStatistics", statisticsBuffer[0]);
+        if (statisticsBuffer != null && statisticsBuffer[0] == null)
+            statisticsBuffer[0] = "";
+        logPreCall("RetrieveStatistics", statisticsBuffer == null ? "" : statisticsBuffer[0]);
         checkEnabled();
         Device.check(!Props.CapStatisticsReporting, JposConst.JPOS_E_ILLEGAL, "Device does not support retrieving statistics");
+        Device.check(statisticsBuffer == null, JposConst.JPOS_E_ILLEGAL, "Missing statisticsBuffer");
         DeviceInterface.retrieveStatistics(statisticsBuffer);
         logCall("RetrieveStatistics", statisticsBuffer[0]);
     }
@@ -488,11 +496,13 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, method updateStatistics
      */
     public void updateStatistics(String statisticsBuffer) throws JposException {
-        logPreCall("UpdateStatistics");
+        if (statisticsBuffer == null)
+            statisticsBuffer = "";
+        logPreCall("UpdateStatistics", statisticsBuffer);
         checkEnabled();
         Device.check(!Props.CapUpdateStatistics || !Props.CapStatisticsReporting, JposConst.JPOS_E_ILLEGAL, "Device does not support updating statistics");
         DeviceInterface.updateStatistics(statisticsBuffer);
-        logCall("UpdateStatistics", statisticsBuffer);
+        logCall("UpdateStatistics");
     }
 
     /**
@@ -648,7 +658,7 @@ public class JposBase implements BaseService {
 
     @Override
     public void directIO(int command, int[] data, Object object) throws JposException {
-        logPreCall("DirectIO", "" + command + ", " + data[0] + ", " + object);
+        logPreCall("DirectIO", "" + command + ", " + (data == null ? "" : data[0]) + ", " + (object == null ? "" : object.toString()));
         try {
             DeviceInterface.directIO(command, data, object);
         } catch (JposOutputRequest.OkException e) {
@@ -656,7 +666,7 @@ public class JposBase implements BaseService {
             e.getOutputRequest().enqueue();
             logAsyncCall("DirectIO");
         }
-        logCall("DirectIO", "" + command + ", " + data[0] + ", " + object);
+        logCall("DirectIO", "" + command + ", " + (data == null ? "" : data[0]) + ", " + (object == null ? "" : object.toString()));
     }
 
     @Override
@@ -671,7 +681,8 @@ public class JposBase implements BaseService {
     @Override
     public void release() throws JposException {
         logPreCall("Release");
-        checkClaimed();
+        checkOpened();
+        Device.check(!Props.Claimed, JposConst.JPOS_E_NOTCLAIMED, "Device not claimed");
         if (Props.DeviceEnabled && Props.ExclusiveUse == JposCommonProperties.ExclusiveYes)
             setDeviceEnabled(false);
         DeviceInterface.release();

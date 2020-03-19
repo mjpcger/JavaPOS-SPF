@@ -381,7 +381,6 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
      */
     public RemoteOrderDisplayProperties(int dev) {
         super(dev);
-        ExclusiveUse = ExclusiveYes;
         FlagWhenIdleStatusValue = RemoteOrderDisplayService.ROD_SUE_IDLE;
     }
 

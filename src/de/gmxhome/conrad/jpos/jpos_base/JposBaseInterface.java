@@ -316,7 +316,8 @@ public interface JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>CapStatisticsReporting are true.</li>
+     *     <li>CapStatisticsReporting are true,</li>
+     *     <li>statisticsBuffer is not null.</li>
      * </ul>
      *
      * @param statisticsBuffer See UPOS specification, method RetrieveStatistics

@@ -54,7 +54,6 @@ public class POSKeyboardProperties extends JposCommonProperties implements POSKe
      */
     public POSKeyboardProperties(int dev) {
         super(dev);
-        ExclusiveUse = ExclusiveYes;
     }
 
     @Override

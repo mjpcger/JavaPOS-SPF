@@ -689,7 +689,6 @@ public class Device extends JposDevice implements Runnable {
         props.NumVatRates = MAXVATINDEX;
         props.QuantityDecimalPlacesDef = 3;
         props.QuantityLengthDef = 9;
-        props.FlagWhenIdleStatusValue = FiscalPrinterConst.FPTR_SUE_IDLE;
         // props.CoverOpenDef, props.DayOpenedDef, props.PrinterStateDef, props.RecEmptyDef, props.RecNearEndDef,
         // props.RemainingFiscalMemoryDef and props.TrainingModeActiveDef must be set before enabling the device.
         // They can only be set to meaningful values after the device has been claimed and some successful communication
@@ -704,7 +703,6 @@ public class Device extends JposDevice implements Runnable {
         props.CapRetrieveCurrentMarker = true;
         props.CapRetrieveMarker = true;
         props.CapRetrieveMarkersDateTime = true;
-        props.FlagWhenIdleStatusValue = ElectronicJournalConst.EJ_SUE_IDLE;
         // props.MediumFreeSpaceDef and props.MediumSizeDef must be set before first enable, but need
         // communication with the device. Therefore, they cannot be set to meaningful values before the
         // device has been claimed successfully.
@@ -727,7 +725,6 @@ public class Device extends JposDevice implements Runnable {
     public void changeDefaults(CashDrawerProperties props) {
         props.DeviceServiceDescription = "Drawer service for sample fiscal printer";
         props.DeviceServiceVersion = Version;
-        props.ExclusiveUse = ExclusiveAllowed;
         // All other defaults match the abilities of this service.
     }
 

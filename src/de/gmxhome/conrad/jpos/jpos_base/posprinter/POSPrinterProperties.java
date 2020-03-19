@@ -863,7 +863,6 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
      */
     public POSPrinterProperties(int dev) {
         super(dev);
-        ExclusiveUse = ExclusiveYes;
         FlagWhenIdleStatusValue = POSPrinterConst.PTR_SUE_IDLE;
     }
 

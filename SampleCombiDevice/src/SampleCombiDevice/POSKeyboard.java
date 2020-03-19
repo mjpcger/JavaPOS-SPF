@@ -17,8 +17,11 @@
 
 package SampleCombiDevice;
 
+import de.gmxhome.conrad.jpos.jpos_base.SyncObject;
 import de.gmxhome.conrad.jpos.jpos_base.poskeyboard.*;
 import jpos.*;
+
+import javax.swing.*;
 
 /**
  * Class implementing the POSKeyboardInterface for the sample combi device.
@@ -57,9 +60,52 @@ public class POSKeyboard extends POSKeyboardProperties {
 
     @Override
     public void checkHealth(int level) throws JposException {
-        if (Dev.internalCheckHealth(this, level))
-            return;
-        // TOBEIMPLEMENTED
+        if (!Dev.internalCheckHealth(this, level) && !externalCheckHealth(level)) {
+            interactiveCheckHealth(level);
+        }
         super.checkHealth(level);
+    }
+
+    private void interactiveCheckHealth(int level) {
+        if (level == JposConst.JPOS_CH_INTERACTIVE) {
+            String result;
+            int datacount = DataCount;
+            int loopcount;
+            try {
+                ((POSKeyboardService) EventSource).setFreezeEvents(true);
+                if (!DataEventEnabled)
+                    ((POSKeyboardService) EventSource).setDataEventEnabled(true);
+                Dev.synchronizedMessageBox("Press OK, then press any key", "CheckHealth POSKeyboard", JOptionPane.INFORMATION_MESSAGE);
+                for (loopcount = 0; loopcount < 100 && datacount == DataCount && (!Dev.DeviceIsOffline && !Dev.InIOError); loopcount++)
+                    new SyncObject().suspend(100);
+                result = (loopcount == 100 ? "Timed out" : (datacount < DataCount ? "OK" : "Error"));
+                ((POSKeyboardService) EventSource).setFreezeEvents(false);
+            } catch (JposException e) {
+                result = "Error, " + e.getMessage();
+            }
+            Dev.synchronizedMessageBox("Keyboard check " + result + ".", "CheckHealth POSKeyboard",
+                    (result.equals("OK") ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE));
+            CheckHealthText = "Interactive check: " + result;
+        }
+    }
+
+    private boolean externalCheckHealth(int level) {
+        if (level == JposConst.JPOS_CH_EXTERNAL) {
+            int datacount = DataCount;
+            int loopcount;
+            try {
+                ((POSKeyboardService) EventSource).setFreezeEvents(true);
+                if (!DataEventEnabled)
+                    ((POSKeyboardService) EventSource).setDataEventEnabled(true);
+                for (loopcount = 0; loopcount < 100 && datacount == DataCount && (!Dev.DeviceIsOffline && !Dev.InIOError); loopcount++)
+                    new SyncObject().suspend(100);
+                CheckHealthText = "External check: " + (loopcount == 100 ? "Timed out" : (datacount < DataCount ? "OK" : "Error"));
+                ((POSKeyboardService) EventSource).setFreezeEvents(false);
+            } catch (JposException e) {
+                CheckHealthText = "External check: Error, " + e.getMessage();
+            }
+            return true;
+        }
+        return false;
     }
 }

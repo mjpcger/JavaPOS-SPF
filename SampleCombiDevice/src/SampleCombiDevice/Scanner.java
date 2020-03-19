@@ -17,8 +17,11 @@
 
 package SampleCombiDevice;
 
+import de.gmxhome.conrad.jpos.jpos_base.SyncObject;
 import de.gmxhome.conrad.jpos.jpos_base.scanner.*;
 import jpos.*;
+
+import javax.swing.*;
 
 /**
  * Class implementing the POSKeyboardInterface for the sample combi device.
@@ -65,10 +68,55 @@ public class Scanner extends ScannerProperties {
 
     @Override
     public void checkHealth(int level) throws JposException {
-        if (Dev.internalCheckHealth(this, level))
-            return;
-        // TOBEIMPLEMENTED
+        if (!Dev.internalCheckHealth(this, level) && !externalCheckHealth(level)) {
+            interactiveCheckHealth(level);
+        }
         super.checkHealth(level);
+    }
+
+    private void interactiveCheckHealth(int level) {
+        if (level == JposConst.JPOS_CH_INTERACTIVE) {
+            int datacount = DataCount;
+            int loopcount;
+            String result;
+            try {
+                clearDataProperties();
+                ((ScannerService) EventSource).setFreezeEvents(true);
+                if (!DataEventEnabled)
+                    ((ScannerService) EventSource).setDataEventEnabled(true);
+                Dev.synchronizedMessageBox("Press OK, then scan a bar code", "CheckHealth Scanner", JOptionPane.INFORMATION_MESSAGE);
+                for (loopcount = 0; loopcount < 100 && datacount == DataCount && (!Dev.DeviceIsOffline && !Dev.InIOError); loopcount++)
+                    new SyncObject().suspend(100);
+                result = (loopcount == 100 ? "Timed out" : (datacount < DataCount ? "OK" : "Error"));
+                ((ScannerService) EventSource).setFreezeEvents(false);
+            } catch (JposException e) {
+                result = "Error, " + e.getMessage();
+            }
+            Dev.synchronizedMessageBox("Scanner check " + result + ".", "CheckHealth Scanner",
+                    (result.equals("OK") ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE));
+            CheckHealthText = "Interactive check: " + result;
+        }
+    }
+
+    private boolean externalCheckHealth(int level) {
+        if (level == JposConst.JPOS_CH_EXTERNAL) {
+            int datacount = DataCount;
+            int loopcount;
+            try {
+                clearDataProperties();
+                ((ScannerService) EventSource).setFreezeEvents(true);
+                if (!DataEventEnabled)
+                    ((ScannerService) EventSource).setDataEventEnabled(true);
+                for (loopcount = 0; loopcount < 100 && datacount == DataCount && (!Dev.DeviceIsOffline && !Dev.InIOError); loopcount++)
+                    new SyncObject().suspend(100);
+                CheckHealthText = "External check: " + (loopcount == 100 ? "Timed out" : (datacount < DataCount ? "OK" : "Error"));
+                ((ScannerService) EventSource).setFreezeEvents(false);
+            } catch (JposException e) {
+                CheckHealthText = "External check: Error, " + e.getMessage();
+            }
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -76,5 +124,12 @@ public class Scanner extends ScannerProperties {
         if (DataEventEnabled != enable)
             Dev.sendCommand(enable ? CmdScannerEnable : CmdScannerDisable, Dev.NoResponse);
         super.dataEventEnabled(enable);
+    }
+
+    @Override
+    public void clearDataProperties() {
+        ScanData = ScanDataDef;
+        ScanDataType = ScannerConst.SCAN_SDT_UNKNOWN;
+        ScanDataLabel = new byte[0];
     }
 }

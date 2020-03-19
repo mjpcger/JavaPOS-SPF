@@ -123,7 +123,11 @@ public class Device extends JposDevice implements Runnable{
      */
     int MaxRetry = 2;
     private boolean UsbToSerial = false;
-    private boolean InIOError = true;
+
+    /**
+     * Flag showing the driver is in I/O error state.
+     */
+    boolean InIOError = true;
 
     /**
      * Flag showing the current drawer state (true = drawer is open).
@@ -321,7 +325,6 @@ public class Device extends JposDevice implements Runnable{
     @Override
     public void changeDefaults(CashDrawerProperties props) {
         props.DeviceServiceDescription = "Drawer service for combined device simulator";
-        props.ExclusiveUse = ExclusiveAllowed;
         props.DeviceServiceVersion = 1014001;
     }
 

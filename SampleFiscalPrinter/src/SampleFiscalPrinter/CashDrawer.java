@@ -48,6 +48,7 @@ class CashDrawer extends CashDrawerProperties implements StatusUpdater {
             Dev.startPolling(this);
         } else {
             Dev.stopPolling();
+            signalWaiter();
         }
         super.deviceEnabled(enable);
         synchronized (Dev) {
@@ -120,11 +121,12 @@ class CashDrawer extends CashDrawerProperties implements StatusUpdater {
         attachWaiter();
         char[] actstate;
 
-        while ((actstate = Dev.getCurrentState()).length > DRAWER && actstate[DRAWER] != CLOSED) {
+        while ((actstate = Dev.getCurrentState()).length > DRAWER && actstate[DRAWER] != CLOSED && DeviceEnabled) {
             waitWaiter(SyncObject.INFINITE);
         }
         releaseWaiter();
         check((actstate = Dev.getCurrentState()).length <= DRAWER, JposConst.JPOS_E_OFFLINE, "Device offline");
+        check(!DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device not enabled");
         super.waitForDrawerClose();
     }
 

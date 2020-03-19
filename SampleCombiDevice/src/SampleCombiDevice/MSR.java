@@ -17,10 +17,13 @@
 
 package SampleCombiDevice;
 
+import de.gmxhome.conrad.jpos.jpos_base.SyncObject;
 import de.gmxhome.conrad.jpos.jpos_base.msr.*;
+import jpos.JposConst;
 import jpos.JposException;
 import jpos.MSRConst;
 
+import javax.swing.*;
 import java.util.Arrays;
 
 /**
@@ -60,10 +63,57 @@ public class MSR extends MSRProperties {
 
     @Override
     public void checkHealth(int level) throws JposException {
-        if (Dev.internalCheckHealth(this, level))
-            return;
-        // TOBEIMPLEMENTED
+        if (!Dev.internalCheckHealth(this, level) && !externalCheckHealth(level)) {
+            interactiveCheckHealth(level);
+        }
         super.checkHealth(level);
+    }
+
+    private void interactiveCheckHealth(int level) {
+        if (level == JposConst.JPOS_CH_INTERACTIVE) {
+            int datacount = DataCount;
+            int loopcount;
+            String result;
+            try {
+                clearDataProperties();
+                ((MSRService) EventSource).setFreezeEvents(true);
+                if (!DataEventEnabled)
+                    ((MSRService) EventSource).setDataEventEnabled(true);
+                Dev.synchronizedMessageBox("Press OK, then swipe a card", "CheckHealth MSR", JOptionPane.INFORMATION_MESSAGE);
+                for (loopcount = 0; loopcount < 100 && datacount == DataCount && (!Dev.DeviceIsOffline && !Dev.InIOError); loopcount++)
+                    new SyncObject().suspend(100);
+                result = (loopcount == 100 ? "Timed out" : (datacount < DataCount ? "OK" : "Error"));
+                ((MSRService) EventSource).setFreezeEvents(false);
+            } catch (JposException e) {
+                result = "Error, " + e.getMessage();
+            }
+            Dev.synchronizedMessageBox("MSR check " + result + ".", "CheckHealth MSR",
+                    (result.equals("OK") ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE));
+            CheckHealthText = "Interactive check: " + result;
+        }
+    }
+
+    private boolean externalCheckHealth(int level) {
+        if (level == JposConst.JPOS_CH_EXTERNAL) {
+            int datacount = DataCount;
+            int loopcount;
+            String result;
+            try {
+                clearDataProperties();
+                ((MSRService) EventSource).setFreezeEvents(true);
+                if (!DataEventEnabled)
+                    ((MSRService) EventSource).setDataEventEnabled(true);
+                for (loopcount = 0; loopcount < 100 && datacount == DataCount && (!Dev.DeviceIsOffline && !Dev.InIOError); loopcount++)
+                    new SyncObject().suspend(100);
+                result = (loopcount == 100 ? "Timed out" : (datacount < DataCount ? "OK" : "Error"));
+                ((MSRService) EventSource).setFreezeEvents(false);
+            } catch (JposException e) {
+                result = "Error, " + e.getMessage();
+            }
+            CheckHealthText = "External check: " + result;
+            return true;
+        }
+        return false;
     }
 
     @Override
