@@ -1165,7 +1165,8 @@ public class Device extends JposDevice implements Runnable{
         String resp = (String) o;
         if (resp.length() == 0)
             throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
-        int code = Integer.parseInt(resp.substring(1, resp.indexOf(STX)));
+        int codeEndIndex = resp.indexOf(STX);
+        int code = Integer.parseInt(resp.substring(1, codeEndIndex > 0 ? codeEndIndex : resp.length()));
         switch (code) {
             case 4: // Device locked:
                 throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_RESET, "Terminal locked");
@@ -1175,6 +1176,8 @@ public class Device extends JposDevice implements Runnable{
                 throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "Waiting for commit");
             case 7: // No confirmation requested.
                 throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "Authorization active");
+            case 3: // Operation abort confirmed
+                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "Authorization aborted");
             case 0: // Transaction OK
             case 1: // Wait for commit
             case 2: // Authorization failure
@@ -1195,7 +1198,8 @@ public class Device extends JposDevice implements Runnable{
         String resp = (String) o;
         if (resp.length() == 0)
             throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
-        int code = Integer.parseInt(resp.substring(1, resp.indexOf(STX)));
+        int codeEndIndex = resp.indexOf(STX);
+        int code = Integer.parseInt(resp.substring(1, codeEndIndex > 0 ? codeEndIndex : resp.length()));
         switch (code) {
             case 4: // Device locked:
                 throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_RESET, "Terminal locked");
