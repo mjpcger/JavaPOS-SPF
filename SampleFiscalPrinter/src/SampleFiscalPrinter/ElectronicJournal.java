@@ -89,6 +89,11 @@ class ElectronicJournal extends ElectronicJournalProperties implements StatusUpd
     }
 
     @Override
+    public void station(int station) throws JposException {
+        Dev.check(station != ElectronicJournalConst.EJ_S_RECEIPT, JposConst.JPOS_E_ILLEGAL, "Journal deactivation not allowed");
+    }
+
+    @Override
     public PrintContent printContent(String fromMarker, String toMarker) throws JposException {
         long fromvalue = "".equals(fromMarker) ? 1 : fullCheckMarker(fromMarker, "fromMarker");
         long tovalue = "".equals(toMarker) ? MAXPERIOD * 1000000000L : fullCheckMarker(toMarker, "toMarker");

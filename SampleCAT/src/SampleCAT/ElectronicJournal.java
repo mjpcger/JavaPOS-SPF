@@ -438,6 +438,11 @@ public class ElectronicJournal extends ElectronicJournalProperties {
     }
 
     @Override
+    public void station(int station) throws JposException {
+        Dev.check(station != ElectronicJournalConst.EJ_S_RECEIPT, JposConst.JPOS_E_ILLEGAL, "Journal deactivation not allowed");
+    }
+
+    @Override
     public void handlePowerStateOnEnable() throws JposException {
         PowerState = JposConst.JPOS_PS_ONLINE;
         super.handlePowerStateOnEnable();
