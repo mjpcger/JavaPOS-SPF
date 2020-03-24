@@ -239,7 +239,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
     public void displayText(String s) throws JposException {
         logPreCall("DisplayText", s);
         checkEnabled();
-        Device.check(!Data.CapDisplayText, JposConst.JPOS_E_ILLEGAL, "DisplayText not supported");
+        Device.check(!Data.CapDisplayText, JposConst.JPOS_E_ILLEGAL, "Method DisplayText not supported");
         Device.check(s != null && s.length() > Data.MaxDisplayTextChars, JposConst.JPOS_E_ILLEGAL, "Text too long: " + s);
         ScaleInterface.displayText(s);
         logCall("DisplayText");
@@ -249,6 +249,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
     public void doPriceCalculating(int[] weightData, int[] tare, long[] unitPrice, long[] unitPriceX, int[] weightUnitX, int[] weightNumeratorX, int[] weightDenominatorX, long[] price, int timeout) throws JposException {
         logPreCall("DoPriceCalculating", "" + timeout);
         checkEnabled();
+        Device.check(!Data.CapSetUnitPriceWithWeightUnit, JposConst.JPOS_E_ILLEGAL, "Method DoPriceCalculating not supported");
         Device.check(Device.PendingCommands.size() > 0 || Device.CurrentCommand != null, JposConst.JPOS_E_BUSY, "Device busy");
         Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER && Props.AsyncMode == false, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         Device.check(weightData.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid dimension of weightData");
@@ -286,7 +287,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
     public void freezeValue(int item, boolean freeze) throws JposException {
         logPreCall("FreezeValue", "" + item + ", " + freeze);
         checkEnabled();
-        Device.check(!Data.CapFreezeValue, JposConst.JPOS_E_ILLEGAL, "Freeze value not supported");
+        Device.check(!Data.CapFreezeValue, JposConst.JPOS_E_ILLEGAL, "Method FreezeValue not supported");
         Device.check((item & ~(ScaleConst.SCAL_SFR_MANUAL_TARE|ScaleConst.SCAL_SFR_PERCENT_TARE|ScaleConst.SCAL_SFR_WEIGHTED_TARE|ScaleConst.SCAL_SFR_UNITPRICE)) != 0, JposConst.JPOS_E_ILLEGAL, "Invalid item: " + item);
         ScaleInterface.freezeValue(item, freeze);
         logCall("FreezeValue");
@@ -296,7 +297,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
     public void readLiveWeightWithTare(int[] weightData, int[] tare, int timeout) throws JposException {
         logPreCall("ReadLiveWeightWithTare", "" + timeout);
         checkEnabled();
-        Device.check(!Data.CapReadLiveWeightWithTare, JposConst.JPOS_E_ILLEGAL, "Reading live weight with tare not supported");
+        Device.check(!Data.CapReadLiveWeightWithTare, JposConst.JPOS_E_ILLEGAL, "Method ReadLiveWeightWithTare not supported");
         Device.check(Device.PendingCommands.size() > 0 || Device.CurrentCommand != null, JposConst.JPOS_E_BUSY, "Device busy");
         Device.check(timeout < 0  && timeout != JposConst.JPOS_FOREVER && Props.AsyncMode == false, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         Device.check(weightData.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid dimension of weightData");
@@ -354,7 +355,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
     public void setPriceCalculationMode(int mode) throws JposException {
         logPreCall("SetPriceCalculationMode", "" + mode);
         checkEnabled();
-        Device.check(!Data.CapSetPriceCalculationMode, JposConst.JPOS_E_ILLEGAL, "Set price calculation mode not supported");
+        Device.check(!Data.CapSetPriceCalculationMode, JposConst.JPOS_E_ILLEGAL, "Method SetPriceCalculationMode not supported");
         Device.checkMember(mode, new long[]{ScaleConst.SCAL_PCM_PRICE_LABELING, ScaleConst.SCAL_PCM_SELF_SERVICE, ScaleConst.SCAL_PCM_OPERATOR}, JposConst.JPOS_E_ILLEGAL, "Invalid mode: " + mode);
         ScaleInterface.setPriceCalculationMode(mode);
         logCall("SetPriceCalculationMode");
@@ -364,7 +365,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
     public void setSpecialTare(int mode, int data) throws JposException {
         logPreCall("SetSpecialTare", "" + mode + ", " + data);
         checkEnabled();
-        Device.check(!Data.CapSpecialTare, JposConst.JPOS_E_ILLEGAL, "Special tare not supported");
+        Device.check(!Data.CapSpecialTare, JposConst.JPOS_E_ILLEGAL, "Method SetSpecialTare not supported");
         Device.checkMember(mode, new long[]{ScaleConst.SCAL_SST_DEFAULT, ScaleConst.SCAL_SST_MANUAL, ScaleConst.SCAL_SST_PERCENT, ScaleConst.SCAL_SST_WEIGHTED}, JposConst.JPOS_E_ILLEGAL, "Invalid mode: " + mode);
         Device.check(data < 0 && mode != ScaleConst.SCAL_SST_WEIGHTED, JposConst.JPOS_E_ILLEGAL, "Negative tare");
         Device.check(data > Data.MaximumWeight && (mode == ScaleConst.SCAL_SST_DEFAULT || mode == ScaleConst.SCAL_SST_MANUAL), JposConst.JPOS_E_ILLEGAL, "Tare too high: " + data);
@@ -381,7 +382,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
     public void setTarePriority(int priority) throws JposException {
         logPreCall("SetTarePriority", "" + priority);
         checkEnabled();
-        Device.check(!Data.CapTarePriority, JposConst.JPOS_E_ILLEGAL, "Freeze value not supported");
+        Device.check(!Data.CapTarePriority, JposConst.JPOS_E_ILLEGAL, "Method SetTarePriority not supported");
         Device.checkMember(priority, new long[]{ScaleConst.SCAL_STP_FIRST, ScaleConst.SCAL_STP_NONE}, JposConst.JPOS_E_ILLEGAL, "Invalid priority: " + priority);
         ScaleInterface.setTarePriority(priority);
         logCall("SetTarePriority");
@@ -396,7 +397,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
     public void setUnitPriceWithWeightUnit(long unitPrice, int weightUnit, int weightNumerator, int weightDenominator) throws JposException {
         logPreCall("SetUnitPriceWithWeightUnit", "" + unitPrice + ", " + weightUnit + ", " + weightNumerator + ", " + weightDenominator);
         checkEnabled();
-        Device.check(!Data.CapSetUnitPriceWithWeightUnit, JposConst.JPOS_E_ILLEGAL, "Freeze value not supported");
+        Device.check(!Data.CapSetUnitPriceWithWeightUnit, JposConst.JPOS_E_ILLEGAL, "Method SetUnitPriceWithWeightUnit not supported");
         Device.checkMember(weightUnit, new long[]{ScaleConst.SCAL_WU_GRAM, ScaleConst.SCAL_WU_KILOGRAM, ScaleConst.SCAL_WU_OUNCE, ScaleConst.SCAL_WU_POUND}, JposConst.JPOS_E_ILLEGAL, "Invalid weight unit: " + weightUnit);
         Device.check(unitPrice < 0, JposConst.JPOS_E_ILLEGAL, "Unit price invalid: " + unitPrice);
         Device.check(weightNumerator < 0, JposConst.JPOS_E_ILLEGAL, "Weight numerator invalid: " + weightNumerator);
@@ -409,7 +410,7 @@ public class ScaleService extends JposBase implements ScaleService114 {
     public void zeroScale() throws JposException {
         logPreCall("ZeroScale");
         checkEnabled();
-        Device.check(!Data.CapZeroScale, JposConst.JPOS_E_ILLEGAL, "Zeroing scale not supported");
+        Device.check(!Data.CapZeroScale, JposConst.JPOS_E_ILLEGAL, "Method ZeroScale not supported");
         Device.check(Device.PendingCommands.size() > 0 || Device.CurrentCommand != null, JposConst.JPOS_E_BUSY, "Device busy");
         ScaleInterface.zeroScale();
         logCall("ZeroScale");

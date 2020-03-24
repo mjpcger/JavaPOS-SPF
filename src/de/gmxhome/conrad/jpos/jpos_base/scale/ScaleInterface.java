@@ -97,6 +97,7 @@ public interface ScaleInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>The device state is not S_BUSY,</li>
+     *     <li>CapSetUnitPriceWithWeightUnit is true,</li>
      *     <li>The dimension of the given array parameters is 1,</li>
      *     <li>In case of AsyncMode = false: The timeout is &ge; 0 or JPOS_FOREVER.</li>
      * </ul>
@@ -105,8 +106,6 @@ public interface ScaleInterface extends JposBaseInterface {
      * Since the UPOS specification is very unclear for this method, further
      * checks might be necessary and must be implemented within this method in derived classes:
      * <ul>
-     *     <li>CapPriceCalculation check,</li>
-     *     <li>CapSetUnitPriceWithWeightUnit check,</li>
      *     <li>Check whether SetUnitPriceWithWeightUnit has been called previously.</li>
      * </ul>
      * <br>In addition, this method must return the current values for initPriceX, weightUnitX,
