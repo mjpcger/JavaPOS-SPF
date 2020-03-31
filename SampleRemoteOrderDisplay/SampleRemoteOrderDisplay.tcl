@@ -704,7 +704,7 @@ proc processInput {} {
 							if {[string length $data] > 9 && [set cnt [scan [string range $data 0 8] "%02d%02d%02d%2d%1d" line column fgcol bgcol blink]] == 5} {
 								# Display text
 								set text [string range $data 9 end]
-								if {$line > 0 && $column > 0 && $line < $DispHeight && $column + [string length $text] - 1 <= $DispWidth && $fgcol >= 0 && $fgcol <= 15 && $bgcol >= 0 && $bgcol <= 15 && $blink >= 0 && $blink <= 1} {
+								if {$line > 0 && $column > 0 && $line <= $DispHeight && $column + [string length $text] - 1 <= $DispWidth && $fgcol >= 0 && $fgcol <= 15 && $bgcol >= 0 && $bgcol <= 15 && $blink >= 0 && $blink <= 1} {
 									setText $line $column $text $fgcol $bgcol $blink
 									puts "OK"
 								} {
