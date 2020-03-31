@@ -330,6 +330,7 @@ public class Device extends JposDevice implements Runnable {
         }
         else {
             displayUnit.SaveBuffer[0] = null;
+            WaitClockData.signal();
             data = null;
         }
         return data;
@@ -351,6 +352,7 @@ public class Device extends JposDevice implements Runnable {
         } else
             UnitOnline &= ~unit;
         if (disp.DeviceEnabled) {
+            int oldUnitsOnline = disp.UnitsOnline;
             int status = JposConst.JPOS_PS_OFF_OFFLINE;
             if (datum == '1') {
                 disp.UnitsOnline |= unit;
@@ -359,8 +361,10 @@ public class Device extends JposDevice implements Runnable {
                 Display.Unit[unitidx].CursorActive = false;
                 disp.UnitsOnline &= ~unit;
             }
-            disp.EventSource.logSet("UnitsOnline");
-            handleEvent(new RemoteOrderDisplayStatusUpdateEvent(disp.EventSource, status, unit));
+            if (disp.UnitsOnline != oldUnitsOnline) {
+                disp.EventSource.logSet("UnitsOnline");
+                handleEvent(new RemoteOrderDisplayStatusUpdateEvent(disp.EventSource, status, unit));
+            }
         }
         return null;
     }
@@ -1078,19 +1082,31 @@ public class Device extends JposDevice implements Runnable {
         }
 
         private void moveClock(int units, int row, int column) throws JposException {
+            int notstarted = 0, offrange = 0, gettimeerror = 0;
             for (int u = 0; u < Display.Unit.length; u++) {
                 if ((units & (1 << u)) != 0) {
-                    Service.check(Display.Unit[u].SaveBuffer[0] == null, units, JposConst.JPOS_E_EXTENDED, RemoteOrderDisplayConst.JPOS_EROD_BADCLK, "Clock not started");
-                    Service.check(column + Display.Unit[u].SaveBuffer[0][0].length > COLUMNCOUNT, units, JposConst.JPOS_E_ILLEGAL, 0, "Target position out of range");
+                    if ((notstarted |= Display.Unit[u].SaveBuffer[0] == null ? 1 << u : 0) == 0) {
+                        if ((offrange |= column + Display.Unit[u].SaveBuffer[0][0].length > COLUMNCOUNT ? 1 << u : 0) == 0 ) {
+                            if (Display.Unit[u].ClockSuspendTick == 0) {
+                                while (WaitClockData.suspend(0)) ;
+                                if (sendCommand(String.format("%02dST%02d%02d%1d%d", u + 1, 0, 0, 0, 0)) == null) {
+                                    WaitClockData.suspend(RequestTimeout);
+                                    gettimeerror |= Display.Unit[u].SaveBuffer[0] == null ? 1 << u : 0;
+                                }
+                                else {
+                                    gettimeerror |= 1 << u;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
             }
+            Service.check(notstarted != 0, notstarted, JposConst.JPOS_E_EXTENDED, RemoteOrderDisplayConst.JPOS_EROD_BADCLK, "Clock not started");
+            Service.check(offrange != 0, offrange, JposConst.JPOS_E_ILLEGAL, 0, "Target position out of range");
+            Service.check(gettimeerror != 0, gettimeerror, JposConst.JPOS_E_FAILURE, 0, "Clock not accessible");
             for (int u = 0; u < Display.Unit.length; u++) {
                 if ((units & (1 << u)) != 0) {
-                    if (Display.Unit[u].ClockSuspendTick == 0) {
-                        while (WaitClockData.suspend(0)) ;
-                        sendCheckCommand(units, String.format("%02dST%02d%02d%1d%d", u + 1, 0, 0, 0, 0));
-                        WaitClockData.suspend(RequestTimeout);
-                    }
                     int sourceRow = Display.Unit[u].ClockRow;
                     int sourceColumn = Display.Unit[u].ClockColumn;
                     CharAttributes[][] clock = Display.Unit[u].SaveBuffer[0];
@@ -1101,7 +1117,7 @@ public class Device extends JposDevice implements Runnable {
                     updateRegion(request, u, underclock, sourceRow, sourceColumn, true);
                     updateRegion(request, u, clock, row, column, true);
                     if (Display.Unit[u].ClockSuspendTick == 0) {
-                        sendCheckCommand(units, String.format("%02dST%02d%02d%1d%d", u + 1, row, column, Display.Unit[u].ClockType, 1));
+                        sendCheckCommand(units, String.format("%02dST%02d%02d%1d%d", u + 1, row + 1, column + 1, Display.Unit[u].ClockType, 1));
                     }
                 }
             }

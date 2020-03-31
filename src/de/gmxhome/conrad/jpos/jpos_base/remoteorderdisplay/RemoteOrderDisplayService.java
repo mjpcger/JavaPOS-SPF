@@ -482,7 +482,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
                 String[] values = mode.split(":");
                 if (Integer.parseInt(values[0]) == Data.Unit[index].VideoMode) {
                     String[] limits = values[1].split("x");
-                    if (row > Integer.parseInt(limits[0]) || column > Integer.parseInt(limits[1]))
+                    if (row >= Integer.parseInt(limits[0]) || column >= Integer.parseInt(limits[1]))
                         result |= 1 << index;
                     break;
                 }
@@ -631,7 +631,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
         while (units != 0) {
             int index = Data.unitsToFirstIndex(units);
             units &= ~(1 << index);
-            if (!Data.Unit[index].CapSelectCharacterSet || !Device.member(cs, Device.stringArrayToLongArray(Data.Unit[index].CharacterSetList.split(","))))
+            if ((!Data.Unit[index].CapSelectCharacterSet && Data.Unit[index].CharacterSet != cs) || !Device.member(cs, Device.stringArrayToLongArray(Data.Unit[index].CharacterSetList.split(","))))
                 result |= 1 << index;
         }
         return result;
