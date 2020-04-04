@@ -332,7 +332,6 @@ public class MSRService extends JposBase implements MSRService114 {
     public void setErrorReportingType(int i) throws JposException {
         logPreSet("ErrorReportingType");
         checkOpened();
-        Device.check(Data.CapDataEncryption == MSRConst.MSR_DE_NONE, JposConst.JPOS_E_ILLEGAL, "Data encryption not supported");
         Device.checkMember(i, new long[]{MSRConst.MSR_ERT_CARD, MSRConst.MSR_ERT_TRACK}, JposConst.JPOS_E_ILLEGAL, "Invalid error reporting: " + i);
         MSRInterface.errorReportingType(i);
         logSet("ErrorReportingType");

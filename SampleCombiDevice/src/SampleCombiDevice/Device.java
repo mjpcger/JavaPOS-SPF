@@ -826,20 +826,13 @@ public class Device extends JposDevice implements Runnable{
         props = (MSRProperties)getClaimingInstance(ClaimedMSR, 0);
         if (readData(next, offset, MsrLenPos + MsrLenLen)) {
             int trackTotal = Integer.parseInt(new String(Arrays.copyOfRange(next, MsrLenPos, MsrLenPos + MsrLenLen)));
-            byte[][] tracks = new byte[][]{new byte[0], new byte[0], new byte[0]};
+            byte[][] tracks = new byte[][]{new byte[0], new byte[0], new byte[0], new byte[3]};
             boolean success = readData(next, 0, trackTotal);
             if (props != null) {
                 if (success && next[0] == '1') {
                     Exception e = extractTracks(next, props, trackTotal, tracks);
                     if (e != null)
                         return e;
-                }
-                if (props.ErrorReportingType == MSRConst.MSR_ERT_TRACK) {
-                    try {
-                        handleEvent(new MSRErrorEvent(props.EventSource, JposConst.JPOS_E_FAILURE, 0, new TrackData(tracks)));
-                    } catch (JposException e) {
-                        return e;
-                    }
                 }
             }
             return head;
@@ -911,12 +904,22 @@ public class Device extends JposDevice implements Runnable{
             start = extractTrack(1, (byte) ';', next, trackTotal, tracks, ++start);
             if (start < trackTotal && next[start] == '3') {
                 start = extractTrack(2, (byte) ';', next, trackTotal, tracks, ++start);
-                if (props != null && start == trackTotal) {
+                if (props != null) {
                     try {
-                        int status = (((tracks[2].length << 8) + tracks[1].length) << 8) + tracks[0].length;
-                        handleEvent(new MSRDataEvent(props.EventSource, status, new TrackData(tracks)));
-                    }
-                    catch (Exception e) {
+                        if (tracks[3][0] == JposConst.JPOS_SUCCESS && tracks[3][1] == JposConst.JPOS_SUCCESS && tracks[3][2] == JposConst.JPOS_SUCCESS && start == trackTotal) {
+                            int status = (((tracks[2].length << 8) + tracks[1].length) << 8) + tracks[0].length;
+                            handleEvent(new MSRDataEvent(props.EventSource, status, new TrackData(tracks)));
+                        } else {
+                            MSRErrorEvent ev;
+                            if (props.ErrorReportingType == MSRConst.MSR_ERT_CARD || start != trackTotal)
+                                ev = new MSRErrorEvent(props.EventSource, JposConst.JPOS_E_FAILURE, 0, new TrackData(tracks));
+                            else {
+                                int exterr = ((((tracks[3][2] & 0xff) << 8) + (tracks[3][1] & 0xff)) << 8) + (tracks[3][0] & 0xff);
+                                ev = new MSRErrorEvent(props.EventSource, JposConst.JPOS_E_EXTENDED, exterr, new TrackData(tracks));
+                            }
+                            handleEvent(ev);
+                        }
+                    } catch(Exception e){
                         return e;
                     }
                 }
@@ -927,18 +930,25 @@ public class Device extends JposDevice implements Runnable{
 
     private int extractTrack(int index, byte startChar, byte[] next, int trackTotal, byte[][] tracks, int start) {
         int end = start + 1;
+        tracks[3][index] = JposConst.JPOS_SUCCESS;
         if (start < trackTotal && next[start] == startChar) {
-            while (end < trackTotal && next[end] != '?')
+            while (end < trackTotal && next[end] != '?') {
+                if(next[end] == startChar)
+                    tracks[3][index] = (byte) MSRConst.JPOS_EMSR_START;
                 end++;
+            }
             if (end < trackTotal) {
                 MSRProperties props = (MSRProperties)getClaimingInstance(ClaimedMSR, 0);
                 int trackbit = new int[]{MSRConst.MSR_TR_1, MSRConst.MSR_TR_2, MSRConst.MSR_TR_3}[index];
-                if (props != null && (trackbit & props.TracksToRead) != 0)
+                if (props != null && (trackbit & props.TracksToRead) != 0 && tracks[3][index] == JposConst.JPOS_SUCCESS) {
                     tracks[index] = Arrays.copyOfRange(next, start, end + 1);
+                }
                 return end + 1;
             }
-            else
+            else {
+                tracks[3][index] = (byte)MSRConst.JPOS_EMSR_END;
                 return start - 1;
+            }
         }
         return start;
     }
@@ -1263,7 +1273,7 @@ public class Device extends JposDevice implements Runnable{
          * @param tracks    Initial value for tracks read before.
          */
         TrackData(byte[][] tracks) {
-            Tracks = tracks;
+            Tracks = Arrays.copyOf(tracks, tracks.length > 3 ? 3 : tracks.length);
         }
 
         /**
