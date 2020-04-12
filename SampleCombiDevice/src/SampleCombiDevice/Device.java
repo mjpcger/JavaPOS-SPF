@@ -98,6 +98,14 @@ public class Device extends JposDevice implements Runnable{
     private static final int Ean13Len = 13;
 
     /**
+     * First byte of response on code page change
+     */
+    static final byte RespFromDisplay = 'C';
+    private static final int DisplayStatePos = 1;
+    private static final int DisplayStateLen = 2;
+    private static final int DisplayStateSuccess = '1';
+
+    /**
      * First byte of response on status request
      */
     static final byte RespFromStatus = 'S';
@@ -316,7 +324,7 @@ public class Device extends JposDevice implements Runnable{
         props.CapMapCharacterSet = true;
         props.CapCharacterSet = LineDisplayConst.DISP_CCS_UNICODE;
         props.CharacterSetDef = LineDisplayConst.DISP_CS_UNICODE;
-        props.CharacterSetList = "997";
+        props.CharacterSetList = "437,997,998,1252";
         props.CapBlink = LineDisplayConst.DISP_CB_BLINKEACH;
         props.CapReverse = LineDisplayConst.DISP_CR_REVERSEEACH;
         props.CapICharWait = true;
@@ -687,7 +695,7 @@ public class Device extends JposDevice implements Runnable{
             if (requestState) {
                 try {
                     OutStream.write(CmdStatusRequest);
-                    DeviceIsOffline = InIOError = false;
+                    DeviceIsOffline = InIOError = CpChanged = false;
                     handlePowerStateEvent(JposConst.JPOS_SUE_POWER_ONLINE);
                 } catch (JposException e1) {
                     closePort(false);
@@ -695,7 +703,7 @@ public class Device extends JposDevice implements Runnable{
                 }
             }
             else {
-                DeviceIsOffline = InIOError = false;
+                DeviceIsOffline = InIOError = CpChanged = false;
                 handlePowerStateEvent(JposConst.JPOS_SUE_POWER_ONLINE);
             }
         }
@@ -724,6 +732,10 @@ public class Device extends JposDevice implements Runnable{
                 next[0] = charIn[0];
                 offset = charIn.length;
                 switch (head[0] = next[0]) {
+                    case RespFromDisplay:
+                        Object e0 = respFromDisplay(next, offset, head);
+                        if (e0 != null) return e0;
+                        break;
                     case RespFromDrawer:
                         Object e1 = respFromDrawer(next, offset, head);
                         if (e1 != null) return e1;
@@ -759,6 +771,16 @@ public class Device extends JposDevice implements Runnable{
         }
         catch (Exception e) {
             return e;
+        }
+        return null;
+    }
+
+    boolean CpChanged = false;
+
+    private Object respFromDisplay(byte[] next, int offset, byte[] head) throws JposException {
+        if (readData(next, offset, DisplayStateLen)) {
+            CpChanged = next[DisplayStatePos] == DisplayStateSuccess;
+            return head;
         }
         return null;
     }

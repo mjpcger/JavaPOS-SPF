@@ -47,6 +47,12 @@
 #	Rtdd...d					Label scanned with type specified by t, with data specified by dd...d. Supported types are A (UPC-A),
 #								E (UPC-E), F (EAN-13) and FF (EAN-8).
 #  Display
+#   Ce							Code page to be used for text output. Valid envoding values for e are:
+#									0	UTF-8 (the default),
+#									1	ASCII
+#									2	Code page 437
+#									3	Code page 1252
+#   Cx							Response. x=0: No change, x=1: changed as requested.
 #	Tlnndd...d[aa...a]			Display text command. l specifies the line number (0 or 1), nn the number of characters that follow. Due
 #								to UTF-8 encoding, nn is less than the number of bytes that follow if the text contains non-ascii characters.
 #								dd...d specify max. 20 characters that shall be displayed. All further characters [aa...a] are optional,
@@ -89,6 +95,9 @@ set StatusReq "SR";         # Request Status command
 set StatusResp "S%s%s%s";   # Specify format of status response, 1st %s will be replaced by drawer status char, 2nd %s by lock position and 3rd %s by key value
 set BeepOn "B1";            # Start beeping
 set BeepOff "B0";           # Stop beeping
+set SetEncoding "C";        # Prefix for encoding change
+set Encodings {utf-8 ascii cp437 cp1252}
+
 
 # No further changes necessary if only communication sequences shall be changed
 set Status 0
@@ -135,7 +144,7 @@ proc changeText {line text btext} {
 }
 # callback for reading from COM port
 proc comInputCB {} {
-	global SFd StartStop OpenSeq DrawerValues DrawerMask LockValues ScanEnable ScanDisable TextOut TextLineCount TextLineLength StatusReq StatusResp Status Lock Key Fd BeepOn BeepOff
+	global SFd StartStop OpenSeq DrawerValues DrawerMask LockValues ScanEnable ScanDisable TextOut TextLineCount TextLineLength StatusReq StatusResp Status Lock Key Fd BeepOn BeepOff SetEncoding Encodings
 
     if {[eof $Fd] != 0 && $SFd != ""} {
         puts "Disconnect client socket"
@@ -167,6 +176,18 @@ proc comInputCB {} {
 				changeScanner 0
 				set c [string range $c [string length $ScanDisable] end]
 				puts "Scanner disabled"
+			} elseif {[string range $c 0 [string length $SetEncoding]-1] == $SetEncoding} {
+			    puts $c
+				set c [string range $c [string length $SetEncoding] end]
+			    if {[scan [string range $c 0 0] %d encidx] == 1 && $encidx >= 0 && $encidx < [llength $Encodings]} {
+			        fconfigure $Fd -encoding [lindex $Encodings $encidx]
+			        puts -nonewline $Fd "C1"
+			        puts "Encoding changed to [lindex $Encodings $encidx]"
+			    } {
+                    puts -nonewline $Fd "C0"
+                    puts "Encoding <[string range $c 1 1]> not supported"
+			    }
+			    set c ""
 			} elseif {[string range $c 0 [string length $TextOut]-1] == $TextOut} {
 			    puts $c
 				set c [string range $c [string length $TextOut] end]

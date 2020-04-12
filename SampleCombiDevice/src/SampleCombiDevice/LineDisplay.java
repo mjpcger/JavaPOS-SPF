@@ -101,6 +101,16 @@ public class LineDisplay extends LineDisplayProperties {
         super.clearText();
     }
 
+    private String Encoding;
+
+    @Override
+    public void characterSet(int charset) throws JposException {
+        if (charset != CharacterSet) {
+            Dev.CpChanged = false;
+        }
+        super.characterSet(charset);
+    }
+
     @Override
     public void deviceBrightness(int b) throws JposException {
         super.deviceBrightness(b);
@@ -218,6 +228,11 @@ public class LineDisplay extends LineDisplayProperties {
             if (c == '\n')
                 return;
         }
+        if (!MapCharacterSet && CharacterSet != LineDisplayConst.DISP_CS_UNICODE) {
+            try {
+                c = new String(new byte[]{(byte)(c & 0xff)}, Encoding).charAt(0);
+            } catch (UnsupportedEncodingException e) {}
+        }
         Dev.DisplayContents[coordinates.Line][coordinates.Column] = c;
         Dev.DisplayAttributes[coordinates.Line][coordinates.Column] = attribute;
         coordinates.Column++;
@@ -225,8 +240,10 @@ public class LineDisplay extends LineDisplayProperties {
 
     private void sendTextLine(String linestr, char row) throws JposException {
         byte[] line;
+        if (!Dev.CpChanged)
+            setDeviceCodepage(CharacterSet);
         try {
-            line = linestr.getBytes("UTF-8");
+            line = linestr.getBytes(Encoding);
         } catch (UnsupportedEncodingException e) {
             throw new JposException(JposConst.JPOS_E_ILLEGAL, e.getMessage(), e);
         }
@@ -236,6 +253,28 @@ public class LineDisplay extends LineDisplayProperties {
         for (int i = TextStartPos, len = linestr.length(); --i >= TextLengthPos; len /= 10)
             buffer[i] = (byte)(len % 10 + '0');
         Dev.sendCommand(buffer, Dev.NoResponse);
+    }
+
+    private void setDeviceCodepage(int charset) throws JposException {
+        String[] encodings = new String[]{"UTF-8", "ASCII", "cp437", "cp1252"};
+        int[][] pairs = new int[][]{
+                new int[]{'0', LineDisplayConst.DISP_CS_UNICODE},
+                new int[]{'1', LineDisplayConst.DISP_CS_ASCII},
+                new int[]{'2', 437},
+                new int[]{'3', 1252}
+        };
+        for (int[] pair : pairs) {
+            if (charset == pair[1]) {
+                byte[] buffer = new byte[]{'C', (byte) pair[0]};
+                Dev.CpChanged = false;
+                Dev.sendCommand(buffer, Dev.RespFromDisplay);
+                Dev.check(!Dev.CpChanged, JposConst.JPOS_E_ILLEGAL, "Character set could not be changed to " + pair[1]);
+                super.characterSet(charset);
+                Encoding = encodings[pair[0] - '0'];
+                return;
+            }
+        }
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Unsupported character set: " + charset);
     }
 
     @Override

@@ -410,9 +410,10 @@ public interface LineDisplayInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>MarqueeType equals DISP_MT_NONE or DISP_MT_INIT,</li>
+     *     <li>MarqueeType equals DISP_MT_NONE,</li>
      *     <li>InterCharacterWait equals 0,</li>
      *     <li>direction is DISP_ST_UP, DISP_ST_DOWN, DISP_ST_LEFT or DISP_ST_RIGHT.</li>
+     *     <li>units &ge; 0,</li>
      * </ul>
      *
      * @param direction Scrolling direction.

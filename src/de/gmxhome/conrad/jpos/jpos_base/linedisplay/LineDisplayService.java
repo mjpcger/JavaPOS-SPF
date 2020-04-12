@@ -670,6 +670,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         checkEnabled();
         Device.check(Data.InterCharacterWait != 0 || Data.MarqueeType != LineDisplayConst.DISP_MT_NONE, JposConst.JPOS_E_ILLEGAL, "Scroll text not supported in marquee or teletype mode");
         Device.checkMember(direction, new long[]{LineDisplayConst.DISP_ST_UP, LineDisplayConst.DISP_ST_DOWN, LineDisplayConst.DISP_ST_LEFT, LineDisplayConst.DISP_ST_RIGHT}, JposConst.JPOS_E_ILLEGAL, "Illegal direction: "+ direction);
+        Device.check(units < 0, JposConst.JPOS_E_ILLEGAL, "Scrolling negative units not supported");
         LineDisplayInterface.scrollText(direction, units);
         logCall("ScrollText");
     }
