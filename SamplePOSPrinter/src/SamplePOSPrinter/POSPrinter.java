@@ -125,7 +125,7 @@ public class POSPrinter extends POSPrinterProperties {
         CheckHealthText = "Interactive CheckHealth: ";
         switch (level) {
             case JposConst.JPOS_CH_INTERNAL:
-                CheckHealthText += "Internal CheckHealth: OK.";
+                CheckHealthText = "Internal CheckHealth: OK.";
                 break;
             case JposConst.JPOS_CH_EXTERNAL:
                 CheckHealthText = "External CheckHealth: ";

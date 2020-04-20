@@ -733,7 +733,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
      * Default value of SlpCurrentCartridge property. Default: PTR_COLOR_PRIMARY. Should be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int SlpCurrentCartridgeDef = POSPrinterConst.PTR_COLOR_PRIMARY;
+    public int SlpCurrentCartridgeDef = 0;
 
     /**
      * UPOS property SlpCurrentCartridge.
