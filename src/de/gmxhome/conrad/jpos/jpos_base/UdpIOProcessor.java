@@ -187,7 +187,7 @@ public class UdpIOProcessor extends UniqueIOProcessor {
      * Set UDP specific parameters. Must be called before opening the IO processor.
      * @param ownport       Own port number between 1 and 65534
      * @param maxdatasize   Maximum message size, any value &lt; 0
-     * @throws JposException
+     * @throws JposException If parameters invalid or socket not initialized.
      */
     public void setParameters(int ownport, int maxdatasize) throws JposException {
         if (Socket != null) {

@@ -339,6 +339,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapTrainingMode is true,</li>
+     *     <li>TrainingModeActive is false,</li>
      *     <li>PrinterState is PS_MONITOR (not in any other kind of document).</li>
      * </ul>
      * The default implementation should be called within derived methods to ensure that the property
@@ -468,7 +469,8 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapTrainingMode is true,</li>
-     *     <li>TrainingModeActive is true.</li>
+     *     <li>TrainingModeActive is true,</li>
+     *     <li>PrinterState is PS_MONITOR (not in any other kind of document).</li>
      * </ul>
      * The default implementation should be called within derived methods to ensure that the property
      * PrinterState is updated as expected.
@@ -1570,8 +1572,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>CapPackageAdjustment is true,</li>
      *     <li>PrinterState is PS_FISCAL_RECEIPT,</li>
      *     <li>CapFiscalReceiptType is false or FiscalReceiptType is RT_SALES, RT_SERVICE, RT_SIMPLE_INVOICE or RT_REFUND,</li>
-     *     <li>adjustmentType is one of AT_AMOUNT_DISCOUNT, AT_AMOUNT_SURCHARGE, AT_PERCENTAGE_DISCOUNT, AT_PERCENTAGE_SURCHARGE,
-     * AT_COUPON_AMOUNT_DISCOUNT or AT_COUPON_PERCENTAGE_DISCOUNT,</li>
+     *     <li>adjustmentType is FPTR_AT_DISCOUNT or FPTR_AT_SURCHARGE,</li>
      *     <li>description is not null and does not contain the reserved word, if any,</li>
      *     <li>vatAdjustment is not null and consists of no more than NumVatRates value pairs, each consisting of two values:
      * A long and a long or a decimal number with maximum 4 decimals.</li>
@@ -1583,7 +1584,11 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
      * or signal paper present.</li>
      * </ul>
-     * The implementation should sets property PreLine to an empty string. Even if the UPOS specification
+     * <b>Keep in mind:</b>The adjustmentType values AT_DISCOUNT and AT_SURCHARGE, described in the UPOS specification,
+     * are not defined within the jpos framework. Therefore, JavaPOS-SPF works with self-defined values that can be
+     * set in jpos.xml via properties FPTR_AT_DISCOUNT and FPTR_AT_SURCHARGE. The defaults are AT_AMOUNT_DISCOUNT for
+     * FPTR_AT_DISCOUNT and AT_AMOUNT_SURCHARGE for FPTR_AT_SURCHARGE.
+     * <br>The implementation should sets property PreLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
      * of this properties is buffered in the PrePostOutputRequest and the application should have
      * the opportunity to set this property for further print requests after a print request has been enqueued
@@ -1626,10 +1631,10 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
+     *     <li>CapPackageAdjustment is true,</li>
      *     <li>PrinterState is PS_FISCAL_RECEIPT,</li>
      *     <li>CapFiscalReceiptType is false or FiscalReceiptType is RT_SALES, RT_SERVICE, RT_SIMPLE_INVOICE or RT_REFUND,</li>
-     *     <li>adjustmentType is one of AT_AMOUNT_DISCOUNT, AT_AMOUNT_SURCHARGE, AT_PERCENTAGE_DISCOUNT, AT_PERCENTAGE_SURCHARGE,
-     * AT_COUPON_AMOUNT_DISCOUNT or AT_COUPON_PERCENTAGE_DISCOUNT,</li>
+     *     <li>adjustmentType is FPTR_AT_DISCOUNT or FPTR_AT_SURCHARGE,</li>
      *     <li>vatAdjustment is not null and consists of no more than NumVatRates value pairs, each consisting of two values:
      * A long and a long or a decimal number with maximum 4 decimals.</li>
      * </ul>
@@ -1640,7 +1645,11 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
      * or signal paper present.</li>
      * </ul>
-     * The implementation should sets property PreLine to an empty string. Even if the UPOS specification
+     * <b>Keep in mind:</b>The adjustmentType values AT_DISCOUNT and AT_SURCHARGE, described in the UPOS specification,
+     * are not defined within the jpos framework. Therefore, JavaPOS-SPF works with self-defined values that can be
+     * set in jpos.xml via properties FPTR_AT_DISCOUNT and FPTR_AT_SURCHARGE. The defaults are AT_AMOUNT_DISCOUNT for
+     * FPTR_AT_DISCOUNT and AT_AMOUNT_SURCHARGE for FPTR_AT_SURCHARGE.
+     * <br>The implementation should sets property PreLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
      * of this properties is buffered in the PrePostOutputRequest and the application should have
      * the opportunity to set this property for further print requests after a print request has been enqueued

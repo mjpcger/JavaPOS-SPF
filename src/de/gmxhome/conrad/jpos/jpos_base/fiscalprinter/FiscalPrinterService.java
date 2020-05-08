@@ -1181,6 +1181,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         logPreCall("BeginTraining");
         checkEnabled();
         Device.check(!Data.CapTrainingMode, JposConst.JPOS_E_ILLEGAL, "Training mode not supported");
+        Device.checkext(Data.TrainingModeActive, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device just in training mode");
         Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Cannot change to training mode");
         FiscalPrinterInterface.beginTraining();
         logCall("BeginTraining");
@@ -1273,6 +1274,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         checkEnabled();
         Device.check(!Data.CapTrainingMode, JposConst.JPOS_E_ILLEGAL, "Training mode not supported");
         Device.checkext(!Data.TrainingModeActive, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device not in training mode");
+        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Cannot disable training mode");
         FiscalPrinterInterface.endTraining();
         logCall("EndTraining");
     }
@@ -1391,8 +1393,8 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         format.setLenient(false);
         Date start = format.parse(date1, new ParsePosition(0));
         Date end = format.parse(date2, new ParsePosition(0));
-        Device.check(start == null || date1.length() > format.toPattern().length(), JposConst.JPOS_E_ILLEGAL, "Starting date invalid: " + date1);
-        Device.check(end == null || date2.length() > format.toPattern().length(), JposConst.JPOS_E_ILLEGAL, "Ending date invalid: " + date2);
+        Device.check(start == null || date1.length() != format.toPattern().length(), JposConst.JPOS_E_ILLEGAL, "Starting date invalid: " + date1);
+        Device.check(end == null || date2.length() != format.toPattern().length(), JposConst.JPOS_E_ILLEGAL, "Ending date invalid: " + date2);
         Device.check(start.compareTo(end) > 0, JposConst.JPOS_E_ILLEGAL, "Starting date must not be after ending date");
         FiscalPrinterInterface.printPeriodicTotalsReport(date1, date2);
         logCall("PrintPeriodicTotalsReport");
@@ -1464,9 +1466,9 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
             SimpleDateFormat format = new SimpleDateFormat("ddMMyyyyHHmm");
             format.setLenient(false);
             Date start = format.parse(startNum, new ParsePosition(0));
-            Device.check(start == null || startNum.length() > format.toPattern().length(), JposConst.JPOS_E_ILLEGAL, "Starting date invalid: " + startNum);
+            Device.check(start == null || startNum.length() != format.toPattern().length(), JposConst.JPOS_E_ILLEGAL, "Starting date invalid: " + startNum);
             Date end = format.parse(endNum, new ParsePosition(0));
-            Device.check(end == null || endNum.length() > format.toPattern().length(), JposConst.JPOS_E_ILLEGAL, "Ending date invalid: " + endNum);
+            Device.check(end == null || endNum.length() != format.toPattern().length(), JposConst.JPOS_E_ILLEGAL, "Ending date invalid: " + endNum);
             Device.check(start.compareTo(end) > 0, JposConst.JPOS_E_ILLEGAL, "Starting date must not be after ending date");
         }
         else {
@@ -1530,7 +1532,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         SimpleDateFormat format = new SimpleDateFormat("ddMMyyyyHHmm");
         format.setLenient(false);
         Date start = format.parse(date, new ParsePosition(0));
-        Device.checkext(start == null || date.length() > format.toPattern().length(), FiscalPrinterConst.JPOS_EFPTR_BAD_DATE, "Date invalid: " + date);
+        Device.checkext(start == null || date.length() != format.toPattern().length(), FiscalPrinterConst.JPOS_EFPTR_BAD_DATE, "Date invalid: " + date);
         FiscalPrinterInterface.setDate(date);
         logCall("SetDate");
     }
@@ -1984,17 +1986,13 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
                 FiscalPrinterConst.FPTR_RT_REFUND
         };
         long[] allowedType = new long[]{
-                FiscalPrinterConst.FPTR_AT_AMOUNT_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_AMOUNT_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
+                Device.FPTR_AT_DISCOUNT,
+                Device.FPTR_AT_SURCHARGE
         };
         Device.check(vatAdjustment == null || description == null, JposConst.JPOS_E_ILLEGAL, "description and vatAdjustment must not be null");
         logPreCall("PrintRecPackageAdjustment", adjustmentType + ", " + description + ", " + vatAdjustment);
         checkEnabled();
-        Device.check(!Data.CapPackageAdjustment, JposConst.JPOS_E_ILLEGAL, "Receipt not paid not supported");
+        Device.check(!Data.CapPackageAdjustment, JposConst.JPOS_E_ILLEGAL, "Package Adjustment not supported");
         Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
         Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
         Device.checkMember(adjustmentType, allowedType, JposConst.JPOS_E_ILLEGAL, "Adjustment not supported: " + adjustmentType);
@@ -2025,17 +2023,13 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
                 FiscalPrinterConst.FPTR_RT_REFUND
         };
         long[] allowedType = new long[]{
-                FiscalPrinterConst.FPTR_AT_AMOUNT_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_AMOUNT_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
+                Device.FPTR_AT_DISCOUNT,
+                Device.FPTR_AT_SURCHARGE
         };
         Device.check(vatAdjustment == null, JposConst.JPOS_E_ILLEGAL, "vatAdjustment must not be null");
         logPreCall("PrintRecPackageAdjustVoid", adjustmentType + ", " + vatAdjustment);
         checkEnabled();
-        Device.check(!Data.CapPackageAdjustment, JposConst.JPOS_E_ILLEGAL, "Receipt not paid not supported");
+        Device.check(!Data.CapPackageAdjustment, JposConst.JPOS_E_ILLEGAL, "Package Adjustment not supported");
         Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
         Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
         Device.checkMember(adjustmentType, allowedType, JposConst.JPOS_E_ILLEGAL, "Adjustment not supported: " + adjustmentType);
@@ -2155,13 +2149,11 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         };
         long[] allowedamount = new long[]{
                 FiscalPrinterConst.FPTR_AT_AMOUNT_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_AMOUNT_DISCOUNT
+                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE
         };
         long[] allowedpercent = new long[]{
                 FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
+                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE
         };
         long[] allowedpositive = new long[]{
                 FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,

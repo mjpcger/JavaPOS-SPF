@@ -392,6 +392,18 @@ public class JposBaseDevice {
     public Integer JposVersion = null;
 
     /**
+     * Holds the discount value for parameter adjustmentType of FiscalPrinter methods PrintRecPackageAdjustment and
+     * PrintRecPackageAdjustVoid.
+     */
+    public Integer FPTR_AT_DISCOUNT = null;
+
+    /**
+     * Holds the discount value for parameter adjustmentType of FiscalPrinter methods PrintRecPackageAdjustment and
+     * PrintRecPackageAdjustVoid.
+     */
+    public Integer FPTR_AT_SURCHARGE = null;
+
+    /**
      * Checks whether a JposEntry belongs to a predefined property value an if so,
      * sets the corresponding driver value
      *
@@ -451,6 +463,12 @@ public class JposBaseDevice {
                 DrawerBeepVolume = Integer.parseInt(o.toString());
                 if (DrawerBeepVolume < 0 || DrawerBeepVolume > 127)
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "Drawer beep value not between 0 and 127: " + DrawerBeepVolume);
+            }
+            if (FPTR_AT_DISCOUNT != null && (o = entry.getPropertyValue("FPTR_AT_DISCOUNT")) != null) {
+                FPTR_AT_DISCOUNT = Integer.parseInt(o.toString());
+            }
+            if (FPTR_AT_SURCHARGE != null && (o = entry.getPropertyValue("FPTR_AT_SURCHARGE")) != null) {
+                FPTR_AT_SURCHARGE = Integer.parseInt(o.toString());
             }
         } catch (JposException e) {
             throw e;

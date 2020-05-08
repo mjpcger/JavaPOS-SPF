@@ -48,6 +48,8 @@ public class UpdateFirmware extends JposOutputRequest {
      * <br>If updateFirmware throws a JposException with ErrorCodeExtended set to one of the allowed values, Result
      * will be set to ErrorCodeExtended internally.
      * <br>If updateFirmware ends normally, Result will be set to SUE_UF_COMPLETE internally.
+     * @param result Result value as explained above.
+     * @throws JposException if result is invalid.
      */
     public void setResult(int result) throws JposException {
         Props.Device.checkMember(result, AllowedResult, JposConst.JPOS_E_ILLEGAL, "Invalid UpdateFirmware result: " + result);
