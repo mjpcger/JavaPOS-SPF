@@ -1077,6 +1077,7 @@ public class Device extends JposDevice implements Runnable {
      * Major part of device initialization. Increments open count. If open count was zero, starts polling
      * the device state. Depending on the device sharing of the device type, it will be performed during
      * enable (shareable devices) or during claim (exclusive use devices).
+     * @param props  Property set of device to be opened.
      * @return The new open count.
      */
     int startPolling(JposCommonProperties props) {
