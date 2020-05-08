@@ -808,7 +808,7 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
             for (int i = 1; i < cmd[0].length; i++)
                 cmdstr = cmdstr + " ETB " + cmd[0][i];
             cmdstr = "Internal command [" + cmdstr + "] failed: ";
-            Dev.check(cmd[1].length == 2 && cmd[1][1].equals("0"), JposConst.JPOS_E_ILLEGAL, cmdstr + "Check state [" + state.toString() + "]");
+            Dev.check(cmd[1].length == 2 && cmd[1][1].equals("0"), JposConst.JPOS_E_ILLEGAL, cmdstr + "Check state [" + new String(state) + "]");
             Dev.check(cmd[1].length == 2, JposConst.JPOS_E_FAILURE, cmdstr + "Bad parameter " + cmd[1][1]);
             Dev.check(cmd[1].length == 3 , JposConst.JPOS_E_FAILURE, cmdstr + cmd[1][1] + " - " + cmd[1][2]);
         }
@@ -848,6 +848,13 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
         } catch (NumberFormatException e) {
             throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid printer VAT rate", e);
         }
+    }
+
+    @Override
+    public void setDate(String date) throws JposException {
+        SimpleDateFormat format = new SimpleDateFormat("ddMMyyyyHHmm");
+        String nowstr = format.format(new Date());
+        checkext(!nowstr.equals(date), FiscalPrinterConst.JPOS_EFPTR_BAD_DATE, "Invalid date");
     }
 
     @Override
