@@ -118,7 +118,6 @@ public class JnaSerial {
         IntByReference sentBytes = new IntByReference(-1);
         do {
             sentBytes.setValue(actlen);
-            //*
             WinBase.OVERLAPPED ov = new WinBase.OVERLAPPED();
             ov.writeField("hEvent", Kernel32Lib.CreateEvent(null, true, false, null));
             if (ov.hEvent == null)
@@ -126,17 +125,11 @@ public class JnaSerial {
             try {
                 if (!Kernel32Lib.WriteFile(hd, memory.getByteBuffer(actpos, actlen), actlen, null, ov))
                     throw new JposException(JposConst.JPOS_E_FAILURE, "WriteFile returned error code " + Kernel32Lib.GetLastError());
-                if (Kernel32Lib.WaitForSingleObject(ov.hEvent, WinBase.INFINITE) != WinBase.WAIT_OBJECT_0)
-                    throw new JposException(JposConst.JPOS_E_FAILURE, "WaitForSingleObject returned error code " + Kernel32Lib.GetLastError());
                 if (!Kernel32Lib.GetOverlappedResult(hd, ov, sentBytes, true))
                     throw new JposException(JposConst.JPOS_E_FAILURE, "GetOverlappedResult returned error code " + Kernel32Lib.GetLastError());
             } finally {
                 Kernel32Lib.CloseHandle(ov.hEvent);
             }
-            /*/
-            if (!Kernel32Lib.WriteFile(hd, memory.getByteBuffer(actpos, actlen), actlen, sentBytes, null))
-                throw new JposException(JposConst.JPOS_E_FAILURE, "WriteFile returned error code " + Kernel32Lib.GetLastError());
-            //*/
             if (sentBytes.getValue() > 0) {
                 actpos += sentBytes.getValue();
                 if ((actlen = buffer.length - actpos) == 0)
@@ -172,7 +165,6 @@ public class JnaSerial {
         WinNT.HANDLE hd = checkOpened(true);
         IntByReference receicedBytes = new IntByReference(-1);
         Memory received = new Memory(count);
-        //*
         setTimeouts(timeout);
         WinBase.OVERLAPPED ov = new WinBase.OVERLAPPED();
         ov.writeField("hEvent", Kernel32Lib.CreateEvent(null, true, false, null));
@@ -181,8 +173,6 @@ public class JnaSerial {
         try {
             if (!(Kernel32Lib.ReadFile(hd, received.getByteBuffer(0, count), count, null, ov)))
                 throw new JposException(JposConst.JPOS_E_FAILURE, "Read returned error code " + Kernel32Lib.GetLastError());
-            if (Kernel32Lib.WaitForSingleObject(ov.hEvent, WinBase.INFINITE) != WinBase.WAIT_OBJECT_0)
-                throw new JposException(JposConst.JPOS_E_FAILURE, "WaitForSingleObject returned error code " + Kernel32Lib.GetLastError());
             if (!Kernel32Lib.GetOverlappedResult(hd, ov, receicedBytes, true))
                 throw new JposException(JposConst.JPOS_E_FAILURE, "GetOverlappedResult returned error code " + Kernel32Lib.GetLastError());
         } finally {
@@ -191,24 +181,6 @@ public class JnaSerial {
         if (receicedBytes.getValue() < 0 )
             throw new JposException(JposConst.JPOS_E_FAILURE, "GetOverlappedResult returned invalid count " + receicedBytes.getValue());
         return received.getByteArray(0, receicedBytes.getValue());
-        /*/
-        while (true) {
-            synchronized (this) {
-                if (!(Kernel32Lib.ReadFile(hd, received.getByteBuffer(0, count), count, receicedBytes, null)))
-                    throw new JposException(JposConst.JPOS_E_FAILURE, "Read returned error code " + Kernel32Lib.GetLastError());
-            }
-            if (receicedBytes.getValue() < 0 )
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Read returned invalid count " + receicedBytes.getValue());
-            if (receicedBytes.getValue() > 0)
-                return received.getByteArray(0, receicedBytes.getValue());
-            if (timeout == 0)
-                break;
-            int tio = 10;
-            timeout -= timeout < 0 ? 0 : (timeout >= 10 ? tio : (tio = timeout));
-            new SyncObject().suspend(tio);
-        }
-        return new byte[0];
-        //*/
     }
 
     /**
@@ -230,11 +202,7 @@ public class JnaSerial {
         checkOpened(false);
         Port = port;
         WinNT.HANDLE hd = Kernel32Lib.CreateFile("\\\\.\\" + Port,
-                //*
                 WinNT.GENERIC_READ|WinNT.GENERIC_WRITE, 0, null, WinNT.OPEN_EXISTING, 0, null);
-                /*/
-                WinNT.GENERIC_READ|WinNT.GENERIC_WRITE, 0, null, WinNT.OPEN_EXISTING, WinNT.FILE_FLAG_OVERLAPPED, null);
-                //*/
         if (hd.equals(WinBase.INVALID_HANDLE_VALUE)) {
             int error = Kernel32Lib.GetLastError();
             boolean exists =  error == WinError.ERROR_FILE_NOT_FOUND;
