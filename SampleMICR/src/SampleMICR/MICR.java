@@ -50,7 +50,7 @@ public class MICR extends MICRProperties {
     /**
      * The constructor. Gets the Device object that implements the device communication as parameter. The
      * device index used by the sample device is always 0.
-     * @param dev
+     * @param dev Instance of Device this object belongs to.
      */
     public MICR(SampleMICR.Device dev) {
         super(0);

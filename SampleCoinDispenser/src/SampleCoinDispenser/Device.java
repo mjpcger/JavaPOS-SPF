@@ -102,7 +102,7 @@ public class Device extends JposDevice implements Runnable{
     boolean ReadArgumentCheck = false;
 
     /**
-     * The TCP strean processor.
+     * The TCP stream processor.
      */
     private TcpClientIOProcessor OutStream = null;
 
