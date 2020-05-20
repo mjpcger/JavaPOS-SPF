@@ -49,7 +49,7 @@ public class Device extends JposDevice{
     private int Databits = SerialIOProcessor.DATABITS_8;
     private int Stopbits = SerialIOProcessor.STOPBITS_2;
     private int Parity = SerialIOProcessor.PARITY_NONE;
-    private int OwnPort = 0;
+    private Integer OwnPort = null;
     private int LoggingType = UniqueIOProcessor.LoggingTypeEscapeString;
     private int PollDelay = 1000;
     private int MaxRetry = 2;
@@ -220,51 +220,45 @@ public class Device extends JposDevice{
         PhysicalDeviceDescription = "Sample printer simulator for virtual COM ports or TCP";
         PhysicalDeviceName = "Sample POSPrinter Simulator";
         OpenCount[0] = 0;
-        try {
-            new TcpClientIOProcessor(this, ID);
-        } catch (JposException e) {
-            TcpType = false;
-        }
         CapPowerReporting = JposConst.JPOS_PR_ADVANCED;
     }
-
-    /**
-     * Specifies whether the device is connected via tcp. If false, connection is via COM port.
-     */
-    private boolean TcpType = true;
 
     @Override
     public void checkProperties(JposEntry entry) throws JposException {
         super.checkProperties(entry);
         try {
+            new TcpClientIOProcessor(this, ID);
+            OwnPort = 0;
+        } catch (JposException e) {}
+        try {
             Object o;
             if ((o = entry.getPropertyValue("Baudrate")) != null) {
                 Baudrate = Integer.parseInt(o.toString());
-                if (TcpType)
+                if (OwnPort != null)
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Baudrate");
             }
             if ((o = entry.getPropertyValue("Databits")) != null) {
                 Databits = Integer.parseInt(o.toString());
-                if (TcpType)
+                if (OwnPort != null)
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Databits");
             }
             if ((o = entry.getPropertyValue("Stopbits")) != null) {
                 Stopbits = Integer.parseInt(o.toString());
-                if (TcpType)
+                if (OwnPort != null)
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Stopbits");
             }
             if ((o = entry.getPropertyValue("Parity")) != null) {
                 Parity = Integer.parseInt(o.toString());
-                if (TcpType)
+                if (OwnPort != null)
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Parity");
             }
             if ((o = entry.getPropertyValue("OwnPort")) != null) {
                 int port = Integer.parseInt(o.toString());
                 if (port < 0 || port > 0xffff)
                     throw new IOException("Invalid TCP port: " + o.toString());
-                OwnPort = port;
-                if (!TcpType)
+                if (OwnPort == null)
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: OwnPort");
+                OwnPort = port;
             }
             if ((o = entry.getPropertyValue("LoggingType")) != null) {
                 int type = Integer.parseInt(o.toString());
@@ -285,7 +279,7 @@ public class Device extends JposDevice{
                 MaxRetry = Integer.parseInt(o.toString());
             if ((o = entry.getPropertyValue("UsbToSerial")) != null) {
                 UsbToSerial = Boolean.parseBoolean(o.toString());
-                if (TcpType)
+                if (OwnPort != null)
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: UsbToSerial");
             }
             if ((o = entry.getPropertyValue("MapCharacterSet")) != null) {
@@ -341,7 +335,7 @@ public class Device extends JposDevice{
     protected void sendCommand(byte[] request) throws JposException
     {
         synchronized(SocketSync) {
-            if (!TcpType && UsbToSerial && !((SerialIOProcessor) OutStream).exists())
+            if (OwnPort == null && UsbToSerial && !((SerialIOProcessor) OutStream).exists())
                 throw new JposException(0, "Device plugged off");
             if (OutStream == null) {
                 JposException e = initPort();
@@ -585,7 +579,7 @@ public class Device extends JposDevice{
      */
     private JposException initPort() {
         try {
-            if (!TcpType) {
+            if (OwnPort == null) {
                 SerialIOProcessor ser;
                 OutStream = ser = new SerialIOProcessor(this, ID);
                 ser.setParameters(Baudrate, Databits, Stopbits, Parity);

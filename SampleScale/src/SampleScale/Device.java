@@ -27,11 +27,6 @@ public class Device extends JposDevice implements Runnable {
      */
     protected Device(String id) {
         super(id);
-        try {
-            Target = new TcpClientIOProcessor(this, id);
-            OwnPort = 0;   // Default: Random port
-        } catch (JposException e) {
-        }
         scaleInit(1);
         PhysicalDeviceDescription = "Scales Dialog 02 / 04 simulator";
         PhysicalDeviceName = "Scales Simulator";
@@ -46,7 +41,7 @@ public class Device extends JposDevice implements Runnable {
     /**
      * In case of a TCP connection, values above 0 specify the source port number. Zero results in an random source port.
      */
-    int OwnPort;
+    Integer OwnPort = null;
 
     /**
      * Timeout for getting a response after sending a request.
@@ -86,9 +81,13 @@ public class Device extends JposDevice implements Runnable {
     public void checkProperties(JposEntry entry) throws JposException {
         super.checkProperties(entry);
         try {
+            new TcpClientIOProcessor(this, ID);
+            OwnPort = 0;   // Default: Random port
+        } catch (JposException e) {}
+        try {
             Object o;
             if ((o = entry.getPropertyValue("OwnPort")) != null) {
-                if (Target != null) {
+                if (OwnPort != null) {
                     if ((OwnPort = Integer.parseInt(o.toString())) < 0 || OwnPort >= 0xffff)
                         throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid source port.");
                 }
@@ -378,9 +377,10 @@ public class Device extends JposDevice implements Runnable {
      */
     private JposException initPort() {
         try {
-            try {
+            if (OwnPort != null) {
                 ((TcpClientIOProcessor)(Target = new TcpClientIOProcessor(this, ID))).setParam(OwnPort);
-            } catch (JposException e) {
+            }
+            else {
                 ((SerialIOProcessor)(Target = new SerialIOProcessor(this, ID))).setParameters(SerialIOProcessor.BAUDRATE_4800, SerialIOProcessor.DATABITS_7, SerialIOProcessor.STOPBITS_1, SerialIOProcessor.PARITY_ODD);
             }
             Target.open(InIOError);

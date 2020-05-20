@@ -75,17 +75,18 @@ public class Device extends JposDevice implements Runnable {
         cashDrawerInit(1);
         PhysicalDeviceDescription = "Fiscal printer simulator for TCP and COM port";
         PhysicalDeviceName = "Fiscal printer Simulator";
-        try {
-            new TcpClientIOProcessor(this, ID);
-        } catch (JposException e) {
-            TcpType = false;
-        }
         CapPowerReporting = JposConst.JPOS_PR_ADVANCED;
     }
 
     @Override
     public void checkProperties(JposEntry entry) throws JposException {
         super.checkProperties(entry);
+        try {
+            new TcpClientIOProcessor(this, ID);
+            TcpType = true;
+        } catch (JposException e) {
+            TcpType = false;
+        }
         try {
             Object o;
             int value;
@@ -184,7 +185,7 @@ public class Device extends JposDevice implements Runnable {
     /**
      * Specifies whether the device is connected via tcp. If false, connection is via COM port.
      */
-    private boolean TcpType = true;
+    private Boolean TcpType = null;
 
     /*
      * Internally used control characters.
