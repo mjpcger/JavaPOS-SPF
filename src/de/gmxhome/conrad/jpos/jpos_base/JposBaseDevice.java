@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base;
 import jpos.*;
 import jpos.config.JposEntry;
 import jpos.events.*;
+
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -403,6 +405,8 @@ public class JposBaseDevice {
      */
     public Integer FPTR_AT_SURCHARGE = null;
 
+    public static String SerialIOAdapterClass = null;
+
     /**
      * Checks whether a JposEntry belongs to a predefined property value an if so,
      * sets the corresponding driver value
@@ -457,6 +461,23 @@ public class JposBaseDevice {
                     LogLevel = Level.OFF;
                 else
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid warning level");
+            }
+            if ((o = entry.getPropertyValue("SerialIOAdapterClass")) != null) {
+                if (SerialIOAdapterClass == null) {
+                    try {
+                        Constructor newop = Class.forName(o.toString()).getConstructor();
+                        SerialIOAdapterClass = o.toString();
+                    } catch (Exception e) {
+                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "SerialIOAdapterClass " + o.toString() + " invalid");
+                    }
+                }
+                else if (!SerialIOAdapterClass.equals(o.toString()))
+                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "SerialIOAdapterClass of different device entries of a physical device must match");
+            }
+            else if (SerialIOAdapterClass == null) {
+                SerialIOAdapterClass = System.getProperty("java.version").split("\\.")[0].equals("1") ?
+                        "de.gmxhome.conrad.jSSC.JSSCSerial" :
+                        "de.gmxhome.conrad.jSerialComm.JSCSerial";
             }
             // Device class specific entries, common for all implementations
             if (DrawerBeepVolume != null && (o = entry.getPropertyValue("DrawerBeepVolume")) != null) {
