@@ -119,7 +119,7 @@ public class Device extends JposDevice implements Runnable{
     private int Databits = SerialIOProcessor.DATABITS_8;
     private int Stopbits = SerialIOProcessor.STOPBITS_2;
     private int Parity = SerialIOProcessor.PARITY_NONE;
-    private int OwnPort = 0;
+    private Integer OwnPort = null;
     private int LoggingType = UniqueIOProcessor.LoggingTypeEscapeString;
     private int RequestTimeout = 500;
     private int CharacterTimeout = 10;
@@ -253,38 +253,42 @@ public class Device extends JposDevice implements Runnable{
         }
     }
 
-    /**
-     * The device type. &gt;0: COM port type, &lt;0: TCP service type.
-     */
-    private int DeviceType = 0;
-
     @Override
     public void checkProperties(JposEntry entry) throws JposException {
         super.checkProperties(entry);
         try {
+            new TcpClientIOProcessor(this, ID);
+            OwnPort = 0;
+        } catch (JposException e) {}
+        try {
             Object o;
             if ((o = entry.getPropertyValue("Baudrate")) != null) {
+                if (OwnPort != null)
+                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Baudrate");
                 Baudrate = Integer.parseInt(o.toString());
-                DeviceType = 1;
             }
             if ((o = entry.getPropertyValue("Databits")) != null) {
+                if (OwnPort != null)
+                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Databits");
                 Databits = Integer.parseInt(o.toString());
-                DeviceType = 1;
             }
             if ((o = entry.getPropertyValue("Stopbits")) != null) {
+                if (OwnPort != null)
+                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Stopbits");
                 Stopbits = Integer.parseInt(o.toString());
-                DeviceType = 1;
             }
             if ((o = entry.getPropertyValue("Parity")) != null) {
+                if (OwnPort != null)
+                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Parity");
                 Parity = Integer.parseInt(o.toString());
-                DeviceType = 1;
             }
             if ((o = entry.getPropertyValue("OwnPort")) != null) {
+                if (OwnPort == null)
+                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: OwnPort");
                 int port = Integer.parseInt(o.toString());
                 if (port < 0 || port > 0xffff)
                     throw new IOException("Invalid TCP port: " + o.toString());
                 OwnPort = port;
-                DeviceType = -1;
             }
             if ((o = entry.getPropertyValue("LoggingType")) != null) {
                 int type = Integer.parseInt(o.toString());
@@ -306,8 +310,9 @@ public class Device extends JposDevice implements Runnable{
             if ((o = entry.getPropertyValue("MaxRetry")) != null)
                 MaxRetry = Integer.parseInt(o.toString());
             if ((o = entry.getPropertyValue("UsbToSerial")) != null) {
+                if (OwnPort != null)
+                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: UsbToSerial");
                 UsbToSerial = Boolean.parseBoolean(o.toString());
-                DeviceType = 1;
             }
             if ((o = entry.getPropertyValue("BinaryEKey")) != null) {
                 BinaryEKey = Boolean.parseBoolean(o.toString());
@@ -1117,14 +1122,14 @@ public class Device extends JposDevice implements Runnable{
      */
     private Exception initPort() {
         try {
-            if (DeviceType == 0) {
+            if (OwnPort != null) {
                 try {
                     OutStream = new TcpClientIOProcessor(this, ID);
                 } catch (JposException e) {}
             }
             else
                 OutStream = null;
-            if (DeviceType >= 0 && OutStream == null) {
+            if (OwnPort == null && OutStream == null) {
                 SerialIOProcessor ser;
                 OutStream = ser = new SerialIOProcessor(this, ID);
                 ser.setParameters(Baudrate, Databits, Stopbits, Parity);
