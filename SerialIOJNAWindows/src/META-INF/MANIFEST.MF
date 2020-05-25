@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Class-Path: jna-5.5.0.jar jna-platform-5.5.0.jar jpos114.jar JavaPOS-SPF
+ .jar
+

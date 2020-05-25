@@ -1,3 +1,4 @@
+de.gmxhome.conrad.JNAWindows
 de.gmxhome.conrad.jpos.jpos_base
 de.gmxhome.conrad.jpos.jpos_base.cashdrawer
 de.gmxhome.conrad.jpos.jpos_base.cat
@@ -14,6 +15,8 @@ de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay
 de.gmxhome.conrad.jpos.jpos_base.scale
 de.gmxhome.conrad.jpos.jpos_base.scanner
 de.gmxhome.conrad.jpos.jpos_base.toneindicator
+de.gmxhome.conrad.jSerialComm
+de.gmxhome.conrad.jSSC
 SampleCAT
 SampleCoinDispenser
 SampleCombiDevice

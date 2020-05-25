@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Class-Path: jpos114.jar jSerialComm-2.6.2.jar log4j-1.2.17.jar JavaPOS-S
+ PF.jar
+

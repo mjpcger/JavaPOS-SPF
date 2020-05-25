@@ -34,7 +34,6 @@ public class JSCSerial implements SerialIOAdapter {
 
     /**
      * Constructor. Creates communication adapter.
-     * @throws IOException If the operating system is not supported by JnaSerial.
      */
     public JSCSerial() {
         SerialIOExecutor = null;
