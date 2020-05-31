@@ -618,8 +618,11 @@ public class Device extends JposDevice implements Runnable{
                 return;
             }
         }
-        else
+        else if (DeviceIsOffline) {
+            DeviceIsOffline = false;
+            handlePowerStateEvent(JposConst.JPOS_SUE_POWER_ONLINE);
             retry[0] = 0;
+        }
         if (DeviceIsOffline) {
             abortAllCommands(cmd);
         }
