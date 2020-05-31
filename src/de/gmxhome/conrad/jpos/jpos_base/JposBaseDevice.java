@@ -474,11 +474,6 @@ public class JposBaseDevice {
                 else if (!SerialIOAdapterClass.equals(o.toString()))
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "SerialIOAdapterClass of different device entries of a physical device must match");
             }
-            else if (SerialIOAdapterClass == null) {
-                SerialIOAdapterClass = System.getProperty("java.version").split("\\.")[0].equals("1") ?
-                        "de.gmxhome.conrad.jSSC.JSSCSerial" :
-                        "de.gmxhome.conrad.jSerialComm.JSCSerial";
-            }
             // Device class specific entries, common for all implementations
             if (DrawerBeepVolume != null && (o = entry.getPropertyValue("DrawerBeepVolume")) != null) {
                 DrawerBeepVolume = Integer.parseInt(o.toString());

@@ -33,6 +33,11 @@ public class SerialIOProcessor extends UniqueIOProcessor {
     static Constructor NewSerialPort;
 
     static {
+        if (SerialIOAdapterClass == null) {
+            SerialIOAdapterClass = System.getProperty("java.version").split("\\.")[0].equals("1") ?
+                    "de.gmxhome.conrad.jSSC.JSSCSerial" :
+                    "de.gmxhome.conrad.jSerialComm.JSCSerial";
+        }
         try {
             NewSerialPort = Class.forName(SerialIOAdapterClass).getConstructor();
         } catch (ClassNotFoundException e) {
