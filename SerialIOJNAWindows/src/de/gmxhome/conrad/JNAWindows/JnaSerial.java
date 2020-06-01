@@ -87,7 +87,7 @@ public class JnaSerial implements SerialIOAdapter {
         checkOpened(false);
         Port = port;
         WinNT.HANDLE hd = Kernel32Lib.CreateFile("\\\\.\\" + Port,
-                WinNT.GENERIC_READ|WinNT.GENERIC_WRITE, 0, null, WinNT.OPEN_EXISTING, 0, null);
+                WinNT.GENERIC_READ|WinNT.GENERIC_WRITE, 0, null, WinNT.OPEN_EXISTING, WinNT.FILE_FLAG_OVERLAPPED, null);
         if (hd.equals(WinBase.INVALID_HANDLE_VALUE)) {
             int error = Kernel32Lib.GetLastError();
             if (error == WinError.ERROR_FILE_NOT_FOUND)
@@ -157,8 +157,11 @@ public class JnaSerial implements SerialIOAdapter {
         if (ov.hEvent == null)
             throw new IOException("Read event creation returned error code " + Kernel32Lib.GetLastError());
         try {
-            if (!(Kernel32Lib.ReadFile(hd, received.getByteBuffer(0, count), count, null, ov)))
-                throw new IOException("Read returned error code " + Kernel32Lib.GetLastError());
+            if (!(Kernel32Lib.ReadFile(hd, received.getByteBuffer(0, count), count, null, ov))) {
+                int code = Kernel32Lib.GetLastError();
+                if (code != WinError.ERROR_IO_PENDING)
+                    throw new IOException("Read returned error code " + code);
+            }
             if (!Kernel32Lib.GetOverlappedResult(hd, ov, receicedBytes, true))
                 throw new IOException("GetOverlappedResult returned error code " + Kernel32Lib.GetLastError());
         } finally {
@@ -183,8 +186,11 @@ public class JnaSerial implements SerialIOAdapter {
             if (ov.hEvent == null)
                 throw new IOException("Write event creation error " + Kernel32Lib.GetLastError());
             try {
-                if (!Kernel32Lib.WriteFile(hd, memory.getByteBuffer(actpos, actlen), actlen, null, ov))
-                    throw new IOException("WriteFile returned error code " + Kernel32Lib.GetLastError());
+                if (!Kernel32Lib.WriteFile(hd, memory.getByteBuffer(actpos, actlen), actlen, null, ov)) {
+                    int code = Kernel32Lib.GetLastError();
+                    if (code != WinError.ERROR_IO_PENDING)
+                        throw new IOException("WriteFile returned error code " + Kernel32Lib.GetLastError());
+                }
                 if (!Kernel32Lib.GetOverlappedResult(hd, ov, sentBytes, true))
                     throw new IOException("GetOverlappedResult returned error code " + Kernel32Lib.GetLastError());
             } finally {

@@ -1356,6 +1356,8 @@ public class POSPrinterService extends JposBase implements POSPrinterService114 
         checkEnabled();
         Device.check(bitmapNumber < 1 || bitmapNumber > 20, JposConst.JPOS_E_ILLEGAL, "BitmapNumber out of range: " + bitmapNumber);
         Device.checkMember(station, new long[]{POSPrinterConst.PTR_S_RECEIPT, POSPrinterConst.PTR_S_SLIP}, JposConst.JPOS_E_ILLEGAL, "Invalid station: " + station);
+        Device.check(station == POSPrinterConst.PTR_S_RECEIPT && (!Data.CapRecBitmap || !Data.CapRecPresent), JposConst.JPOS_E_ILLEGAL, "No bitmap support for receipt");
+        Device.check(station == POSPrinterConst.PTR_S_SLIP && (!Data.CapSlpBitmap || !Data.CapSlpPresent), JposConst.JPOS_E_ILLEGAL, "No bitmap support for slip");
         Device.check(width != POSPrinterConst.PTR_BM_ASIS && width <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid width: " + width);
         Device.check(!Device.member(alignment, new long[]{POSPrinterConst.PTR_BM_LEFT, POSPrinterConst.PTR_BM_CENTER, POSPrinterConst.PTR_BM_RIGHT}) && alignment < 0, JposConst.JPOS_E_ILLEGAL, "Invalid alignment: " + alignment);
         POSPrinterInterface.setBitmap(bitmapNumber, station, fileName == null ? "" : fileName, width, alignment);

@@ -480,6 +480,7 @@ public interface POSPrinterInterface extends JposBaseInterface {
      *     <li>Device is enabled,</li>
      *     <li>bitmapNumber is between 1 and 20,</li>
      *     <li>station is S_RECEIPT or S_SLIP,</li>
+     *     <li>selected station and bitmap printing on selected station supported,</li>
      *     <li>fileName is not null,</li>
      *     <li>width is BM_ASIS or &gt; 0,</li>
      *     <li>alignment is BM_LEFT, BM_CENTER, BM_RIGHT or &ge; 0.</li>
