@@ -1,3 +1,4 @@
+#!/usr/bin/wish
 # Copyright 2019 Martin Conrad
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -308,9 +309,9 @@ pack [ttk::labelframe .sc.f.tx -text "Item"] -expand 1 -fill both -side left
 pack [ttk::labelframe .sc.f.up -text "Price"] -expand 1 -fill both -side left
 pack [ttk::labelframe .sc.f.wg -text "Weight"] -expand 1 -fill both -side left
 pack [ttk::labelframe .sc.f.tot -text "Total"] -expand 1 -fill both -side left
-font configure ansifixed -size 16 -weight bold
-pack [ttk::label .sc.f.tx.l -textvariable Text -width 13 -font ansifixed -anchor w] -expand 1 -fill y
-pack [ttk::label .sc.f.up.l -textvariable PriceTx -width 7 -font ansifixed -anchor e] -expand 1 -fill both
-pack [ttk::label .sc.f.wg.l -textvariable WeightTx -width 5 -font ansifixed -anchor e] -expand 1 -fill y
-pack [ttk::label .sc.f.tot.l -textvariable TotalTx -width 7 -font ansifixed -anchor e] -expand 1 -fill y
+font configure TkFixedFont -size 16 -weight bold
+pack [ttk::label .sc.f.tx.l -textvariable Text -width 13 -font TkFixedFont -anchor w] -expand 1 -fill y
+pack [ttk::label .sc.f.up.l -textvariable PriceTx -width 7 -font TkFixedFont -anchor e] -expand 1 -fill both
+pack [ttk::label .sc.f.wg.l -textvariable WeightTx -width 5 -font TkFixedFont -anchor e] -expand 1 -fill y
+pack [ttk::label .sc.f.tot.l -textvariable TotalTx -width 7 -font TkFixedFont -anchor e] -expand 1 -fill y
 updateWeightPrice
