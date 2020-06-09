@@ -1,4 +1,7 @@
-#!/usr/bin/wish
+#!/bin/sh
+# In case of Unix-like OS, run it with xterm\
+test "$Debug" = "" && exec wish $0 || exec xterm -e wish $0
+
 # Copyright 2019 Martin Conrad
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -300,7 +303,9 @@ pack [ttk::labelframe .dev.set -text Port] -fill y -side left
 pack [ttk::entry .dev.set.e -textvariable Port -width 10] -expand 1 -fill both
 pack [ttk::labelframe .dev.port -text "Scale Dialog"] -fill y -side left
 pack [ttk::combobox .dev.port.e -textvariable Protocol -width 2 -values {"02" "04"}] -expand 1 -fill both
-pack [ttk::button .dev.dbg -text Debug -width 6 -command debug] -expand 1 -fill both -side left
+if {[catch {console hide}] == 0} {
+    pack [ttk::button .dev.dbg -text Debug -width 6 -command debug] -expand 1 -fill both -side left
+}
 pack [ttk::button .dev.st -text Start -width 6 -command startstop] -expand 1 -fill both -side left
 pack [ttk::labelframe .sc -text Scale] -expand 1 -fill both
 pack [ttk::scale .sc.sc -from 0 -to 5000 -command setWeightPrice] -expand 1 -fill x

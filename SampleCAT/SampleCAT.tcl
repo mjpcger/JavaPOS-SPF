@@ -1,4 +1,7 @@
-#!/usr/bin/wish
+#!/bin/sh
+# In case of Unix-like OS, run it with xterm\
+test "$Debug" = "" && exec wish $0 || exec xterm -e wish $0
+
 # Copyright 2019 Martin Conrad
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,7 +53,9 @@ set Buffer {}
 pack [ttk::labelframe .co -text Setup] -fill both
 pack [ttk::labelframe .co.port -text "Port"] -fill y -side left
 pack [ttk::entry .co.port.e -textvariable Port -width 5] -fill both -side left
-pack [ttk::button .co.debug -text "Debug On" -command debug] -fill y -side left
+if {[catch {console hide}] == 0} {
+    pack [ttk::button .co.debug -text "Debug On" -command debug] -fill y -side left
+}
 pack [ttk::button .co.startstop -text "Start" -command startstop] -expand 1 -side left -fill both
 # Terminal
 pack [ttk::labelframe .di -text Display] -fill both

@@ -1,4 +1,7 @@
-#!/usr/bin/wish
+#!/bin/sh
+# In case of Unix-like OS, run it with xterm\
+test "$Debug" = "" && exec wish $0 || exec xterm -e wish $0
+
 # Copyright 2019 Martin Conrad
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,7 +67,9 @@ pack [ttk::labelframe .a.p -text Port] -expand 1 -fill both -side left
 pack [ttk::entry .a.p.e -textvariable Port -width 10 -validate key -validatecommand {portCheck %P}] -expand 1 -fill both
 pack [ttk::labelframe .a.m -text Mode] -expand 1 -fill both -side left
 pack [ttk::combobox .a.m.b -state disabled -values {"9600,n,8,2" "9600,e,8,1" "9600,o,8,1"}] -expand 1 -fill both
-pack [ttk::button .a.dbg -text "Debug On" -width 5 -command setDebug] -fill both -expand 1 -side left
+if {[catch {console hide}] == 0} {
+    pack [ttk::button .a.dbg -text "Debug On" -width 5 -command setDebug] -fill both -expand 1 -side left
+}
 pack [ttk::button .a.st -text Start -width 5 -command startstop] -fill both -expand 1 -side left
 
 set Port 65432

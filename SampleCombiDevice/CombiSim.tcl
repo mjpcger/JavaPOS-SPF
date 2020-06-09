@@ -1,4 +1,7 @@
-#!/usr/bin/wish
+#!/bin/sh
+# In case of Unix-like OS, run it with xterm\
+test "$Debug" = "" && exec wish $0 || exec xterm -e wish $0
+
 # Copyright 2019 Martin Conrad
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -443,7 +446,9 @@ pack [ttk::entry .sd.s.p.e -textvariable ComPort] -expand 1 -anchor w
 pack [ttk::labelframe .sd.s.b -text Mode] -side left -fill y -anchor w
 pack [ttk::entry .sd.s.b.e -textvariable Mode] -expand 1 -anchor w
 pack [ttk::button .sd.s.x -textvariable StartStop -width 5 -command startStop] -expand 1 -side right -fill both -anchor e
-pack [ttk::button .sd.s.d -text Debug -width 5 -command debug] -expand 1 -side right -fill both -anchor e
+if {[catch {console hide}] == 0} {
+    pack [ttk::button .sd.s.d -text Debug -width 5 -command debug] -expand 1 -side right -fill both -anchor e
+}
 set EditKey 0
 set ButtonKey 0
 pack [ttk::frame .ds] -expand 1 -fill both
