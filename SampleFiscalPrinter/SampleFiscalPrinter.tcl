@@ -1,3 +1,4 @@
+#!/usr/bin/wish
 # Copyright 2019 Martin Conrad
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -447,7 +448,7 @@ proc updateParamSetter {} {
 	global ParamSetter Period VAT HdLine TrLine TaxPayerID SerialNo GrandTotal Memory Total CurrentTotal Position ReceiptState Training LineCount CurrentCodepage Till Cashier DisplayLine1 DisplayLine2 At Blocked JournalBuffer JournalValueLength LastFrameSent
 	
 	set fd [open $ParamSetter w]
-	fconfigure $fd -encoding $CurrentCodepage
+	fconfigure $fd -encoding $CurrentCodepage -translation binary
 	puts $fd {# Current period, 0: pre-fiscal, MaxPeriod: block}
 	puts $fd "set Period $Period"
 	puts $fd {# Up to 4 VAT rates, unused rate set to any negative value}

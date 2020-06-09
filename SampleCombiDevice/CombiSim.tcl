@@ -1,3 +1,4 @@
+#!/usr/bin/wish
 # Copyright 2019 Martin Conrad
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -434,7 +435,7 @@ proc updateKeyValue {} {
 
 # Setup GUI
 wm title . "Combi Device"
-font create trackfont -family ansifixed -size 7 -weight normal
+font create trackfont -family TkFixedFont -size 7 -weight normal
 pack [ttk::frame .sd] -expand 1 -fill both
 pack [ttk::labelframe .sd.s -text Settings] -expand 1 -fill both -side left
 pack [ttk::labelframe .sd.s.p -text Port] -side left -fill y -anchor w
@@ -474,9 +475,9 @@ pack [ttk::frame .m.t3b] -expand 1 -fill both
 pack [ttk::labelframe .m.t3b.t3 -text {Track 3}] -fill both -side left
 pack [ttk::entry .m.t3b.t3.e -textvariable Track3 -width $Track3size -font trackfont -validate key -validatecommand {validateTrack1 %S %P $Track3size}] -expand 1 -fill y -anchor w -side left
 pack [ttk::button .m.t3b.b -text "Read" -width 4 -command msrData] -expand 1 -fill both -side left
-font configure ansifixed -size 36 -weight bold
+font configure TkFixedFont -size 36 -weight bold
 pack [ttk::labelframe .di -text Display] -fill both
-pack [text .di.sp -width 20 -height $TextLineCount -borderwidth 2 -state disabled -font ansifixed]
+pack [text .di.sp -width 20 -height $TextLineCount -borderwidth 2 -state disabled -font TkFixedFont]
 .di.sp tag add Normal end
 .di.sp tag configure Normal -foreground black -background white
 .di.sp tag add Reverse end
