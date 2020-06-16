@@ -325,8 +325,6 @@ public class Device extends JposDevice{
         props.DeviceServiceVersion = 1014001;
     }
 
-    private final Byte SocketSync = new Byte((byte)0);
-
     /**
      * Method to write data synchronized.
      * @param request Data to be sent.
@@ -334,7 +332,7 @@ public class Device extends JposDevice{
      */
     protected void sendCommand(byte[] request) throws JposException
     {
-        synchronized(SocketSync) {
+        synchronized(this) {
             if (OwnPort == null && UsbToSerial && !((SerialIOProcessor) OutStream).exists())
                 throw new JposException(0, "Device plugged off");
             if (OutStream == null) {
@@ -350,7 +348,7 @@ public class Device extends JposDevice{
     }
 
     private void handleCommunicationError(String msg) {
-        synchronized(SocketSync) {
+        synchronized(this) {
             closePort(false);
             InIOError = true;
         }
@@ -360,10 +358,7 @@ public class Device extends JposDevice{
     }
 
     private void setStatus(byte val) {
-        boolean oldstate = DrawerOpen;
-        synchronized (this) {
-            DrawerOpen = (val & RespDrawerBit) == RespDrawerBit;
-        }
+        DrawerOpen = (val & RespDrawerBit) == RespDrawerBit;
         val &= ~RespDrawerBit;
         if (!(PrinterError = val == RespError)) {
             if (val == RespCover) {
@@ -467,13 +462,13 @@ public class Device extends JposDevice{
 
         private void recvState(boolean firsttime) {
             UniqueIOProcessor out;
-            synchronized (SocketSync) {
+            synchronized (this) {
                 out = OutStream;
             }
             int timeout = PollDelay * MaxRetry + MaxRetry + RequestTimeout;
             if (out == null) {
                 OfflineWaiter.suspend(firsttime ? timeout : SyncObject.INFINITE);
-                synchronized (SocketSync) {
+                synchronized (this) {
                     out = OutStream;
                 }
                 if (out == null)
