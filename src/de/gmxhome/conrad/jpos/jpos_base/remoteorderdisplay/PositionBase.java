@@ -17,13 +17,14 @@
 package de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
+import de.gmxhome.conrad.jpos.jpos_base.UnitOutputRequest;
 import jpos.JposConst;
 import jpos.JposException;
 
 /**
  * Output request class for remote order display methods using starting row and column parameters.
  */
-public class PositionBase extends OutputRequest {
+public class PositionBase extends UnitOutputRequest {
     /**
      * Retrieves parameter row of remote order display method. See UPOS specification of the specific method for further
      * information.
@@ -62,6 +63,6 @@ public class PositionBase extends OutputRequest {
         RemoteOrderDisplayProperties data = (RemoteOrderDisplayProperties) (Props);
         RemoteOrderDisplayService svc = (RemoteOrderDisplayService) data.EventSource;
         int errorunits = svc.validateCoordinates(getUnits(), getRow(), getColumn());
-        svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
+        svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits, EndSync != null);
     }
 }

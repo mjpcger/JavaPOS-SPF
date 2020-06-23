@@ -67,7 +67,7 @@ public class CopyVideoRegion extends AreaBase {
             checkUnitsOnline();
             checkAreaValid();
             int errorunits = svc.validateCoordinates(getUnits(), getTargetRow() + getHeight() - 1, getTargetColumn() + getWidth() - 1);
-            svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
+            svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits, EndSync != null);
         }
         svc.RemoteOrderDisplayInterface.copyVideoRegion(this);
     }

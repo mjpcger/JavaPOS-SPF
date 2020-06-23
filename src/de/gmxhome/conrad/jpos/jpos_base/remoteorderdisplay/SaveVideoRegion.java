@@ -55,7 +55,7 @@ public class SaveVideoRegion extends AreaBase {
             checkUnitsOnline();
             checkAreaValid();
             int errorunits = svc.validateBufferID(getUnits(), getBufferId());
-            svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + getBufferId() + " for units specified by " + errorunits);
+            svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + getBufferId() + " for units specified by " + errorunits, EndSync != null);
         }
         svc.RemoteOrderDisplayInterface.saveVideoRegion(this);
     }

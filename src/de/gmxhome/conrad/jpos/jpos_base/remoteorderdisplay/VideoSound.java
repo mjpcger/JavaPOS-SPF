@@ -22,7 +22,7 @@ import jpos.*;
 /**
  * Output request executor for RemoteOrderDisplay method VideoSound.
  */
-public class VideoSound extends OutputRequest {
+public class VideoSound extends UnitOutputRequest {
     /**
      * Retrieves parameter function of method VideoSound. See UPOS specification for further information.
      * @return  Value of method parameter frequency.
@@ -82,7 +82,7 @@ public class VideoSound extends OutputRequest {
         if (EndSync == null) {
             checkUnitsOnline();
             int errunits = svc.validateTone(getUnits());
-            svc.check(errunits != 0, errunits, JposConst.JPOS_E_FAILURE, 0, "Selected units do not support video sound: " + errunits);
+            svc.check(errunits != 0, errunits, JposConst.JPOS_E_FAILURE, 0, "Selected units do not support video sound: " + errunits, EndSync != null);
         }
         svc.RemoteOrderDisplayInterface.videoSound(this);
     }

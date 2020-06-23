@@ -412,6 +412,83 @@ public class JposBase implements BaseService {
     }
 
     /**
+     * Check method for device classes that support a subsystem of up to 32 units.
+     * Checks condition and if true, sets error properties and throws JposException. This method may only be used if
+     * it is absolutely clear that the check is made within a synchronous UPOS method. If this is not the case, use
+     * method <i>check</i>with additional parameter <i>synchrone</i>. This is almost always the case in methods that
+     * have one parameter derived from JposOutputRequest. You can check whether property <i>EndSync</i> of the request
+     * equals null (asynchronous call) or not (synchronous call).
+     * @param condition Error condition.
+     * @param units     Units to be filled in ErrorUnits.
+     * @param error     Error code.
+     * @param ext       Extended error code.
+     * @param message   Error message, same message for ErrorString and JposException.
+     * @throws JposException If Error condition is true.
+     */
+    public void check(boolean condition, int units, int error, int ext, String message) throws JposException {
+        check(condition, units, error, ext, message, true);
+    }
+
+    /**
+     * Check method for device classes that support a subsystem of up to 32 units.
+     * Checks condition and if true, sets error properties and throws JposException.
+     * @param condition Error condition.
+     * @param units     Units to be filled in ErrorUnits.
+     * @param error     Error code.
+     * @param ext       Extended error code.
+     * @param message   Error message, same message for ErrorString and JposException.
+     * @param synchrone True if method has been called synchronously, false otherwise.
+     * @throws JposException If Error condition is true.
+     */
+    public void check(boolean condition, int units, int error, int ext, String message, boolean synchrone) throws JposException {
+        if (condition) {
+            if (synchrone) {
+                Props.ErrorUnits = units;
+                logSet("ErrorUnits");
+                Props.ErrorString = message;
+                logSet("ErrorString");
+            }
+            else {
+                Props.EventUnits = units;
+                logSet("EventUnits");
+                Props.EventString = message;
+                logSet("EventString");
+            }
+            throw new JposException(error, ext, message);
+        }
+    }
+
+    /**
+     * Check method for device classes that support a subsystem of up to 32 units.
+     * Check condition and if true, sets error properties and throws JposException. If the error cause
+     * @param cause     The Exception that caused the error. A value of null can be passed if no error occurred.
+     * @param units     Units to be filled in ErrorUnits.
+     * @param error     Error code.
+     * @param ext       Extended error code.
+     * @param synchrone True if method has been called synchronously, false otherwise.
+     * @throws JposException If Error condition is true.
+     */
+    public void check(Exception cause, int units, int error, int ext, boolean synchrone) throws JposException {
+        if (cause != null) {
+            if (synchrone) {
+                Props.ErrorUnits = units;
+                logSet("ErrorUnits");
+                Props.ErrorString = cause.getMessage();
+                logSet("ErrorString");
+            }
+            else {
+                Props.EventUnits = units;
+                logSet("EventUnits");
+                Props.EventString = cause.getMessage();
+                logSet("EventString");
+            }
+            if (cause instanceof JposException)
+                throw (JposException) cause;
+            throw new JposException(error, ext, cause.getMessage(), cause);
+        }
+    }
+
+    /**
      * Get common property OutputID, see UPOS specification
      * @return property value
      * @throws JposException See UPOS specification, property

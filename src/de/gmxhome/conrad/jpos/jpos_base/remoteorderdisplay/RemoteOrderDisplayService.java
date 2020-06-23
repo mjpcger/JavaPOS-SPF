@@ -19,6 +19,7 @@ package de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.RemoteOrderDisplayService114;
+import org.apache.log4j.Level;
 
 /**
  * RemoteOrderDisplay service implementation. For more details about getter, setter and method implementations,
@@ -393,9 +394,9 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     @Override
     public int getVideoDataCount() throws JposException {
         checkOpened();
-        RemoteOrderDisplayInterface.videoDataCount();
-        logGet("VideoDataCount");
-        return Data.VideoDataCount;
+        int count = RemoteOrderDisplayInterface.unitDataCount();
+        Device.log(Level.DEBUG, Props.LogicalName + ": VideoDataCount: " + count);
+        return count;
     }
 
     @Override
@@ -508,25 +509,6 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
                 result |= 1 << index;
         }
         return result;
-    }
-
-    /**
-     * Check condition and if true, sets error properties and throws JposException.
-     * @param condition Error condition
-     * @param units     Units to be filled in ErrorUnits
-     * @param error     Error code
-     * @param ext       Extended error code
-     * @param message   Error message, same message for ErrorString and JposException
-     * @throws JposException If Error condition is true
-     */
-    public void check(boolean condition, int units, int error, int ext, String message) throws JposException {
-        if (condition) {
-            Data.ErrorUnits = units;
-            logSet("ErrorUnits");
-            Data.ErrorString = message;
-            logSet("ErrorString");
-            throw new JposException(error, ext, message);
-        }
     }
 
     /**
@@ -667,7 +649,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
         logCall("SetCursor");
     }
 
-    private void doItTrans(OutputRequest request, String what) throws JposException {
+    private void doItTrans(UnitOutputRequest request, String what) throws JposException {
         if (TransactionCommand != null)
             TransactionCommand.addMethod(request);
         else  if (!callNowOrLater(request)) {

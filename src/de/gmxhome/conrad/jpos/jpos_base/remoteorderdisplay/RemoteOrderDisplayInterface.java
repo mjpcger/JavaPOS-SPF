@@ -26,25 +26,6 @@ import jpos.*;
  */
 public interface RemoteOrderDisplayInterface extends JposBaseInterface {
     /**
-     * Clears input for all units specified by bits.
-     * @param bit   Bit mask indicating which video units to operate on
-     * @throws JposException Should not be thrown
-     */
-    public void clearInput(int bit) throws JposException;
-
-    /**
-     * Clears output for all units specified by bits.
-     * @param bit   Bit mask indicating which video units to operate on
-     * @throws JposException Should not be thrown
-     */
-    public void clearOutput(int bit) throws JposException;
-
-    /**
-     * Computes VideoDataCount by counting enqueued data events where Unit equals CurrentUnitID.
-     */
-    public void videoDataCount();
-
-    /**
      * Final part of setting AutoToneDuration. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>

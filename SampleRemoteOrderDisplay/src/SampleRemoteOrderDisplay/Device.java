@@ -267,7 +267,7 @@ public class Device extends JposDevice implements Runnable {
             disp.EventSource.logSet("UnitsOnline");
         }
         try {
-            handleEvent(new RemoteOrderDisplayStatusUpdateEvent(disp.EventSource, JposConst.JPOS_PS_OFF_OFFLINE, UnitOnline));
+            handleEvent(new UnitStatusUpdateEvent(disp.EventSource, JposConst.JPOS_PS_OFF_OFFLINE, UnitOnline));
         } catch (JposException e1) {
             e1.printStackTrace();
         } finally {
@@ -301,7 +301,7 @@ public class Device extends JposDevice implements Runnable {
             RemoteOrderDisplayProperties disp = (RemoteOrderDisplayProperties)getClaimingInstance(ClaimedRemoteOrderDisplay, 0);
             if ((disp.EventType & RemoteOrderDisplayConst.ROD_DE_TOUCH_UP) != 0 && data[2] == UpCmd ||
                     (disp.EventType & RemoteOrderDisplayConst.ROD_DE_TOUCH_DOWN) != 0 && data[2] == DownCmd) {
-                handleEvent(new RemoteOrderDisplayDataEvent(disp.EventSource, (((row << 8) + col) << 16) + type, unit));
+                handleEvent(new UnitDataEvent(disp.EventSource, (((row << 8) + col) << 16) + type, unit));
             }
             data = null;
         }
@@ -363,7 +363,7 @@ public class Device extends JposDevice implements Runnable {
             }
             if (disp.UnitsOnline != oldUnitsOnline) {
                 disp.EventSource.logSet("UnitsOnline");
-                handleEvent(new RemoteOrderDisplayStatusUpdateEvent(disp.EventSource, status, unit));
+                handleEvent(new UnitStatusUpdateEvent(disp.EventSource, status, unit));
             }
         }
         return null;
@@ -430,7 +430,7 @@ public class Device extends JposDevice implements Runnable {
                     UnitsOnline = UnitOnline;
                     EventSource.logSet("UnitsOnline");
                     if (UnitOnline != 0) {
-                        handleEvent(new RemoteOrderDisplayStatusUpdateEvent(EventSource, JposConst.JPOS_PS_ONLINE, UnitOnline));
+                        handleEvent(new UnitStatusUpdateEvent(EventSource, JposConst.JPOS_PS_ONLINE, UnitOnline));
                     }
                 }
             }
@@ -442,9 +442,9 @@ public class Device extends JposDevice implements Runnable {
             int nowonline = ~UnitsOnline & UnitOnline;
             UnitsOnline = UnitOnline;
             if (nowoffline != 0)
-                handleEvent(new RemoteOrderDisplayStatusUpdateEvent(EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE, nowoffline));
+                handleEvent(new UnitStatusUpdateEvent(EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE, nowoffline));
             if (nowonline != 0)
-                handleEvent(new RemoteOrderDisplayStatusUpdateEvent(EventSource, JposConst.JPOS_SUE_POWER_ONLINE, nowonline));
+                handleEvent(new UnitStatusUpdateEvent(EventSource, JposConst.JPOS_SUE_POWER_ONLINE, nowonline));
         }
 
         @Override
@@ -491,9 +491,10 @@ public class Device extends JposDevice implements Runnable {
         public void clearVideo(ClearVideo request) throws JposException {
             int color = ((request.getAttributes() >> 4) & 7) | BackgroundIntensity;
             int units = request.getUnits();
+            boolean synchrone = request.EndSync != null;
             for (int i = 0; i < Display.Unit.length; i++) {
                 if ((units & (1 << i)) != 0) {
-                    sendCheckCommand(request, String.format("%02dRC%02d%02d%02d%02d%02d%1d", i + 1, 1, 1, Display.Unit[i].Attribute[1].length, Display.Unit[i].Attribute.length, color, 1));
+                    sendCheckCommand(request, String.format("%02dRC%02d%02d%02d%02d%02d%1d", i + 1, 1, 1, Display.Unit[i].Attribute[1].length, Display.Unit[i].Attribute.length, color, 1, synchrone));
                     for (int l = 0; l < Display.Unit[i].Attribute.length; l++) {
                         for (int c = 0; c < Display.Unit[i].Attribute[l].length; c++) {
                             Display.Unit[i].Attribute[l][c].BackgroundColor = color;
@@ -520,6 +521,7 @@ public class Device extends JposDevice implements Runnable {
         public void clearVideoRegion(ClearVideoRegion request) throws JposException {
             int color = ((request.getAttributes() >> 4) & 7) | BackgroundIntensity;
             int units = request.getUnits();
+            boolean synchrone = request.EndSync != null;
             for (int i = 0; i < Display.Unit.length; i++) {
                 if ((units & (1 << i)) != 0) {
                     boolean clockInRegion = Display.Unit[i].SaveBuffer[0] != null && request.getRow() <= Display.Unit[i].ClockRow && Display.Unit[i].ClockRow < request.getRow() + request.getHeight();
@@ -527,13 +529,13 @@ public class Device extends JposDevice implements Runnable {
                         clockInRegion = false;
                     if (clockInRegion && Display.Unit[i].ClockSuspendTick == 0) {
                         while (WaitClockData.suspend(0)) ;
-                        sendCheckCommand(units, String.format("%02dST%02d%02d%1d%d", i + 1, 0, 0, 0, 0));
+                        sendCheckCommand(units, String.format("%02dST%02d%02d%1d%d", i + 1, 0, 0, 0, 0), synchrone);
                         WaitClockData.suspend(RequestTimeout);
                     }
                     sendCheckCommand(request, String.format("%02dRC%02d%02d%02d%02d%02d%1d", i + 1, request.getRow() + 1, request.getColumn() + 1, request.getWidth(), request.getHeight(), color, 1));
                     if (clockInRegion) {
                         updateRegion(request, i, Display.Unit[i].SaveBuffer[0], Display.Unit[i].ClockRow, Display.Unit[i].ClockColumn, true);
-                        sendCheckCommand(units, String.format("%02dST%02d%02d%1d%d", i + 1, Display.Unit[i].ClockRow + 1, Display.Unit[i].ClockColumn + 1, Display.Unit[i].ClockType, 1));
+                        sendCheckCommand(units, String.format("%02dST%02d%02d%1d%d", i + 1, Display.Unit[i].ClockRow + 1, Display.Unit[i].ClockColumn + 1, Display.Unit[i].ClockType, 1), synchrone);
                     }
                     for (int l = request.getRow(); l < request.getRow() + request.getHeight(); l++) {
                         for (int c = request.getColumn(); c < request.getColumn() + request.getWidth(); c++) {
@@ -583,15 +585,15 @@ public class Device extends JposDevice implements Runnable {
                     }
                 }
             }
-            Service.check(noregion != 0, noregion, JposConst.JPOS_E_EXTENDED, RemoteOrderDisplayConst.JPOS_EROD_NOREGION, "No region saved for buffer ID " + request.getBufferId() + " for units " + Integer.toString(noregion, 0x10));
-            Service.check(outofrange != 0, outofrange, JposConst.JPOS_E_ILLEGAL, 0, "Target Region out of range for units " + Integer.toString(outofrange, 0x10));
+            Service.check(noregion != 0, noregion, JposConst.JPOS_E_EXTENDED, RemoteOrderDisplayConst.JPOS_EROD_NOREGION, "No region saved for buffer ID " + request.getBufferId() + " for units " + Integer.toString(noregion, 0x10), request.EndSync != null);
+            Service.check(outofrange != 0, outofrange, JposConst.JPOS_E_ILLEGAL, 0, "Target Region out of range for units " + Integer.toString(outofrange, 0x10), request.EndSync != null);
             for (int i = 0; i < Display.Unit.length; i++) {
                 if ((request.getUnits() & (1 << i)) != 0) {
                     CharAttributes[][] range;
                     synchronized (Display.Unit[i].SaveBuffer) {
                         range = Display.Unit[i].SaveBuffer[request.getBufferId()];
                     }
-                    Service.check(range == null, 1 << i, JposConst.JPOS_E_EXTENDED, RemoteOrderDisplayConst.JPOS_EROD_NOREGION, "No region saved for buffer ID " + request.getBufferId() + " for unit " + Integer.toString(1 << i, 0x10));
+                    Service.check(range == null, 1 << i, JposConst.JPOS_E_EXTENDED, RemoteOrderDisplayConst.JPOS_EROD_NOREGION, "No region saved for buffer ID " + request.getBufferId() + " for unit " + Integer.toString(1 << i, 0x10), request.EndSync != null);
                     updateRegion(request, i, range, request.getTargetRow(), request.getTargetColumn(), false);
                 }
             }
@@ -632,7 +634,7 @@ public class Device extends JposDevice implements Runnable {
             }
         }
 
-        private void updateRegion(OutputRequest request, int u, DisplayContents.CharAttributes[][] range, int targetRow, int targetColumn, boolean clock) throws JposException {
+        private void updateRegion(UnitOutputRequest request, int u, DisplayContents.CharAttributes[][] range, int targetRow, int targetColumn, boolean clock) throws JposException {
             for (int l = 0; l < range.length; l++) {
                 for (int c = 0; c < range[l].length; c++) {
                     String s = "";
@@ -655,7 +657,7 @@ public class Device extends JposDevice implements Runnable {
             }
         }
 
-        private void drawLeftLinePart(OutputRequest request, int u, CharAttributes charAttributes, int targetRow, int targetColumn, int l, int c, boolean clock) throws JposException {
+        private void drawLeftLinePart(UnitOutputRequest request, int u, CharAttributes charAttributes, int targetRow, int targetColumn, int l, int c, boolean clock) throws JposException {
             if (charAttributes.LeftBorderColor != NOT_PRESENT) {
                 int color = charAttributes.LeftBorderColor % BLINKING;
                 int blinking = charAttributes.LeftBorderColor / BLINKING;
@@ -665,7 +667,7 @@ public class Device extends JposDevice implements Runnable {
             }
         }
 
-        private void drawRightLinePart(OutputRequest request, int u, CharAttributes charAttributes, int targetRow, int targetColumn, int l, int c, boolean clock) throws JposException {
+        private void drawRightLinePart(UnitOutputRequest request, int u, CharAttributes charAttributes, int targetRow, int targetColumn, int l, int c, boolean clock) throws JposException {
             if (charAttributes.RightBorderColor != NOT_PRESENT) {
                 int color = charAttributes.RightBorderColor % BLINKING;
                 int blinking = charAttributes.RightBorderColor / BLINKING;
@@ -675,7 +677,7 @@ public class Device extends JposDevice implements Runnable {
             }
         }
 
-        private void displayTextPart(OutputRequest request, int unit, CharAttributes attributes, int row, int column, String text, boolean clock) throws JposException {
+        private void displayTextPart(UnitOutputRequest request, int unit, CharAttributes attributes, int row, int column, String text, boolean clock) throws JposException {
             int fgcolor = attributes.ForegroundColor % BLINKING;
             int bgcolor = attributes.BackgroundColor;
             int blinking = attributes.ForegroundColor / BLINKING;
@@ -700,7 +702,7 @@ public class Device extends JposDevice implements Runnable {
             }
         }
 
-        private void drawTopLinePart(OutputRequest request, int u, CharAttributes charAttributes, int targetRow, int targetColumn, int l, int c, String s, boolean clock) throws JposException {
+        private void drawTopLinePart(UnitOutputRequest request, int u, CharAttributes charAttributes, int targetRow, int targetColumn, int l, int c, String s, boolean clock) throws JposException {
             int fgcolor;
             int blinking;
             if (charAttributes.TopBorderColor != NOT_PRESENT) {
@@ -715,7 +717,7 @@ public class Device extends JposDevice implements Runnable {
             }
         }
 
-        private void drawBottomLinePart(OutputRequest request, int u, CharAttributes charAttributes, int targetRow, int targetColumn, int l, int c, String s, boolean clock) throws JposException {
+        private void drawBottomLinePart(UnitOutputRequest request, int u, CharAttributes charAttributes, int targetRow, int targetColumn, int l, int c, String s, boolean clock) throws JposException {
             int fgcolor;
             int blinking;
             if (charAttributes.BottomBorderColor != NOT_PRESENT) {
@@ -940,15 +942,10 @@ public class Device extends JposDevice implements Runnable {
             }
         }
 
-        private void sendCheckCommand(OutputRequest request, String command) throws JposException {
+        private void sendCheckCommand(UnitOutputRequest request, String command) throws JposException {
             JposException e = sendCommand(command);
             if (e != null) {
-                RemoteOrderDisplayProperties data = (RemoteOrderDisplayProperties) request.Props;
-                data.ErrorUnits = request.getUnits();
-                data.EventSource.logSet("ErrorUnits");
-                data.ErrorString = e.getMessage();
-                data.EventSource.logSet("ErrorString");
-                throw e;
+                EventSource.check(e, request.getUnits(), e.getErrorCode(), e.getErrorCodeExtended(), request.EndSync != null);
             }
         }
 
@@ -1113,7 +1110,7 @@ public class Device extends JposDevice implements Runnable {
                     CharAttributes[][] underclock = getRange(u, sourceRow, sourceColumn, clock[0].length, 1);
                     Display.Unit[u].ClockRow = row;
                     Display.Unit[u].ClockColumn = column;
-                    OutputRequest request = new OutputRequest(this, 1 << u);
+                    UnitOutputRequest request = new UnitOutputRequest(this, 1 << u);
                     updateRegion(request, u, underclock, sourceRow, sourceColumn, true);
                     updateRegion(request, u, clock, row, column, true);
                     if (Display.Unit[u].ClockSuspendTick == 0) {
@@ -1139,15 +1136,14 @@ public class Device extends JposDevice implements Runnable {
             }
         }
 
-        private void sendCheckCommand(int units, String command) throws JposException {
+        private void sendCheckCommand(int units, String command, boolean synchrone) throws JposException {
             JposException e = sendCommand(command);
-            if (e != null) {
-                ErrorUnits = units;
-                EventSource.logSet("ErrorUnits");
-                ErrorString = e.getMessage();
-                EventSource.logSet("ErrorString");
-                throw e;
-            }
+            EventSource.check(e, units, e.getErrorCode(), e.getErrorCodeExtended(), synchrone);
+        }
+
+        // For simplification: Same method for use in synchronous methods only.
+        private void sendCheckCommand(int units, String command) throws JposException {
+            sendCheckCommand(units, command, true);
         }
 
         @Override

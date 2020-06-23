@@ -22,7 +22,7 @@ import jpos.*;
 /**
  * Output request executor for RemoteOrderDisplay method ClearVideo and base for method ClearVideoRegion.
  */
-public class ClearVideo extends OutputRequest {
+public class ClearVideo extends UnitOutputRequest {
     /**
      * Retrieves parameter attribute of method ClearVideo or ClearVideoRegion. see UPOS specification, chapter Remote
      * Order Display - General Information - Model: Blinking flag, intensity flag, background and foreground color flags.

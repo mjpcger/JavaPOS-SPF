@@ -161,6 +161,7 @@ public class JposBaseDevice {
      */
     protected JposBaseDevice(String id) {
         ID = id;
+        (EventSerializer = new SyncObject()).signal();
     }
 
     /**
@@ -693,6 +694,8 @@ public class JposBaseDevice {
         }
     }
 
+    private SyncObject EventSerializer;
+
     /**
      * Process the event queue. Fires StatusUpdateEvent events while
      * FreezeEvents = false
@@ -717,6 +720,7 @@ public class JposBaseDevice {
             JposStatusUpdateEvent stevent = null;
             JposDirectIOEvent dioevent = null;
             while(true) {
+                EventSerializer.suspend(SyncObject.INFINITE);
                 synchronized (Props.EventList) {
                     Props.EventProcessor = null;
                     if (Props.FreezeEvents || Props.EventList.size() == 0)
@@ -738,7 +742,9 @@ public class JposBaseDevice {
                     Props.EventCB.fireStatusUpdateEvent(stevent);
                     log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Status Update Event: [" + stevent.toLogString() + "]");
                 }
+                EventSerializer.signal();
             }
+            EventSerializer.signal();
         }
     }
 
@@ -779,6 +785,7 @@ public class JposBaseDevice {
             JposDataEvent dataevent = null;
             JposDirectIOEvent dioevent = null;
             while (true) {
+                EventSerializer.suspend(SyncObject.INFINITE);
                 synchronized (Props.DataEventList) {
                     Props.DataEventProcessor = null;
                     if (Props.FreezeEvents || Props.DataEventList.size() == 0)
@@ -825,7 +832,9 @@ public class JposBaseDevice {
                     Props.EventCB.fireDirectIOEvent(dioevent);
                     log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toLogString() + "]");
                 }
+                EventSerializer.signal();
             }
+            EventSerializer.signal();
         }
     }
 
@@ -866,6 +875,7 @@ public class JposBaseDevice {
             JposOutputCompleteEvent ocevent = null;
             JposDirectIOEvent dioevent = null;
             while (true) {
+                EventSerializer.suspend(SyncObject.INFINITE);
                 synchronized (Props.ErrorEventList) {
                     Props.ErrorEventProcessor = null;
                     if (Props.FreezeEvents || Props.ErrorEventList.size() == 0)
@@ -902,7 +912,9 @@ public class JposBaseDevice {
                     Props.EventCB.fireDirectIOEvent(dioevent);
                     log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toLogString() + "]");
                 }
+                EventSerializer.signal();
             }
+            EventSerializer.signal();
         }
     }
 

@@ -296,11 +296,6 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
     public boolean CapTransaction;
 
     /**
-     * UPOS property CurrentUnitID.
-     */
-    public int CurrentUnitID;
-
-    /**
      * Returns the lowest index of a unit specified by the given bitmask.
      * @param units A bitmask specifying one or more display units.
      * @return The lowest index where (units &amp; (1 &lt;&lt; index)) != 0.
@@ -315,34 +310,9 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
     }
 
     /**
-     * UPOS property ErrorString.
-     */
-    public String ErrorString;
-
-    /**
-     * UPOS property ErrorUnits.
-     */
-    public int ErrorUnits;
-
-    /**
-     * UPOS property EventString.
-     */
-    public String EventString;
-
-    /**
      * UPOS property EventType.
      */
     public int EventType;
-
-    /**
-     * UPOS property EventUnitID.
-     */
-    public int EventUnitID;
-
-    /**
-     * UPOS property EventUnits.
-     */
-    public int EventUnits;
 
     /**
      * UPOS property MapCharacterSet.
@@ -370,11 +340,6 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
     public int UnitsOnline;
 
     /**
-     * UPOS property VideoDataCount.
-     */
-    public int VideoDataCount;
-
-    /**
      * Constructor.
      *
      * @param dev Device index
@@ -389,17 +354,11 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
         super.initOnOpen();
         CapMapCharacterSet = CapMapCharacterSetDef;
         CapTransaction = CapTransactionDef;
-        ErrorString = "";
-        ErrorUnits = 0;
-        EventString = "";
         EventType = EventTypeDef;
-        EventUnitID = 0;
-        EventUnits = 0;
         MapCharacterSet = MapCharacterSetDef;
         Timeout = TimeoutDef;
         for (int i = Unit.length; --i >= 0;)
             Unit[i] = new UnitProperties();
-        VideoDataCount = 0;
     }
 
     @Override
@@ -428,125 +387,7 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
 
     @Override
     public JposOutputRequest newJposOutputRequest() {
-        return new OutputRequest(this, CurrentUnitID);
-    }
-
-    @Override
-    public void clearInput() throws JposException {
-        clearInput(CurrentUnitID);
-    }
-
-    @Override
-    public void clearOutput() throws JposException{
-        clearOutput(CurrentUnitID);
-    }
-
-    @Override
-    public void clearInput(int bit) throws JposException{
-        synchronized(DataEventList) {
-            for (int i = 0; i < DataEventList.size();) {
-                JposEvent ev = DataEventList.get(i);
-                i = conditionalDataEventRemoval(bit, i, ev);
-                i = conditionalInputErrorEventRemoval(bit, i, ev);
-            }
-        }
-        State = JposConst.JPOS_S_IDLE;
-        clearErrorProperties();
-    }
-
-    @Override
-    public void clearOutput(int bit) throws JposException {
-        synchronized(EventList) {
-            for (int i = 0; i < EventList.size();) {
-                i = conditionalOutputCompleteEventRemoval(bit, i);
-            }
-        }
-        synchronized(ErrorEventList) {
-            for (int i = 0; i < ErrorEventList.size();) {
-                i = conditionalOutputErrorEventRemoval(bit, i);
-            }
-        }
-        OutputRequest checker = new OutputRequest(this, bit);
-        checker.clearAll();
-        int remainingCommands = checker.countCommands();
-        if (State != JposConst.JPOS_S_IDLE && remainingCommands == 0) {
-            State = JposConst.JPOS_S_IDLE;
-            Device.log(Level.DEBUG, LogicalName + ": State <- " + JposConst.JPOS_S_IDLE);
-        }
-        else if (State != JposConst.JPOS_S_BUSY && remainingCommands != 0) {
-            State = JposConst.JPOS_S_BUSY;
-            Device.log(Level.DEBUG, LogicalName + ": State <- " + JposConst.JPOS_S_BUSY);
-        }
-        clearOutputErrorProperties();
-        if (FlagWhenIdle && remainingCommands != 0) {
-            FlagWhenIdle = false;
-            Device.log(Level.DEBUG, LogicalName + ": FlagWhenIdle <- " + FlagWhenIdleStatusValue);
-            Device.handleEvent(new JposStatusUpdateEvent(EventSource, FlagWhenIdleStatusValue));
-        }
-    }
-
-    private int conditionalOutputErrorEventRemoval(int bit, int i) {
-        RemoteOrderDisplayOutputErrorEvent event = (RemoteOrderDisplayOutputErrorEvent)ErrorEventList.get(i);
-        if ((event.Units & bit) != 0) {
-            ErrorEventList.remove(i);
-        }
-        else {
-            i++;
-        }
-        return i;
-    }
-
-    private int conditionalInputErrorEventRemoval(int bit, int i, JposEvent ev) {
-        if (ev instanceof RemoteOrderDisplayInputErrorEvent) {
-            RemoteOrderDisplayInputErrorEvent event = (RemoteOrderDisplayInputErrorEvent) ev;
-            if ((event.Units & bit) != 0) {
-                DataEventList.remove(i);
-            }
-            else {
-                i++;
-            }
-        }
-        return i;
-    }
-
-    private int conditionalDataEventRemoval(int bit, int i, JposEvent ev) {
-        if (ev instanceof RemoteOrderDisplayDataEvent) {
-            RemoteOrderDisplayDataEvent event = (RemoteOrderDisplayDataEvent) ev;
-            if ((event.Unit & bit) != 0) {
-                DataEventList.remove(i);
-                DataCount--;
-            }
-            else {
-                i++;
-            }
-        }
-        return i;
-    }
-
-    @Override
-    public void videoDataCount() {
-        VideoDataCount = 0;
-        synchronized(DataEventList) {
-            for (JposEvent ev : DataEventList) {
-                if (ev instanceof RemoteOrderDisplayDataEvent && ((RemoteOrderDisplayDataEvent)ev).Unit == CurrentUnitID) {
-                    VideoDataCount++;
-                }
-            }
-        }
-    }
-
-    private int conditionalOutputCompleteEventRemoval(int bit, int i) {
-        JposEvent ev = (JposEvent)EventList.get(i);
-        if (ev instanceof RemoteOrderDisplayOutputCompleteEvent) {
-            RemoteOrderDisplayOutputCompleteEvent event = (RemoteOrderDisplayOutputCompleteEvent) ev;
-            if ((event.Units & bit) != 0) {
-                EventList.remove(i);
-            }
-            else {
-                i++;
-            }
-        }
-        return i;
+        return new UnitOutputRequest(this, CurrentUnitID);
     }
 
     @Override

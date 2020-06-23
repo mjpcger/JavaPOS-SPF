@@ -16,12 +16,13 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay;
 
+import de.gmxhome.conrad.jpos.jpos_base.UnitOutputRequest;
 import jpos.*;
 
 /**
  * Output request executor for RemoteOrderDisplay method RestoreVideoRegion.
  */
-public class RestoreVideoRegion extends OutputRequest {
+public class RestoreVideoRegion extends UnitOutputRequest {
     /**
      * Retrieves parameter targetRow of method RestoreVideoRegion. See UPOS specification for further information.
      * @return  Value of method parameter targetRow.
@@ -71,9 +72,9 @@ public class RestoreVideoRegion extends OutputRequest {
         if (EndSync == null) {
             checkUnitsOnline();
             int errorunits = svc.validateCoordinates(getUnits(), getTargetRow(), getTargetColumn());
-            svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
+            svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits, EndSync != null);
             errorunits = svc.validateBufferID(getUnits(), getBufferId());
-            svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + getBufferId() + " for units specified by " + errorunits);
+            svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + getBufferId() + " for units specified by " + errorunits, EndSync != null);
         }
         svc.RemoteOrderDisplayInterface.restoreVideoRegion(this);
     }

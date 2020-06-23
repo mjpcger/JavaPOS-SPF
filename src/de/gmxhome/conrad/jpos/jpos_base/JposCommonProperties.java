@@ -141,6 +141,42 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     public String LogicalName;
 
     /**
+     * UPOS property CurrentUnitID. Must be initialized at least in initOnFirstEnable method of derived class, if
+     * UsesSubsystemUnits is true.
+     */
+    public int CurrentUnitID;
+
+    /**
+     * UPOS property ErrorString.
+     */
+    public String ErrorString;
+
+    /**
+     * UPOS property ErrorUnits.
+     */
+    public int ErrorUnits;
+
+    /**
+     * UPOS property EventString.
+     */
+    public String EventString;
+
+    /**
+     * UPOS property EventUnitID.
+     */
+    public int EventUnitID;
+
+    /**
+     * UPOS property EventUnits.
+     */
+    public int EventUnits;
+
+    /**
+     * UPOS property UnitsOnline.
+     */
+    public int UnitsOnline;
+
+    /**
      * Object for event callbacks. Passed by Open method.
      */
     public EventCallbacks EventCB;
@@ -203,6 +239,13 @@ public abstract class JposCommonProperties implements JposBaseInterface {
      * Specifies the device model the device supports. Default is ExclusiveYes.
      */
     public int ExclusiveUse = ExclusiveYes;
+
+    /**
+     * Specifies whether the device class supports use of subsystem units. If true, the service implements a device class
+     * that supports the properties EventUnitID, EventUnits, EventText, ErrorUnits, ErrorText and UnitsOnline. Currently,
+     * this restricts usage to device class BumpBar and RemoteOrderDisplay.
+     */
+    public boolean UsesSubsystemUnits = false;
 
     /**
      * Specifies whether first enable happened before.
@@ -273,6 +316,11 @@ public abstract class JposCommonProperties implements JposBaseInterface {
         PowerNotify = JposConst.JPOS_PN_DISABLED;
         FlagWhenIdle = false;
         AsyncMode = false;
+        ErrorString = "";
+        ErrorUnits = 0;
+        EventString = "";
+        EventUnitID = 0;
+        EventUnits = 0;
     }
 
     /**
@@ -296,6 +344,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
             DataEventList.clear();
             ErrorEventList.clear();
             FirstEnableHappened = true;
+            UnitsOnline = 0;
         }
         return res;
     }
@@ -464,6 +513,19 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     }
 
     @Override
+    public int unitDataCount() {
+        int count = 0;
+        synchronized(DataEventList) {
+            for (JposEvent ev : DataEventList) {
+                if (ev instanceof UnitDataEvent && ((UnitDataEvent)ev).Unit == CurrentUnitID) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    @Override
     public void claim(int timeout) throws JposException {
         initOnClaim();
         synchronized(Claiming) {
@@ -503,11 +565,11 @@ public abstract class JposCommonProperties implements JposBaseInterface {
             Claimed = false;
         }
         if (ExclusiveUse == JposCommonProperties.ExclusiveYes) {
-            synchronized (DataEventList) {
-                DataEventList.clear();
-                DataCount = 0;
-                clearDataProperties();
-            }
+                synchronized (DataEventList) {
+                    DataEventList.clear();
+                    DataCount = 0;
+                    clearDataProperties();
+                }
             synchronized (ErrorEventList) {
                 ErrorEventList.clear();
                 clearErrorProperties();
@@ -531,11 +593,46 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     @Override
     public void clearInput() throws JposException {
         synchronized (DataEventList) {
-            DataEventList.clear();
-            DataCount = 0;
+            if (UsesSubsystemUnits) {
+                for (int i = 0; i < DataEventList.size(); ) {
+                    JposEvent ev = DataEventList.get(i);
+                    i = conditionalDataEventRemoval(CurrentUnitID, i, ev);
+                    i = conditionalInputErrorEventRemoval(CurrentUnitID, i, ev);
+                }
+            } else {
+                DataEventList.clear();
+                DataCount = 0;
+            }
         }
         State = JposConst.JPOS_S_IDLE;
         clearErrorProperties();
+    }
+
+    private int conditionalInputErrorEventRemoval(int bit, int i, JposEvent ev) {
+        if (ev instanceof UnitInputErrorEvent) {
+            UnitInputErrorEvent event = (UnitInputErrorEvent) ev;
+            if ((event.Units & bit) != 0) {
+                DataEventList.remove(i);
+            }
+            else {
+                i++;
+            }
+        }
+        return i;
+    }
+
+    private int conditionalDataEventRemoval(int bit, int i, JposEvent ev) {
+        if (ev instanceof UnitDataEvent) {
+            UnitDataEvent event = (UnitDataEvent) ev;
+            if ((event.Unit & bit) != 0) {
+                DataEventList.remove(i);
+                DataCount--;
+            }
+            else {
+                i++;
+            }
+        }
+        return i;
     }
 
     @Override
@@ -553,20 +650,76 @@ public abstract class JposCommonProperties implements JposBaseInterface {
 
     @Override
     public void clearOutput() throws JposException {
-        synchronized (ErrorEventList) {
-            ErrorEventList.clear();
+        if (UsesSubsystemUnits) {
+            synchronized(EventList) {
+                for (int i = 0; i < EventList.size();) {
+                    i = conditionalOutputCompleteEventRemoval(CurrentUnitID, i);
+                }
+            }
+            synchronized(ErrorEventList) {
+                for (int i = 0; i < ErrorEventList.size();) {
+                    i = conditionalOutputErrorEventRemoval(CurrentUnitID, i);
+                }
+            }
+            UnitOutputRequest checker = new UnitOutputRequest(this, CurrentUnitID);
+            checker.clearAll();
+            int remainingCommands = checker.countCommands();
+            if (State != JposConst.JPOS_S_IDLE && remainingCommands == 0) {
+                State = JposConst.JPOS_S_IDLE;
+                Device.log(Level.DEBUG, LogicalName + ": State <- " + JposConst.JPOS_S_IDLE);
+            }
+            else if (State != JposConst.JPOS_S_BUSY && remainingCommands != 0) {
+                State = JposConst.JPOS_S_BUSY;
+                Device.log(Level.DEBUG, LogicalName + ": State <- " + JposConst.JPOS_S_BUSY);
+            }
+            clearOutputErrorProperties();
+            if (FlagWhenIdle && remainingCommands != 0) {
+                FlagWhenIdle = false;
+                Device.log(Level.DEBUG, LogicalName + ": FlagWhenIdle <- " + FlagWhenIdleStatusValue);
+                Device.handleEvent(new JposStatusUpdateEvent(EventSource, FlagWhenIdleStatusValue));
+            }
         }
-        newJposOutputRequest().clearOutput();
-        if (State != JposConst.JPOS_S_IDLE) {
-            State = JposConst.JPOS_S_IDLE;
-            EventSource.logSet("State");
+        else {
+            synchronized (ErrorEventList) {
+                ErrorEventList.clear();
+            }
+            newJposOutputRequest().clearOutput();
+            if (State != JposConst.JPOS_S_IDLE) {
+                State = JposConst.JPOS_S_IDLE;
+                EventSource.logSet("State");
+            }
+            clearOutputErrorProperties();
+            if (FlagWhenIdle) {
+                FlagWhenIdle = false;
+                EventSource.logSet("FlagWhenIdle");
+                Device.handleEvent(new JposStatusUpdateEvent(EventSource, FlagWhenIdleStatusValue));
+            }
         }
-        clearOutputErrorProperties();
-        if (FlagWhenIdle) {
-            FlagWhenIdle = false;
-            EventSource.logSet("FlagWhenIdle");
-            Device.handleEvent(new JposStatusUpdateEvent(EventSource, FlagWhenIdleStatusValue));
+    }
+
+    private int conditionalOutputErrorEventRemoval(int bit, int i) {
+        UnitOutputErrorEvent event = (UnitOutputErrorEvent)ErrorEventList.get(i);
+        if ((event.Units & bit) != 0) {
+            ErrorEventList.remove(i);
         }
+        else {
+            i++;
+        }
+        return i;
+    }
+
+    private int conditionalOutputCompleteEventRemoval(int bit, int i) {
+        JposEvent ev = (JposEvent)EventList.get(i);
+        if (ev instanceof UnitOutputCompleteEvent) {
+            UnitOutputCompleteEvent event = (UnitOutputCompleteEvent) ev;
+            if ((event.Units & bit) != 0) {
+                EventList.remove(i);
+            }
+            else {
+                i++;
+            }
+        }
+        return i;
     }
 
     @Override

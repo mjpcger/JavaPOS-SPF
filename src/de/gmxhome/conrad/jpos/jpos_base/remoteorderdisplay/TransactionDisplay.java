@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Output request executor for RemoteOrderDisplay method TransactionDisplay.
  */
-public class TransactionDisplay extends OutputRequest {
+public class TransactionDisplay extends UnitOutputRequest {
     /**
      * Retrieves parameter row of method TransactionDisplay. See UPOS specification for further information.
      * @return  Value of method parameter function.
@@ -39,14 +39,14 @@ public class TransactionDisplay extends OutputRequest {
     /**
      * List holds all outstanding output requests.
      */
-    List<OutputRequest> TransactionCommands = new ArrayList<OutputRequest>();
+    List<UnitOutputRequest> TransactionCommands = new ArrayList<UnitOutputRequest>();
 
     /**
      * Adds an output request to the request queue.
      * @param request Request to be enqueued.
      * @throws JposException if request is null (specifying synchronous method implementation).
      */
-    synchronized void addMethod(OutputRequest request) throws JposException {
+    synchronized void addMethod(UnitOutputRequest request) throws JposException {
         Props.Device.check(request == null, JposConst.JPOS_E_FAILURE, "Transaction mode not supported for synchronous implementation");
         TransactionCommands.add(request);
     }
@@ -68,7 +68,7 @@ public class TransactionDisplay extends OutputRequest {
         if (EndSync == null)
             checkUnitsOnline();
         ((RemoteOrderDisplayService)Props.EventSource).RemoteOrderDisplayInterface.transactionDisplay(this);
-        for (OutputRequest request : TransactionCommands) {
+        for (UnitOutputRequest request : TransactionCommands) {
             Device.check (Abort != null, JposConst.JPOS_E_FAILURE, "Transaction interrupted");
             request.invoke();
         }

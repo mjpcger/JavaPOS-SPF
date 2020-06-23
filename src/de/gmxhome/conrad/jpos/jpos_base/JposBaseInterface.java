@@ -364,4 +364,10 @@ public interface JposBaseInterface {
      * @throws JposException If an error occurs.
      */
     public void handlePowerStateOnEnable() throws JposException;
+
+    /**
+     * Counts enqueued data events of subsystem unit specified by CurrentUnitID.
+     * @return Number of enqueued data events from subsystem unit specified by CurrentUnitID.
+     */
+    public int unitDataCount();
 }

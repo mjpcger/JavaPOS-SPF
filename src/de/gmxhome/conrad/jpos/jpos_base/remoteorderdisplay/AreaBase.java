@@ -66,6 +66,6 @@ public class AreaBase extends PositionBase {
         RemoteOrderDisplayService svc = (RemoteOrderDisplayService) data.EventSource;
         int errorunits = svc.validateCoordinates(getUnits(), getRow(), getColumn());
         errorunits |= svc.validateCoordinates(getUnits(), getRow() + getHeight() - 1, getColumn() + getWidth() - 1);
-        svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
+        svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits, EndSync != null);
     }
 }
