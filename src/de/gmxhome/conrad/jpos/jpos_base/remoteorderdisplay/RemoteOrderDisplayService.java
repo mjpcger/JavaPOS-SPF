@@ -187,7 +187,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     public void setAutoToneDuration(int i) throws JposException {
         logPreSet("AutoToneDuration");
         checkOnline(Data.CurrentUnitID);
-        check(i < 0 || (i > 0 && !Data.CapTone), Data.CurrentUnitID, JposConst.JPOS_E_ILLEGAL, 0, "AutoToneDuration " + i + " invalid for unit " + Data.unitsToFirstIndex(Data.CurrentUnitID));
+        check(i < 0, Data.CurrentUnitID, JposConst.JPOS_E_ILLEGAL, 0, "AutoToneDuration " + i + " invalid for unit " + Data.unitsToFirstIndex(Data.CurrentUnitID));
         RemoteOrderDisplayInterface.autoToneDuration(i);
         logSet("AutoToneDuration");
     }

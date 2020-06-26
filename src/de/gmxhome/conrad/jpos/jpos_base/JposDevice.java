@@ -16,6 +16,7 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
+import de.gmxhome.conrad.jpos.jpos_base.bumpbar.BumpBarProperties;
 import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerProperties;
 import de.gmxhome.conrad.jpos.jpos_base.cat.CATProperties;
 import de.gmxhome.conrad.jpos.jpos_base.coindispenser.CoinDispenserProperties;
@@ -65,6 +66,7 @@ public class JposDevice extends JposBaseDevice {
     @Override
     public int noOfPropertySets() {
         return super.noOfPropertySets() +
+                getCount(BumpBars) +
                 getCount(CashDrawers) +
                 getCount(Keylocks) +
                 getCount(POSKeyboards) +
@@ -80,6 +82,61 @@ public class JposDevice extends JposBaseDevice {
                 getCount(ElectronicJournals) +
                 getCount(MICRs) +
                 getCount(FiscalPrinters);
+    }
+
+    /*
+     * BumpBar specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for BumpBar devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of bump bars the device service supports. Each
+     * list element contains a list of all property sets owned by BumpBarService
+     * objects belonging to the same bump bar.
+     */
+    public List<JposCommonProperties>[] BumpBars = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of bump bar property sets, one element for each bump bar the device service
+     * supports. Whenever a bump bar device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public BumpBarProperties[] ClaimedBumpBar;
+
+    /**
+     * Allocate device specific property set list for bump bar devices. One list must be allocated for each bump
+     * bar the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxBumpBar Maximum number of cash drawers that can be controlled by the physical device
+     */
+    protected void bumpBarInit(int maxBumpBar) {
+        if (BumpBars.length == 0 && maxBumpBar > 0) {
+            ClaimedBumpBar = new BumpBarProperties[maxBumpBar];
+            BumpBars = (List<JposCommonProperties>[])new List[maxBumpBar];
+            for (int i = 0; i < maxBumpBar; i++) {
+                BumpBars[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support bump bar services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(BumpBarProperties props) {
+    }
+
+    /**
+     * Returns device implementation of BumpBarProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of BumpBarProperties that matches the requirements of the corresponding device service.
+     */
+    public BumpBarProperties getBumpBarProperties(int index) {
+        return null;
     }
 
     /*

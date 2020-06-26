@@ -31,8 +31,7 @@ public interface RemoteOrderDisplayInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>The display specified by CurrentUnitID is online,</li>
-     *     <li>The new property value is positive,</li>
-     *     <li>CapTone is true of the new property value is 0.</li>
+     *     <li>The new property value is positive.</li>
      * </ul>
      *
      * @param duration New AutoToneDuration value

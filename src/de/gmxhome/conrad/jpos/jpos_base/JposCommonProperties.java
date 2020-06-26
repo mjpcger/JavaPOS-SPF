@@ -362,14 +362,23 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     /**
      * Clear error properties. Performed at the end of any error handling.
      */
-    public void clearErrorProperties() {}
+    public void clearErrorProperties() {
+        EventString = "";
+        EventUnits = 0;
+    }
 
     /**
-     * Clear output error properties. Performed during at the end of any output error handling. Must only be overwritten
-     * when different operation if necessary for input and output errors.
+     * Clear output error properties. Performed at the end of any output error handling. Must only be overwritten
+     * when different operation is necessary for input and output errors or if the device supports subsystem units.
      */
     public void clearOutputErrorProperties() {
-        clearErrorProperties();
+        if (UsesSubsystemUnits) {
+            ErrorString = "";
+            ErrorUnits = 0;
+        }
+        else {
+            clearErrorProperties();
+        }
     }
 
     /**

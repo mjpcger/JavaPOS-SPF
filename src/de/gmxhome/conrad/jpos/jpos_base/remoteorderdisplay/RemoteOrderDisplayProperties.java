@@ -374,13 +374,6 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
         return true;
     }
 
-    @Override
-    public void clearErrorProperties() {
-        super.clearErrorProperties();
-        EventString = "";
-        EventUnits = 0;
-    }
-
     /*
      * Interface part of property set
      */

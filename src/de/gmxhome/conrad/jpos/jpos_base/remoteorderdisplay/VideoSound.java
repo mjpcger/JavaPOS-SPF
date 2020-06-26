@@ -24,7 +24,7 @@ import jpos.*;
  */
 public class VideoSound extends UnitOutputRequest {
     /**
-     * Retrieves parameter function of method VideoSound. See UPOS specification for further information.
+     * Retrieves parameter frequency of method VideoSound. See UPOS specification for further information.
      * @return  Value of method parameter frequency.
      */
     public int getFrequency() {
@@ -54,7 +54,7 @@ public class VideoSound extends UnitOutputRequest {
     private int NumberOfCycles;
 
     /**
-     * Retrieves parameter function of method VideoSound. See UPOS specification for further information.
+     * Retrieves parameter interSoundWait of method VideoSound. See UPOS specification for further information.
      * @return  Value of method parameter interSoundWait.
      */
     public int getInterSoundWait() {
@@ -74,6 +74,10 @@ public class VideoSound extends UnitOutputRequest {
      */
     public VideoSound(JposCommonProperties props, int units, int frequency, int duration, int numberOfCycles, int interSoundWait) {
         super(props, units);
+        Frequency = frequency;
+        Duration = duration;
+        NumberOfCycles = numberOfCycles;
+        InterSoundWait = interSoundWait;
     }
 
     @Override
