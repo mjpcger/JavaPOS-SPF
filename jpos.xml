@@ -261,14 +261,31 @@
 		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
 		<prop name="Port" value="127.0.0.1:45678"/>
 	</JposEntry>
-	<!-- Test Sample Remote Order Display Entries. Values referencing the port must match -->
+	<!-- Test Sample subsystem device Entries. Values referencing the port must match -->
 	<JposEntry logicalName="TestRODisplay">
-		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay.RemoteOrderDisplayService" factoryClass="SampleRemoteOrderDisplay.RemoteOrderDisplayFactory"/>
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay.RemoteOrderDisplayService" factoryClass="SampleSubsystemDevice.RemoteOrderDisplayFactory"/>
 		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
 		<jpos version="1.14.1" category="RemoteOrderDisplay"/>
-		<product url="http://conrad.gmxhome.de" name="JPOS Services For RemoteOrderDisplay of Sample Remote Order Display" description="Sample Remote Order Display Service For Remote Order Display Simulator"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For RemoteOrderDisplay of Sample Subsystem Device" description="Sample Remote Order Display Service For Remote Order Display Simulator"/>
 		<!--JposDevice required global properties, once for each physical device-->
 		<prop name="LoggerName" value="SampleRemoteOrderDisplayTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="DevIndex" value="0"/>
+		<!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+		<prop name="Port" value="127.0.0.1:43434"/>
+	</JposEntry>
+	<JposEntry logicalName="TestBumpBar">
+		<creation serviceClass="de.gmxhome.conrad.jpos.jpos_base.bumpbar.BumpBarService" factoryClass="SampleSubsystemDevice.BumpBarFactory"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos version="1.14.1" category="BumpBar"/>
+		<product url="http://conrad.gmxhome.de" name="JPOS Services For BumpBar of Sample Subsystem Device" description="Sample Bump Bar Service For Subsystem Device Simulator"/>
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="SampleBumpBarTest"/>
 		<prop name="LogFilePath" value="logfile.log"/>
 		<prop name="LogLevel" value="trace"/>
 		<!--Optional global property, must only be set once for all devices-->

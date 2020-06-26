@@ -90,6 +90,9 @@ for {set cv 1} {$cv <= $DispCount} {incr cv} {
 	pack [ttk::frame .d.l$cv.f] -expand 1 -anchor w
 	set CanvasActiveAfter$cv ""
 	pack [ttk::checkbutton .d.l$cv.f.cb -text "Present" -variable CanvasActive$cv -onvalue 1 -offvalue 0 -command "clearLater $cv"] -side left -anchor w
+	for {set bt 1} {$bt <= 8} {incr bt} {
+	    pack [ttk::button .d.l$cv.f.bt$bt -text "F$bt" -command "button $cv $bt" -width 2] -side left -anchor w
+	}
 	pack [set CurrentCanvas [canvas .d.l$cv.c -height [expr $DispHeight*$charheight] -width [expr $DispWidth*$charwidth] -bg white]]
 	bind $CurrentCanvas <ButtonPress-1> "buttonDown $cv %x %y"
 	bind $CurrentCanvas <ButtonRelease-1> "buttonUp $cv %x %y"
@@ -114,6 +117,18 @@ proc setCursor {x y color} {
         $CurrentCanvas create line $halfwidth 0 $halfwidth $charheight -width 1 -tag "cursortag coltags$colorcode blinktags" -fill $colorcode
 	    $CurrentCanvas move cursortag [expr $charwidth * ($y - 1) + 2] [expr $charheight * ($x - 1) + 2]
         moveout
+    }
+}
+
+# Bump bar key presses
+proc button {d k} {
+    upvar #0 CanvasActive$d ca
+    global Fd
+    if $ca {
+        catch {
+            puts -nonewline $Fd [format "%02dK%02d\3" $d $k]
+        }
+        puts "F$k on $d"
     }
 }
 
