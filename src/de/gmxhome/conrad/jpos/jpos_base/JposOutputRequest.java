@@ -449,6 +449,12 @@ public class JposOutputRequest implements Runnable {
         return new JposStatusUpdateEvent(Props.EventSource, Props.FlagWhenIdleStatusValue);
     }
 
+    /**
+     * Helper class for methods where support for asynchronous operation has been added. Since such final parts of a
+     * method typically cannot return an object derived from JposOutputRequest because of their method signature, such
+     * methods throw an OkException after successful validation. The service can catch and retrieve the JposOutputRequest
+     * object from the OkException and invoke the real final part synchronously or asynchronously as usual.
+     */
     public class OkException extends JposException {
         /**
          * get JposOutputRequest this exception belongs to.
@@ -466,6 +472,10 @@ public class JposOutputRequest implements Runnable {
         }
     }
 
+    /**
+     * Creates and throws an OkException that contains its superclass as JposOutputRequest.
+     * @throws JposException    OkException containing output request for final synchronous or asynchronous processing.
+     */
     public void throwRequest() throws JposException {
         throw new OkException();
     }
