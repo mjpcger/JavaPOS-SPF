@@ -214,7 +214,7 @@ public class Device extends JposDevice implements Runnable{
 
     /**
      * Constructor, Stores communication target. Communication target can be a COM port or a TCP
-     * tagret. Valid COM port specifiers differ between operating systems, e.g. on Windows, COM1
+     * target. Valid COM port specifiers differ between operating systems, e.g. on Windows, COM1
      * can be a valid communication target while on Linux, /dev/ttyS0 might specify the same target.
      * Format of TCP targets is <i>IpAddress</i>:<i>Port</i>, e.g. 10.11.12.13:45678.
      * @param port COM port or TCP target.

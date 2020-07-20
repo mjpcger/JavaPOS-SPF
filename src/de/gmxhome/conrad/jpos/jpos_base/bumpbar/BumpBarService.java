@@ -45,7 +45,7 @@ public class BumpBarService extends JposBase implements BumpBarService114 {
     };
 
     /**
-     * Instance of a class implementing the RemoteOrderDisplayInterface for remote order display specific setter and method calls bound
+     * Instance of a class implementing the BumpBarInterface for bump bar specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public BumpBarInterface BumpBarInterface;

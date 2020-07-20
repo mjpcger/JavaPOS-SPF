@@ -551,7 +551,6 @@ public class JposBaseDevice {
             }
     }
 
-
     /**
      * Enqueues or fires status update event. If FreezeEvent is false, the event will be fired immediately. Otherwise it will
      * be enqueued and fired after FreezeEvents will be reset. In case of sharable devices, the event will be fired to all
@@ -749,8 +748,8 @@ public class JposBaseDevice {
     }
 
     /**
-     * Process the event queue. Fires DataEvent and ErrorEvent events while
-     * FreezeEvents = false and DataEventEnabled = true
+     * Process the event queue. Fires StatusUpdateEvent events while
+     * FreezeEvents = false.
      *
      * @param dev Property set to be used for event processing
      * @throws JposException If <i>EventFirer</i> object cannot be created.

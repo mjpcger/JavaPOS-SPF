@@ -271,6 +271,16 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     public boolean AllowDeprecatedMethods = false;
 
     /**
+     * Synchronization object for delayed status update event firing.
+     */
+    SyncObject DelayedStatusUpdateEventWaiter = new SyncObject();
+
+    /**
+     * Delayed status update event for later firing.
+     */
+    DelayedStatusUpdateEvent BufferedEvent = null;
+
+    /**
      * List holding asynchronous output requests whenever service is in error state.
      */
     public List<JposOutputRequest> SuspendedCommands = new ArrayList<JposOutputRequest>();

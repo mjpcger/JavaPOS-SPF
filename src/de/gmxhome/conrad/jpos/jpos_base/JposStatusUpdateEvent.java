@@ -156,8 +156,8 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
     }
 
     /**
-     * Checks whether event must be blocked due to missing status support or .
-     * Currently only power status update events will be blocked if PowerNotify
+     * Checks whether event must be blocked due to missing or delayed status support.
+     * Currently power status update events will be blocked if PowerNotify
      * is disabled.
      * @return true if event must be blocked.
      */

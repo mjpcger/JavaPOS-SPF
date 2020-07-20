@@ -18,21 +18,27 @@ package de.gmxhome.conrad.jpos.jpos_base;
 
 import de.gmxhome.conrad.jpos.jpos_base.bumpbar.BumpBarProperties;
 import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerProperties;
+import de.gmxhome.conrad.jpos.jpos_base.gate.GateProperties;
 import de.gmxhome.conrad.jpos.jpos_base.cat.CATProperties;
 import de.gmxhome.conrad.jpos.jpos_base.coindispenser.CoinDispenserProperties;
 import de.gmxhome.conrad.jpos.jpos_base.electronicjournal.ElectronicJournalProperties;
 import de.gmxhome.conrad.jpos.jpos_base.fiscalprinter.FiscalPrinterProperties;
+import de.gmxhome.conrad.jpos.jpos_base.itemdispenser.ItemDispenserProperties;
 import de.gmxhome.conrad.jpos.jpos_base.keylock.KeylockProperties;
+import de.gmxhome.conrad.jpos.jpos_base.lights.LightsProperties;
 import de.gmxhome.conrad.jpos.jpos_base.linedisplay.LineDisplayProperties;
 import de.gmxhome.conrad.jpos.jpos_base.micr.MICRProperties;
+import de.gmxhome.conrad.jpos.jpos_base.motionsensor.MotionSensorProperties;
 import de.gmxhome.conrad.jpos.jpos_base.msr.MSRProperties;
 import de.gmxhome.conrad.jpos.jpos_base.poskeyboard.POSKeyboardProperties;
 import de.gmxhome.conrad.jpos.jpos_base.posprinter.POSPrinterProperties;
 import de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay.RemoteOrderDisplayProperties;
 import de.gmxhome.conrad.jpos.jpos_base.scale.ScaleProperties;
 import de.gmxhome.conrad.jpos.jpos_base.scanner.ScannerProperties;
+import de.gmxhome.conrad.jpos.jpos_base.signaturecapture.SignatureCaptureProperties;
 import de.gmxhome.conrad.jpos.jpos_base.toneindicator.ToneIndicatorProperties;
 import jpos.FiscalPrinterConst;
+import jpos.SignatureCapture;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,20 +74,25 @@ public class JposDevice extends JposBaseDevice {
         return super.noOfPropertySets() +
                 getCount(BumpBars) +
                 getCount(CashDrawers) +
-                getCount(Keylocks) +
-                getCount(POSKeyboards) +
-                getCount(Scanners) +
-                getCount(ToneIndicators) +
-                getCount(LineDisplays) +
-                getCount(MSRs) +
-                getCount(Scales) +
+                getCount(CATs) +
                 getCount(CoinDispensers) +
+                getCount(ElectronicJournals) +
+                getCount(FiscalPrinters) +
+                getCount(Gates) +
+                getCount(ItemDispensers) +
+                getCount(Keylocks) +
+                getCount(Lightss) +
+                getCount(LineDisplays) +
+                getCount(MICRs) +
+                getCount(MotionSensors) +
+                getCount(MSRs) +
+                getCount(POSKeyboards) +
                 getCount(POSPrinters) +
                 getCount(RemoteOrderDisplays) +
-                getCount(CATs) +
-                getCount(ElectronicJournals) +
-                getCount(MICRs) +
-                getCount(FiscalPrinters);
+                getCount(Scales) +
+                getCount(Scanners) +
+                getCount(SignatureCaptures) +
+                getCount(ToneIndicators);
     }
 
     /*
@@ -959,6 +970,281 @@ public class JposDevice extends JposBaseDevice {
      * @return Instance of FiscalPrinterProperties that matches the requirements of the corresponding device service.
      */
     public FiscalPrinterProperties getFiscalPrinterProperties(int index) {
+        return null;
+    }
+
+    /*
+     * Lights specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for Lights devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of lights the service supports. Each
+     * list element contains a list of all property sets owned by LightsService
+     * objects belonging to the same lights.
+     */
+    public List<JposCommonProperties>[] Lightss = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of lights property sets, one element for each lights the device service
+     * supports. Whenever a lights device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public LightsProperties[] ClaimedLights;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support lights services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(LightsProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for lights. One list must be allocated for each
+     * lights device the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxLights Maximum number of lights that can be controlled by the physical device
+     */
+    protected void lightsInit(int maxLights) {
+        if (Lightss.length == 0 && maxLights > 0) {
+            ClaimedLights = new LightsProperties[maxLights];
+            Lightss = (List<JposCommonProperties>[])new List[maxLights];
+            for (int i = 0; i < maxLights; i++) {
+                Lightss[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of LightsProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of LightsProperties that matches the requirements of the corresponding device service.
+     */
+    public LightsProperties getLightsProperties(int index) {
+        return null;
+    }
+
+    /*
+     * MotionSensor specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for MotionSensor devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of motion sensors the service supports. Each
+     * list element contains a list of all property sets owned by MotionSensorService
+     * objects belonging to the same motion sensor.
+     */
+    public List<JposCommonProperties>[] MotionSensors = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of motion sensor property sets, one element for each motion sensor the device service
+     * supports. Whenever a motion sensor device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public MotionSensorProperties[] ClaimedMotionSensor;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support motion sensor services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(MotionSensorProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for motion sensors. One list must be allocated for each
+     * motion sensor the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxMotionSensor Maximum number of motion sensors that can be controlled by the physical device
+     */
+    protected void motionSensorInit(int maxMotionSensor) {
+        if (MotionSensors.length == 0 && maxMotionSensor > 0) {
+            ClaimedMotionSensor = new MotionSensorProperties[maxMotionSensor];
+            MotionSensors = (List<JposCommonProperties>[])new List[maxMotionSensor];
+            for (int i = 0; i < maxMotionSensor; i++) {
+                MotionSensors[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of MotionSensorProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of MotionSensorProperties that matches the requirements of the corresponding device service.
+     */
+    public MotionSensorProperties getMotionSensorProperties(int index) {
+        return null;
+    }
+
+    /*
+     * Gate specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for Gate devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of gates the service supports. Each
+     * list element contains a list of all property sets owned by GateService
+     * objects belonging to the same gate.
+     */
+    public List<JposCommonProperties>[] Gates = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of gate property sets, one element for each gate the device service
+     * supports. Whenever a gate device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public GateProperties[] ClaimedGate;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support gate services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(GateProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for gates. One list must be allocated for each
+     * gate the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxGate Maximum number of gates that can be controlled by the physical device
+     */
+    protected void gateInit(int maxGate) {
+        if (Gates.length == 0 && maxGate > 0) {
+            ClaimedGate = new GateProperties[maxGate];
+            Gates = (List<JposCommonProperties>[])new List[maxGate];
+            for (int i = 0; i < maxGate; i++) {
+                Gates[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of GateProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of GateProperties that matches the requirements of the corresponding device service.
+     */
+    public GateProperties getGateProperties(int index) {
+        return null;
+    }
+
+    /*
+     * ItemDispenser specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for ItemDispenser devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of item dispensers the service supports. Each
+     * list element contains a list of all property sets owned by ItemDispenserService
+     * objects belonging to the same item dispenser.
+     */
+    public List<JposCommonProperties>[] ItemDispensers = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of item dispenser property sets, one element for each item dispenser the device service
+     * supports. Whenever an item dispenser device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public ItemDispenserProperties[] ClaimedItemDispenser;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support item dispenser services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(ItemDispenserProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for item dispensers. One list must be allocated for each
+     * item dispenser the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxItemDispenser Maximum number of item dispensers that can be controlled by the physical device
+     */
+    protected void itemDispenserInit(int maxItemDispenser) {
+        if (ItemDispensers.length == 0 && maxItemDispenser > 0) {
+            ClaimedItemDispenser = new ItemDispenserProperties[maxItemDispenser];
+            ItemDispensers = (List<JposCommonProperties>[])new List[maxItemDispenser];
+            for (int i = 0; i < maxItemDispenser; i++) {
+                ItemDispensers[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of ItemDispenserProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of ItemDispenserProperties that matches the requirements of the corresponding device service.
+     */
+    public ItemDispenserProperties getItemDispenserProperties(int index) {
+        return null;
+    }
+
+    /*
+     * SignatureCapture specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for SignatureCapture devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of signature capture devices the service supports. Each
+     * list element contains a list of all property sets owned by SignatureCaptureService
+     * objects belonging to the same signature capture device.
+     */
+    public List<JposCommonProperties>[] SignatureCaptures = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of signature capture property sets, one element for each signature capture device the device service
+     * supports. Whenever a signature capture device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public SignatureCaptureProperties[] ClaimedSignatureCapture;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support signature capture services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(SignatureCaptureProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for signature capture devices. One list must be allocated for each
+     * signature capture device the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxSignatureCapture Maximum number of signature capture devices that can be controlled by the physical device
+     */
+    protected void signatureCaptureInit(int maxSignatureCapture) {
+        if (SignatureCaptures.length == 0 && maxSignatureCapture > 0) {
+            ClaimedSignatureCapture = new SignatureCaptureProperties[maxSignatureCapture];
+            SignatureCaptures = (List<JposCommonProperties>[])new List[maxSignatureCapture];
+            for (int i = 0; i < maxSignatureCapture; i++) {
+                SignatureCaptures[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of SignatureCaptureProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of SignatureCaptureProperties that matches the requirements of the corresponding device service.
+     */
+    public SignatureCaptureProperties getSignatureCaptureProperties(int index) {
         return null;
     }
 }
