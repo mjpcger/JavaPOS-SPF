@@ -318,6 +318,7 @@ public class JposBase implements BaseService {
         logPreSet("PowerNotify");
         checkOpened();
         Device.check(Props.DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device just enabled");
+        Device.check(Props.Device.CapPowerReporting == JposConst.JPOS_PR_NONE && powerNotify != JposConst.JPOS_PN_DISABLED, JposConst.JPOS_E_ILLEGAL, "PowerReporting not supported");
         Device.checkMember(powerNotify, new long[]{JposConst.JPOS_PN_DISABLED, JposConst.JPOS_PN_ENABLED}, JposConst.JPOS_E_ILLEGAL, "Illegal value for PowerNotify");
         DeviceInterface.powerNotify(powerNotify);
         if (powerNotify == JposConst.JPOS_PN_DISABLED && Props.PowerState != JposConst.JPOS_PS_UNKNOWN) {

@@ -63,9 +63,10 @@ public interface JposBaseInterface {
      * <ul>
      *     <li>Device has not been closed,</li>
      *     <li>Device is not enabled,</li>
-     *     <li>powerNotify is JPOS_PN_DISABLED or JPOS_PN_ENABLED.</li>
+     *     <li>powerNotify is PN_DISABLED or PN_ENABLED,</li>
+     *     <li>CapPowerReporting is not PR_NONE or powerNotify is PN_DISABLED.</li>
      * </ul>
-     * If powerNotify equals JPOS_PN_DISABLED, PowerState will be set to JPOS_PS_UNKNOWN after this method
+     * If powerNotify equals PN_DISABLED, PowerState will be set to PS_UNKNOWN after this method
      * returns.
      *
      * @param powerNotify New property value
@@ -131,7 +132,7 @@ public interface JposBaseInterface {
      *     <li>Device has not been closed,</li>
      *     <li>The device is not claimed,</li>
      *     <li>ExclusiveUse dos not equal ExclusiveNo,</li>
-     *     <li>timeout is negative not equal to JPOS_FOREVER.</li>
+     *     <li>timeout is negative not equal to FOREVER.</li>
      * </ul>
      *
      * @param timeout see UPOS specification, method Claim
