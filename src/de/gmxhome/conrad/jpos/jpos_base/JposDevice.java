@@ -31,6 +31,7 @@ import de.gmxhome.conrad.jpos.jpos_base.micr.MICRProperties;
 import de.gmxhome.conrad.jpos.jpos_base.motionsensor.MotionSensorProperties;
 import de.gmxhome.conrad.jpos.jpos_base.msr.MSRProperties;
 import de.gmxhome.conrad.jpos.jpos_base.poskeyboard.POSKeyboardProperties;
+import de.gmxhome.conrad.jpos.jpos_base.pospower.POSPowerProperties;
 import de.gmxhome.conrad.jpos.jpos_base.posprinter.POSPrinterProperties;
 import de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay.RemoteOrderDisplayProperties;
 import de.gmxhome.conrad.jpos.jpos_base.scale.ScaleProperties;
@@ -87,6 +88,7 @@ public class JposDevice extends JposBaseDevice {
                 getCount(MotionSensors) +
                 getCount(MSRs) +
                 getCount(POSKeyboards) +
+                getCount(POSPowers) +
                 getCount(POSPrinters) +
                 getCount(RemoteOrderDisplays) +
                 getCount(Scales) +
@@ -311,6 +313,61 @@ public class JposDevice extends JposBaseDevice {
      * @return Instance of POSKeyboardProperties that matches the requirements of the corresponding device service.
      */
     public POSKeyboardProperties getPOSKeyboardProperties(int index) {
+        return null;
+    }
+
+    /*
+     * POSPower specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for POSPower devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of POS power devices  the device service supports. Each
+     * list element contains a list of all property sets owned by POSPowerService
+     * objects belonging to the same POS power device.
+     */
+    public List<JposCommonProperties>[] POSPowers = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of POS power property sets, one element for each POS power device the device service
+     * supports. Whenever a POS power device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public POSPowerProperties[] ClaimedPOSPower;
+
+    /**
+     * Allocate device specific property set list for POS power devices. One list must be allocated for each POS power
+     * device the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxPower Maximum number of POS power devices that can be controlled by the physical device
+     */
+    protected void pOSPowerInit(int maxPower) {
+        if (POSPowers.length == 0 && maxPower > 0) {
+            ClaimedPOSPower = new POSPowerProperties[maxPower];
+            POSPowers = (List<JposCommonProperties>[])new List[maxPower];
+            for (int i = 0; i < maxPower; i++) {
+                POSPowers[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support POS power services.
+     *
+     * @param props Property set for setting the propperty defaults
+     */
+    public void changeDefaults(POSPowerProperties props) {
+    }
+
+    /**
+     * Returns device implementation of POSPowerProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of POSPowerProperties that matches the requirements of the corresponding device service.
+     */
+    public POSPowerProperties getPOSPowerProperties(int index) {
         return null;
     }
 

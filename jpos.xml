@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE JposEntries PUBLIC "-//JavaPOS//DTD//EN" "jcl.dtd">
 <JposEntries>
+	<!-- Test POSPower Entry, implements POSPower -->
+	<JposEntry logicalName="TestPOSPower">
+		<creation factoryClass="SamplePOSPower.POSPowerFactory" serviceClass="de.gmxhome.conrad.jpos.jpos_base.pospower.POSPowerService"/>
+		<vendor url="http://conrad.gmxhome.de" name="Martin Conrad"/>
+		<jpos category="POSPower" version="1.14.1"/>
+		<product description="JASPAR based service implementation for POSPower of sample POSPower device" name="JPOS Services For POSPower of sample POSPower device" />
+		<!--JposDevice required global properties, once for each physical device-->
+		<prop name="LoggerName" value="SampleFiscalPrinterTest"/>
+		<prop name="LogFilePath" value="logfile.log"/>
+		<prop name="LogLevel" value="trace"/>
+		<!--Optional global property, must only be set once for all devices-->
+		<prop name="LogFilePattern" value=".yyyyMMdd"/>
+		<prop name="LoggerFormat" value="%d{HH:mm:ss,SSS} %-5p [%t]: %m%n"/>
+		<!--Other JposDevice required properties, once for each logical device-->
+		<prop name="SecondsToFinish" value="5"/>
+	</JposEntry>
 	<!-- Test FiscalPrinter Entry, implements FiscalPrinter, ElectronicJournal, LineDisplay and CashDrawer -->
 	<JposEntry logicalName="TestFiscalDrawer">
 		<creation factoryClass="SampleFiscalPrinter.CashDrawerFactory" serviceClass="de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerService"/>
