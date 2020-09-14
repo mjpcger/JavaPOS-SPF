@@ -31,8 +31,8 @@ import javax.swing.*;
  * Implementation of a JposDevice based implementation for a sample implemented in SampleUdpDevice.tcl that becomes
  * a JavaPOS CashDrawer device services in combination with the CashDrawerServer class.
  * The simulator supports the following commands:<ul>
- *     <li/> 'S': Status request. Sends back '0' if drawer is closed, otherwise '1'.
- *     <li/> 'O': Opens the drawer. Sends back the new status which is always '1'.
+ *     <li> 'S': Status request. Sends back '0' if drawer is closed, otherwise '1'.</li>
+ *     <li> 'O': Opens the drawer. Sends back the new status which is always '1'.</li>
  * </ul>
  * All frames have a length of 1 byte. Communication will be made with UDP sockets.<br>
  * Jpos property <i>Port</i> will be used to specify the target socket (ip:port).<br>
@@ -105,10 +105,8 @@ public class Device extends JposDevice implements Runnable {
         try {
             if (UseClientIO)
                 ((UdpClientIOProcessor) (Target = new UdpClientIOProcessor(this, ID))).setParam(OwnPort);
-            else {
-                ((UdpIOProcessor) (Target = new UdpIOProcessor(this))).setParameters(OwnPort, Integer.MAX_VALUE);
-                Target.setTarget(ID);
-            }
+            else
+                ((UdpIOProcessor) (Target = new UdpIOProcessor(this, OwnPort))).setTarget(ID);
             Target.open(Offline);
             Offline = false;
         } catch (JposException e) {

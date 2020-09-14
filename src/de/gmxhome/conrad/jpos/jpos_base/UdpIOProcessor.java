@@ -37,17 +37,17 @@ import java.util.List;
  * <i>DatagramChannel</i>.<br>
  * Keep in mind: To allow correct message processing, the implementation has been made as follows:
  * <ul>
- *     <li/> After open, before the first message has been received, getSource() will return 0.0.0.0:0.
- *     <li/> After the first message has been received, getSource() will always return the address of the sender of the
- *     last read message. After calling flush(), getSource() will return 0.0.0.0:0 again.
- *     <li/> In case of a multi-threaded application, ensure to synchronize read() and the corresponding getSource()
- *     call to ensure that the message will be assigned to the correct source.
- *     <li/> Before sending the first message, setTarget() must be used to set the target IP and port.
- *     <li/> If a response to an incoming message shall be sent, you can use setTarget(getSource) as long as no other
- *     message has been read.
- *     <li/> The target set by setTarget() is valid as long as another target will be set. In case of a multi-threaded
+ *     <li> After open, before the first message has been received, getSource() will return 0.0.0.0:0.</li>
+ *     <li> After the first message has been received, getSource() will always return the address of the sender of the
+ *     last read message. After calling flush(), getSource() will return 0.0.0.0:0 again.</li>
+ *     <li> In case of a multi-threaded application, ensure to synchronize read() and the corresponding getSource()
+ *     call to ensure that the message will be assigned to the correct source.</li>
+ *     <li> Before sending the first message, setTarget() must be used to set the target IP and port.</li>
+ *     <li> If a response to an incoming message shall be sent, you can use setTarget(getSource) as long as no other
+ *     message has been read.</li>
+ *     <li> The target set by setTarget() is valid as long as another target will be set. In case of a multi-threaded
  *     application, ensure to synchronize setTarget() and the corresponding write() call to ensure that the message sent
- *     by write receives the correct target.
+ *     by write receives the correct target.</li>
  * </ul>
  */
 public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
@@ -75,15 +75,23 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
         }
     }
     /**
+     * Stores JposDevice of derived IO processors and own port number. The device will
+     * be used for logging. The port number is the local port to be used to communicate with other sockets. If zero,
+     * a random port will be used.
      *
-     * @param device
-     * @throws jpos.JposException
+     * @param device  Device that uses the processor. Processor uses logging of device
+     *                to produce logging entries.
+     * @param ownport Local port to be used by this socket.
+     * @throws jpos.JposException Will not be thrown.
      */
-    public UdpIOProcessor(JposDevice device) throws JposException {
+    public UdpIOProcessor(JposDevice device, int ownport) throws JposException {
         super(device, "0.0.0.0:0");
         try {
             SourceIP = TargetIP = InetAddress.getByName("0.0.0.0");
             SourcePort = TargetPort = 0;
+            if (ownport < 0 || ownport > 0xffff)
+                throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, "Invalid port: " + ownport);
+            OwnPort = ownport;
         } catch (Exception e) {
             logerror("UdpIOProcessor", JposConst.JPOS_E_FAILURE, e);
         }
@@ -108,6 +116,7 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
      *                          network configuration and hardware.
      * @throws JposException    If port address &lt; 0 or port address &gt; 65535
      */
+    @Deprecated
     public void setParameters(int ownport, int maxdatasize) throws JposException {
         if (ownport < 0 || ownport > 0xffff)
             logerror("SetParam", JposConst.JPOS_E_ILLEGAL, "Invalid port: " + ownport + ", must be between 0 and 65535");
