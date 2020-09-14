@@ -204,7 +204,10 @@ public class Device extends JposDevice implements Runnable {
                 }
                 if (index == commands.length - 1) { // New status is complete
                     handleStates(newgatestate, newmotionsensorstate, newitemdispenderstate);
-                    StartPollingWaiter.signalWaiter();
+                    if (StartPollingWaiter != null) {
+                        StartPollingWaiter.signalWaiter();
+                        StartPollingWaiter = null;
+                    }
                     PollWaiter.suspend(PollDelay);
                     prepareStatusWaitingObjects();
                 }
@@ -216,7 +219,10 @@ public class Device extends JposDevice implements Runnable {
                 if (retry == MaxRetry) {
                     retry = 0;
                     handleStates(-1, -1, null);
-                    StartPollingWaiter.signalWaiter();
+                    if (StartPollingWaiter != null) {
+                        StartPollingWaiter.signalWaiter();
+                        StartPollingWaiter = null;
+                    }
                     PollWaiter.suspend(PollDelay);
                     prepareStatusWaitingObjects();
                 }
@@ -402,11 +408,10 @@ public class Device extends JposDevice implements Runnable {
             if (OpenCount[0] == 0) {
                 ToBeFinished = false;
                 PollWaiter = new SyncObject();
-                StartPollingWaiter = props;
+                (StartPollingWaiter = props).attachWaiter();
                 (StateWatcher = new Thread(this)).start();
                 StateWatcher.setName(ID + "/StatusUpdater");
                 OpenCount[0] = 1;
-                props.attachWaiter();
                 props.waitWaiter(MaxRetry * RequestTimeout * 3);
                 props.releaseWaiter();
             }
@@ -656,7 +661,7 @@ public class Device extends JposDevice implements Runnable {
             synchronizedMessageBox("CheckHealth result:\n" + props.CheckHealthText, "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    // Common method for setting poser state on enable in a specific property set
+    // Common method for setting power state on enable in a specific property set
     private void setPowerStateOnEnable(JposCommonProperties props) throws JposException {
         handleEvent(new JposStatusUpdateEvent(props.EventSource, ItemDispenserStates.length == 0 ? JposConst.JPOS_SUE_POWER_OFF_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE));
     }
