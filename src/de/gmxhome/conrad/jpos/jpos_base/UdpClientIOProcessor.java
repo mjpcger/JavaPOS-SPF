@@ -12,6 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
 package de.gmxhome.conrad.jpos.jpos_base;
@@ -22,8 +23,6 @@ import org.apache.log4j.Level;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
@@ -31,33 +30,15 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Class to process UDP communication. Client communication means communication with one UDP socket, initiated by this
- * instance. Server socket communication adds the ability to communicate with several UDP sockets, initiated by this
- * socket or any other socket. Includes functionality for automatic data logging. Implementation is based on Java class
- * <i>DatagramChannel</i>.<br>
- * Keep in mind: To allow correct message processing, the implementation has been made as follows:
- * <ul>
- *     <li/> After open, before the first message has been received, getSource() will return 0.0.0.0:0.
- *     <li/> After the first message has been received, getSource() will always return the address of the sender of the
- *     last read message. After calling flush(), getSource() will return 0.0.0.0:0 again.
- *     <li/> In case of a multi-threaded application, ensure to synchronize read() and the corresponding getSource()
- *     call to ensure that the message will be assigned to the correct source.
- *     <li/> Before sending the first message, setTarget() must be used to set the target IP and port.
- *     <li/> If a response to an incoming message shall be sent, you can use setTarget(getSource) as long as no other
- *     message has been read.
- *     <li/> The target set by setTarget() is valid as long as another target will be set. In case of a multi-threaded
- *     application, ensure to synchronize setTarget() and the corresponding write() call to ensure that the message sent
- *     by write receives the correct target.
- * </ul>
+ * Class to process client UDP communication. Client communication means communication with one UDP socket, initiated by
+ * this instance. Includes functionality for automatic data logging. Implementation is based on Java class
+ * <i>DatagramChannel</i>.
  */
-public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
+public class UdpClientIOProcessor extends UniqueIOProcessor implements Runnable {
     private int TargetPort = 0;
     private InetAddress TargetIP = null;
-    private int SourcePort = 0;
-    private InetAddress SourceIP = null;
     private int OwnPort = 0;
     private DatagramChannel Socket = null;
-    private int MaxDataSize = 0;
 
     private Thread TheReader = null;
     private SyncObject ReadWaiter = null;
@@ -65,54 +46,41 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
     private List<Object> InputData = new ArrayList<Object>();
     private boolean HighWaterWaiting = false;
 
-    private static class Frame {
-        byte[] Data;
-        InetSocketAddress Source;
-
-        Frame(byte[]data, SocketAddress source) {
-            Data = data;
-            Source = (InetSocketAddress) source;
-        }
-    }
     /**
+     * Stores JposDevice and port of derived IO processors. The device will
+     * be used for logging while the port specifies the communication object.
      *
-     * @param device
-     * @throws jpos.JposException
+     * @param dev  Device that uses the processor. Processor uses logging of device
+     *             to produce logging entries
+     * @param addr Communication object, e.g. 127.0.0.1:23456
+     * @throws JposException If port does not specify a valid communication object
      */
-    public UdpIOProcessor(JposDevice device) throws JposException {
-        super(device, "0.0.0.0:0");
+    public UdpClientIOProcessor(JposDevice dev, String addr) throws JposException {
+        super(dev, addr);
+        String[] splitaddr = addr.split(":");
+        if (splitaddr.length != 2)
+            logerror("UdpClientIOProcessor", JposConst.JPOS_E_ILLEGAL, addr +" invalid: Format must be ip:port");
+        int port;
         try {
-            SourceIP = TargetIP = InetAddress.getByName("0.0.0.0");
-            SourcePort = TargetPort = 0;
+            if ((port = Integer.parseInt(splitaddr[1])) <= 0 || port > 0xffff)
+                throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, splitaddr[1] + " invalid: Must be between 1 and 65535");
+            TargetIP = InetAddress.getByName(splitaddr[0]);
+            TargetPort = port;
+            InitialPort = getTarget();
         } catch (Exception e) {
-            logerror("UdpIOProcessor", JposConst.JPOS_E_FAILURE, e);
+            logerror("UdpClientIOProcessor", JposConst.JPOS_E_FAILURE, e);
         }
-    }
-
-    @Deprecated
-    public UdpIOProcessor(JposDevice device, String addr) throws JposException {
-        super(device, "0.0.0.0:0");
-        try {
-            SourceIP = InetAddress.getByName("0.0.0.0");
-            SourcePort = 0;
-        } catch (Exception e) {
-            logerror("UdpIOProcessor", JposConst.JPOS_E_FAILURE, e);
-        }
-        setTarget(addr);
     }
 
     /**
      * Sets UDP specific communication parameter.
-     * @param ownport           Own port address
-     * @param maxdatasize       Maximum size of a frame. May be set to Integer.MAX_VALUE to use the limits given by
-     *                          network configuration and hardware.
+     * @param ownport   Own port address
      * @throws JposException    If port address &lt; 0 or port address &gt; 65535
      */
-    public void setParameters(int ownport, int maxdatasize) throws JposException {
+    public void setParam(int ownport) throws JposException {
         if (ownport < 0 || ownport > 0xffff)
             logerror("SetParam", JposConst.JPOS_E_ILLEGAL, "Invalid port: " + ownport + ", must be between 0 and 65535");
         OwnPort = ownport;
-        MaxDataSize = maxdatasize;
     }
 
     @Override
@@ -121,43 +89,17 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
     }
 
     @Override
-    public String setTarget(String addr) throws JposException {
-        String[] splitaddr = addr.split(":");
-        if (splitaddr.length != 2)
-            logerror("SetTarget", JposConst.JPOS_E_ILLEGAL, addr +" invalid: Format must be ip:port");
-        int port;
-        InetAddress address;
-        try {
-            if ((port = Integer.parseInt(splitaddr[1])) <= 0 || port > 0xffff)
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, splitaddr[1] + " invalid: Must be between 1 and 65535");
-            address = InetAddress.getByName(splitaddr[0]);
-            if (((Socket != null && Socket.socket().getLocalPort() == port) || port == OwnPort) &&
-                    (address.equals(InetAddress.getByName("localhost"))))
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, 0, "Target cannot be own address");
-            TargetIP = address;
-            TargetPort = port;
-            InitialPort = getTarget();
-        } catch (Exception e) {
-            logerror("SetTarget", JposConst.JPOS_E_FAILURE, e);
-        }
-        return TargetIP.toString() + ":" + TargetPort;
-    }
-
-    @Override
-    public String getTarget() {
-        return TargetIP.toString() + ":" + TargetPort;
-    }
-
-    @Override
-    public String getSource() {
-        return SourceIP.toString() + ":" + SourcePort;
+    public String setTarget(String target) throws JposException {
+        if (!target.equals(Port))
+            logerror("SetTarget", JposConst.JPOS_E_ILLEGAL, "Target must match " + Port);
+        return Target;
     }
 
     @Override
     synchronized public void open(boolean noErrorLog) throws JposException {
         if (Socket != null) {
-            Dev.log(Level.ERROR, LoggingPrefix + "Open error: Datagram socket just opened");
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, "Datagram socket just opened");
+            Dev.log(Level.ERROR, LoggingPrefix + "Open error: Datagram socket just connected");
+            throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, "Datagram socket just connected");
         }
         try {
             Socket = DatagramChannel.open();
@@ -165,11 +107,12 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
                 Socket.socket().bind(new InetSocketAddress(OwnPort));
             else
                 Socket.socket().bind(null);
+            Socket.connect(new InetSocketAddress(TargetIP, TargetPort));
             ReadWaiter = new SyncObject();
             ContinueWaiter = new SyncObject();
             InputData.clear();
             HighWaterWaiting = false;
-            (TheReader = new Thread(this, "localhost:" + Socket.socket().getLocalPort() + " Reader")).start();
+            (TheReader = new Thread(this, Port + " Reader")).start();
         } catch (Exception e) {
             String message = e.getClass().getSimpleName() + ": " + e.getMessage();
             Dev.log(Level.ERROR, LoggingPrefix + "Open error: " + message);
@@ -199,15 +142,11 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
 
     @Override
     public int write(byte[] buffer) throws JposException {
-        if (buffer.length > MaxDataSize)
-            logerror("Write", JposConst.JPOS_E_FAILURE, "Buffer too long: " + buffer.length);
         synchronized (WriteSynchronizer) {
             if (Socket == null)
-                logerror("Write", JposConst.JPOS_E_ILLEGAL, "Socket not opened");
+                logerror("Write", JposConst.JPOS_E_ILLEGAL, "Socket not connected");
             try {
-                if (Socket.socket().getReceiveBufferSize() < buffer.length)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Message too long: " + buffer.length);
-                Socket.send(ByteBuffer.wrap(buffer), new InetSocketAddress(TargetIP, TargetPort));
+                Socket.write(ByteBuffer.wrap(buffer));
             } catch (Exception e) {
                 logerror("Write", JposConst.JPOS_E_FAILURE, e);
             }
@@ -215,7 +154,7 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
         }
     }
 
-    private Frame read(int len, int timeout) throws JposException {
+    private byte[] read(int len, int timeout) throws JposException {
         if (ReadWaiter.suspend(timeout)) {
             Object data = InputData.get(0);
             InputData.remove(0);
@@ -223,17 +162,15 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
                 ContinueWaiter.signal();
                 throw (JposException) data;
             } else {
-                byte[] frame = ((Frame) data).Data;
-                SourceIP = ((Frame) data).Source.getAddress();
-                SourcePort = ((Frame) data).Source.getPort();
+                byte[] frame = (byte[]) data;
                 if (HighWaterWaiting && InputData.size() < 500) {
                     HighWaterWaiting = false;
                     ContinueWaiter.signal();
                 }
-                return (Frame)data;
+                return Arrays.copyOf(frame, frame.length < len ? frame.length : len);
             }
         } else {
-            return null;
+            return new byte[0];
         }
     }
 
@@ -241,19 +178,19 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
     public void run() {
         while (Socket != null) {
             Object readobj = null;
-            SocketAddress address = null;
+            int count = -1;
             boolean highwater = false;
             try {
                 ByteBuffer data = ByteBuffer.wrap(new byte[Socket.socket().getReceiveBufferSize()]);
-                if ((address = Socket.receive(data)) == null)
+                if ((count = Socket.read(data)) <= 0)
                     continue;
-                readobj = new Frame(Arrays.copyOf(data.array(), data.position()), address);
+                readobj = Arrays.copyOf(data.array(), count);
             } catch (Exception e) {
                 readobj = new JposException(JposConst.JPOS_E_FAILURE, e.getClass().getSimpleName() + ": " + e.getMessage(), e);
             }
             synchronized (ReadSynchronizer) {
                 InputData.add(readobj);
-                if (readobj instanceof Frame && InputData.size() >= 1000)
+                if (readobj instanceof byte[] && InputData.size() >= 1000)
                     highwater = HighWaterWaiting = true;
                 ReadWaiter.signal();
             }
@@ -278,7 +215,7 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
                         break;
                 }
                 else {
-                    count += ((Frame) data).Data.length;
+                    count += ((byte[]) data).length;
                 }
             }
             LoggingData = String.valueOf(count).getBytes();
@@ -289,25 +226,17 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
     @Override
     public byte[] read(int count) throws JposException {
         synchronized(ReadSynchronizer) {
-            if (count > MaxDataSize)
-                count = MaxDataSize;
-            Frame data = read(Integer.MAX_VALUE, Timeout);
+            byte[] data = read(Integer.MAX_VALUE, Timeout);
             byte[] discardedData = null;
-            if (data == null)
-                LoggingData = new byte[0];
+            if (data.length <= count)
+                LoggingData = data;
             else {
-                if (data.Data.length <= count) {
-                    LoggingData = data.Data;
-                } else {
-                    LoggingData = Arrays.copyOf(data.Data, count);
-                    discardedData = Arrays.copyOfRange(data.Data, count, data.Data.length);
-                }
-                SourceIP = data.Source.getAddress();
-                SourcePort = data.Source.getPort();
+                LoggingData = Arrays.copyOf(data, count);
+                discardedData = Arrays.copyOfRange(data, count, data.length);
             }
             super.read(count);
             if (discardedData != null) {
-                Dev.log(Level.TRACE, LoggingPrefix + "Discarded data (" + discardedData.length + ") bytes" + location(true) + ": " + toLogString(discardedData));
+                Dev.log(Level.TRACE, LoggingPrefix + "Discarded data (" + discardedData.length + ") bytes: " + toLogString(discardedData));
             }
             return LoggingData;
         }
