@@ -30,7 +30,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 /**
- * Implementation of CAT based for the sample implemented in Device.tcl.
+ * Implementation of CAT based for the sample implemented in SampleCAT.tcl.
  * Supported features are:
  * <ul>
  *     <li>Sale, refund and void.</li>

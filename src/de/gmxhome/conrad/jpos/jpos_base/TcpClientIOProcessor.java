@@ -38,7 +38,7 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
      *
      * @param dev  Device that uses the proceessor. Processor uses loging of device
      *             to produce logging entries
-     * @param addr Communication object, e.g. COM3 or 127.0.0.1:23456
+     * @param addr Communication object, e.g. 127.0.0.1:23456
      * @throws JposException If addr if not a valid tcp address in format IP:port.
      */
     public TcpClientIOProcessor(JposDevice dev, String addr) throws JposException {

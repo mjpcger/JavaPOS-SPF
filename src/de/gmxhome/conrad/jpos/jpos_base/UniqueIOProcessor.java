@@ -172,7 +172,7 @@ public class UniqueIOProcessor {
     /**
      * Stores JposDevice and port of derived IO processors. The device will
      * be used for logging while the port specifies the communication object.
-     * @param dev   Device that uses the proceessor. Processor uses loging of device
+     * @param dev   Device that uses the processor. Processor uses logging of device
      *              to produce logging entries
      * @param port  Communication object, e.g. COM3 or 127.0.0.1:23456
      * @throws JposException If port does not specify a valid communication object

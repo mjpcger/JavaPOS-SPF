@@ -31,7 +31,7 @@ import static de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties.ExclusiveAll
 
 /**
  * Implementation of CashDrawer, FiscalPrinter, LineDisplay and ElectronicJournal based on the sample implemented in
- * Device.tcl.
+ * SampleFiscalPrinter.tcl.
  * Supported features are:
  * <br>FiscalPrinter:
  * <ul>
