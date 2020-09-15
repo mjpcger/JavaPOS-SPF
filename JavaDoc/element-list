@@ -16,6 +16,7 @@ de.gmxhome.conrad.jpos.jpos_base.micr
 de.gmxhome.conrad.jpos.jpos_base.motionsensor
 de.gmxhome.conrad.jpos.jpos_base.msr
 de.gmxhome.conrad.jpos.jpos_base.poskeyboard
+de.gmxhome.conrad.jpos.jpos_base.pospower
 de.gmxhome.conrad.jpos.jpos_base.posprinter
 de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay
 de.gmxhome.conrad.jpos.jpos_base.scale
@@ -30,6 +31,8 @@ SampleCombiDevice
 SampleCombiSpecial
 SampleFiscalPrinter
 SampleMICR
+SamplePOSPower
 SamplePOSPrinter
 SampleScale
 SampleSubsystemDevice
+SampleUdpDevice
