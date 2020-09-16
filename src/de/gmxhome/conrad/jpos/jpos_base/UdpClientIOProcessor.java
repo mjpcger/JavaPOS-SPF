@@ -154,26 +154,6 @@ public class UdpClientIOProcessor extends UniqueIOProcessor implements Runnable 
         }
     }
 
-    private byte[] read(int len, int timeout) throws JposException {
-        if (ReadWaiter.suspend(timeout)) {
-            Object data = InputData.get(0);
-            InputData.remove(0);
-            if (data instanceof JposException) {
-                ContinueWaiter.signal();
-                throw (JposException) data;
-            } else {
-                byte[] frame = (byte[]) data;
-                if (HighWaterWaiting && InputData.size() < 500) {
-                    HighWaterWaiting = false;
-                    ContinueWaiter.signal();
-                }
-                return Arrays.copyOf(frame, frame.length < len ? frame.length : len);
-            }
-        } else {
-            return new byte[0];
-        }
-    }
-
     @Override
     public void run() {
         while (Socket != null) {
@@ -225,21 +205,24 @@ public class UdpClientIOProcessor extends UniqueIOProcessor implements Runnable 
 
     @Override
     public byte[] read(int count) throws JposException {
-        synchronized(ReadSynchronizer) {
-            byte[] data = read(Integer.MAX_VALUE, Timeout);
-            byte[] discardedData = null;
-            if (data.length <= count)
-                LoggingData = data;
-            else {
-                LoggingData = Arrays.copyOf(data, count);
-                discardedData = Arrays.copyOfRange(data, count, data.length);
+        if (ReadWaiter.suspend(Timeout)) {
+            synchronized (ReadSynchronizer) {
+                Object data = InputData.get(0);
+                InputData.remove(0);
+                if (data instanceof JposException) {
+                    ContinueWaiter.signal();
+                    throw (JposException) data;
+                }
+                if (HighWaterWaiting && InputData.size() < 500) {
+                    HighWaterWaiting = false;
+                    ContinueWaiter.signal();
+                }
+                LoggingData = (byte[]) data;
             }
-            super.read(count);
-            if (discardedData != null) {
-                Dev.log(Level.TRACE, LoggingPrefix + "Discarded data (" + discardedData.length + ") bytes: " + toLogString(discardedData));
-            }
-            return LoggingData;
-        }
+        } else
+            LoggingData = new byte[0];
+        return super.read(count);
+
     }
 
     @Override

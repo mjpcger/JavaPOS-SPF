@@ -22,7 +22,6 @@ import org.apache.log4j.Level;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
@@ -57,7 +56,7 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
     private InetAddress SourceIP = null;
     private int OwnPort = 0;
     private DatagramChannel Socket = null;
-    private int MaxDataSize = 0;
+    private int MaxDataSize = Integer.MAX_VALUE;
 
     private Thread TheReader = null;
     private SyncObject ReadWaiter = null;
@@ -92,6 +91,7 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
             if (ownport < 0 || ownport > 0xffff)
                 throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, "Invalid port: " + ownport);
             OwnPort = ownport;
+            LoggingPrefix = "";
         } catch (Exception e) {
             logerror("UdpIOProcessor", JposConst.JPOS_E_FAILURE, e);
         }
@@ -103,6 +103,7 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
         try {
             SourceIP = InetAddress.getByName("0.0.0.0");
             SourcePort = 0;
+            LoggingPrefix = "";
         } catch (Exception e) {
             logerror("UdpIOProcessor", JposConst.JPOS_E_FAILURE, e);
         }
@@ -145,7 +146,6 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
                 throw new JposException(JposConst.JPOS_E_ILLEGAL, 0, "Target cannot be own address");
             TargetIP = address;
             TargetPort = port;
-            InitialPort = getTarget();
         } catch (Exception e) {
             logerror("SetTarget", JposConst.JPOS_E_FAILURE, e);
         }
@@ -174,6 +174,7 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
                 Socket.socket().bind(new InetSocketAddress(OwnPort));
             else
                 Socket.socket().bind(null);
+            LoggingPrefix = "localhost:" + Socket.socket().getLocalPort() +": ";
             ReadWaiter = new SyncObject();
             ContinueWaiter = new SyncObject();
             InputData.clear();
@@ -198,6 +199,7 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
             logerror("Close", JposConst.JPOS_E_FAILURE, e);
         }
         Socket = null;
+        LoggingPrefix = "";
         ContinueWaiter.signal();
         try {
             TheReader.join();
@@ -224,37 +226,15 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
         }
     }
 
-    private Frame read(int len, int timeout) throws JposException {
-        if (ReadWaiter.suspend(timeout)) {
-            Object data = InputData.get(0);
-            InputData.remove(0);
-            if (data instanceof JposException) {
-                ContinueWaiter.signal();
-                throw (JposException) data;
-            } else {
-                byte[] frame = ((Frame) data).Data;
-                SourceIP = ((Frame) data).Source.getAddress();
-                SourcePort = ((Frame) data).Source.getPort();
-                if (HighWaterWaiting && InputData.size() < 500) {
-                    HighWaterWaiting = false;
-                    ContinueWaiter.signal();
-                }
-                return (Frame)data;
-            }
-        } else {
-            return null;
-        }
-    }
-
     @Override
     public void run() {
         while (Socket != null) {
             Object readobj = null;
-            SocketAddress address = null;
+            InetSocketAddress address = null;
             boolean highwater = false;
             try {
                 ByteBuffer data = ByteBuffer.wrap(new byte[Socket.socket().getReceiveBufferSize()]);
-                if ((address = Socket.receive(data)) == null)
+                if ((address = (InetSocketAddress) Socket.receive(data)) == null)
                     continue;
                 readobj = new Frame(Arrays.copyOf(data.array(), data.position()), address);
             } catch (Exception e) {
@@ -297,29 +277,27 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
 
     @Override
     public byte[] read(int count) throws JposException {
-        synchronized(ReadSynchronizer) {
-            if (count > MaxDataSize)
-                count = MaxDataSize;
-            Frame data = read(Integer.MAX_VALUE, Timeout);
-            byte[] discardedData = null;
-            if (data == null)
-                LoggingData = new byte[0];
-            else {
-                if (data.Data.length <= count) {
-                    LoggingData = data.Data;
-                } else {
-                    LoggingData = Arrays.copyOf(data.Data, count);
-                    discardedData = Arrays.copyOfRange(data.Data, count, data.Data.length);
+        if (count > MaxDataSize)
+            count = MaxDataSize;
+        if (ReadWaiter.suspend(Timeout)) {
+            synchronized (ReadSynchronizer) {
+                Object any = InputData.get(0);
+                InputData.remove(0);
+                if (any instanceof JposException) {
+                    ContinueWaiter.signal();
+                    throw (JposException) any;
                 }
-                SourceIP = data.Source.getAddress();
-                SourcePort = data.Source.getPort();
+                if (HighWaterWaiting && InputData.size() < 500) {
+                    HighWaterWaiting = false;
+                    ContinueWaiter.signal();
+                }
+                LoggingData = ((Frame) any).Data;
+                SourceIP = ((Frame) any).Source.getAddress();
+                SourcePort = ((Frame) any).Source.getPort();
             }
-            super.read(count);
-            if (discardedData != null) {
-                Dev.log(Level.TRACE, LoggingPrefix + "Discarded data (" + discardedData.length + ") bytes" + location(true) + ": " + toLogString(discardedData));
-            }
-            return LoggingData;
-        }
+        } else
+            LoggingData = new byte[0];
+        return super.read(count);
     }
 
     @Override
