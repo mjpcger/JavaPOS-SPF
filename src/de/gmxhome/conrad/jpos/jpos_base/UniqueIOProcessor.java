@@ -20,6 +20,8 @@ import jpos.JposConst;
 import jpos.JposException;
 import org.apache.log4j.Level;
 
+import java.util.Arrays;
+
 /**
  * Unique implementation for IO processing. Derived classes should add
  * support for serial (RS232), TCP and other IO operations
@@ -216,7 +218,7 @@ public class UniqueIOProcessor {
     /**
      * Reads a frame of given maximum byte length from communication source. If called
      * from a derived class, LoggingData must be filled with the byte array to be
-     * returned.
+     * returned. If LoggingData is longer than the maximum length, the remaining bytes will be discarded.
      * @param count Maximum no. of bytes to be read
      * @return byte[] containing received bytes. In case of timeout, less than count
      * bytes will be returned, in extreme case, the array has length zero.
@@ -225,8 +227,16 @@ public class UniqueIOProcessor {
     public byte[] read(int count) throws JposException {
         if (LoggingData == null)
             throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, "Read implementation error, no LoggingData available.");
-        Dev.log(Level.TRACE, LoggingPrefix + "Read " + LoggingData.length + " bytes" + location(true) + ": " + toLogString(LoggingData));
-        return LoggingData;
+        if (LoggingData.length > count) {
+            byte[] data = Arrays.copyOf(LoggingData, count);
+            byte[] remainder = Arrays.copyOfRange(LoggingData, count, LoggingData.length);
+            Dev.log(Level.TRACE, LoggingPrefix + "Read " + data.length + " bytes" + location(true) + ": " + toLogString(data));
+            Dev.log(Level.TRACE, LoggingPrefix + "Discard " + remainder.length + " bytes" + location(true) + ": " + toLogString(remainder));
+            return data;
+        } else {
+            Dev.log(Level.TRACE, LoggingPrefix + "Read " + LoggingData.length + " bytes" + location(true) + ": " + toLogString(LoggingData));
+            return LoggingData;
+        }
     }
 
     /**
