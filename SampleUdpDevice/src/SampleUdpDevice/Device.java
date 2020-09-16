@@ -57,7 +57,7 @@ public class Device extends JposDevice implements Runnable {
 
     private int OwnPort = 0;
     private int PollDelay = 200;
-    private int RequestTimeout = 100;
+    private int RequestTimeout = 200;
     private int MaxRetry = 2;
     private boolean UseClientIO = true;
 
@@ -144,12 +144,19 @@ public class Device extends JposDevice implements Runnable {
         if (connectionOffline())
             return null;
         try {
+            byte[] response;
             byte[] request = command.getBytes();
             Target.flush();
-            Target.setTimeout(RequestTimeout);
+            long starttime = System.currentTimeMillis();
+            long acttime = starttime;
             for (int count = 0; count < MaxRetry; count++) {
                 Target.write(request);
-                byte[] response = Target.read(2);
+                do {
+                    Target.setTimeout((int)(RequestTimeout - (acttime - starttime)));
+                    response = Target.read(2);
+                    if (UseClientIO || response.length == 0 || Target.getSource().equals(Target.getTarget()))
+                        break;
+                } while ((acttime = System.currentTimeMillis()) - starttime < RequestTimeout);
                 if (response.length == 1 && (response[0] == '1' || response[0] == '0'))
                     return new String(response);
             }
