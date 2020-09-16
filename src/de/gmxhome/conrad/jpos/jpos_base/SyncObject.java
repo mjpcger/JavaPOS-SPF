@@ -35,7 +35,7 @@ public class SyncObject {
     private Semaphore TheSemaphore;
 
     /**
-     * Constructor, initializes TheLock and TheCondition
+     * Constructor, initializes Semaphore used for synchronization.
      */
     public SyncObject() {
         TheSemaphore = new Semaphore(0, true);
