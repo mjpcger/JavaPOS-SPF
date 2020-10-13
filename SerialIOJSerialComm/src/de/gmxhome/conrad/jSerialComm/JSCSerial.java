@@ -137,6 +137,7 @@ public class JSCSerial implements SerialIOAdapter {
         int[][][] validvalues = {
                 {   // T_BAUD
                         {B_1200, 1200},
+                        {B_2400, 2400},
                         {B_4800, 4800},
                         {B_9600, 9600},
                         {B_19200, 19200},

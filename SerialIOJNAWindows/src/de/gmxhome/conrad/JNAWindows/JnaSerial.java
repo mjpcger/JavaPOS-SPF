@@ -255,6 +255,7 @@ public class JnaSerial implements SerialIOAdapter {
         int[][][] validvalues = {
                 {   // T_BAUD
                         {B_1200, WinBase.CBR_1200},
+                        {B_2400, WinBase.CBR_2400},
                         {B_4800, WinBase.CBR_4800},
                         {B_9600, WinBase.CBR_9600},
                         {B_19200, WinBase.CBR_19200},

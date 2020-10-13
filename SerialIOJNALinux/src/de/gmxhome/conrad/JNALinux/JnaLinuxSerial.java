@@ -307,21 +307,22 @@ public class JnaLinuxSerial implements SerialIOAdapter {
         return false;
     }
 
-    private static String[] Baudrates = {"1200", "4800", "9600", "19200", "38400", "57600", "115200"};
+    private static String[] Baudrates = {"1200", "2400", "4800", "9600", "19200", "38400", "57600", "115200"};
     private static String[] Datasize = {"cs7", "cs8"};
     private static String[] Stopbits = {"-cstopb", "cstopb"};
     private static String[] Parities = {"-parenb", "parenb parodd", "parenb -parodd"};
     private static String   SttyCommandPrefix = "stty raw -echo";
     private static int[][] ValidBaudrates = {
             {B_1200, 0},
-            {B_4800, 1},
-            {B_9600, 2},
-            {B_19200, 3},
-            {B_38400, 4},
-            {B_57600, 5},
-            {B_115200, 6},
-            {B_128000, 7},
-            {B_256000, 8}
+            {B_2400, 1},
+            {B_4800, 2},
+            {B_9600, 3},
+            {B_19200, 4},
+            {B_38400, 5},
+            {B_57600, 6},
+            {B_115200, 7},
+            {B_128000, 8},
+            {B_256000, 9}
     };
     private static int[][] ValidDatasizes = {
             {D_7, 0},
@@ -345,6 +346,7 @@ public class JnaLinuxSerial implements SerialIOAdapter {
             set.load(new BufferedInputStream(new FileInputStream(new File(JnaLinuxSerial.class.getName() + ".properties"))));
             Baudrates = new String[]{
                     set.getProperty("BD1200", "1200"),
+                    set.getProperty("BD2400", "2400"),
                     set.getProperty("BD4800", "4800"),
                     set.getProperty("BD9600", "9600"),
                     set.getProperty("BD19200", "19200"),

@@ -30,6 +30,10 @@ public interface SerialIOAdapter {
      */
     public final static int B_1200 = 1200;
     /**
+     * Baudrate constant for 2400 baud.
+     */
+    public final static int B_2400 = 2400;
+    /**
      * Baudrate constant for 4800 baud.
      */
     public final static int B_4800 = 4800;

@@ -51,6 +51,10 @@ public class SerialIOProcessor extends UniqueIOProcessor {
      */
     public final static int BAUDRATE_1200 = SerialIOAdapter.B_1200;
     /**
+     * Baudrate constant for 2400 baud.
+     */
+    public final static int BAUDRATE_2400 = SerialIOAdapter.B_2400;
+    /**
      * Baudrate constant for 4800 baud.
      */
     public final static int BAUDRATE_4800 = SerialIOAdapter.B_4800;
