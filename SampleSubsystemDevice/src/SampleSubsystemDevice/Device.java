@@ -35,31 +35,55 @@ import java.util.List;
 import static SampleSubsystemDevice.DisplayContents.*;
 
 /**
- * Implementation of a subsystem device service based on the sample implemented in SampleSubsystemDevice.tcl.
- * Supported features for RemoteOrderDisplay part are:
- * <br>- One clock per display unit.
- * <br>- One buffer per display unit.
- * <br>- No tone, no character set selection, only one (default) video mode.
- * <br>- clock overlays text, text changes do not overwrite the clock as long as clock has not been stopped.
- * <br>- text does not overwrite drawn lines. Drawn lines can only be removed by clearVideo, clearVideoRegion or
- * resetVideo.
- * <br>- A box around the clock can become part of the clock if it was drawn before starting the clock with the
+ * JposDevice based implementation of JavaPOS BumpBar and RemoteOrderDisplay device service implementations for the
+ * sample device implemented in SampleSubsystemDevice.tcl.
+ * <p>Supported features for RemoteOrderDisplay part are:
+ * <ul>
+ * <li>One clock per display unit.</li>
+ * <li>One buffer per display unit.</li>
+ * <li>No tone, no character set selection, only one (default) video mode.</li>
+ * <li>clock overlays text, text changes do not overwrite the clock as long as clock has not been stopped.</li>
+ * <li>text does not overwrite drawn lines. Drawn lines can only be removed by clearVideo, clearVideoRegion or
+ * resetVideo.</li>
+ * <li>A box around the clock can become part of the clock if it was drawn before starting the clock with the
  * clock specific dimensions (height 1, width 5, 5 or eight, depending on clock type). In that case, the box remains
- * part of the clock, even if it will be cleared by clearVideoRegion.
- * <br>- If the simulator performs a clock update cycle between reading out the current time and restarting the clock
- * at the new position in method controlClock with function CLK_MOVE, the time will not be updated.
- * <br>For each display unit, the whole contents of the display will be buffered in the service. For each character,
+ * part of the clock, even if it will be cleared by clearVideoRegion.</li>
+ * <li>If the simulator performs a clock update cycle between reading out the current time and restarting the clock
+ * at the new position in method controlClock with function CLK_MOVE, the time will not be updated.</li>
+ * </ul>
+ * For each display unit, the whole contents of the display will be buffered in the service. For each character,
  * a foreground and background color and a character value will be stored. In addition, if a a line has been drawn above,
  * below, on the left or right side of the character, the line color will be stored as well. This is necessary to be
  * able to implement save, restore, copy and move instructions, for normal text as well as for the clock.<p>
  * Supported features for BumpBar are:
- * <br>- No tone.
- * <br>- Key Scan codes 1 - 8, can be customized via UPOS method SetKeyTranslation
- * <br>BumpBar and RemoteOrderDisplay are two device services implemented for one simulated physical device concentrator.
+ * <ul>
+ * <li>No tone.</li>
+ * <li>Key Scan codes 1 - 8, can be customized via UPOS method SetKeyTranslation.</li>
+ * </ul>
+ * BumpBar and RemoteOrderDisplay are two device services implemented for one simulated physical device concentrator.
  * There is a 1:1 relationship between bump bar units and remote order display units: Each unit sample consists of a remote
  * order display with 20x25 characters and a bump bar with 8 keys. For each unit, the bump bar unit id and the remote
  * order display unit id are equal and if both, remote order display and bump bar, are enabled, their power states and
  * units online are equal.
+ * <p>Here a full list of all device specific properties that can be changed via jpos.xml:
+ * <ul>
+ *     <li>BackgroundIntensity: Background intensity, must be 0 or <i>RemoteOrderDisplayConst.ROD_ATTR_INTENSITY</i>
+ *     (8). Default: <i>RemoteOrderDisplayConst.ROD_ATTR_INTENSITY</i>.</li>
+ *     <li>CharacterTimeout: Positive integer value, specifying the maximum delay between bytes that belong to the same
+ *     frame. Default value: 50 milliseconds.</li>
+ *     <li>ClientPort: Integer value between 0 and 65535 specifying the TCP port used for communication with the device
+ *     simulator. Default: 0 (for random port number selected by operating system).</li>
+ *     <li>CursorColor: Color and insensity of the cursor. Default: <i>RemoteOrderDisplayConst.ROD_ATTR_FG_BLACK</i> (0). Can
+ *     be set to any value between 0 and 15.</li>
+ *     <li>MinClaimTimeout: Minimum timeout in milliseconds used by method Claim to ensure correct working. Must be a
+ *     positive value. If this value is too small, Claim might throw a JposException even if everything is OK if the
+ *     specified timeout is less than or equal to MinClaimTimeout. Default: 100.</li>
+ *     <li>Port: Operating system specific name of the TCP address to be used for
+ *     communication with the device simulator. Names are of the form IPv4:port, where IPv4 is the IP address of the
+ *     device and port its TCP port.</li>
+ *     <li>RequestTimeout: Maximum time, in milliseconds, between sending a command to the simulator and getting the
+ *     first byte of its response. Default: 1000.</li>
+ * </ul>
  */
 public class Device extends JposDevice implements Runnable {
     /**
@@ -81,7 +105,7 @@ public class Device extends JposDevice implements Runnable {
     private final static int MAX_LINES = 20;    // Simulator supports up to 20 lines per unit
     private final static int MAX_COLUMNS = 25;  // Simulator supports up to 25 characters per line for each unit
     private DisplayContents Display = new DisplayContents();
-    // colors are the same as specified by UPOS, plus intensity, resulting in 16 colors, where only 8 colors are allowd
+    // colors are the same as specified by UPOS, plus intensity, resulting in 16 colors, where only 8 colors are allowed
     // for background (configurable intensity).
     private int BackgroundIntensity = RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
     private int CursorColor = RemoteOrderDisplayConst.ROD_ATTR_FG_BLACK;

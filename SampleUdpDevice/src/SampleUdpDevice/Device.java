@@ -28,18 +28,29 @@ import org.apache.log4j.Level;
 import javax.swing.*;
 
 /**
- * Implementation of a JposDevice based implementation for a sample implemented in SampleUdpDevice.tcl that becomes
+ * JposDevice based implementation of a JavaPOS CashDrawer device service implementation for the
+ * sample device implemented in SampleUdpDevice.tcl. It becomes
  * a JavaPOS CashDrawer device services in combination with the CashDrawerServer class.
- * The simulator supports the following commands:<ul>
+ * <p>The simulator supports the following commands:<ul>
  *     <li> 'S': Status request. Sends back '0' if drawer is closed, otherwise '1'.</li>
  *     <li> 'O': Opens the drawer. Sends back the new status which is always '1'.</li>
  * </ul>
- * All frames have a length of 1 byte. Communication will be made with UDP sockets.<br>
- * Jpos property <i>Port</i> will be used to specify the target socket (ip:port).<br>
- * Jpos property <i>OwnPort</i> can be used to specify the port used by the simulator. If not specified, a random port
- * will be used.<br>
- * Jpos property <i>UseClientIO</i> can be set to false to force use of UdpIOProcessor. If not specified or true,
- * UdpClientIOProcessor will be used.
+ * All frames have a length of 1 byte. Communication will be made with UDP sockets.<p>
+ * Here a full list of all device specific properties that can be changed via jpos.xml:
+ * <ul>
+ *     <li>MaxRetry: Specifies the maximum number of retries. Default: 2.</li>
+ *     <li>OwnPort: Integer value between 0 and 65535 specifying the UDP port used for communication with the device
+ *     simulator. Default: 0 (for random port number selected by operating system).</li>
+ *     <li>PollDelay: Minimum time between status requests, in milliseconds. Status requests will be used to monitor the
+ *     device state. Default: 200.</li>
+ *     <li>Port: Operating system specific name of the UDP address to be used for
+ *     communication with the device simulator. Names are of the form IPv4:port, where IPv4 is the IP address of the
+ *     device and port its UDP port.</li>
+ *     <li>RequestTimeout: Maximum time, in milliseconds, between sending a command to the simulator and getting the
+ *     first byte of its response. Default: 200.</li>
+ *     <li>UseClientIO: Specifies whether UdpClientIOProcessor or UdpIOProcessor shall be used for communication. If
+ *     true, UdpClientIOProcessor will be used, otherwise UdpIOProcessor. Default: true.</li>
+ * </ul>
  */
 public class Device extends JposDevice implements Runnable {
     /**

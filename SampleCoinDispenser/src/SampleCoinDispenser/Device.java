@@ -25,8 +25,8 @@ import de.gmxhome.conrad.jpos.jpos_base.coindispenser.*;
 import org.apache.log4j.Level;;
 
 /**
- * Implementation of a JposDevice based implementation of a coin dispenser driver that becomes
- * a JavaPOS CoinDispenser service in combination with the CoinDispenserService class.<br>
+ * Base of a JposDevice based implementation of a JavaPOS CoinDispenser device service implementation for the
+ * sample device implemented in SampleCoinDispenserSimulator.tcl.<br>
  * The simulator provides a coin dispenser with the following properties:
  * Has one slot for 1, 5, 10, 50 and 100 currency units and two slots for 2, 20 and 200 currency units. This allows
  * correct payment for every amount up to 499 currency units.<br>
@@ -48,19 +48,35 @@ import org.apache.log4j.Level;;
  *            <li><b>KO\n</b>: Operation failed. This may happen due to a jam condition.</li>
  *        </ul>
  *     </li>
+ * </ul><br>
+ * Here a full list of all device specific properties that can be changed via jpos.xml:
+ * <ul>
+ *     <li>CharacterTimeout: Positive integer value, specifying the maximum delay between bytes that belong to the same
+ *     frame. Default value: 50 milliseconds.</li>
+ *     <li>ClientPort: Integer value between 0 and 65535 specifying the TCP port used for communication with the device
+ *     simulator. Default: 0 (for random port number selected by operating system).</li>
+ *     <li>ComPort: The IPv4 address of the device. Must always be specified and not empty. Notation: address:port, where
+ *     address is a IPv4 address and port the TCP port of the device.</li>
+ *     <li>MinClaimTimeout: Minimum timeout in milliseconds used by method Claim to ensure correct working. Must be a
+ *     positive value. If this value is too small, Claim might throw a JposException even if everything is OK if the
+ *     specified timeout is less than or equal to MinClaimTimeout. Default: 100.</li>
+ *     <li>NearLimit: Minimum amount of coins in each slot. If one slot contains a lower number of coins, status will
+ *     be reported as near empty. However, an empty status will only be reported if all slots are empty. Default: 2.</li>
+ *     <li>PollTimeout: Minimum time between status requests, in milliseconds. Status requests will be used to monitor
+ *     the device state. Default: 500.</li>
+ *     <li>ReadArgumentCheck: Specifies whether the cashCounts argument of readCashCounts shall be used as a template
+ *     for the result or be overwritten by a string that contains cashCount values for all slots. Default: false.</li>
+ *     <li>RequestTimeout: Maximum time, in milliseconds, between sending a command to the simulator and getting the
+ *     first byte of its response. Default: 200.</li>
+ *     <li>SlotCapacity: The maximum number of coins that one single (simulated) hardware slot can hold. Default: 999.</li>
  * </ul>
  */
 public class Device extends JposDevice implements Runnable{
     /**
-     * Server port of sample CoinDispenser.
-     */
-    String Port = "127.0.0.1:56789";
-
-    /**
      * Own client port. If not specified, random port will be allocated dynamically by operating system. This
      * is good for normal operation but may be a problem in some firewall configurations.
      */
-    int OwnPort = 0;
+    int ClientPort = 0;
 
     /**
      * Minimum claim timeout. If a timeout value less than MinClaimTimeout will be used in claim call,
@@ -246,10 +262,8 @@ public class Device extends JposDevice implements Runnable{
         super.checkProperties(entry);
         try {
             Object o;
-            if ((o = entry.getPropertyValue("Port")) != null)
-                Port = o.toString();
             if ((o = entry.getPropertyValue("ClientPort")) != null)
-                OwnPort = Integer.parseInt(o.toString());
+                ClientPort = Integer.parseInt(o.toString());
             if ((o = entry.getPropertyValue("RequestTimeout")) != null)
                 RequestTimeout = Integer.parseInt(o.toString());
             if ((o = entry.getPropertyValue("CharacterTimeout")) != null)
@@ -441,7 +455,7 @@ public class Device extends JposDevice implements Runnable{
     JposException initPort() {
         try {
             OutStream = new TcpClientIOProcessor(this, ID);
-            OutStream.setParam(OwnPort);
+            OutStream.setParam(ClientPort);
             OutStream.open(InIOError);
             InIOError = false;
         } catch (JposException e) {

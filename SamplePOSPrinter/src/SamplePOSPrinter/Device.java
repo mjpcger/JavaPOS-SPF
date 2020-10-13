@@ -28,9 +28,48 @@ import java.util.*;
 
 
 /**
- * Implementation of a JposDevice based implementation of a sample printer that becomes
- * JavaPOS CashDrawer and POSPrinter device services in combination with the CashDrawerServer
- * and POSPrinterServer classes.
+ * Base of a JposDevice based implementation of JavaPOS CashDrawer and POSPrinter
+ * device service implementations for the sample device implemented in SamplePrinterSimulator.tcl.
+ * For a complete list of possible commands and responses, look at the comments at the beginning of the device simulator
+ * script.
+ * <p>Here a full list of all device specific properties that can be changed via jpos.xml:
+ * <ul>
+ *     <li>AdjustLineChars: Specifies whether setting RecLineChars sets RecLineChars to the given value (false) or to
+ *     the maximum value allowed for the largest font that can print the specified number of characters per line.
+ *     Default: true.</li>
+ *     <li>AsyncProcessingCommandDelay: Delaybetween asynchronous commands in milliseconds . May be helpful for testing.
+ *     Default: 0.</li>
+ *     <li>Baudrate: Baud rate of the communication device. Must be one of the baud rate constants specified in the
+ *     SerialIOProcessor class. Default: 9600 (SerialIOProcessor.BAUDRATE_9600).
+ *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
+ *     <li>Databits: Number of data bits per data unit. Must be 7 or 8. Default: 8. It is strictly recommended to let
+ *     this value unchanged.
+ *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
+ *     <li>LoggingType: Specifies the logging format used by the IO processor. Must be one of the logging type values
+ *     specified in the UniqueIOProcessor class. Default: 1 (UniqueIOProcessor.LoggingTypeEscapeString).</li>
+ *     <li>MapCharacterSet: Default for MapCharacterSet property. Default: true. </li>
+ *     <li>MaxRetry: Specifies the maximum number of retries. Should be &gt; 0 only for RS232 (real COM ports)
+ *     where characters can become lost or corrupted on the communication line. Default: 2.</li>
+ *     <li>OwnPort: Integer value between 0 and 65535 specifying the TCP port used for communication with the device
+ *     simulator. Default: 0 (for random port number selected by operating system).
+ *     <br>This property may only be set if the communication with the device shall be made via TCP.</li>
+ *     <li>Parity: Parity of each data unit. Must be one of the parity constants specified in the
+ *     SerialIOProcessor class. Default: 0 (SerialIOProcessor.PARITY_NONE).
+ *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
+ *     <li>PollDelay: Minimum time between status requests, in milliseconds. Status requests will be used to monitor the
+ *     device state. Default: 1000.</li>
+ *     <li>Port: Operating system specific name of the serial communication port (e.g. RS232, Usb2Serial,
+ *     Bluetooth...) or the TCP address to be used for
+ *     communication with the device simulator. In case of RS232, names look typically like COM2 or /dev/ttyS1. In
+ *     case of TCP, names are of the form IPv4:port, where IPv4 is the IP address of the device and port its TCP port.</li>
+ *     <li>RequestTimeout: Maximum time, in milliseconds, between sending a command to the simulator and getting the
+ *     first byte of its response. Default: 500.</li>
+ *     <li>Stopbits: Number of stop bits per data unit. Must be 1 or 2. Default: 2.
+ *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
+ *     <li>UsbToSerial: Specifies whether the specified port is a virtual port that will be removed by the operating
+ *     system when the device is not connected. Default: false.
+ *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
+ * </ul>
  */
 public class Device extends JposDevice{
     private UniqueIOProcessor OutStream;

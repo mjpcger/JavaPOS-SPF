@@ -32,8 +32,20 @@ import javax.swing.*;
 import java.io.IOException;
 
 /**
- * Implementation of a JposDevice based implementation of a device that becomes a
- * JavaPOS POSPower device services in combination with the POSPowerService class.
+ * JposDevice based implementation of JavaPOS POSPower device service implementation for the battery power devices in
+ * Windows laptops, notebooks and tablets.
+ * <p>This implementation uses the following WIN32 API functions:
+ * <ul>
+ *     <li>GetSystemPowerStatus, </li>
+ *     <li>SetSuspendState</li>
+ * </ul>and the Windows program shutdown.exe.
+ * <p>Here a full list of all device specific properties that can be changed via jpos.xml:
+ * <ul>
+ *     <li>PollDelay: Minimum time between status requests, in milliseconds. Status requests will be used to monitor the
+ *     device state. Default: 1000.</li>
+ *     <li>SecondsToFinish: Number of seconds between shutdown activation and shutdown. Will be used with command line
+ *     parameter "-t" of the shutdown command. Default: 1.</li>
+ * </ul>
  */
 public class Device extends JposDevice implements Runnable {
     private static interface Kernel32Ext extends Kernel32 {

@@ -35,10 +35,53 @@ import java.util.*;
 import static de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties.ExclusiveAllowed;
 import static de.gmxhome.conrad.jpos.jpos_base.UniqueIOProcessor.IOProcessorError;
 
-
 /**
- * Implementation of a JposDevice based implementation of a combined driver that becomes
- * several JavaPOS device service in combination with the JposXxxx class in jpos_base
+ * Base of a JposDevice based implementation of JavaPOS CashDrawer, Keylock, LineDisplay,MSR, POSKeyboard, Scanner and
+ * ToneIndicator device service implementations for the sample device implemented in CombiSim.tcl.<br>
+ * For a complete list of possible commands and responses, look at the comments at the beginning of the device simulator
+ * script.
+ * <p>Here a full list of all device specific properties that can be changed via jpos.xml:
+ * <ul>
+ *     <li>Baudrate: Baud rate of the communication device. Must be one of the baud rate constants specified in the
+ *     SerialIOProcessor class. Default: 9600 (SerialIOProcessor.BAUDRATE_9600).
+ *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
+ *     <li>BinaryEKey: This property specifies whether the service shall convert electronic key values. If false,
+ *     electronic key values will be passed to the application as received from the simulator: as a series of ASCII
+ *     codes representing hexadecimal values ('0' - '9', 'A' - 'F'). If true, electronic key values will be converted
+ *     to byte values before passing them to the application. Default: true.</li>
+ *     <li>CharacterTimeout: Positive integer value, specifying the maximum delay between bytes that belong to the same
+ *     frame. Default value: 10 milliseconds.</li>
+ *     <li>ComPort: Operating system specific name of the serial communication port (e.g. RS232, Usb2Serial,
+ *     Bluetooth...) or the TCP address to be used for
+ *     communication with the device simulator. In case of RS232, names look typically like COM2 or /dev/ttyS1. In
+ *     case of TCP, names are of the form IPv4:port, where IPv4 is the IP address of the device and port its TCP port.</li>
+ *     <li>Databits: Number of data bits per data unit. Must be 7 or 8. Default: 8. It is strictly recommended to let
+ *     this value unchanged.
+ *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
+ *     <li>LoggingType: Specifies the logging format used by the IO processor. Must be one of the logging type values
+ *     specified in the UniqueIOProcessor class. Default: 1 (UniqueIOProcessor.LoggingTypeEscapeString).</li>
+ *     <li>MaxRetry: Specifies the maximum number of retries. Should be &gt; 0 only for RS232 (real COM ports)
+ *     where characters can become lost or corrupted on the communication line. Default: 2.</li>
+ *     <li>OwnPort: Integer value between 0 and 65535 specifying the TCP port used for communication with the device
+ *     simulator. Default: 0 (for random port number selected by operating system).
+ *     <br>This property may only be set if the communication with the device shall be made via TCP.</li>
+ *     <li>Parity: Parity of each data unit. Must be one of the parity constants specified in the
+ *     SerialIOProcessor class. Default: 0 (SerialIOProcessor.PARITY_NONE).
+ *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
+ *     <li>PollDelay: Minimum time between status requests, in milliseconds. Status requests will be used to monitor the
+ *     device state. Default: 50.</li>
+ *     <li>RequestTimeout: Maximum time, in milliseconds, between sending a command to the simulator and getting the
+ *     first byte of its response. Default: 500.</li>
+ *     <li>Stopbits: Number of stop bits per data unit. Must be 1 or 2. Default: 2.
+ *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
+ * </ul>
+ * <p>
+ * The key values of the keyboard must be configured within the SampleCombiDevice.Device.properties file. It must
+ * contain an entry of the form <b>Key</b><i>row</i><b>-</b><i>column</i><b>Value = </b><i>keyvalue</i> for every
+ * supported key, where
+ * <i>row</i> must be the two-digit key row (01 - 10),
+ * <i>column</i> must be the two-digit key column (01 - 16) and
+ * <i>keyvalue</i> must be the application-specific integer value that specifies that key.
  */
 public class Device extends JposDevice implements Runnable{
     private UniqueIOProcessor OutStream;
@@ -130,7 +173,6 @@ public class Device extends JposDevice implements Runnable{
      * where characters can become lost or corrupted on the communication line.
      */
     int MaxRetry = 2;
-    private boolean UsbToSerial = false;
 
     /**
      * Flag showing the driver is in I/O error state.
@@ -309,11 +351,6 @@ public class Device extends JposDevice implements Runnable{
                 PollDelay = Integer.parseInt(o.toString());
             if ((o = entry.getPropertyValue("MaxRetry")) != null)
                 MaxRetry = Integer.parseInt(o.toString());
-            if ((o = entry.getPropertyValue("UsbToSerial")) != null) {
-                if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: UsbToSerial");
-                UsbToSerial = Boolean.parseBoolean(o.toString());
-            }
             if ((o = entry.getPropertyValue("BinaryEKey")) != null) {
                 BinaryEKey = Boolean.parseBoolean(o.toString());
             }
@@ -1142,6 +1179,7 @@ public class Device extends JposDevice implements Runnable{
                 tcp.setParam(OwnPort);
                 OutStream = tcp;
             }
+            OutStream.setLoggingType(LoggingType);
             OutStream.open(false);
         } catch (Exception e) {
             return e;

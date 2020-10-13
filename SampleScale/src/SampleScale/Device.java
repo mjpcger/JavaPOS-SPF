@@ -12,8 +12,32 @@ import javax.swing.*;
 import java.nio.charset.Charset;
 
 /**
- * Implementation of a JposDevice based implementation of a scales driver that becomes
- * a JavaPOS Scales service in combination with the JposScale class
+ * JposDevice based implementation of a JavaPOS Scale device service implementation for the
+ * sample device implemented in SampleScale.tcl.
+ * <p>This is an implementation based on the Scales Dialog 02 / 04.
+ * <p>Here a full list of all device specific properties that can be changed via jpos.xml:
+ * <ul>
+ *     <li>Baudrate: Baud rate of the communication device. Must be 2400 or 4800, if set. Default: 2400.
+ *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
+ *     <li>CharacterTimeout: Positive integer value, specifying the maximum delay between bytes that belong to the same
+ *     frame. Default value: 20 milliseconds.</li>
+ *     <li>DefaultTara: Default tare value. Default: 2. If the scale shall use any other default, you can set it here.</li>
+ *     <li>MaximumWeight: Maximum weight supported by the scale. Default: 5000. Any higher weight results in an
+ *     overweight condition.</li>
+ *     <li>MaxRetry: Specifies the maximum number of retries. Should be &gt; 0 only for RS232 (real COM ports)
+ *     where characters can become lost or corrupted on the communication line. Default: 0.</li>
+ *     <li>OwnPort: Integer value between 0 and 65535 specifying the TCP port used for communication with the device
+ *     simulator. Default: 0 (for random port number selected by operating system).
+ *     <br>This property may only be set if the communication with the device shall be made via TCP.</li>
+ *     <li>PollDelay: Minimum time between status requests, in milliseconds. Status requests will be used to monitor the
+ *     device state. Default: 500.</li>
+ *     <li>RequestTimeout: Maximum time, in milliseconds, between sending a command to the simulator and getting the
+ *     first byte of its response. Default: 2000.</li>
+ *     <li>Target: Operating system specific name of the serial communication port (e.g. RS232, Usb2Serial,
+ *     Bluetooth...) or the TCP address to be used for
+ *     communication with the device simulator. In case of RS232, names look typically like COM2 or /dev/ttyS1. In
+ *     case of TCP, names are of the form IPv4:port, where IPv4 is the IP address of the device and port its TCP port.</li>
+ * </ul>
  */
 public class Device extends JposDevice implements Runnable {
     /**
@@ -38,6 +62,10 @@ public class Device extends JposDevice implements Runnable {
      */
     int MaxRetry = 0;
 
+    /**
+     * In case of a serial connection, baud rates 2400 (Scales Dialog 02) or 4800 (Scales Dialog 04) are valid.
+     */
+    Integer Baudrate = SerialIOProcessor.BAUDRATE_2400;
     /**
      * In case of a TCP connection, values above 0 specify the source port number. Zero results in an random source port.
      */
@@ -93,6 +121,11 @@ public class Device extends JposDevice implements Runnable {
                 }
                 else
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid property for Scale Dialog 04.");
+            }
+            if ((o = entry.getPropertyValue("Baudrate")) != null) {
+                Baudrate = Integer.parseInt(o.toString());
+                if (OwnPort != null)
+                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Baudrate");
             }
             if ((o = entry.getPropertyValue("RequestTimeout")) != null) {
                 RequestTimeout = Integer.parseInt(o.toString());
@@ -381,7 +414,7 @@ public class Device extends JposDevice implements Runnable {
                 ((TcpClientIOProcessor)(Target = new TcpClientIOProcessor(this, ID))).setParam(OwnPort);
             }
             else {
-                ((SerialIOProcessor)(Target = new SerialIOProcessor(this, ID))).setParameters(SerialIOProcessor.BAUDRATE_4800, SerialIOProcessor.DATABITS_7, SerialIOProcessor.STOPBITS_1, SerialIOProcessor.PARITY_ODD);
+                ((SerialIOProcessor)(Target = new SerialIOProcessor(this, ID))).setParameters(Baudrate, SerialIOProcessor.DATABITS_7, SerialIOProcessor.STOPBITS_1, SerialIOProcessor.PARITY_ODD);
             }
             Target.open(InIOError);
             InIOError = false;

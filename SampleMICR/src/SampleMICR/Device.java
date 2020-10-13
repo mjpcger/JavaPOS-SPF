@@ -25,8 +25,24 @@ import jpos.config.JposEntry;
 import org.apache.log4j.Level;
 
 /**
- * Implementation of a JposDevice based implementation of a MICR driver that becomes
- * a JavaPOS MICR service in combination with the MICR class.
+ * Base of a JposDevice based implementation of JavaPOS MICR device service implementation for the sample device
+ * implemented in SampleMICR.tcl.
+ * <p>Here a full list of all device specific properties that can be changed via jpos.xml:
+ * <ul>
+ *     <li>CharacterTimeout: Positive integer value, specifying the maximum delay between bytes that belong to the same
+ *     frame. Default value: 20 milliseconds.</li>
+ *     <li>MinClaimTimeout: Minimum timeout in milliseconds used by method Claim to ensure correct working. Must be a
+ *     positive value. If this value is too small, Claim might throw a JposException even if everything is OK if the
+ *     specified timeout is less than or equal to MinClaimTimeout. Default: 200.</li>
+ *     <li>OwnPort: Integer value between 0 and 65535 specifying the TCP port used for communication with the device
+ *     simulator. Default: 0 (for random port number selected by operating system).</li>
+ *     <li>PollDelay: Minimum time between status requests, in milliseconds. Status requests will be used to monitor the
+ *     device state. Default: 500.</li>
+ *     <li>SubstituteCharacters: String containing the special characters named <i>Transit</i>, <i>Amount</i>,
+ *     <i>On-Us</i> and <i>Dash</i>, in this order. Default: "tao-".</li>
+ *     <li>Target: The IPv4 address of the device. Must always be specified and not empty. Notation: address:port, where
+ *     address is a IPv4 address and port the TCP port of the device.</li>
+ * </ul>
  */
 public class Device extends JposDevice implements Runnable {
     private int OwnPort = 0;

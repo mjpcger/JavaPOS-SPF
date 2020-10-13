@@ -30,7 +30,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 /**
- * Implementation of CAT based for the sample implemented in SampleCAT.tcl.
+ * Base of a JposDevice based implementation of JavaPOS CAT and ElectronicJournal device service implementations for the
+ * sample device implemented in SampleCAT.tcl. The sample device simulates EFT payment transactions without ticket
+ * printing (the simulator sends ticket and display data to its target).<br>
  * Supported features are:
  * <ul>
  *     <li>Sale, refund and void.</li>
@@ -60,7 +62,7 @@ import java.util.Arrays;
  *     <li>No need for vendor-specific code to process display data.</li>
  *     <li>No need to change the application if it is designed to share its line display during CAT operations:
  *         <ul>
- *             <li>If the aplication releases the LineDisplay before CAT operations start.</li>
+ *             <li>If the application releases the LineDisplay before CAT operations start.</li>
  *             <li>If the application re-claims and re-enables LineDisplay after CAT operations finish.</li>
  *         </ul></li>
  * </ul>
@@ -120,6 +122,32 @@ import java.util.Arrays;
  *         be finished before payment operations have been finished (CAT operations are payment operations) and ticket
  *         printing would destroy the sales receipt otherwise.
  *         receipt.</li>
+ * </ul><br>
+ * Here a full list of all device specific properties that can be changed via jpos.xml:
+ * <ul>
+ *     <li>CharacterTimeout: Positive integer value, specifying the maximum delay between bytes that belong to the same
+ *     frame. Default value: 50 milliseconds.</li>
+ *     <li>ClientPort: Integer value between 0 and 65535 specifying the TCP port used for communication with the device
+ *     simulator. Default: 0 (for random port number selected by operating system).</li>
+ *     <li>DisplayLines: Number of display lines the application or the attached JavaPOS display can support. Must be
+ *     2, 3 or 4. Default: 4</li>
+ *     <li>DisplayName: See description above: Must be a LineDisplay device name or empty. Default: empty.</li>
+ *     <li>DisplayWidth: Maximum  length of a single display line the application or the attached LineDisplay can
+ *     support. Must be an integer value between 20 and 40 (both inclusive). Default: 40.</li>
+ *     <li>JournalLowSize: Maximum free space (in tickets) to report nearly full. Must be a positive value between
+ *     0 and the maximum size of the journal, in tickets. Default: 10.</li>
+ *     <li>JournalMaxSize: Maximum size of of electronic journal (in tickets). Must be a positive value. Default: 1000.</li>
+ *     <li>JournalPath: See description above: Path of electronic journal files or empty to force usage of DirectIoEvent
+ *     objects to pass CAT tickets to the application. Default: empty (to force DirectIOEvent usage).</li>
+ *     <li>JournalWidth: Length of one ticket line stored in the journal or sent vie DirectIOEvent. Must be a value
+ *     between 28 and 99 (inclusive). Default: 32.</li>
+ *     <li>MinClaimTimeout: Minimum timeout in milliseconds used by method Claim to ensure correct working. Must be a
+ *     positive value. If this value is too small, Claim might throw a JposException even if everything is OK if the
+ *     specified timeout is less than or equal to MinClaimTimeout. Default: 100.</li>
+ *     <li>Port: The IPv4 address of the device. Must always be specified and not empty. Notation: address:port, where
+ *     address is a IPv4 address and port the TCP port of the device.</li>
+ *     <li>RequestTimeout: Maximum time the service object waits for the reception of a response frame after sending a
+ *     request to the target, in milliseconds. Default: 1000.</li>
  * </ul>
  */
 public class Device extends JposDevice implements Runnable{
@@ -238,7 +266,7 @@ public class Device extends JposDevice implements Runnable{
     private int DisplayWidth = 40;          // Length of display line.
     private int DisplayLines = 4;           // Number of display lines.
     private String DisplayName = "";        // Display name, if empty, use DirectIOEvents instead
-    private int OwnPort = 0;                // Default: OS generated random port
+    private int ClientPort = 0;                // Default: OS generated random port
     private int CharacterTimeout = 50;      // Default: Service specific value for maximum delay between bytes belonging
                                             // to the same frame
     /**
@@ -773,7 +801,7 @@ public class Device extends JposDevice implements Runnable{
             Object o;
             int value;
             if ((o = entry.getPropertyValue("ClientPort")) != null && (value = Integer.parseInt(o.toString())) >= 0 && value <= 0xffff)
-                OwnPort = value;
+                ClientPort = value;
             if ((o = entry.getPropertyValue("RequestTimeout")) != null && (value = Integer.parseInt(o.toString())) > 0)
                 RequestTimeout = value;
             if ((o = entry.getPropertyValue("CharacterTimeout")) != null && (value = Integer.parseInt(o.toString())) > 0)
@@ -788,9 +816,9 @@ public class Device extends JposDevice implements Runnable{
                 DisplayLines = value;
             if ((o = entry.getPropertyValue("JournalPath")) != null)
                 check(!JournalPath.equals(o.toString()), JposConst.JPOS_E_ILLEGAL, "Inconsistent JournalPath properties: \"" + JournalPath + "\" - \"" + o.toString() + "\"");
-            if ((o = entry.getPropertyValue("JournalMaxSize")) != null && (value = Integer.parseInt(o.toString())) >= 0 && MinDisplayWidth <= value && value <= MaxDisplayWidth)
+            if ((o = entry.getPropertyValue("JournalMaxSize")) != null && (value = Integer.parseInt(o.toString())) >= 0)
                 JournalMaxSize = value;
-            if ((o = entry.getPropertyValue("JournalLowSize")) != null && (value = Integer.parseInt(o.toString())) >= 0 && MinDisplayWidth <= value && value <= MaxDisplayWidth)
+            if ((o = entry.getPropertyValue("JournalLowSize")) != null && (value = Integer.parseInt(o.toString())) >= 0 && JournalMaxSize <= value)
                 JournalLowSize = value;
             if ((o = entry.getPropertyValue("DisplayName")) != null)
                 check(!DisplayName.equals(o.toString()), JposConst.JPOS_E_ILLEGAL, "Inconsistent DisplayName properties: \"" + DisplayName + "\" - \"" + o.toString() + "\"");
@@ -994,7 +1022,7 @@ public class Device extends JposDevice implements Runnable{
     private JposException initPort() {
         try {
             OutStream = new TcpClientIOProcessor(this, ID);
-            OutStream.setParam(OwnPort);
+            OutStream.setParam(ClientPort);
             OutStream.open(InIOError);
             InIOError = false;
             ReadThread = new StreamReader("StreamReader_" + ID);
