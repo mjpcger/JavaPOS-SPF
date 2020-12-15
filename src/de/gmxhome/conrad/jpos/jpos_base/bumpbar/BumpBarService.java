@@ -25,10 +25,7 @@ import org.apache.log4j.Level;
 
 /**
  * BumpBar service implementation. For more details about getter, setter and method implementations,
- * see JposBase.<br>
- * Special handling has been added to method DirectIO: Due to the fact that UPOS does not support a FlagWhenIdle
- * property for remote order displays, two commands have been added to the UPOS standard. See the description of
- * method DirectIO for details.
+ * see JposBase.
  */
 public class BumpBarService extends JposBase implements BumpBarService114 {
     private BumpBarProperties Data;

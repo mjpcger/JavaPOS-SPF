@@ -18,15 +18,15 @@
 package SampleUdpDevice;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.*;
+import de.gmxhome.conrad.jpos.jpos_base.belt.*;
 import jpos.*;
 import jpos.config.*;
 import jpos.loader.*;
 
 /**
- * Factory class for CashDrawer device class of sample UDP service implementation
+ * Factory class for Belt device class of sample UDP service implementation
  */
-public class CashDrawerFactory extends Factory implements JposServiceInstanceFactory {
+public class BeltFactory extends Factory implements JposServiceInstanceFactory {
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
@@ -34,7 +34,7 @@ public class CashDrawerFactory extends Factory implements JposServiceInstanceFac
             String port = jposEntry.getPropertyValue("Port").toString();
 
             synchronized(Devices) {
-                if (deviceClass.equals("CashDrawer")) {
+                if (deviceClass.equals("Belt")) {
                     JposDevice any = getDevice(port);
                     Device dev;
                     boolean created = any != null;
