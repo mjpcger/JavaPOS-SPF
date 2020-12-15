@@ -16,6 +16,7 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
+import de.gmxhome.conrad.jpos.jpos_base.belt.BeltProperties;
 import de.gmxhome.conrad.jpos.jpos_base.bumpbar.BumpBarProperties;
 import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerProperties;
 import de.gmxhome.conrad.jpos.jpos_base.gate.GateProperties;
@@ -73,6 +74,7 @@ public class JposDevice extends JposBaseDevice {
     @Override
     public int noOfPropertySets() {
         return super.noOfPropertySets() +
+                getCount(Belts) +
                 getCount(BumpBars) +
                 getCount(CashDrawers) +
                 getCount(CATs) +
@@ -95,6 +97,61 @@ public class JposDevice extends JposBaseDevice {
                 getCount(Scanners) +
                 getCount(SignatureCaptures) +
                 getCount(ToneIndicators);
+    }
+
+    /*
+     * Belt specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for Belt devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of belts the device service supports. Each
+     * list element contains a list of all property sets owned by BeltService
+     * objects belonging to the same belt.
+     */
+    public List<JposCommonProperties>[] Belts = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of belt property sets, one element for each belt the device service
+     * supports. Whenever a belt device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public BeltProperties[] ClaimedBelt;
+
+    /**
+     * Allocate device specific property set list for belt devices. One list must be allocated for each belt
+     * the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxBelt Maximum number of belts that can be controlled by the physical device
+     */
+    protected void beltInit(int maxBelt) {
+        if (Belts.length == 0 && maxBelt > 0) {
+            ClaimedBelt = new BeltProperties[maxBelt];
+            Belts = (List<JposCommonProperties>[])new List[maxBelt];
+            for (int i = 0; i < maxBelt; i++) {
+                Belts[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support belt services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(BeltProperties props) {
+    }
+
+    /**
+     * Returns device implementation of BeltProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of BeltProperties that matches the requirements of the corresponding device service.
+     */
+    public BeltProperties getBeltProperties(int index) {
+        return null;
     }
 
     /*
@@ -122,7 +179,7 @@ public class JposDevice extends JposBaseDevice {
      * bar the driver supports.
      * Must be called within constructor of derived classes.
      *
-     * @param maxBumpBar Maximum number of cash drawers that can be controlled by the physical device
+     * @param maxBumpBar Maximum number of bump bars that can be controlled by the physical device
      */
     protected void bumpBarInit(int maxBumpBar) {
         if (BumpBars.length == 0 && maxBumpBar > 0) {
