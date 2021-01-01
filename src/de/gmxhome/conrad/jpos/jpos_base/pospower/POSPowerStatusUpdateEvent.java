@@ -121,25 +121,15 @@ public class POSPowerStatusUpdateEvent extends JposStatusUpdateEvent {
 
     @Override
     public boolean setAndCheckStatusProperties() {
-        POSPowerProperties props = (POSPowerProperties)getPropertySet();
-        int status = props.UPSChargeState;
-        int capacity = props.BatteryCapacityRemaining;
-        int source = props.PowerSource;
+        String[] propnames = {
+                "UPSChargeState",
+                "BatteryCapacityRemaining",
+                "PowerSource"
+        };
+        Object[] oldvals = getPropertyValues(propnames);
         if (super.setAndCheckStatusProperties())
             return true;
-        if (status != props.UPSChargeState) {
-            props.EventSource.logSet("UPSChargeState");
-            return true;
-        }
-        else if (capacity != props.BatteryCapacityRemaining) {
-            props.EventSource.logSet("BatteryCapacityRemaining");
-            return true;
-        }
-        else if (source != props.PowerSource) {
-            props.EventSource.logSet("PowerSource");
-            return true;
-        }
-        return false;
+        return propertiesHaveBeenChanged(propnames, oldvals);
     }
 
     /**

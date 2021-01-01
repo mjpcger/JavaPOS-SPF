@@ -82,15 +82,15 @@ public class ElectronicJournalStatusUpdateEvent extends JposStatusUpdateEvent {
 
     @Override
     public boolean setAndCheckStatusProperties() {
-        ElectronicJournalProperties props = (ElectronicJournalProperties)getPropertySet();
-        boolean suspended = props.Suspended;
-        int status = props.State;
+        String[] propnames = {
+                "State",
+                "Suspended"
+        };
+        Object[] oldvals = getPropertyValues(propnames);
         if (super.setAndCheckStatusProperties())
             return true;
-        if (status != props.State)
-            props.EventSource.logSet("State");
-        if (suspended != props.Suspended)
-            props.EventSource.logSet("Suspended");
+        if (propertiesHaveBeenChanged(propnames, oldvals))
+            return true;
         switch (getStatus()) {
             case ElectronicJournalConst.EJ_SUE_MEDIUM_FULL:
             case ElectronicJournalConst.EJ_SUE_MEDIUM_NEAR_FULL:

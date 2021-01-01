@@ -87,19 +87,14 @@ public class KeylockStatusUpdateEvent extends JposStatusUpdateEvent {
 
     @Override
     public boolean setAndCheckStatusProperties() {
-        KeylockProperties props = (KeylockProperties)getPropertySet();
-        int pos = props.KeyPosition;
-        byte[] ekey = props.ElectronicKeyValue;
+        String[] propnames = {
+                "KeyPosition",
+                "ElectronicKeyValue"
+        };
+        Object[] oldvals = getPropertyValues(propnames);
         if (super.setAndCheckStatusProperties())
             return true;
-        if (pos != props.KeyPosition || !Arrays.equals(ekey, props.ElectronicKeyValue)) {
-            if (pos != props.KeyPosition)
-                props.EventSource.logSet("KeyPosition");
-            if (!Arrays.equals(ekey, props.ElectronicKeyValue))
-                props.EventSource.logSet("ElectronicKeyValue");
-            return true;
-        }
-        return false;
+        return propertiesHaveBeenChanged(propnames, oldvals);
     }
 
     @Override
@@ -109,7 +104,11 @@ public class KeylockStatusUpdateEvent extends JposStatusUpdateEvent {
             return ret;
         switch (getStatus()) {
             case KeylockConst.LOCK_KP_ELECTRONIC:
-                return ElectronicKeyValue == null ? "Lock Position Undefined" : "Electronic Key Changed To " + new String(ElectronicKeyValue);
+                try {
+                    return ElectronicKeyValue == null ? "Lock Position Undefined" : "Electronic Key Changed To " + getPropertySet().EventSource.getPropertyString(this, "ElectronicKeyValue");
+                } catch (Exception e) {
+                    return "Electronic Key Changed To [Error: " + e.getMessage() + "]";
+                }
             case KeylockConst.LOCK_KP_LOCK:
                 return "Key Position: Locked";
             case KeylockConst.LOCK_KP_NORM:

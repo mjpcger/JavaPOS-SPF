@@ -221,53 +221,25 @@ public class POSPrinterStatusUpdateEvent extends JposStatusUpdateEvent {
     public boolean setAndCheckStatusProperties() {
         POSPrinterProperties props = (POSPrinterProperties)getPropertySet();
         int state = props.State;
-        boolean cover = props.CoverOpen;
-        boolean jend = props.JrnEmpty;
-        boolean jlow = props.JrnNearEnd;
-        int jcart = props.JrnCartridgeState;
-        boolean rend = props.RecEmpty;
-        boolean rlow = props.RecNearEnd;
-        int rcart = props.RecCartridgeState;
-        boolean send = props.SlpEmpty;
-        boolean slow = props.SlpNearEnd;
-        int scart = props.SlpCartridgeState;
+        String[] propnames = {
+                "CoverOpen",
+                "JrnEmpty",
+                "JrnNearEnd",
+                "JrnCartridgeState",
+                "RecEmpty",
+                "RecNearEnd",
+                "RecCartridgeState",
+                "SlpEmpty",
+                "SlpNearEnd",
+                "SlpCartridgeState"
+        };
+        Object[] oldvals = getPropertyValues(propnames);
         if (super.setAndCheckStatusProperties())
             return true;
         if (state != props.State)
             props.EventSource.logSet("State");
-        if (   cover != props.CoverOpen ||
-                jcart != props.JrnCartridgeState ||
-                jend != props.JrnEmpty ||
-                jlow != props.JrnNearEnd ||
-                rcart != props.RecCartridgeState ||
-                rend != props.RecEmpty ||
-                rlow != props.RecNearEnd ||
-                scart != props.SlpCartridgeState ||
-                send != props.SlpEmpty ||
-                slow != props.SlpNearEnd)
-        {
-            if (cover != props.CoverOpen)
-                props.EventSource.logSet("CoverOpen");
-            if (jcart != props.JrnCartridgeState)
-                props.EventSource.logSet("JrnCartridgeState");
-            if (jend != props.JrnEmpty)
-                props.EventSource.logSet("JrnEmpty");
-            if (jlow != props.JrnNearEnd)
-                props.EventSource.logSet("JrnNearEnd");
-            if (rcart != props.RecCartridgeState)
-                props.EventSource.logSet("RecCartridgeState");
-            if (rend != props.RecEmpty)
-                props.EventSource.logSet("RecEmpty");
-            if (rlow != props.RecNearEnd)
-                props.EventSource.logSet("RecNearEnd");
-            if (scart != props.SlpCartridgeState)
-                props.EventSource.logSet("SlpCartridgeState");
-            if (send != props.SlpEmpty)
-                props.EventSource.logSet("SlpEmpty");
-            if (slow != props.SlpNearEnd)
-                props.EventSource.logSet("SlpNearEnd");
+        if (propertiesHaveBeenChanged(propnames, oldvals))
             return true;
-        }
         switch (getStatus()) {
             case POSPrinterConst.PTR_SUE_JRN_COVER_OK:
             case POSPrinterConst.PTR_SUE_JRN_COVER_OPEN:

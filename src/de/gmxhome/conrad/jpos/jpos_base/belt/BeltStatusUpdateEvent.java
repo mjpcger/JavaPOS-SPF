@@ -125,42 +125,17 @@ public class BeltStatusUpdateEvent extends JposStatusUpdateEvent {
 
     @Override
     public boolean setAndCheckStatusProperties() {
-        BeltProperties props = (BeltProperties)getPropertySet();
-        boolean status[] = {
-            props.LightBarrierBackwardInterrupted,
-            props.LightBarrierForwardInterrupted,
-            props.SecurityFlapBackwardOpened,
-            props.SecurityFlapForwardOpened
+        String[] propnames = {
+                "LightBarrierBackwardInterrupted",
+                "LightBarrierForwardInterrupted",
+                "SecurityFlapBackwardOpened",
+                "SecurityFlapBackwardOpened",
+                "MotionStatus"
         };
-        int motion = props.MotionStatus;
+        Object[] oldvals = getPropertyValues(propnames);
         if (super.setAndCheckStatusProperties())
             return true;
-        boolean newstatus[] = {
-                props.LightBarrierBackwardInterrupted,
-                props.LightBarrierForwardInterrupted,
-                props.SecurityFlapBackwardOpened,
-                props.SecurityFlapForwardOpened
-        };
-        boolean ret = false;
-        if (motion != props.MotionStatus) {
-            props.EventSource.logSet("MotionStatus");
-            ret = true;
-        }
-        if (motion != props.MotionStatus || !Arrays.equals(status, newstatus)) {
-            String[] propnames = {
-                    "LightBarrierBackwardInterrupted",
-                    "LightBarrierForwardInterrupted",
-                    "SecurityFlapBackwardOpened",
-                    "SecurityFlapForwardOpened"
-            };
-            for (int i = 0; i < status.length; i++) {
-                if (status[i] != newstatus[i]) {
-                    props.EventSource.logSet(propnames[i]);
-                    ret = true;
-                }
-            }
-        }
-        return ret;
+        return propertiesHaveBeenChanged(propnames, oldvals);
     }
 
     @Override

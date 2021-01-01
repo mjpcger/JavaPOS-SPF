@@ -137,43 +137,24 @@ public class FiscalPrinterStatusUpdateEvent extends JposStatusUpdateEvent {
 
     @Override
     public boolean setAndCheckStatusProperties() {
+        String[] propnames = {
+                "CoverOpen",
+                "JrnEmpty",
+                "JrnNearEnd",
+                "RecEmpty",
+                "RecNearEnd",
+                "SlpEmpty",
+                "SlpNearEnd"
+        };
+        Object[] oldvals = getPropertyValues(propnames);
         FiscalPrinterProperties props = (FiscalPrinterProperties)getPropertySet();
         int state = props.State;
-        boolean cover = props.CoverOpen;
-        boolean jend = props.JrnEmpty;
-        boolean jlow = props.JrnNearEnd;
-        boolean rend = props.RecEmpty;
-        boolean rlow = props.RecNearEnd;
-        boolean send = props.SlpEmpty;
-        boolean slow = props.SlpNearEnd;
         if (super.setAndCheckStatusProperties())
             return true;
         if (state != props.State)
             props.EventSource.logSet("State");
-        if (   cover != props.CoverOpen ||
-                jend != props.JrnEmpty ||
-                jlow != props.JrnNearEnd ||
-                rend != props.RecEmpty ||
-                rlow != props.RecNearEnd ||
-                send != props.SlpEmpty ||
-                slow != props.SlpNearEnd)
-        {
-            if (cover != props.CoverOpen)
-                props.EventSource.logSet("CoverOpen");
-            if (jend != props.JrnEmpty)
-                props.EventSource.logSet("JrnEmpty");
-            if (jlow != props.JrnNearEnd)
-                props.EventSource.logSet("JrnNearEnd");
-            if (rend != props.RecEmpty)
-                props.EventSource.logSet("RecEmpty");
-            if (rlow != props.RecNearEnd)
-                props.EventSource.logSet("RecNearEnd");
-            if (send != props.SlpEmpty)
-                props.EventSource.logSet("SlpEmpty");
-            if (slow != props.SlpNearEnd)
-                props.EventSource.logSet("SlpNearEnd");
+        if (propertiesHaveBeenChanged(propnames, oldvals))
             return true;
-        }
         switch (getStatus()) {
             case FiscalPrinterConst.FPTR_SUE_JRN_COVER_OK:
             case FiscalPrinterConst.FPTR_SUE_JRN_COVER_OPEN:

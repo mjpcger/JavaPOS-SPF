@@ -19,7 +19,13 @@ package de.gmxhome.conrad.jpos.jpos_base;
 import jpos.JposConst;
 import jpos.events.StatusUpdateEvent;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Status update event with method to fill status properties.
@@ -89,20 +95,14 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
      * @return  true if state might have been really changed, false otherwise.
      */
     public boolean setAndCheckStatusProperties() {
-        JposCommonProperties props = getPropertySet();
-        int state = props.PowerState;
-        boolean flag = props.FlagWhenIdle;
+        String[] properties = {"PowerState", "FlagWhenIdle"};
+        Object[] oldproperties = getPropertyValues(properties);
         if (!setStatusProperties())
             return false;
-        if (state != props.PowerState) {
-            props.EventSource.logSet("PowerState");
+        if (propertiesHaveBeenChanged(properties, oldproperties))
             return true;
-        }
-        if (flag != props.FlagWhenIdle) {
-            props.EventSource.logSet("FlagWhenIdle");
-            return true;
-        }
-        switch (getStatus()) {
+        int state = getStatus();
+        switch (state) {
             case JposConst.JPOS_SUE_UF_COMPLETE:
             case JposConst.JPOS_SUE_UF_COMPLETE_DEV_NOT_RESTORED:
             case JposConst.JPOS_SUE_UF_FAILED_DEV_NEEDS_FIRMWARE:
@@ -115,6 +115,86 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
                     return true;
         }
         return false;
+    }
+
+    /**
+     * Checks whether properties specified by name have been changed. Works for all basic type properties (String,
+     * int, long) and array type properties (byte[]).
+     * @param properties    Array of property names.
+     * @param oldproperties Array of the corresponding property values before possible change.
+     * @return true if at least one of the given property values differs from its corresponding current value.
+     */
+    public boolean propertiesHaveBeenChanged(String[] properties, Object[] oldproperties) {
+        JposCommonProperties props = getPropertySet();
+        Object[] newproperties = getPropertyValues(properties);
+        boolean result = false;
+        for (int i = 0; i < newproperties.length; i++) {
+            if (!compare(oldproperties[i], newproperties[i])) {
+                props.EventSource.logSet(properties[i]);
+                result = true;
+            }
+        }
+        return result;
+    }
+
+    private boolean compare(Object first, Object second) {
+        if (first == null || second == null)
+            return first == second;
+        Class firstclass = first.getClass();
+        if (!firstclass.isArray())
+            return first.equals(second);
+        int count;
+        if (!second.getClass().equals(firstclass) || (count = Array.getLength(first)) != Array.getLength(second))
+            return false;
+        if (--count >= 0) {
+            if (first instanceof Object[])
+                return Arrays.equals((Object[]) first, (Object[]) second);
+            try {
+                return arrayEquals(firstclass, first, second);
+            } catch (Exception e) {
+                do {
+                    if (!Array.get(first, count).equals(Array.get(second, count)))
+                        return false;
+                } while (--count >= 0);
+            }
+        }
+        return true;
+    }
+
+    private static Map<Class,Method> arrayComparators = new HashMap<Class, Method>();
+
+    private boolean arrayEquals(Class theClass, Object first, Object second) throws Exception {
+        Method comparator = arrayComparators.get(theClass);
+        boolean result;
+        if (comparator == null) {
+            comparator = Arrays.class.getMethod("equals", theClass, theClass);
+            result = (Boolean) comparator.invoke(null, first, second);
+            arrayComparators.put(theClass, comparator);
+        } else
+            result = (Boolean) comparator.invoke(null, first, second);
+        return result;
+    }
+
+    /**
+     * Retrieves the values of a given set of properties. The names of the properties to be retrieved will be passed
+     * as an array of String. The corresponding values will be returned in an array of Object with the same size (or
+     * size 0 properties is null), in the same order. For example, if properties is {"Status", "Result"}, the returned
+     * array is { <i>value of Status</i>, <i>value of Result</i>}. If a property does not exist, "[error]" will be
+     * stored in the correcsponding place within the returned array.
+     * @param properties Array of names of properties to be retrieved.
+     * @return Array of property values.
+     */
+    public Object[] getPropertyValues(String[] properties) {
+        JposCommonProperties props = getPropertySet();
+        Object[] result = new Object[properties == null ? 0 : properties.length];
+        for (int i = 0; i < result.length; i++) {
+            try {
+                result[i] = props.EventSource.getClass().getMethod("get" + properties[i]).invoke(props.EventSource);
+            } catch (Exception e) {
+                result[i] = "[error]";
+            }
+        }
+        return result;
     }
 
     /**
