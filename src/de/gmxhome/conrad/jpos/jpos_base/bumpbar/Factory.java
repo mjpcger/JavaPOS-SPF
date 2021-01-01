@@ -26,15 +26,15 @@ public class Factory extends JposDeviceFactory {
     /**
      * Perform basic initialization of given device and property set. Links property
      * set and driver to each other and sets driver specific property defaults.
-     * @param index RemoteOrderDisplay  property set index.
-     * @param dev RemoteOrderDisplay implementation instance derived from JposDevice to be used by the service.
-     * @return RemoteOrderDisplayService object.
+     * @param index BumpBar  property set index.
+     * @param dev BumpBar implementation instance derived from JposDevice to be used by the service.
+     * @return BumpBarService object.
      * @throws JposException If property set could not be retrieved.
      */
     public BumpBarService addDevice(int index, JposDevice dev) throws JposException {
         BumpBarService service;
         BumpBarProperties props = dev.getBumpBarProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getRemoteOrderDisplayProperties()");
+        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBumpBarProperties()");
         service = (BumpBarService) (props.EventSource = new BumpBarService(props, dev));
         props.Device = dev;
         props.addProperties(dev.BumpBars);

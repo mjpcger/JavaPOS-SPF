@@ -22,6 +22,9 @@ import jpos.services.BaseService;
 import jpos.services.EventCallbacks;
 import org.apache.log4j.Level;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+
 /**
  * Base class for all UPOS device services using this framework. Each service owns a
  * driver object derived from JposDevice and a device class specific property set
@@ -98,12 +101,42 @@ public class JposBase implements BaseService {
      */
     public void logGet(Object obj, String propertyName) {
         try {
-            Device.log(Level.DEBUG, Props.LogicalName + ": " + propertyName + ": " +
-                    obj.getClass().getField(propertyName).get(obj).toString());
-
+            Device.log(Level.DEBUG, Props.LogicalName + ": " + propertyName + ": " + getPropertyString(obj, propertyName));
         } catch (Exception e) {
             Device.log(Level.DEBUG, Props.LogicalName + ": Cannot access property " + propertyName);
         }
+    }
+
+    /**
+     * Returns a property value of an object as String, using its getter method. Usually, simply the toString method
+     * of the specified object will be used to retrieve its string representation. If the property is an array, the
+     * string representations of all elements stored within the array will be concatenated separated by comma. Keep
+     * in mind that this might be confusing if the string representation of an element itself contains a comma.
+     * @param obj           Object that contains the requested property.
+     * @param propertyName  Name of the requested property.
+     * @return              String representation of the property.
+     * @throws Exception    Getter not available.
+     */
+    public String getPropertyString(Object obj, String propertyName) throws Exception {
+        Field  property;
+        try {
+            property = obj.getClass().getField(propertyName);
+        } catch (Exception e) {
+            (property = obj.getClass().getDeclaredField(propertyName)).setAccessible(true);
+        }
+        Object value = property.get(obj);
+        String valueString = value == null ? "[null]" : value.toString();
+        if (value.getClass().isArray()) {
+            for (int i = 0; i < Array.getLength(value); i++) {
+                Object component = Array.get(value, i);
+                String componentString = null == component ? "[null]" : component.toString();
+                if (0 == i)
+                    valueString = componentString;
+                else
+                    valueString += "," + componentString;
+            }
+        }
+        return valueString;
     }
 
     /**
@@ -120,9 +153,7 @@ public class JposBase implements BaseService {
      */
     public void logSet(String propertyName) {
         try {
-            Device.log(Level.INFO, Props.LogicalName + ": " + propertyName + " <- " +
-                    Props.getClass().getField(propertyName).get(Props).toString());
-
+            Device.log(Level.INFO, Props.LogicalName + ": " + propertyName + " <- " + getPropertyString(Props, propertyName));
         } catch (Exception e) {
             Device.log(Level.INFO, Props.LogicalName + ": Cannot access property " + propertyName);
         }

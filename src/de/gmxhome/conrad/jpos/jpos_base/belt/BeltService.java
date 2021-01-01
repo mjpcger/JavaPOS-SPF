@@ -17,9 +17,7 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.belt;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposBase;
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
+import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.BeltConst;
 import jpos.JposConst;
 import jpos.JposException;
@@ -31,12 +29,13 @@ import jpos.services.BeltService114;
  */
 public class BeltService extends JposBase implements BeltService114 {
     /**
-     * Instance of a class implementing the CashDrawerInterface for cash drawer specific setter and method calls bound
+     * Instance of a class implementing the BeltInterface for cash drawer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public BeltInterface BeltInterface;
 
     private BeltProperties Data;
+
     /**
      * Constructor. Stores given property set and device implementation object.
      *

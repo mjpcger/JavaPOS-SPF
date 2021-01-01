@@ -25,6 +25,7 @@ import jpos.JposException;
 import jpos.services.SignatureCaptureService114;
 
 import java.awt.*;
+import java.util.Arrays;
 
 /**
  * SignatureCapture service implementation. For more details about getter, setter and method implementations,
@@ -89,14 +90,18 @@ public class SignatureCaptureService extends JposBase implements SignatureCaptur
     public Point[] getPointArray() throws JposException {
         checkOpened();
         logGet("PointArray");
-        return Data.PointArray;
+        Point[] result = new Point[Data.PointArray.length];
+        for (int i = Data.PointArray.length - 1; i >= 0; --i) {
+            result[i] = (Point) Data.PointArray[i].clone();
+        }
+        return result;
     }
 
     @Override
     public byte[] getRawData() throws JposException {
         checkOpened();
         logGet("RawData");
-        return Data.RawData;
+        return Arrays.copyOf(Data.RawData, Data.RawData.length);
     }
 
     @Override

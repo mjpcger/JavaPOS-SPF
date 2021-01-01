@@ -123,19 +123,6 @@ public class CoinDispenserService extends JposBase implements CoinDispenserServi
         checkEnabled();
         Device.check(cashCounts == null || cashCounts.length != 1, JposConst.JPOS_E_ILLEGAL, "Bad dimension of cashCounts");
         Device.check(discrepancy == null || discrepancy.length != 1, JposConst.JPOS_E_ILLEGAL, "Bad dimension of discrepancy");
-        if (cashCounts[0] != null) {
-            String cashCount[] = cashCounts[0].split(",");
-            Device.check(cashCount != null && cashCount.length == 0, JposConst.JPOS_E_ILLEGAL, "Cash counts missing");
-            for (String entry : cashCount) {
-                String values[] = entry.split(":");
-                Device.check(((values.length - 1) & ~1) != 0, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
-                try {
-                    Device.check(Integer.parseInt(values[0]) <= 0 || (values.length > 1 && Integer.parseInt(values[1]) < 0), JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
-                } catch (NumberFormatException e) {
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Non-integer cash count component", e);
-                }
-            }
-        }
         CoinDispenserInterface.readCashCounts(cashCounts, discrepancy);
         logCall("ReadCashCounts", generateArgString(cashCounts, discrepancy));
     }

@@ -44,8 +44,7 @@ public interface CoinDispenserInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>Both parameters are arrays with dimension 1,</li>
-     *     <li>If cashCount[0] is not null: The string matches the same conditions as cashCount in method adjustCashCount.</li>
+     *     <li>Both parameters are arrays with dimension 1.</li>
      * </ul>
      *
      * @param cashCounts  The cash count data is placed into cashCounts.
