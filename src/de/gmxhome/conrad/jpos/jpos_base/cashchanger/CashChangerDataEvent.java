@@ -58,7 +58,9 @@ public class CashChangerDataEvent extends JposDataEvent {
         CashChangerProperties props = (CashChangerProperties) getPropertySet();
         if (props.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_COUNT) {
             props.DepositAmount = Amount;
+            props.EventSource.logSet("DepositAmount");
             props.DepositCounts = Counts;
+            props.EventSource.logSet("DepositCounts");
         }
     }
 }

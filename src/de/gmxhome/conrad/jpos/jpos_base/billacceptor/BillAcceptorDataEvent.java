@@ -57,7 +57,9 @@ public class BillAcceptorDataEvent extends JposDataEvent {
         BillAcceptorProperties props = (BillAcceptorProperties) getPropertySet();
         if (props.DepositStatus == BillAcceptorConst.BACC_STATUS_DEPOSIT_COUNT) {
             props.DepositAmount = Amount;
+            props.EventSource.logSet("DepositAmount");
             props.DepositCounts = Counts;
+            props.EventSource.logSet("DepositCounts");
         }
     }
 }
