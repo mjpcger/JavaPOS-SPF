@@ -17,8 +17,12 @@
 package de.gmxhome.conrad.jpos.jpos_base;
 
 import de.gmxhome.conrad.jpos.jpos_base.belt.BeltProperties;
+import de.gmxhome.conrad.jpos.jpos_base.billacceptor.BillAcceptorProperties;
+import de.gmxhome.conrad.jpos.jpos_base.billdispenser.BillDispenserProperties;
 import de.gmxhome.conrad.jpos.jpos_base.bumpbar.BumpBarProperties;
+import de.gmxhome.conrad.jpos.jpos_base.cashchanger.CashChangerProperties;
 import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerProperties;
+import de.gmxhome.conrad.jpos.jpos_base.coinacceptor.CoinAcceptorProperties;
 import de.gmxhome.conrad.jpos.jpos_base.gate.GateProperties;
 import de.gmxhome.conrad.jpos.jpos_base.cat.CATProperties;
 import de.gmxhome.conrad.jpos.jpos_base.coindispenser.CoinDispenserProperties;
@@ -75,9 +79,13 @@ public class JposDevice extends JposBaseDevice {
     public int noOfPropertySets() {
         return super.noOfPropertySets() +
                 getCount(Belts) +
+                getCount(Belts) +
+                getCount(Belts) +
                 getCount(BumpBars) +
+                getCount(Belts) +
                 getCount(CashDrawers) +
                 getCount(CATs) +
+                getCount(Belts) +
                 getCount(CoinDispensers) +
                 getCount(ElectronicJournals) +
                 getCount(FiscalPrinters) +
@@ -155,6 +163,116 @@ public class JposDevice extends JposBaseDevice {
     }
 
     /*
+     * BillAcceptor specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for BillAcceptor devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of bill acceptors the device service supports. Each
+     * list element contains a list of all property sets owned by BillAcceptorService
+     * objects belonging to the same bill acceptor.
+     */
+    public List<JposCommonProperties>[] BillAcceptors = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of bill acceptor property sets, one element for each bill acceptor the device service
+     * supports. Whenever a bill acceptor device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public BillAcceptorProperties[] ClaimedBillAcceptor;
+
+    /**
+     * Allocate device specific property set list for bill acceptor devices. One list must be allocated for each bill
+     * acceptors the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxBillAcceptor Maximum number of bill acceptors that can be controlled by the physical device
+     */
+    protected void billAcceptorInit(int maxBillAcceptor) {
+        if (BillAcceptors.length == 0 && maxBillAcceptor > 0) {
+            ClaimedBillAcceptor = new BillAcceptorProperties[maxBillAcceptor];
+            BillAcceptors = (List<JposCommonProperties>[])new List[maxBillAcceptor];
+            for (int i = 0; i < maxBillAcceptor; i++) {
+                BillAcceptors[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support bill acceptor services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(BillAcceptorProperties props) {
+    }
+
+    /**
+     * Returns device implementation of BillAcceptorProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of BillAcceptorProperties that matches the requirements of the corresponding device service.
+     */
+    public BillAcceptorProperties getBillAcceptorProperties(int index) {
+        return null;
+    }
+
+    /*
+     * BillDispenser specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for BillDispenser devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of bill dispensers the device service supports. Each
+     * list element contains a list of all property sets owned by BillDispenserService
+     * objects belonging to the same bill dispenser.
+     */
+    public List<JposCommonProperties>[] BillDispensers = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of bill dispenser property sets, one element for each bill dispenser the device service
+     * supports. Whenever a bill dispenser device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public BillDispenserProperties[] ClaimedBillDispenser;
+
+    /**
+     * Allocate device specific property set list for bill dispenser devices. One list must be allocated for each bill dispenser
+     * the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxBillDispenser Maximum number of bill dispensers that can be controlled by the physical device
+     */
+    protected void billDispenserInit(int maxBillDispenser) {
+        if (BillDispensers.length == 0 && maxBillDispenser > 0) {
+            ClaimedBillDispenser = new BillDispenserProperties[maxBillDispenser];
+            BillDispensers = (List<JposCommonProperties>[])new List[maxBillDispenser];
+            for (int i = 0; i < maxBillDispenser; i++) {
+                BillDispensers[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support bill dispenser services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(BillDispenserProperties props) {
+    }
+
+    /**
+     * Returns device implementation of BillDispenserProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of BillDispenserProperties that matches the requirements of the corresponding device service.
+     */
+    public BillDispenserProperties getBillDispenserProperties(int index) {
+        return null;
+    }
+
+    /*
      * BumpBar specific implementations
      */
 
@@ -206,6 +324,61 @@ public class JposDevice extends JposBaseDevice {
      * @return Instance of BumpBarProperties that matches the requirements of the corresponding device service.
      */
     public BumpBarProperties getBumpBarProperties(int index) {
+        return null;
+    }
+
+    /*
+     * CashChanger specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for CashChanger devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of cash changers the device service supports. Each
+     * list element contains a list of all property sets owned by CashChangerService
+     * objects belonging to the same cash changer.
+     */
+    public List<JposCommonProperties>[] CashChangers = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of cash changer property sets, one element for each cash changer the device service
+     * supports. Whenever a cash changer device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public CashChangerProperties[] ClaimedCashChanger;
+
+    /**
+     * Allocate device specific property set list for cash changer devices. One list must be allocated for each cash
+     * changer the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxCashChanger Maximum number of cash changers that can be controlled by the physical device
+     */
+    protected void cashChangerInit(int maxCashChanger) {
+        if (CashChangers.length == 0 && maxCashChanger > 0) {
+            ClaimedCashChanger = new CashChangerProperties[maxCashChanger];
+            CashChangers = (List<JposCommonProperties>[])new List[maxCashChanger];
+            for (int i = 0; i < maxCashChanger; i++) {
+                CashChangers[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support cash changer services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(CashChangerProperties props) {
+    }
+
+    /**
+     * Returns device implementation of CashChangerProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of CashChangerProperties that matches the requirements of the corresponding device service.
+     */
+    public CashChangerProperties getCashChangerProperties(int index) {
         return null;
     }
 
@@ -266,602 +439,57 @@ public class JposDevice extends JposBaseDevice {
     }
 
     /*
-     * Keylock specific implementations
+     * CoinAcceptor specific implementations
      */
 
     /**
-     * Set of Set of property sets for Keylock devices. The size of the list
+     * Set of Set of property sets for CoinAcceptor devices. The size of the list
      * will be specified by the device service implementation (default is 0) and is
-     * identical to the number of key locks the device service supports. Each
-     * list element contains a list of all property sets owned by KeylockService
-     * objects belonging to the same key lock.
+     * identical to the number of coin acceptors the device service supports. Each
+     * list element contains a list of all property sets owned by CoinAcceptorService
+     * objects belonging to the same coin acceptor.
      */
-    public List<JposCommonProperties>[] Keylocks = ((List<JposCommonProperties>[])new List[0]);
+    public List<JposCommonProperties>[] CoinAcceptors = (List<JposCommonProperties>[])new List[0];
 
     /**
-     * Array of key lock property sets, one element for each key lock the device service
-     * supports. Whenever a key lock device will be claimed, the corresponding property set will
+     * Array of coin acceptor property sets, one element for each coin acceptor the device service
+     * supports. Whenever a coin acceptor device will be claimed, the corresponding property set will
      * be stored within this array.
      */
-    public KeylockProperties[] ClaimedKeylock;
+    public CoinAcceptorProperties[] ClaimedCoinAcceptor;
 
     /**
-     * Allocate device specific property set list for keylock devices. One list must be allocated for each keylock the driver supports.
+     * Allocate device specific property set list for coin acceptor devices. One list must be allocated for each coin
+     * acceptor the driver supports.
      * Must be called within constructor of derived classes.
      *
-     * @param maxKeylock Maximum number of keylocks that can be controlled by the physical device
+     * @param maxCoinAcceptor Maximum number of coin acceptors that can be controlled by the physical device
      */
-    protected void keylockInit(int maxKeylock) {
-        if (Keylocks.length == 0 && maxKeylock > 0) {
-            ClaimedKeylock = new KeylockProperties[maxKeylock];
-            Keylocks = (List<JposCommonProperties>[])new List[maxKeylock];
-            for (int i = 0; i < maxKeylock; i++) {
-                Keylocks[i] = new ArrayList<JposCommonProperties>(0);
+    protected void coinAcceptorInit(int maxCoinAcceptor) {
+        if (CoinAcceptors.length == 0 && maxCoinAcceptor > 0) {
+            ClaimedCoinAcceptor = new CoinAcceptorProperties[maxCoinAcceptor];
+            CoinAcceptors = (List<JposCommonProperties>[])new List[maxCoinAcceptor];
+            for (int i = 0; i < maxCoinAcceptor; i++) {
+                CoinAcceptors[i] = new ArrayList<JposCommonProperties>(0);
             }
         }
     }
 
     /**
-     * Change defaults of properties. Must be implemented within derived classed that support keylock services.
-     *
-     * @param props Property set for setting the propperty defaults
-     */
-    public void changeDefaults(KeylockProperties props) {
-    }
-
-    /**
-     * Returns device implementation of KeylockProperties.
-     *
-     * @param index Device index, see constructor of JposCommonProperties.
-     * @return Instance of KeylockProperties that matches the requirements of the corresponding device service.
-     */
-    public KeylockProperties getKeylockProperties(int index) {
-        return null;
-    }
-
-    /*
-     * POSKeyboard specific implementations
-     */
-
-    /**
-     * Set of Set of property sets for POSKeyboard devices. The size of the list
-     * will be specified by the device service implementation (default is 0) and is
-     * identical to the number of keyboards the device service supports. Each
-     * list element contains a list of all property sets owned by POSKeyboardService
-     * objects belonging to the same keyboard.
-     */
-    public List<JposCommonProperties>[] POSKeyboards = (List<JposCommonProperties>[])new List[0];
-
-    /**
-     * Array of keyboard property sets, one element for each POS keyboard the device service
-     * supports. Whenever a keyboard device will be claimed, the corresponding property set will
-     * be stored within this array.
-     */
-    public POSKeyboardProperties[] ClaimedPOSKeyboard;
-
-    /**
-     * Allocate device specific property set list for POS keyboard devices. One list must be allocated for each POS keyboard the driver supports.
-     * Must be called within constructor of derived classes.
-     *
-     * @param maxKeyboard Maximum number of POS keyboards that can be controlled by the physical device
-     */
-    protected void pOSKeyboardInit(int maxKeyboard) {
-        if (POSKeyboards.length == 0 && maxKeyboard > 0) {
-            ClaimedPOSKeyboard = new POSKeyboardProperties[maxKeyboard];
-            POSKeyboards = (List<JposCommonProperties>[])new List[maxKeyboard];
-            for (int i = 0; i < maxKeyboard; i++) {
-                POSKeyboards[i] = new ArrayList<JposCommonProperties>(0);
-            }
-        }
-    }
-
-    /**
-     * Change defaults of properties. Must be implemented within derived classed that support POS keyboard services.
-     *
-     * @param props Property set for setting the propperty defaults
-     */
-    public void changeDefaults(POSKeyboardProperties props) {
-    }
-
-    /**
-     * Returns device implementation of POSKeyboardProperties.
-     *
-     * @param index Device index, see constructor of JposCommonProperties.
-     * @return Instance of POSKeyboardProperties that matches the requirements of the corresponding device service.
-     */
-    public POSKeyboardProperties getPOSKeyboardProperties(int index) {
-        return null;
-    }
-
-    /*
-     * POSPower specific implementations
-     */
-
-    /**
-     * Set of Set of property sets for POSPower devices. The size of the list
-     * will be specified by the device service implementation (default is 0) and is
-     * identical to the number of POS power devices  the device service supports. Each
-     * list element contains a list of all property sets owned by POSPowerService
-     * objects belonging to the same POS power device.
-     */
-    public List<JposCommonProperties>[] POSPowers = (List<JposCommonProperties>[])new List[0];
-
-    /**
-     * Array of POS power property sets, one element for each POS power device the device service
-     * supports. Whenever a POS power device will be claimed, the corresponding property set will
-     * be stored within this array.
-     */
-    public POSPowerProperties[] ClaimedPOSPower;
-
-    /**
-     * Allocate device specific property set list for POS power devices. One list must be allocated for each POS power
-     * device the driver supports.
-     * Must be called within constructor of derived classes.
-     *
-     * @param maxPower Maximum number of POS power devices that can be controlled by the physical device
-     */
-    protected void pOSPowerInit(int maxPower) {
-        if (POSPowers.length == 0 && maxPower > 0) {
-            ClaimedPOSPower = new POSPowerProperties[maxPower];
-            POSPowers = (List<JposCommonProperties>[])new List[maxPower];
-            for (int i = 0; i < maxPower; i++) {
-                POSPowers[i] = new ArrayList<JposCommonProperties>(0);
-            }
-        }
-    }
-
-    /**
-     * Change defaults of properties. Must be implemented within derived classed that support POS power services.
-     *
-     * @param props Property set for setting the propperty defaults
-     */
-    public void changeDefaults(POSPowerProperties props) {
-    }
-
-    /**
-     * Returns device implementation of POSPowerProperties.
-     *
-     * @param index Device index, see constructor of JposCommonProperties.
-     * @return Instance of POSPowerProperties that matches the requirements of the corresponding device service.
-     */
-    public POSPowerProperties getPOSPowerProperties(int index) {
-        return null;
-    }
-
-    /*
-     * Scanner specific implementations
-     */
-
-    /**
-     * Set of Set of property sets for Scanner devices. The size of the list
-     * will be specified by the device service implementation (default is 0) and is
-     * identical to the number of scanners the device service supports. Each
-     * list element contains a list of all property sets owned by ScannerService
-     * objects belonging to the same scanner.
-     */
-    public List<JposCommonProperties>[] Scanners = (List<JposCommonProperties>[])new List[0];
-
-    /**
-     * Array of scanner property sets, one element for each scanner the device service
-     * supports. Whenever a scanner device will be claimed, the corresponding property set will
-     * be stored within this array.
-     */
-    public ScannerProperties[] ClaimedScanner;
-
-    /**
-     * Allocate device specific property set list for scanner devices. One list must be allocated for each scanner the driver supports.
-     * Must be called within constructor of derived classes.
-     *
-     * @param maxScanner Maximum number of scanners that can be controlled by the physical device
-     */
-    protected void scannerInit(int maxScanner) {
-        if (Scanners.length == 0 && maxScanner > 0) {
-            ClaimedScanner = new ScannerProperties[maxScanner];
-            Scanners = (List<JposCommonProperties>[])new List[maxScanner];
-            for (int i = 0; i < maxScanner; i++) {
-                Scanners[i] = new ArrayList<JposCommonProperties>(0);
-            }
-        }
-    }
-
-    /**
-     * Change defaults of properties. Must be implemented within derived classed that support scanner services.
-     *
-     * @param props Property set for setting the propperty defaults
-     */
-    public void changeDefaults(ScannerProperties props) {
-    }
-
-    /**
-     * Returns device implementation of ScannerProperties.
-     *
-     * @param index Device index, see constructor of JposCommonProperties.
-     * @return Instance of ScannerProperties that matches the requirements of the corresponding device service.
-     */
-    public ScannerProperties getScannerProperties(int index) {
-        return null;
-    }
-
-    /*
-     * ToneIndicator specific implemenmtations
-     */
-
-    /**
-     * Set of Set of property sets for ToneIndicator devices. The size of the list
-     * will be specified by the device service implementation (default is 0) and is
-     * identical to the number of tone indicators the device service supports. Each
-     * list element contains a list of all property sets owned by ToneIndicatorService
-     * objects belonging to the same tone indicator.
-     */
-    public List<JposCommonProperties>[] ToneIndicators = (List<JposCommonProperties>[])new List[0];
-
-    /**
-     * Array of tone indicator property sets, one element for each tone indicator the device service
-     * supports. Whenever a tone indicator device will be claimed, the corresponding property set will
-     * be stored within this array.
-     */
-    public ToneIndicatorProperties[] ClaimedToneIndicator;
-
-    /**
-     * Allocate device specific property set list for tone indicator devices. One list must be allocated for each tone indicator the driver supports.
-     * Must be called within constructor of derived classes.
-     *
-     * @param maxToneIndicator Maximum number of tone indicators that can be controlled by the physical device
-     */
-    protected void toneIndicatorInit(int maxToneIndicator) {
-        if (ToneIndicators.length == 0 && maxToneIndicator > 0) {
-            ClaimedToneIndicator = new ToneIndicatorProperties[maxToneIndicator];
-            ToneIndicators = (List<JposCommonProperties>[])new List[maxToneIndicator];
-            for (int i = 0; i < maxToneIndicator; i++) {
-                ToneIndicators[i] = new ArrayList<JposCommonProperties>(0);
-            }
-        }
-    }
-
-    /**
-     * Change defaults of properties. Must be implemented within derived classed that support tone indicator services.
+     * Change defaults of properties. Must be implemented within derived classed that support coin acceptor services.
      *
      * @param props Property set for setting the property defaults
      */
-    public void changeDefaults(ToneIndicatorProperties props) {
+    public void changeDefaults(CoinAcceptorProperties props) {
     }
 
     /**
-     * Returns device implementation of ToneIndicatorProperties.
+     * Returns device implementation of CoinAcceptorProperties.
      *
      * @param index Device index, see constructor of JposCommonProperties.
-     * @return Instance of ToneIndicatorProperties that matches the requirements of the corresponding device service.
+     * @return Instance of CoinAcceptorProperties that matches the requirements of the corresponding device service.
      */
-    public ToneIndicatorProperties getToneIndicatorProperties(int index) {
-        return null;
-    }
-
-    /*
-     * LineDisplay specific implementations
-     */
-
-    /**
-     * Set of Set of property sets for LineDisplay devices. The size of the list
-     * will be specified by the device service implementation (default is 0) and is
-     * identical to the number of line displays the device service supports. Each
-     * list element contains a list of all property sets owned by LineDisplayService
-     * objects belonging to the same line display.
-     */
-    public List<JposCommonProperties>[] LineDisplays = (List<JposCommonProperties>[])new List[0];
-
-    /**
-     * Array of line display property sets, one element for each line display the device service
-     * supports. Whenever a line display device will be claimed, the corresponding property set will
-     * be stored within this array.
-     */
-    public LineDisplayProperties[] ClaimedLineDisplay;
-
-    /**
-     * Allocate device specific property set list for line display devices. One list must be allocated for each line display the driver supports.
-     * Must be called within constructor of derived classes.
-     *
-     * @param maxDisplay Maximum number of line displays that can be controlled by the physical device
-     */
-    protected void lineDisplayInit(int maxDisplay) {
-        if (LineDisplays.length == 0 && maxDisplay > 0) {
-            ClaimedLineDisplay = new LineDisplayProperties[maxDisplay];
-            LineDisplays = (List<JposCommonProperties>[])new List[maxDisplay];
-            for (int i = 0; i < maxDisplay; i++) {
-                LineDisplays[i] = new ArrayList<JposCommonProperties>(0);
-            }
-        }
-    }
-
-    /**
-     * Change defaults of properties. Must be implemented within derived classed that support line display services.
-     *
-     * @param props Property set for setting the propperty defaults
-     */
-    public void changeDefaults(LineDisplayProperties props) {
-    }
-
-    /**
-     * Returns device implementation of LineDisplayProperties.
-     *
-     * @param index Device index, see constructor of JposCommonProperties.
-     * @return Instance of LineDisplayProperties that matches the requirements of the corresponding device service.
-     */
-    public LineDisplayProperties getLineDisplayProperties(int index) {
-        return null;
-    }
-
-    /*
-     * MSR specific implementations
-     */
-
-    /**
-     * Set of Set of property sets for MSR devices. The size of the list
-     * will be specified by the device service implementation (default is 0) and is
-     * identical to the number of magnetic stripe readers the device service supports. Each
-     * list element contains a list of all property sets owned by MSRService
-     * objects belonging to the same magnetic stripe reader.
-     */
-    public List<JposCommonProperties>[] MSRs = (List<JposCommonProperties>[])new List[0];
-
-    /**
-     * Array of msr property sets, one element for each MSR the device service
-     * supports. Whenever a msr device will be claimed, the corresponding property set will
-     * be stored within this array.
-     */
-    public MSRProperties[] ClaimedMSR;
-
-    /**
-     * Change defaults of properties. Must be implemented within derived classed that support magnetic stripe reader services.
-     *
-     * @param props Property set for setting the property defaults
-     */
-    public void changeDefaults(MSRProperties props) {
-    }
-
-    /**
-     * Allocate device specific property set list for magnetic stripe reader (msr) devices. One list must be allocated
-     * for each msr the driver supports.
-     * Must be called within constructor of derived classes.
-     *
-     * @param maxMsr Maximum number of magnetic stripe readers that can be controlled by the physical device
-     */
-    protected void mSRInit(int maxMsr) {
-        if (MSRs.length == 0 && maxMsr > 0) {
-            ClaimedMSR = new MSRProperties[maxMsr];
-            MSRs = (List<JposCommonProperties>[])new List[maxMsr];
-            for (int i = 0; i < maxMsr; i++) {
-                MSRs[i] = new ArrayList<JposCommonProperties>(0);
-            }
-        }
-    }
-
-    /**
-     * Returns device implementation of MSRProperties.
-     *
-     * @param index Device index, see constructor of JposCommonProperties.
-     * @return Instance of MSRProperties that matches the requirements of the corresponding device service.
-     */
-    public MSRProperties getMSRProperties(int index) {
-        return null;
-    }
-
-    /*
-     * Scale specific implementations
-     */
-
-    /**
-     * Set of Set of property sets for Scale devices. The size of the list
-     * will be specified by the device service implementation (default is 0) and is
-     * identical to the number of scales the device service supports. Each
-     * list element contains a list of all property sets owned by ScaleService
-     * objects belonging to the same scale.
-     */
-    public List<JposCommonProperties>[] Scales = (List<JposCommonProperties>[])new List[0];
-
-    /**
-     * Array of Scale property sets, one element for each scale the device service
-     * supports. Whenever a scale device will be claimed, the corresponding property set will
-     * be stored within this array.
-     */
-    public ScaleProperties[] ClaimedScale;
-
-    /**
-     * Change defaults of properties. Must be implemented within derived classed that support scale services.
-     *
-     * @param props Property set for setting the property defaults
-     */
-    public void changeDefaults(ScaleProperties props) {
-    }
-
-    /**
-     * Allocate device specific property set list for scale devices. One list must be allocated for each
-     * scale the driver supports.
-     * Must be called within constructor of derived classes.
-     *
-     * @param maxScales Maximum number of scales that can be controlled by the physical device
-     */
-    protected void scaleInit(int maxScales) {
-        if (Scales.length == 0 && maxScales > 0) {
-            ClaimedScale = new ScaleProperties[maxScales];
-            Scales = (List<JposCommonProperties>[])new List[maxScales];
-            for (int i = 0; i < maxScales; i++) {
-                Scales[i] = new ArrayList<JposCommonProperties>(0);
-            }
-        }
-    }
-
-    /**
-     * Returns device implementation of ScaleProperties.
-     *
-     * @param index Device index, see constructor of JposCommonProperties.
-     * @return Instance of ScaleProperties that matches the requirements of the corresponding device service.
-     */
-    public ScaleProperties getScaleProperties(int index) {
-        return null;
-    }
-
-    /*
-     * CoinDispenser specific implementations
-     */
-
-    /**
-     * Set of Set of property sets for CoinDispenser devices. The size of the list
-     * will be specified by the device service implementation (default is 0) and is
-     * identical to the number of coin dispensers the device service supports. Each
-     * list element contains a list of all property sets owned by CoinDispenserService
-     * objects belonging to the same coin dispenser.
-     */
-    public List<JposCommonProperties>[] CoinDispensers = (List<JposCommonProperties>[])new List[0];
-
-    /**
-     * Array of coin dispenser property sets, one element for each coin dispenser the device service
-     * supports. Whenever a coin dispenser device will be claimed, the corresponding property set will
-     * be stored within this array.
-     */
-    public CoinDispenserProperties[] ClaimedCoinDispenser;
-
-    /**
-     * Change defaults of properties. Must be implemented within derived classed that support coin dispenser services.
-     *
-     * @param props Property set for setting the property defaults
-     */
-    public void changeDefaults(CoinDispenserProperties props) {
-    }
-
-    /**
-     * Allocate device specific property set list for coin dispensers. One list must be allocated for each
-     * coin dispenser the driver supports.
-     * Must be called within constructor of derived classes.
-     *
-     * @param maxCoinDispenser Maximum number of coin dispensers that can be controlled by the physical device
-     */
-    protected void coinDispenserInit(int maxCoinDispenser) {
-        if (CoinDispensers.length == 0 && maxCoinDispenser > 0) {
-            ClaimedCoinDispenser = new CoinDispenserProperties[maxCoinDispenser];
-            CoinDispensers = (List<JposCommonProperties>[])new List[maxCoinDispenser];
-            for (int i = 0; i < maxCoinDispenser; i++) {
-                CoinDispensers[i] = new ArrayList<JposCommonProperties>(0);
-            }
-        }
-    }
-
-    /**
-     * Returns device implementation of CoinDispenserProperties.
-     *
-     * @param index Device index, see constructor of JposCommonProperties.
-     * @return Instance of CoinDispenserProperties that matches the requirements of the corresponding device service.
-     */
-    public CoinDispenserProperties getCoinDispenserProperties(int index) {
-        return null;
-    }
-
-    /*
-     * POSPrinter specific implementations
-     */
-
-    /**
-     * Set of Set of property sets for POSPrinter devices. The size of the list
-     * will be specified by the device service implementation (default is 0) and is
-     * identical to the number of POS printers the device service supports. Each
-     * list element contains a list of all property sets owned by POSPrinterService
-     * objects belonging to the same POS printer.
-     */
-    public List<JposCommonProperties>[] POSPrinters = (List<JposCommonProperties>[])new List[0];
-
-    /**
-     * Array of POS printer property sets, one element for each POS printer the device service
-     * supports. Whenever a POS printer device will be claimed, the corresponding property set will
-     * be stored within this array.
-     */
-    public POSPrinterProperties[] ClaimedPOSPrinter;
-
-    /**
-     * Change defaults of properties. Must be implemented within derived classed that support POS printer services.
-     *
-     * @param props Property set for setting the property defaults
-     */
-    public void changeDefaults(POSPrinterProperties props) {
-    }
-
-    /**
-     * Allocate device specific property set list for POS printers. One list must be allocated for each
-     * POS printer the driver supports.
-     * Must be called within constructor of derived classes.
-     *
-     * @param maxPrinters Maximum number of POS printers that can be controlled by the physical device
-     */
-    protected void pOSPrinterInit(int maxPrinters) {
-        if (POSPrinters.length == 0 && maxPrinters > 0) {
-            ClaimedPOSPrinter = new POSPrinterProperties[maxPrinters];
-            POSPrinters = (List<JposCommonProperties>[])new List[maxPrinters];
-            for (int i = 0; i < maxPrinters; i++) {
-                POSPrinters[i] = new ArrayList<JposCommonProperties>(0);
-            }
-        }
-    }
-
-    /**
-     * Returns device implementation of POSPrinterProperties.
-     *
-     * @param index Device index, see constructor of JposCommonProperties.
-     * @return Instance of POSPrinterProperties that matches the requirements of the corresponding device service.
-     */
-    public POSPrinterProperties getPOSPrinterProperties(int index) {
-        return null;
-    }
-
-    /*
-     * RemoteOrderDisplay specific implementations
-     */
-
-    /**
-     * Set of Set of property sets for RemoteOrderDisplay devices. The size of the list
-     * will be specified by the device service implementation (default is 0) and is
-     * identical to the number of remote order displays the service supports. Each
-     * list element contains a list of all property sets owned by RemoteOrderDisplayService
-     * objects belonging to the same remote order display.
-     */
-    public List<JposCommonProperties>[] RemoteOrderDisplays = (List<JposCommonProperties>[])new List[0];
-
-    /**
-     * Array of remote order display property sets, one element for each remote order display the device service
-     * supports. Whenever a remote order display device will be claimed, the corresponding property set will
-     * be stored within this array.
-     */
-    public RemoteOrderDisplayProperties[] ClaimedRemoteOrderDisplay;
-
-    /**
-     * Change defaults of properties. Must be implemented within derived classed that support remote order display services.
-     *
-     * @param props Property set for setting the property defaults
-     */
-    public void changeDefaults(RemoteOrderDisplayProperties props) {
-    }
-
-    /**
-     * Allocate device specific property set list for remote order display devices. One list must be allocated for each
-     * remote order display the driver supports.
-     * Must be called within constructor of derived classes.
-     *
-     * @param maxRODisplay Maximum number of remote order displays that can be controlled by the physical device
-     */
-    protected void remoteOrderDisplayInit(int maxRODisplay) {
-        if (RemoteOrderDisplays.length == 0 && maxRODisplay > 0) {
-            ClaimedRemoteOrderDisplay = new RemoteOrderDisplayProperties[maxRODisplay];
-            RemoteOrderDisplays = (List<JposCommonProperties>[])new List[maxRODisplay];
-            for (int i = 0; i < maxRODisplay; i++) {
-                RemoteOrderDisplays[i] = new ArrayList<JposCommonProperties>(0);
-            }
-        }
-    }
-
-    /**
-     * Returns device implementation of RemoteOrderDisplayProperties.
-     *
-     * @param index Device index, see constructor of JposCommonProperties.
-     * @return Instance of RemoteOrderDisplayProperties that matches the requirements of the corresponding device service.
-     */
-    public RemoteOrderDisplayProperties getRemoteOrderDisplayProperties(int index) {
+    public CoinAcceptorProperties getCoinAcceptorProperties(int index) {
         return null;
     }
 
@@ -921,6 +549,61 @@ public class JposDevice extends JposBaseDevice {
     }
 
     /*
+     * CoinDispenser specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for CoinDispenser devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of coin dispensers the device service supports. Each
+     * list element contains a list of all property sets owned by CoinDispenserService
+     * objects belonging to the same coin dispenser.
+     */
+    public List<JposCommonProperties>[] CoinDispensers = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of coin dispenser property sets, one element for each coin dispenser the device service
+     * supports. Whenever a coin dispenser device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public CoinDispenserProperties[] ClaimedCoinDispenser;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support coin dispenser services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(CoinDispenserProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for coin dispensers. One list must be allocated for each
+     * coin dispenser the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxCoinDispenser Maximum number of coin dispensers that can be controlled by the physical device
+     */
+    protected void coinDispenserInit(int maxCoinDispenser) {
+        if (CoinDispensers.length == 0 && maxCoinDispenser > 0) {
+            ClaimedCoinDispenser = new CoinDispenserProperties[maxCoinDispenser];
+            CoinDispensers = (List<JposCommonProperties>[])new List[maxCoinDispenser];
+            for (int i = 0; i < maxCoinDispenser; i++) {
+                CoinDispensers[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of CoinDispenserProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of CoinDispenserProperties that matches the requirements of the corresponding device service.
+     */
+    public CoinDispenserProperties getCoinDispenserProperties(int index) {
+        return null;
+    }
+
+    /*
      * ElectronicJournal specific implementations
      */
 
@@ -972,61 +655,6 @@ public class JposDevice extends JposBaseDevice {
      * @return Instance of ElectronicJournalProperties that matches the requirements of the corresponding device service.
      */
     public ElectronicJournalProperties getElectronicJournalProperties(int index) {
-        return null;
-    }
-
-    /*
-     * MICR specific implementations
-     */
-
-    /**
-     * Set of Set of property sets for MICR devices. The size of the list
-     * will be specified by the device service implementation (default is 0) and is
-     * identical to the number of magnetic ink character recognition readers the service supports. Each
-     * list element contains a list of all property sets owned by MICRService
-     * objects belonging to the same magnetic ink character recognition reader.
-     */
-    public List<JposCommonProperties>[] MICRs = (List<JposCommonProperties>[])new List[0];
-
-    /**
-     * Array of electronic journal property sets, one element for each magnetic ink character recognition reader the device service
-     * supports. Whenever a magnetic ink character recognition reader device will be claimed, the corresponding property set will
-     * be stored within this array.
-     */
-    public MICRProperties[] ClaimedMICR;
-
-    /**
-     * Change defaults of properties. Must be implemented within derived classed that support magnetic ink character recognition reader services.
-     *
-     * @param props Property set for setting the property defaults
-     */
-    public void changeDefaults(MICRProperties props) {
-    }
-
-    /**
-     * Allocate device specific property set list for magnetic inc character recognition reader (micr) devices. One list
-     * must be allocated for each micr device the driver supports.
-     * Must be called within constructor of derived classes.
-     *
-     * @param maxMICR Maximum number of micr devices that can be controlled by the physical device
-     */
-    protected void mICRInit(int maxMICR) {
-        if (MICRs.length == 0 && maxMICR > 0) {
-            ClaimedMICR = new MICRProperties[maxMICR];
-            MICRs = (List<JposCommonProperties>[])new List[maxMICR];
-            for (int i = 0; i < maxMICR; i++) {
-                MICRs[i] = new ArrayList<JposCommonProperties>(0);
-            }
-        }
-    }
-
-    /**
-     * Returns device implementation of MICRProperties.
-     *
-     * @param index Device index, see constructor of JposCommonProperties.
-     * @return Instance of MICRProperties that matches the requirements of the corresponding device service.
-     */
-    public MICRProperties getMICRProperties(int index) {
         return null;
     }
 
@@ -1084,116 +712,6 @@ public class JposDevice extends JposBaseDevice {
      * @return Instance of FiscalPrinterProperties that matches the requirements of the corresponding device service.
      */
     public FiscalPrinterProperties getFiscalPrinterProperties(int index) {
-        return null;
-    }
-
-    /*
-     * Lights specific implementations
-     */
-
-    /**
-     * Set of Set of property sets for Lights devices. The size of the list
-     * will be specified by the device service implementation (default is 0) and is
-     * identical to the number of lights the service supports. Each
-     * list element contains a list of all property sets owned by LightsService
-     * objects belonging to the same lights.
-     */
-    public List<JposCommonProperties>[] Lightss = (List<JposCommonProperties>[])new List[0];
-
-    /**
-     * Array of lights property sets, one element for each lights the device service
-     * supports. Whenever a lights device will be claimed, the corresponding property set will
-     * be stored within this array.
-     */
-    public LightsProperties[] ClaimedLights;
-
-    /**
-     * Change defaults of properties. Must be implemented within derived classed that support lights services.
-     *
-     * @param props Property set for setting the property defaults
-     */
-    public void changeDefaults(LightsProperties props) {
-    }
-
-    /**
-     * Allocate device specific property set list for lights. One list must be allocated for each
-     * lights device the driver supports.
-     * Must be called within constructor of derived classes.
-     *
-     * @param maxLights Maximum number of lights that can be controlled by the physical device
-     */
-    protected void lightsInit(int maxLights) {
-        if (Lightss.length == 0 && maxLights > 0) {
-            ClaimedLights = new LightsProperties[maxLights];
-            Lightss = (List<JposCommonProperties>[])new List[maxLights];
-            for (int i = 0; i < maxLights; i++) {
-                Lightss[i] = new ArrayList<JposCommonProperties>(0);
-            }
-        }
-    }
-
-    /**
-     * Returns device implementation of LightsProperties.
-     *
-     * @param index Device index, see constructor of JposCommonProperties.
-     * @return Instance of LightsProperties that matches the requirements of the corresponding device service.
-     */
-    public LightsProperties getLightsProperties(int index) {
-        return null;
-    }
-
-    /*
-     * MotionSensor specific implementations
-     */
-
-    /**
-     * Set of Set of property sets for MotionSensor devices. The size of the list
-     * will be specified by the device service implementation (default is 0) and is
-     * identical to the number of motion sensors the service supports. Each
-     * list element contains a list of all property sets owned by MotionSensorService
-     * objects belonging to the same motion sensor.
-     */
-    public List<JposCommonProperties>[] MotionSensors = (List<JposCommonProperties>[])new List[0];
-
-    /**
-     * Array of motion sensor property sets, one element for each motion sensor the device service
-     * supports. Whenever a motion sensor device will be claimed, the corresponding property set will
-     * be stored within this array.
-     */
-    public MotionSensorProperties[] ClaimedMotionSensor;
-
-    /**
-     * Change defaults of properties. Must be implemented within derived classed that support motion sensor services.
-     *
-     * @param props Property set for setting the property defaults
-     */
-    public void changeDefaults(MotionSensorProperties props) {
-    }
-
-    /**
-     * Allocate device specific property set list for motion sensors. One list must be allocated for each
-     * motion sensor the driver supports.
-     * Must be called within constructor of derived classes.
-     *
-     * @param maxMotionSensor Maximum number of motion sensors that can be controlled by the physical device
-     */
-    protected void motionSensorInit(int maxMotionSensor) {
-        if (MotionSensors.length == 0 && maxMotionSensor > 0) {
-            ClaimedMotionSensor = new MotionSensorProperties[maxMotionSensor];
-            MotionSensors = (List<JposCommonProperties>[])new List[maxMotionSensor];
-            for (int i = 0; i < maxMotionSensor; i++) {
-                MotionSensors[i] = new ArrayList<JposCommonProperties>(0);
-            }
-        }
-    }
-
-    /**
-     * Returns device implementation of MotionSensorProperties.
-     *
-     * @param index Device index, see constructor of JposCommonProperties.
-     * @return Instance of MotionSensorProperties that matches the requirements of the corresponding device service.
-     */
-    public MotionSensorProperties getMotionSensorProperties(int index) {
         return null;
     }
 
@@ -1308,6 +826,662 @@ public class JposDevice extends JposBaseDevice {
     }
 
     /*
+     * Keylock specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for Keylock devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of key locks the device service supports. Each
+     * list element contains a list of all property sets owned by KeylockService
+     * objects belonging to the same key lock.
+     */
+    public List<JposCommonProperties>[] Keylocks = ((List<JposCommonProperties>[])new List[0]);
+
+    /**
+     * Array of key lock property sets, one element for each key lock the device service
+     * supports. Whenever a key lock device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public KeylockProperties[] ClaimedKeylock;
+
+    /**
+     * Allocate device specific property set list for keylock devices. One list must be allocated for each keylock the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxKeylock Maximum number of keylocks that can be controlled by the physical device
+     */
+    protected void keylockInit(int maxKeylock) {
+        if (Keylocks.length == 0 && maxKeylock > 0) {
+            ClaimedKeylock = new KeylockProperties[maxKeylock];
+            Keylocks = (List<JposCommonProperties>[])new List[maxKeylock];
+            for (int i = 0; i < maxKeylock; i++) {
+                Keylocks[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support keylock services.
+     *
+     * @param props Property set for setting the propperty defaults
+     */
+    public void changeDefaults(KeylockProperties props) {
+    }
+
+    /**
+     * Returns device implementation of KeylockProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of KeylockProperties that matches the requirements of the corresponding device service.
+     */
+    public KeylockProperties getKeylockProperties(int index) {
+        return null;
+    }
+
+    /*
+     * Lights specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for Lights devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of lights the service supports. Each
+     * list element contains a list of all property sets owned by LightsService
+     * objects belonging to the same lights.
+     */
+    public List<JposCommonProperties>[] Lightss = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of lights property sets, one element for each lights the device service
+     * supports. Whenever a lights device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public LightsProperties[] ClaimedLights;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support lights services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(LightsProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for lights. One list must be allocated for each
+     * lights device the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxLights Maximum number of lights that can be controlled by the physical device
+     */
+    protected void lightsInit(int maxLights) {
+        if (Lightss.length == 0 && maxLights > 0) {
+            ClaimedLights = new LightsProperties[maxLights];
+            Lightss = (List<JposCommonProperties>[])new List[maxLights];
+            for (int i = 0; i < maxLights; i++) {
+                Lightss[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of LightsProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of LightsProperties that matches the requirements of the corresponding device service.
+     */
+    public LightsProperties getLightsProperties(int index) {
+        return null;
+    }
+
+    /*
+     * LineDisplay specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for LineDisplay devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of line displays the device service supports. Each
+     * list element contains a list of all property sets owned by LineDisplayService
+     * objects belonging to the same line display.
+     */
+    public List<JposCommonProperties>[] LineDisplays = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of line display property sets, one element for each line display the device service
+     * supports. Whenever a line display device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public LineDisplayProperties[] ClaimedLineDisplay;
+
+    /**
+     * Allocate device specific property set list for line display devices. One list must be allocated for each line display the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxDisplay Maximum number of line displays that can be controlled by the physical device
+     */
+    protected void lineDisplayInit(int maxDisplay) {
+        if (LineDisplays.length == 0 && maxDisplay > 0) {
+            ClaimedLineDisplay = new LineDisplayProperties[maxDisplay];
+            LineDisplays = (List<JposCommonProperties>[])new List[maxDisplay];
+            for (int i = 0; i < maxDisplay; i++) {
+                LineDisplays[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support line display services.
+     *
+     * @param props Property set for setting the propperty defaults
+     */
+    public void changeDefaults(LineDisplayProperties props) {
+    }
+
+    /**
+     * Returns device implementation of LineDisplayProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of LineDisplayProperties that matches the requirements of the corresponding device service.
+     */
+    public LineDisplayProperties getLineDisplayProperties(int index) {
+        return null;
+    }
+
+    /*
+     * MICR specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for MICR devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of magnetic ink character recognition readers the service supports. Each
+     * list element contains a list of all property sets owned by MICRService
+     * objects belonging to the same magnetic ink character recognition reader.
+     */
+    public List<JposCommonProperties>[] MICRs = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of electronic journal property sets, one element for each magnetic ink character recognition reader the device service
+     * supports. Whenever a magnetic ink character recognition reader device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public MICRProperties[] ClaimedMICR;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support magnetic ink character recognition reader services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(MICRProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for magnetic inc character recognition reader (micr) devices. One list
+     * must be allocated for each micr device the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxMICR Maximum number of micr devices that can be controlled by the physical device
+     */
+    protected void mICRInit(int maxMICR) {
+        if (MICRs.length == 0 && maxMICR > 0) {
+            ClaimedMICR = new MICRProperties[maxMICR];
+            MICRs = (List<JposCommonProperties>[])new List[maxMICR];
+            for (int i = 0; i < maxMICR; i++) {
+                MICRs[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of MICRProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of MICRProperties that matches the requirements of the corresponding device service.
+     */
+    public MICRProperties getMICRProperties(int index) {
+        return null;
+    }
+
+    /*
+     * MotionSensor specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for MotionSensor devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of motion sensors the service supports. Each
+     * list element contains a list of all property sets owned by MotionSensorService
+     * objects belonging to the same motion sensor.
+     */
+    public List<JposCommonProperties>[] MotionSensors = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of motion sensor property sets, one element for each motion sensor the device service
+     * supports. Whenever a motion sensor device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public MotionSensorProperties[] ClaimedMotionSensor;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support motion sensor services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(MotionSensorProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for motion sensors. One list must be allocated for each
+     * motion sensor the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxMotionSensor Maximum number of motion sensors that can be controlled by the physical device
+     */
+    protected void motionSensorInit(int maxMotionSensor) {
+        if (MotionSensors.length == 0 && maxMotionSensor > 0) {
+            ClaimedMotionSensor = new MotionSensorProperties[maxMotionSensor];
+            MotionSensors = (List<JposCommonProperties>[])new List[maxMotionSensor];
+            for (int i = 0; i < maxMotionSensor; i++) {
+                MotionSensors[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of MotionSensorProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of MotionSensorProperties that matches the requirements of the corresponding device service.
+     */
+    public MotionSensorProperties getMotionSensorProperties(int index) {
+        return null;
+    }
+
+    /*
+     * MSR specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for MSR devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of magnetic stripe readers the device service supports. Each
+     * list element contains a list of all property sets owned by MSRService
+     * objects belonging to the same magnetic stripe reader.
+     */
+    public List<JposCommonProperties>[] MSRs = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of msr property sets, one element for each MSR the device service
+     * supports. Whenever a msr device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public MSRProperties[] ClaimedMSR;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support magnetic stripe reader services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(MSRProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for magnetic stripe reader (msr) devices. One list must be allocated
+     * for each msr the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxMsr Maximum number of magnetic stripe readers that can be controlled by the physical device
+     */
+    protected void mSRInit(int maxMsr) {
+        if (MSRs.length == 0 && maxMsr > 0) {
+            ClaimedMSR = new MSRProperties[maxMsr];
+            MSRs = (List<JposCommonProperties>[])new List[maxMsr];
+            for (int i = 0; i < maxMsr; i++) {
+                MSRs[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of MSRProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of MSRProperties that matches the requirements of the corresponding device service.
+     */
+    public MSRProperties getMSRProperties(int index) {
+        return null;
+    }
+
+    /*
+     * POSKeyboard specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for POSKeyboard devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of keyboards the device service supports. Each
+     * list element contains a list of all property sets owned by POSKeyboardService
+     * objects belonging to the same keyboard.
+     */
+    public List<JposCommonProperties>[] POSKeyboards = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of keyboard property sets, one element for each POS keyboard the device service
+     * supports. Whenever a keyboard device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public POSKeyboardProperties[] ClaimedPOSKeyboard;
+
+    /**
+     * Allocate device specific property set list for POS keyboard devices. One list must be allocated for each POS keyboard the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxKeyboard Maximum number of POS keyboards that can be controlled by the physical device
+     */
+    protected void pOSKeyboardInit(int maxKeyboard) {
+        if (POSKeyboards.length == 0 && maxKeyboard > 0) {
+            ClaimedPOSKeyboard = new POSKeyboardProperties[maxKeyboard];
+            POSKeyboards = (List<JposCommonProperties>[])new List[maxKeyboard];
+            for (int i = 0; i < maxKeyboard; i++) {
+                POSKeyboards[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support POS keyboard services.
+     *
+     * @param props Property set for setting the propperty defaults
+     */
+    public void changeDefaults(POSKeyboardProperties props) {
+    }
+
+    /**
+     * Returns device implementation of POSKeyboardProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of POSKeyboardProperties that matches the requirements of the corresponding device service.
+     */
+    public POSKeyboardProperties getPOSKeyboardProperties(int index) {
+        return null;
+    }
+
+    /*
+     * POSPower specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for POSPower devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of POS power devices  the device service supports. Each
+     * list element contains a list of all property sets owned by POSPowerService
+     * objects belonging to the same POS power device.
+     */
+    public List<JposCommonProperties>[] POSPowers = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of POS power property sets, one element for each POS power device the device service
+     * supports. Whenever a POS power device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public POSPowerProperties[] ClaimedPOSPower;
+
+    /**
+     * Allocate device specific property set list for POS power devices. One list must be allocated for each POS power
+     * device the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxPower Maximum number of POS power devices that can be controlled by the physical device
+     */
+    protected void pOSPowerInit(int maxPower) {
+        if (POSPowers.length == 0 && maxPower > 0) {
+            ClaimedPOSPower = new POSPowerProperties[maxPower];
+            POSPowers = (List<JposCommonProperties>[])new List[maxPower];
+            for (int i = 0; i < maxPower; i++) {
+                POSPowers[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support POS power services.
+     *
+     * @param props Property set for setting the propperty defaults
+     */
+    public void changeDefaults(POSPowerProperties props) {
+    }
+
+    /**
+     * Returns device implementation of POSPowerProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of POSPowerProperties that matches the requirements of the corresponding device service.
+     */
+    public POSPowerProperties getPOSPowerProperties(int index) {
+        return null;
+    }
+
+    /*
+     * POSPrinter specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for POSPrinter devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of POS printers the device service supports. Each
+     * list element contains a list of all property sets owned by POSPrinterService
+     * objects belonging to the same POS printer.
+     */
+    public List<JposCommonProperties>[] POSPrinters = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of POS printer property sets, one element for each POS printer the device service
+     * supports. Whenever a POS printer device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public POSPrinterProperties[] ClaimedPOSPrinter;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support POS printer services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(POSPrinterProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for POS printers. One list must be allocated for each
+     * POS printer the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxPrinters Maximum number of POS printers that can be controlled by the physical device
+     */
+    protected void pOSPrinterInit(int maxPrinters) {
+        if (POSPrinters.length == 0 && maxPrinters > 0) {
+            ClaimedPOSPrinter = new POSPrinterProperties[maxPrinters];
+            POSPrinters = (List<JposCommonProperties>[])new List[maxPrinters];
+            for (int i = 0; i < maxPrinters; i++) {
+                POSPrinters[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of POSPrinterProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of POSPrinterProperties that matches the requirements of the corresponding device service.
+     */
+    public POSPrinterProperties getPOSPrinterProperties(int index) {
+        return null;
+    }
+
+    /*
+     * RemoteOrderDisplay specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for RemoteOrderDisplay devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of remote order displays the service supports. Each
+     * list element contains a list of all property sets owned by RemoteOrderDisplayService
+     * objects belonging to the same remote order display.
+     */
+    public List<JposCommonProperties>[] RemoteOrderDisplays = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of remote order display property sets, one element for each remote order display the device service
+     * supports. Whenever a remote order display device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public RemoteOrderDisplayProperties[] ClaimedRemoteOrderDisplay;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support remote order display services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(RemoteOrderDisplayProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for remote order display devices. One list must be allocated for each
+     * remote order display the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxRODisplay Maximum number of remote order displays that can be controlled by the physical device
+     */
+    protected void remoteOrderDisplayInit(int maxRODisplay) {
+        if (RemoteOrderDisplays.length == 0 && maxRODisplay > 0) {
+            ClaimedRemoteOrderDisplay = new RemoteOrderDisplayProperties[maxRODisplay];
+            RemoteOrderDisplays = (List<JposCommonProperties>[])new List[maxRODisplay];
+            for (int i = 0; i < maxRODisplay; i++) {
+                RemoteOrderDisplays[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of RemoteOrderDisplayProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of RemoteOrderDisplayProperties that matches the requirements of the corresponding device service.
+     */
+    public RemoteOrderDisplayProperties getRemoteOrderDisplayProperties(int index) {
+        return null;
+    }
+
+    /*
+     * Scale specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for Scale devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of scales the device service supports. Each
+     * list element contains a list of all property sets owned by ScaleService
+     * objects belonging to the same scale.
+     */
+    public List<JposCommonProperties>[] Scales = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of Scale property sets, one element for each scale the device service
+     * supports. Whenever a scale device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public ScaleProperties[] ClaimedScale;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support scale services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(ScaleProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for scale devices. One list must be allocated for each
+     * scale the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxScales Maximum number of scales that can be controlled by the physical device
+     */
+    protected void scaleInit(int maxScales) {
+        if (Scales.length == 0 && maxScales > 0) {
+            ClaimedScale = new ScaleProperties[maxScales];
+            Scales = (List<JposCommonProperties>[])new List[maxScales];
+            for (int i = 0; i < maxScales; i++) {
+                Scales[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of ScaleProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of ScaleProperties that matches the requirements of the corresponding device service.
+     */
+    public ScaleProperties getScaleProperties(int index) {
+        return null;
+    }
+
+    /*
+     * Scanner specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for Scanner devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of scanners the device service supports. Each
+     * list element contains a list of all property sets owned by ScannerService
+     * objects belonging to the same scanner.
+     */
+    public List<JposCommonProperties>[] Scanners = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of scanner property sets, one element for each scanner the device service
+     * supports. Whenever a scanner device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public ScannerProperties[] ClaimedScanner;
+
+    /**
+     * Allocate device specific property set list for scanner devices. One list must be allocated for each scanner the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxScanner Maximum number of scanners that can be controlled by the physical device
+     */
+    protected void scannerInit(int maxScanner) {
+        if (Scanners.length == 0 && maxScanner > 0) {
+            ClaimedScanner = new ScannerProperties[maxScanner];
+            Scanners = (List<JposCommonProperties>[])new List[maxScanner];
+            for (int i = 0; i < maxScanner; i++) {
+                Scanners[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support scanner services.
+     *
+     * @param props Property set for setting the propperty defaults
+     */
+    public void changeDefaults(ScannerProperties props) {
+    }
+
+    /**
+     * Returns device implementation of ScannerProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of ScannerProperties that matches the requirements of the corresponding device service.
+     */
+    public ScannerProperties getScannerProperties(int index) {
+        return null;
+    }
+
+    /*
      * SignatureCapture specific implementations
      */
 
@@ -1359,6 +1533,60 @@ public class JposDevice extends JposBaseDevice {
      * @return Instance of SignatureCaptureProperties that matches the requirements of the corresponding device service.
      */
     public SignatureCaptureProperties getSignatureCaptureProperties(int index) {
+        return null;
+    }
+
+    /*
+     * ToneIndicator specific implemenmtations
+     */
+
+    /**
+     * Set of Set of property sets for ToneIndicator devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of tone indicators the device service supports. Each
+     * list element contains a list of all property sets owned by ToneIndicatorService
+     * objects belonging to the same tone indicator.
+     */
+    public List<JposCommonProperties>[] ToneIndicators = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of tone indicator property sets, one element for each tone indicator the device service
+     * supports. Whenever a tone indicator device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public ToneIndicatorProperties[] ClaimedToneIndicator;
+
+    /**
+     * Allocate device specific property set list for tone indicator devices. One list must be allocated for each tone indicator the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxToneIndicator Maximum number of tone indicators that can be controlled by the physical device
+     */
+    protected void toneIndicatorInit(int maxToneIndicator) {
+        if (ToneIndicators.length == 0 && maxToneIndicator > 0) {
+            ClaimedToneIndicator = new ToneIndicatorProperties[maxToneIndicator];
+            ToneIndicators = (List<JposCommonProperties>[])new List[maxToneIndicator];
+            for (int i = 0; i < maxToneIndicator; i++) {
+                ToneIndicators[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support tone indicator services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(ToneIndicatorProperties props) {
+    }
+
+    /**
+     * Returns device implementation of ToneIndicatorProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of ToneIndicatorProperties that matches the requirements of the corresponding device service.
+     */
+    public ToneIndicatorProperties getToneIndicatorProperties(int index) {
         return null;
     }
 }
