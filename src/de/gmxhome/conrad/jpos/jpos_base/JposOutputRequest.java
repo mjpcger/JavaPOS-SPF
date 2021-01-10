@@ -370,8 +370,17 @@ public class JposOutputRequest implements Runnable {
                 try {
                     if (current.Exception != null) {
                         JposErrorEvent event = current.createErrorEvent(current.Exception);
-                        current.suspend(true);
-                        Device.handleEvent(event);
+                        if (event.getSource() == null) {
+                            synchronized (Device.AsyncProcessorRunning) {
+                                current.finished();
+                                current.Props.FlagWhenIdle = true;
+                                current.Props.EventSource.logSet("FlagWhenIdle");
+                                thelastone = current;
+                            }
+                        } else {
+                            current.suspend(true);
+                            Device.handleEvent(event);
+                        }
                     } else {
                         synchronized (Device.AsyncProcessorRunning) {
                             current.finished();
@@ -422,7 +431,17 @@ public class JposOutputRequest implements Runnable {
      * Factory for error events generated from JposExceptions. Must be overwritten whenever a device specific error
      * event shall be created. For example, in case of cash printer methods, this method should return a
      * POSPrinterErrorEvent (which is an object derived from JposErrorEvent) that contains additional values to be
-     * stored in printer properties before the event will be fired.
+     * stored in printer properties before the event will be fired.<br>
+     * If a device supports result code properties instead of error events, this method must return a JposErrorEvent
+     * with source = null. The result codes should be buffered for a later call of the createIdleEvent method which must
+     * create a device specific StatusUpdateEvent which contains the buffered values.<br>
+     * A JposErrorEvent with source = null will not be thrown, it will enforce special request handling instead:<ul>
+     *     <li>Instead of suspending the request, it will be finished.</li>
+     *     <li>The idle flag will be set.</li>
+     * </ul>
+     * Devices handling asynchronous requests this way, must not buffer more than one request at once. They must end
+     * with throwing a StatusUpdateEvent with a specific end-of-request status value instead. This event must be
+     * returned by the createIdleEvent method of a device specific class derived from JposOutputRequest.
      *
      * @param ex JposException which is the originator of an error event.
      * @return  The resulting error event.
@@ -442,7 +461,11 @@ public class JposOutputRequest implements Runnable {
 
     /**
      * Factory for status update event with FlagWhenIdle status value. Must be overwritten whenever a device specific
-     * status update event shall be created.
+     * status update event shall be created.<br>
+     * If the createErrorEvent method has been overwritten with a method that returns an error event with
+     * source = null to enforce special error handling via result properties instead of error events, createIdleEvent
+     * must be overwritten as well.
+     * 
      * @return  The resulting status update event.
      */
     public JposStatusUpdateEvent createIdleEvent() {
