@@ -18,6 +18,7 @@
 package de.gmxhome.conrad.jpos.jpos_base.billdispenser;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.BillDispenser;
 import jpos.BillDispenserConst;
 import jpos.JposConst;
 import jpos.JposException;
@@ -27,12 +28,22 @@ import jpos.JposException;
  */
 public class DispenseCash extends JposInputRequest {
     /**
-     * Get cashCounts parameter passed to DispenseCash method.
+     *  Get cashCounts parameter passed to DispenseCash method.
+     * @return CashCounts parameter.
      */
     public String getCashCounts() {
         return CashCounts;
     }
     private String CashCounts;
+
+    /**
+     * Gets CurrentExit property at the time when the request has been created.
+     * @return  CurrentExit property.
+     */
+    public int getCurrentExit() {
+        return CurrentExit;
+    }
+    private int CurrentExit;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -43,6 +54,7 @@ public class DispenseCash extends JposInputRequest {
     public DispenseCash(JposCommonProperties props, String cashCounts) {
         super(props);
         CashCounts = cashCounts;
+        CurrentExit = ((BillDispenserProperties)props).CurrentExit;
     }
 
     @Override

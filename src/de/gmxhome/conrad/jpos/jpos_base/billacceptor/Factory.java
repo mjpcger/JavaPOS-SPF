@@ -21,7 +21,7 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
 /**
- * BillAcceptor part of Belt factory for JPOS devices using this framework.
+ * General part of BillAcceptor factory for JPOS devices using this framework.
  */
 public class Factory extends JposDeviceFactory {
     /**
@@ -38,8 +38,8 @@ public class Factory extends JposDeviceFactory {
         dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBillAcceptorProperties()");
         service = (BillAcceptorService) (props.EventSource = new BillAcceptorService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.Belts);
-        props.Claiming = dev.ClaimedBelt;
+        props.addProperties(dev.BillAcceptors);
+        props.Claiming = dev.ClaimedBillAcceptor;
         dev.changeDefaults(props);
         dev.check(props.CurrencyCode == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCode property");
         dev.check(props.DepositCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCashList property");

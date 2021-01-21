@@ -69,7 +69,8 @@ public interface CoinAcceptorInterface  extends JposBaseInterface {
      * Final part of BeginDeposit method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled.</li>
+     *     <li>Device is enabled,</li>
+     *     <li>DepositStatus is STATUS_DEPOSIT_END. </li>
      * </ul>
      *
      * @throws JposException If an error occurs.
@@ -81,6 +82,7 @@ public interface CoinAcceptorInterface  extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
+     *     <li>DepositStatus is STATUS_DEPOSIT_COUNT, </li>
      *     <li>success is DEPOSIT_COMPLETE.</li>
      * </ul>
      *
@@ -94,7 +96,8 @@ public interface CoinAcceptorInterface  extends JposBaseInterface {
      * Final part of FixDeposit method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled.</li>
+     *     <li>Device is enabled,</li>
+     *     <li>DepositStatus is STATUS_DEPOSIT_START. </li>
      * </ul>
      *
      * @throws JposException If an error occurs.

@@ -100,7 +100,8 @@ public interface CashChangerInterface  extends JposBaseInterface {
      * Final part of BeginDeposit method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled.</li>
+     *     <li>Device is enabled,</li>
+     *     <li>DepositStatus is STATUS_DEPOSIT_END. </li>
      * </ul>
      *
      * @throws JposException If an error occurs.
@@ -112,7 +113,8 @@ public interface CashChangerInterface  extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>success is DEPOSIT_COMPLETE.</li>
+     *     <li>DepositStatus is STATUS_DEPOSIT_COUNT, </li>
+     *     <li>success is DEPOSIT_CHANGE, DEPOSIT_NOCHANGE or DEPOSIT_REPAY.</li>
      * </ul>
      *
      * @param success  The success parameter holds the value of how to deal with the cash that was
@@ -125,7 +127,8 @@ public interface CashChangerInterface  extends JposBaseInterface {
      * Final part of FixDeposit method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled.</li>
+     *     <li>Device is enabled,</li>
+     *     <li>DepositStatus is STATUS_DEPOSIT_START. </li>
      * </ul>
      *
      * @throws JposException If an error occurs.

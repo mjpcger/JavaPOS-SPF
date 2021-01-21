@@ -194,6 +194,8 @@ public class BillAcceptorService extends JposBase implements BillAcceptorService
     public void beginDeposit() throws JposException {
         logPreCall("BeginDeposit");
         checkEnabled();
+        Device.check(Data.DepositStatus != BillAcceptorConst.BACC_STATUS_DEPOSIT_END, JposConst.JPOS_E_ILLEGAL,
+                (Data.DepositStatus == BillAcceptorConst.BACC_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Just in deposit operation");
         BillAcceptorInterface.beginDeposit();
         logCall("BeginDeposit");
     }
@@ -202,6 +204,8 @@ public class BillAcceptorService extends JposBase implements BillAcceptorService
     public void endDeposit(int success) throws JposException {
         logPreCall("EndDeposit", "" + success);
         checkEnabled();
+        Device.check(Data.DepositStatus != BillAcceptorConst.BACC_STATUS_DEPOSIT_COUNT, JposConst.JPOS_E_ILLEGAL,
+                (Data.DepositStatus == BillAcceptorConst.BACC_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Operation not fixed");
         Device.check(success != BillAcceptorConst.BACC_DEPOSIT_COMPLETE, JposConst.JPOS_E_ILLEGAL, "Invalid success code: " + success);
         BillAcceptorInterface.endDeposit(success);
         logCall("EndDeposit");
@@ -211,6 +215,8 @@ public class BillAcceptorService extends JposBase implements BillAcceptorService
     public void fixDeposit() throws JposException {
         logPreCall("FixDeposit");
         checkEnabled();
+        Device.check(Data.DepositStatus != BillAcceptorConst.BACC_STATUS_DEPOSIT_START, JposConst.JPOS_E_ILLEGAL,
+                (Data.DepositStatus == BillAcceptorConst.BACC_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Operation not started");
         BillAcceptorInterface.fixDeposit();
         logCall("FixDeposit");
     }

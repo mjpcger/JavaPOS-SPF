@@ -27,12 +27,22 @@ import jpos.JposException;
  */
 public class DispenseCash extends JposOutputRequest {
     /**
-     * Get cashCounts parameter passed to DispenseCash method.
+     *  Get cashCounts parameter passed to DispenseCash method.
+     * @return CashCounts parameter.
      */
     public String getCashCounts() {
         return CashCounts;
     }
     private String CashCounts;
+
+    /**
+     * Gets CurrentExit property at the time when the request has been created.
+     * @return  CurrentExit property.
+     */
+    public int getCurrentExit() {
+        return CurrentExit;
+    }
+    private int CurrentExit;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -43,6 +53,7 @@ public class DispenseCash extends JposOutputRequest {
     public DispenseCash(JposCommonProperties props, String cashCounts) {
         super(props);
         CashCounts = cashCounts;
+        CurrentExit = ((CashChangerProperties)props).CurrentExit;
     }
 
     @Override

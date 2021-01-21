@@ -188,6 +188,8 @@ public class CoinAcceptorService extends JposBase implements CoinAcceptorService
     public void beginDeposit() throws JposException {
         logPreCall("BeginDeposit");
         checkEnabled();
+        Device.check(Data.DepositStatus != CoinAcceptorConst.CACC_STATUS_DEPOSIT_END, JposConst.JPOS_E_ILLEGAL,
+                (Data.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Just in deposit operation");
         CoinAcceptorInterface.beginDeposit();
         logCall("BeginDeposit");
     }
@@ -196,6 +198,8 @@ public class CoinAcceptorService extends JposBase implements CoinAcceptorService
     public void endDeposit(int success) throws JposException {
         logPreCall("EndDeposit", "" + success);
         checkEnabled();
+        Device.check(Data.DepositStatus != CoinAcceptorConst.CACC_STATUS_DEPOSIT_COUNT, JposConst.JPOS_E_ILLEGAL,
+                (Data.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Operation not fixed");
         Device.check(success != CoinAcceptorConst.CACC_DEPOSIT_COMPLETE, JposConst.JPOS_E_ILLEGAL, "Invalid success code: " + success);
         CoinAcceptorInterface.endDeposit(success);
         logCall("EndDeposit");
@@ -205,6 +209,8 @@ public class CoinAcceptorService extends JposBase implements CoinAcceptorService
     public void fixDeposit() throws JposException {
         logPreCall("FixDeposit");
         checkEnabled();
+        Device.check(Data.DepositStatus != CoinAcceptorConst.CACC_STATUS_DEPOSIT_START, JposConst.JPOS_E_ILLEGAL,
+                (Data.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Operation not started");
         CoinAcceptorInterface.fixDeposit();
         logCall("FixDeposit");
     }

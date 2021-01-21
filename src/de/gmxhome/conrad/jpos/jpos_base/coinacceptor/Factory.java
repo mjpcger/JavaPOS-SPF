@@ -21,7 +21,7 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
 /**
- * CoinAcceptor part of Belt factory for JPOS devices using this framework.
+ * General part of CoinAcceptor factory for JPOS devices using this framework.
  */
 public class Factory extends JposDeviceFactory {
     /**
@@ -38,13 +38,14 @@ public class Factory extends JposDeviceFactory {
         dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCoinAcceptorProperties()");
         service = (CoinAcceptorService) (props.EventSource = new CoinAcceptorService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.Belts);
-        props.Claiming = dev.ClaimedBelt;
+        props.addProperties(dev.CoinAcceptors);
+        props.Claiming = dev.ClaimedCoinAcceptor;
         dev.changeDefaults(props);
         dev.check(props.CurrencyCode == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCode property");
         dev.check(props.DepositCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCashList property");
         dev.check(props.DepositCodeList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCodeList property");
         dev.check(props.DepositCounts == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCounts property");
+        dev.check(props.RealTimeDataEnabled == null, JposConst.JPOS_E_FAILURE, "Missing initialization of RealTimeDataEnabled property");
         service.DeviceInterface = service.CoinAcceptorInterface = props;
         return service;
     }

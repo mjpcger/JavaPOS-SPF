@@ -71,7 +71,8 @@ public interface BillAcceptorInterface  extends JposBaseInterface {
      * Final part of BeginDeposit method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled.</li>
+     *     <li>Device is enabled,</li>
+     *     <li>DepositStatus is STATUS_DEPOSIT_END. </li>
      * </ul>
      *
      * @throws JposException If an error occurs.
@@ -83,6 +84,7 @@ public interface BillAcceptorInterface  extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
+     *     <li>DepositStatus is STATUS_DEPOSIT_COUNT, </li>
      *     <li>success is DEPOSIT_COMPLETE.</li>
      * </ul>
      *
@@ -96,7 +98,8 @@ public interface BillAcceptorInterface  extends JposBaseInterface {
      * Final part of FixDeposit method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled.</li>
+     *     <li>Device is enabled,</li>
+     *     <li>DepositStatus is STATUS_DEPOSIT_START. </li>
      * </ul>
      *
      * @throws JposException If an error occurs.
@@ -109,7 +112,7 @@ public interface BillAcceptorInterface  extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapPauseDeposit is true, </li>
-     *     <li>control is DEPOSIT_PAUSE or DEPOSIT_RESTART.</li>
+     *     <li>control is DEPOSIT_PAUSE or DEPOSIT_RESTART,</li>
      * </ul>
      *
      * @param control The control parameter contains one of DEPOSIT_PAUSE and DEPOSIT_RESTART.

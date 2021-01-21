@@ -329,6 +329,8 @@ public class CashChangerService extends JposBase implements CashChangerService11
     public void beginDeposit() throws JposException {
         logPreCall("BeginDeposit");
         checkEnabled();
+        Device.check(Data.DepositStatus != CashChangerConst.CHAN_STATUS_DEPOSIT_END, JposConst.JPOS_E_ILLEGAL,
+                (Data.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Just in deposit operation");
         CashChangerInterface.beginDeposit();
         logCall("BeginDeposit");
     }
@@ -336,8 +338,15 @@ public class CashChangerService extends JposBase implements CashChangerService11
     @Override
     public void endDeposit(int success) throws JposException {
         logPreCall("EndDeposit", "" + success);
+        long[] validsuccess = {
+                CashChangerConst.CHAN_DEPOSIT_CHANGE,
+                CashChangerConst.CHAN_DEPOSIT_NOCHANGE,
+                CashChangerConst.CHAN_DEPOSIT_REPAY
+        };
         checkEnabled();
-        Device.check(success != BillAcceptorConst.BACC_DEPOSIT_COMPLETE, JposConst.JPOS_E_ILLEGAL, "Invalid success code: " + success);
+        Device.check(Data.DepositStatus != CashChangerConst.CHAN_STATUS_DEPOSIT_COUNT, JposConst.JPOS_E_ILLEGAL,
+                (Data.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Operation not fixed");
+        Device.checkMember(success, validsuccess, JposConst.JPOS_E_ILLEGAL, "Invalid success code: " + success);
         CashChangerInterface.endDeposit(success);
         logCall("EndDeposit");
     }
@@ -346,6 +355,8 @@ public class CashChangerService extends JposBase implements CashChangerService11
     public void fixDeposit() throws JposException {
         logPreCall("FixDeposit");
         checkEnabled();
+        Device.check(Data.DepositStatus != CashChangerConst.CHAN_STATUS_DEPOSIT_START, JposConst.JPOS_E_ILLEGAL,
+                (Data.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Operation not started");
         CashChangerInterface.fixDeposit();
         logCall("FixDeposit");
     }
@@ -355,7 +366,7 @@ public class CashChangerService extends JposBase implements CashChangerService11
         logPreCall("PauseDeposit");
         checkEnabled();
         Device.check(!Data.CapPauseDeposit, JposConst.JPOS_E_ILLEGAL, "PauseDeposit not supported");
-        long allowed[] = {BillAcceptorConst.BACC_DEPOSIT_PAUSE, BillAcceptorConst.BACC_DEPOSIT_RESTART };
+        long allowed[] = {CashChangerConst.CHAN_DEPOSIT_PAUSE, CashChangerConst.CHAN_DEPOSIT_RESTART };
         Device.checkMember(control, allowed, JposConst.JPOS_E_ILLEGAL, "Illegal parameter value");
         CashChangerInterface.pauseDeposit(control);
         logCall("PauseDeposit");

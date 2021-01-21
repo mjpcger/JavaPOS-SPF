@@ -117,9 +117,10 @@ public class CoinAcceptorProperties extends JposCommonProperties implements Coin
     public Integer FullStatusDef = null;
 
     /**
-     * UPOS property RealTimeDataEnabled. Default: false.
+     * UPOS property RealTimeDataEnabled. Default: null. Must be overwritten
+     * by objects derived from JposDevice within the changeDefaults method.
      */
-    public boolean RealTimeDataEnabled = false;
+    public Boolean RealTimeDataEnabled = null;
     /**
      * Constructor.
      *
@@ -154,16 +155,34 @@ public class CoinAcceptorProperties extends JposCommonProperties implements Coin
     public void adjustCashCounts(String cashCounts) throws JposException {
     }
 
+    /**
+     * Default implementation of BeginDeposit simply sets DepositStatus to STATUS_DEPOSIT_START.
+     * @throws JposException never.
+     */
     @Override
     public void beginDeposit() throws JposException {
+        DepositStatus = CoinAcceptorConst.CACC_STATUS_DEPOSIT_START;
+        EventSource.logSet("DepositStatus");
     }
 
+    /**
+     * Default implementation of EndDeposit simply sets DepositStatus to STATUS_DEPOSIT_END.
+     * @throws JposException never.
+     */
     @Override
     public void endDeposit(int success) throws JposException {
+        DepositStatus = CoinAcceptorConst.CACC_STATUS_DEPOSIT_END;
+        EventSource.logSet("DepositStatus");
     }
 
+    /**
+     * Default implementation of FixDeposit simply sets DepositStatus to STATUS_DEPOSIT_COUNT.
+     * @throws JposException never.
+     */
     @Override
     public void fixDeposit() throws JposException {
+        DepositStatus = CoinAcceptorConst.CACC_STATUS_DEPOSIT_COUNT;
+        EventSource.logSet("DepositStatus");
     }
 
     @Override

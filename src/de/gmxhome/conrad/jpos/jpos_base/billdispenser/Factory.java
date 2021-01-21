@@ -21,7 +21,7 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
 /**
- * BillDispenser part of Belt factory for JPOS devices using this framework.
+ * General part of BillDispenser factory for JPOS devices using this framework.
  */
 public class Factory extends JposDeviceFactory {
     /**
@@ -38,8 +38,8 @@ public class Factory extends JposDeviceFactory {
         dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBillDispenserProperties()");
         service = (BillDispenserService) (props.EventSource = new BillDispenserService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.Belts);
-        props.Claiming = dev.ClaimedBelt;
+        props.addProperties(dev.BillDispensers);
+        props.Claiming = dev.ClaimedBillDispenser;
         dev.changeDefaults(props);
         dev.check(props.CurrencyCode == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCode property");
         dev.check(props.CurrencyCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCashList property");

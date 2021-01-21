@@ -153,16 +153,34 @@ public class BillAcceptorProperties extends JposCommonProperties implements Bill
     public void adjustCashCounts(String cashCounts) throws JposException {
     }
 
+    /**
+     * Default implementation of BeginDeposit simply sets DepositStatus to STATUS_DEPOSIT_START.
+     * @throws JposException never.
+     */
     @Override
     public void beginDeposit() throws JposException {
+        DepositStatus = BillAcceptorConst.BACC_STATUS_DEPOSIT_START;
+        EventSource.logSet("DepositStatus");
     }
 
+    /**
+     * Default implementation of EndDeposit simply sets DepositStatus to STATUS_DEPOSIT_END.
+     * @throws JposException never.
+     */
     @Override
     public void endDeposit(int success) throws JposException {
+        DepositStatus = BillAcceptorConst.BACC_STATUS_DEPOSIT_END;
+        EventSource.logSet("DepositStatus");
     }
 
+    /**
+     * Default implementation of FixDeposit simply sets DepositStatus to STATUS_DEPOSIT_COUNT.
+     * @throws JposException never.
+     */
     @Override
     public void fixDeposit() throws JposException {
+        DepositStatus = BillAcceptorConst.BACC_STATUS_DEPOSIT_COUNT;
+        EventSource.logSet("DepositStatus");
     }
 
     @Override
