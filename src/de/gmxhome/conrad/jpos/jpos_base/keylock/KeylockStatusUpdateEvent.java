@@ -42,9 +42,20 @@ public class KeylockStatusUpdateEvent extends JposStatusUpdateEvent {
         ElectronicKeyValue = ekey;
     }
 
+    /**
+     * Constructor, used by copyEvent to create a copy of this with changed source only.
+     * @param source    New event source.
+     * @param ev        Event to be copied.
+     */
+    public KeylockStatusUpdateEvent(JposBase source, KeylockStatusUpdateEvent ev) {
+        super(source, ev.getStatus());
+        if (ev.ElectronicKeyValue != null)
+            ElectronicKeyValue = Arrays.copyOf(ev.ElectronicKeyValue, ev.ElectronicKeyValue.length);
+    }
+
     @Override
     public JposStatusUpdateEvent copyEvent(JposBase o) {
-        return new KeylockStatusUpdateEvent(o, getStatus(), ElectronicKeyValue);
+        return new KeylockStatusUpdateEvent(o, this);
     }
 
     @Override

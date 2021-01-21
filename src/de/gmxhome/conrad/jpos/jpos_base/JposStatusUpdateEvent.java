@@ -21,7 +21,6 @@ import jpos.events.StatusUpdateEvent;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -43,7 +42,7 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
     }
 
     /**
-     * Creates copy of given event for a different property set. Needed for shareable devices.
+     * Creates copy of given event for a different property set. Needed for shareable devices only.
      * @param source    Source (JposDevice) of the event
      * @return Copy of the event to be handled by the given source.
      */

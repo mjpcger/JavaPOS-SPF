@@ -51,9 +51,19 @@ public class POSPowerStatusUpdateEvent extends JposStatusUpdateEvent {
         AdditionalData = add;
     }
 
+    /**
+     * Constructor, used by copyEvent to create a copy of this with changed source only.
+     * @param source    New event source.
+     * @param ev        Event to be copied.
+     */
+    public POSPowerStatusUpdateEvent(JposBase source, POSPowerStatusUpdateEvent ev) {
+        super(source, ev.getStatus());
+        AdditionalData = ev.AdditionalData;
+    }
+
     @Override
     public JposStatusUpdateEvent copyEvent(JposBase o) {
-        return new POSPowerStatusUpdateEvent(o, getStatus(), AdditionalData);
+        return new POSPowerStatusUpdateEvent(o, this);
     }
 
     @Override

@@ -24,7 +24,6 @@ import org.apache.log4j.Level;
  * Status update event implementation for MotionSensor devices.
  */
 public class MotionSensorStatusUpdateEvent extends DelayedStatusUpdateEvent {
-
     /**
      * Constructor, see JposStatusUpdateEvent
      *
