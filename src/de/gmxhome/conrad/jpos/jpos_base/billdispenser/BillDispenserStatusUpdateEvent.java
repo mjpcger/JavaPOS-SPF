@@ -74,13 +74,6 @@ public class BillDispenserStatusUpdateEvent extends JposStatusUpdateEvent {
     }
 
     @Override
-    public JposStatusUpdateEvent copyEvent(JposBase o) {
-        if (DeviceState != 0)
-            return new BillDispenserStatusUpdateEvent(o, getStatus(), DeviceState);
-        return new BillDispenserStatusUpdateEvent(o, getStatus(), Exception);
-    }
-
-    @Override
     public boolean setStatusProperties() {
         if (super.setStatusProperties())
             return true;

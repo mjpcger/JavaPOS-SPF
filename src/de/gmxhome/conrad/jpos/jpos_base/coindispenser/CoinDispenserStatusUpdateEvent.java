@@ -34,11 +34,6 @@ public class CoinDispenserStatusUpdateEvent extends JposStatusUpdateEvent {
     }
 
     @Override
-    public JposStatusUpdateEvent copyEvent(JposBase o) {
-        return new CoinDispenserStatusUpdateEvent(o, getStatus());
-    }
-
-    @Override
     public boolean setStatusProperties() {
         if (super.setStatusProperties())
             return true;

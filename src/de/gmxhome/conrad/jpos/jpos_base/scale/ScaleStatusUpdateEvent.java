@@ -34,11 +34,6 @@ public class ScaleStatusUpdateEvent extends JposStatusUpdateEvent {
     }
 
     @Override
-    public JposStatusUpdateEvent copyEvent(JposBase o) {
-        return new ScaleStatusUpdateEvent(o, getStatus());
-    }
-
-    @Override
     public boolean setStatusProperties() {
         if (super.setStatusProperties())
             return true;

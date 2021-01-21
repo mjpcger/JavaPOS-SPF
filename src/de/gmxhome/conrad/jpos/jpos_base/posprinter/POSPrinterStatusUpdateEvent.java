@@ -34,11 +34,6 @@ public class POSPrinterStatusUpdateEvent extends JposStatusUpdateEvent {
     }
 
     @Override
-    public JposStatusUpdateEvent copyEvent(JposBase o) {
-        return new POSPrinterStatusUpdateEvent(o, getStatus());
-    }
-
-    @Override
     public boolean setStatusProperties() {
         if (super.setStatusProperties())
             return true;

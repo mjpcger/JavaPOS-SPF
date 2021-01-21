@@ -76,15 +76,6 @@ public class CashChangerStatusUpdateEvent extends JposStatusUpdateEvent {
     }
 
     @Override
-    public JposStatusUpdateEvent copyEvent(JposBase o) {
-        CashChangerStatusUpdateEvent ev = new CashChangerStatusUpdateEvent(o, getStatus());
-        ev.InDepositOperation = InDepositOperation;
-        ev.Exception = Exception;
-        ev.State = State;
-        return ev;
-    }
-
-    @Override
     public boolean setStatusProperties() {
         if (super.setStatusProperties())
             return true;

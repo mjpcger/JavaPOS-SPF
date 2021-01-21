@@ -34,11 +34,6 @@ public class FiscalPrinterStatusUpdateEvent extends JposStatusUpdateEvent {
     }
 
     @Override
-    public JposStatusUpdateEvent copyEvent(JposBase o) {
-        return new FiscalPrinterStatusUpdateEvent(o, getStatus());
-    }
-
-    @Override
     public boolean setStatusProperties() {
         if (super.setStatusProperties())
             return true;
