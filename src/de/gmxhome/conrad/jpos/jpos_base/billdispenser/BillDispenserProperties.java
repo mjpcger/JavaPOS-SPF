@@ -118,7 +118,6 @@ public class BillDispenserProperties extends JposCommonProperties implements Bil
     protected BillDispenserProperties(int dev) {
         super(dev);
         ExclusiveUse = ExclusiveYes;
-        FlagWhenIdleStatusValue = BillDispenserConst.BDSP_STATUS_ASYNC;
     }
 
     @Override

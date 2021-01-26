@@ -230,7 +230,6 @@ public class CashChangerProperties extends JposCommonProperties implements CashC
     protected CashChangerProperties(int dev) {
         super(dev);
         ExclusiveUse = ExclusiveYes;
-        FlagWhenIdleStatusValue = CashChangerConst.CHAN_STATUS_ASYNC;
     }
 
     @Override

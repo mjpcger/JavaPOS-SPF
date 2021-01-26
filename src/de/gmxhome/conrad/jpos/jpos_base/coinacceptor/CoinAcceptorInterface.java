@@ -110,7 +110,8 @@ public interface CoinAcceptorInterface  extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapPauseDeposit is true, </li>
-     *     <li>control is DEPOSIT_PAUSE or DEPOSIT_RESTART.</li>
+     *     <li>control is DEPOSIT_PAUSE or DEPOSIT_RESTART,</li>
+     *     <li>if control is DEPOSIT_PAUSE, DepositStatus is not STATUS_DEPOSIT_END.</li>
      * </ul>
      *
      * @param control The control parameter contains one of DEPOSIT_PAUSE and DEPOSIT_RESTART.

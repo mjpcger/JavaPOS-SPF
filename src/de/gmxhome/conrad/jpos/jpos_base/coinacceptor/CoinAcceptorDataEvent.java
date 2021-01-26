@@ -55,11 +55,16 @@ public class CoinAcceptorDataEvent extends JposDataEvent {
     public void setDataProperties() {
         super.setDataProperties();
         CoinAcceptorProperties props = (CoinAcceptorProperties) getPropertySet();
-        if (props.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_COUNT) {
+        if (props.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_START) {
             props.DepositAmount = Amount;
             props.EventSource.logSet("DepositAmount");
             props.DepositCounts = Counts;
             props.EventSource.logSet("DepositCounts");
         }
+    }
+
+    @Override
+    public String toLogString() {
+        return super.toLogString() + ", Amount: " + Amount + ", Counts: " + Counts;
     }
 }

@@ -56,11 +56,16 @@ public class CashChangerDataEvent extends JposDataEvent {
     public void setDataProperties() {
         super.setDataProperties();
         CashChangerProperties props = (CashChangerProperties) getPropertySet();
-        if (props.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_COUNT) {
+        if (props.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_START) {
             props.DepositAmount = Amount;
             props.EventSource.logSet("DepositAmount");
             props.DepositCounts = Counts;
             props.EventSource.logSet("DepositCounts");
         }
+    }
+
+    @Override
+    public String toLogString() {
+        return super.toLogString() + ", Amount: " + Amount + ", Counts: " + Counts;
     }
 }

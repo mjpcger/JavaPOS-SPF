@@ -210,7 +210,8 @@ public class CoinAcceptorService extends JposBase implements CoinAcceptorService
         logPreCall("FixDeposit");
         checkEnabled();
         Device.check(Data.DepositStatus != CoinAcceptorConst.CACC_STATUS_DEPOSIT_START, JposConst.JPOS_E_ILLEGAL,
-                (Data.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Operation not started");
+                (Data.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_JAM ? "Jam condition" :
+                        (Data.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_END ? "Operation not started" : "Operation just fixed")));
         CoinAcceptorInterface.fixDeposit();
         logCall("FixDeposit");
     }
@@ -220,6 +221,8 @@ public class CoinAcceptorService extends JposBase implements CoinAcceptorService
         logPreCall("PauseDeposit");
         checkEnabled();
         Device.check(!Data.CapPauseDeposit, JposConst.JPOS_E_ILLEGAL, "PauseDeposit not supported");
+        Device.check(control == CoinAcceptorConst.CACC_DEPOSIT_PAUSE && Data.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_END,
+                JposConst.JPOS_E_ILLEGAL, "No pending deposit operation");
         long allowed[] = { CoinAcceptorConst.CACC_DEPOSIT_PAUSE, CoinAcceptorConst.CACC_DEPOSIT_RESTART };
         Device.checkMember(control, allowed, JposConst.JPOS_E_ILLEGAL, "Illegal parameter value");
         CoinAcceptorInterface.pauseDeposit(control);

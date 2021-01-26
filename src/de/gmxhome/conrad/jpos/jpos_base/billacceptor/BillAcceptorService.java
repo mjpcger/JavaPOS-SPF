@@ -216,7 +216,8 @@ public class BillAcceptorService extends JposBase implements BillAcceptorService
         logPreCall("FixDeposit");
         checkEnabled();
         Device.check(Data.DepositStatus != BillAcceptorConst.BACC_STATUS_DEPOSIT_START, JposConst.JPOS_E_ILLEGAL,
-                (Data.DepositStatus == BillAcceptorConst.BACC_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Operation not started");
+                (Data.DepositStatus == BillAcceptorConst.BACC_STATUS_DEPOSIT_JAM ? "Jam condition" :
+                        (Data.DepositStatus == BillAcceptorConst.BACC_STATUS_DEPOSIT_END ? "Operation not started" : "Operation just fixed")));
         BillAcceptorInterface.fixDeposit();
         logCall("FixDeposit");
     }
@@ -226,6 +227,8 @@ public class BillAcceptorService extends JposBase implements BillAcceptorService
         logPreCall("PauseDeposit");
         checkEnabled();
         Device.check(!Data.CapPauseDeposit, JposConst.JPOS_E_ILLEGAL, "PauseDeposit not supported");
+        Device.check(control == BillAcceptorConst.BACC_DEPOSIT_PAUSE && Data.DepositStatus == BillAcceptorConst.BACC_STATUS_DEPOSIT_END,
+                JposConst.JPOS_E_ILLEGAL, "No pending deposit operation");
         long allowed[] = {BillAcceptorConst.BACC_DEPOSIT_PAUSE, BillAcceptorConst.BACC_DEPOSIT_RESTART };
         Device.checkMember(control, allowed, JposConst.JPOS_E_ILLEGAL, "Illegal parameter value");
         BillAcceptorInterface.pauseDeposit(control);

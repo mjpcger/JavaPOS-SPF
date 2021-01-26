@@ -308,7 +308,7 @@ public class CashChangerService extends JposBase implements CashChangerService11
         for (String parts : cashCountPart) {
             if (!parts.equals("")) {
                 nocounts = false;
-                String cashCount[] = parts.substring(1).split(",");
+                String cashCount[] = parts.split(",");
                 for (String entry : cashCount) {
                     String values[] = entry.split(":");
                     Device.check(values.length != 2, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
@@ -356,7 +356,8 @@ public class CashChangerService extends JposBase implements CashChangerService11
         logPreCall("FixDeposit");
         checkEnabled();
         Device.check(Data.DepositStatus != CashChangerConst.CHAN_STATUS_DEPOSIT_START, JposConst.JPOS_E_ILLEGAL,
-                (Data.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Operation not started");
+                (Data.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_JAM ? "Jam condition" :
+                        (Data.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_END ? "Operation not started" : "Operation just fixed")));
         CashChangerInterface.fixDeposit();
         logCall("FixDeposit");
     }
@@ -366,6 +367,8 @@ public class CashChangerService extends JposBase implements CashChangerService11
         logPreCall("PauseDeposit");
         checkEnabled();
         Device.check(!Data.CapPauseDeposit, JposConst.JPOS_E_ILLEGAL, "PauseDeposit not supported");
+        Device.check(control == CashChangerConst.CHAN_DEPOSIT_PAUSE && Data.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_END,
+                JposConst.JPOS_E_ILLEGAL, "No pending deposit operation");
         long allowed[] = {CashChangerConst.CHAN_DEPOSIT_PAUSE, CashChangerConst.CHAN_DEPOSIT_RESTART };
         Device.checkMember(control, allowed, JposConst.JPOS_E_ILLEGAL, "Illegal parameter value");
         CashChangerInterface.pauseDeposit(control);
@@ -383,7 +386,7 @@ public class CashChangerService extends JposBase implements CashChangerService11
         for (String parts : cashCountPart) {
             if (!parts.equals("")) {
                 nocounts = false;
-                String cashCount[] = parts.substring(1).split(",");
+                String cashCount[] = parts.split(",");
                 for (String entry : cashCount) {
                     String values[] = entry.split(":");
                     Device.check(values.length != 2, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
@@ -400,7 +403,7 @@ public class CashChangerService extends JposBase implements CashChangerService11
             logAsyncCall("DispenseCash");
         else
             logCall("DispenseCash");
-  }
+    }
 
     @Override
     public void dispenseChange(int amount) throws JposException {

@@ -43,7 +43,7 @@ public class CashChangerStatusUpdateEvent extends JposStatusUpdateEvent {
      */
     public CashChangerStatusUpdateEvent(JposBase source, int state) {
         super(source, state);
-        InDepositOperation = JposDevice.member(((CashChangerProperties) getPropertySet()).DepositStatus, OutOfDepositStates);
+        InDepositOperation = !JposDevice.member(((CashChangerProperties) getPropertySet()).DepositStatus, OutOfDepositStates);
         State = InDepositOperation ? CashChangerConst.CHAN_STATUS_DEPOSIT_END : CashChangerConst.CHAN_STATUS_OK;
     }
 
@@ -71,7 +71,7 @@ public class CashChangerStatusUpdateEvent extends JposStatusUpdateEvent {
      */
     public CashChangerStatusUpdateEvent(JposBase source, int status, int state) {
         super(source, status);
-        InDepositOperation = JposDevice.member(((CashChangerProperties) getPropertySet()).DepositStatus, OutOfDepositStates);
+        InDepositOperation = !JposDevice.member(((CashChangerProperties) getPropertySet()).DepositStatus, OutOfDepositStates);
         State = state;
     }
 
