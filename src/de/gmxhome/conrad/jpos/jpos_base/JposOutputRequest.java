@@ -370,7 +370,7 @@ public class JposOutputRequest implements Runnable {
                 try {
                     if (current.Exception != null) {
                         JposErrorEvent event = current.createErrorEvent(current.Exception);
-                        if (event.getSource() == null) {
+                        if (event == null) {
                             synchronized (Device.AsyncProcessorRunning) {
                                 current.finished();
                                 current.Props.FlagWhenIdle = true;
@@ -432,10 +432,10 @@ public class JposOutputRequest implements Runnable {
      * event shall be created. For example, in case of cash printer methods, this method should return a
      * POSPrinterErrorEvent (which is an object derived from JposErrorEvent) that contains additional values to be
      * stored in printer properties before the event will be fired.<br>
-     * If a device supports result code properties instead of error events, this method must return a JposErrorEvent
-     * with source = null. The result codes should be buffered for a later call of the createIdleEvent method which must
-     * create a device specific StatusUpdateEvent which contains the buffered values.<br>
-     * A JposErrorEvent with source = null will not be thrown, it will enforce special request handling instead:<ul>
+     * If a device supports result code properties instead of error events, this method must return null.
+     * The result codes should be buffered for a later call of the createIdleEvent method which must create a
+     * device specific StatusUpdateEvent which contains the buffered values.<br>
+     * If null will be returned instead of a JposErrorEvent, it will enforce special request handling instead:<ul>
      *     <li>Instead of suspending the request, it will be finished.</li>
      *     <li>The idle flag will be set.</li>
      * </ul>

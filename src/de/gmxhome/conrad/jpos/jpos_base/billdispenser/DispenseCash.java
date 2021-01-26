@@ -59,8 +59,6 @@ public class DispenseCash extends JposInputRequest {
 
     @Override
     public void invoke() throws JposException {
-        Props.FlagWhenIdle = true;
-        Props.EventSource.logSet("FlagWhenIdle");
         ((BillDispenserService)Props.EventSource).BillDispenserInterface.dispenseCash(this);
     }
 
@@ -69,7 +67,7 @@ public class DispenseCash extends JposInputRequest {
     @Override
     public JposErrorEvent createErrorEvent(JposException ex) {
         TheException = ex;
-        return new JposErrorEvent(null, ex.getErrorCode(), ex.getErrorCodeExtended(), JposConst.JPOS_EL_INPUT, ex.getMessage());
+        return null;
     }
 
     @Override
