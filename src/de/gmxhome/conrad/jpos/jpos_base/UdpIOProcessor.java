@@ -226,6 +226,8 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
         }
     }
 
+    private Integer FlushSync = 0;
+
     @Override
     public void run() {
         while (Socket != null) {
@@ -240,14 +242,16 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
             } catch (Exception e) {
                 readobj = new JposException(JposConst.JPOS_E_FAILURE, e.getClass().getSimpleName() + ": " + e.getMessage(), e);
             }
-            synchronized (ReadSynchronizer) {
-                InputData.add(readobj);
-                if (readobj instanceof Frame && InputData.size() >= 1000)
-                    highwater = HighWaterWaiting = true;
-                ReadWaiter.signal();
+            synchronized (FlushSync) {
+                synchronized (ReadSynchronizer) {
+                    InputData.add(readobj);
+                    if (readobj instanceof Frame && InputData.size() >= 1000)
+                        highwater = HighWaterWaiting = true;
+                    ReadWaiter.signal();
+                }
+                if (readobj instanceof JposException || highwater)
+                    ContinueWaiter.suspend(SyncObject.INFINITE);
             }
-            if (readobj instanceof JposException || highwater)
-                ContinueWaiter.suspend(SyncObject.INFINITE);
         }
     }
 
@@ -302,19 +306,30 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
 
     @Override
     public void flush() throws JposException {
-        synchronized (ReadSynchronizer) {
-            if (InputData.size() > 0) {
-                Object e = InputData.get(InputData.size() - 1);
-                InputData.clear();
-                ReadWaiter = new SyncObject();
-                if (e instanceof JposException || HighWaterWaiting) {
-                    HighWaterWaiting = false;
-                    ContinueWaiter.signal();
-                    if (e instanceof JposException)
-                        throw (JposException) e;
+        boolean callSuper = true;
+        while (true) {
+            synchronized (ReadSynchronizer) {
+                if (InputData.size() > 0) {
+                    Object e = InputData.get(InputData.size() - 1);
+                    InputData.clear();
+                    ReadWaiter = new SyncObject();
+                    if (e instanceof JposException || HighWaterWaiting) {
+                        HighWaterWaiting = false;
+                        ContinueWaiter.signal();
+                        if (e instanceof JposException)
+                            throw (JposException) e;
+                    }
+                }
+                if (callSuper) {
+                    super.flush();
+                    callSuper = false;
                 }
             }
-            super.flush();
+            synchronized (FlushSync) {
+                if (InputData.size() == 0) {
+                    break;
+                }
+            }
         }
     }
 }
