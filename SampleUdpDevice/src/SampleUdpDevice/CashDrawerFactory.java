@@ -24,7 +24,7 @@ import jpos.config.*;
 import jpos.loader.*;
 
 /**
- * Factory class for CashDrawer device class of sample UDP service implementation
+ * Factory class for CashDrawer device class of sample UDP service implementation.
  */
 public class CashDrawerFactory extends Factory implements JposServiceInstanceFactory {
     @Override

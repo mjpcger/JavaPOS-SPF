@@ -19,7 +19,6 @@ package SampleUdpDevice;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.billdispenser.*;
-import jpos.BillDispenser;
 import jpos.BillDispenserConst;
 import jpos.JposConst;
 import jpos.JposException;
@@ -114,6 +113,30 @@ class SampleUdpDeviceBillDispenserProperties extends BillDispenserProperties {
     }
 
     @Override
+    public void adjustCashCounts(String cashCounts) throws JposException {
+        synchronized (Dev.CashSlots) {
+            Dev.check(Dev.CashDepositStartSlots != null, JposConst.JPOS_E_ILLEGAL, "Cash acceptance in progress");
+        }
+        int[][] slots = Dev.cashCounts2ints(cashCounts, 2);
+        boolean doit = false;
+        synchronized (Dev.CashSlots) {
+            for (int i = Dev.CashMinBillIndex; i < slots.length; i++) {
+                if ((slots[i][1] -= Dev.CashSlots[i][1]) != 0)
+                    doit = true;
+            }
+        }
+        if (doit) {
+            String list = "";
+            for (int i = Dev.CashMinBillIndex; i < slots.length; i++) {
+                if (slots[i][1] != 0)
+                    list += " " + slots[i][0] + " " + slots[i][1];
+            }
+            String result = Dev.sendResp("CASHBOX:AddSlots" + list.substring(1));
+            Dev.check(result == null || Dev.Offline, JposConst.JPOS_E_FAILURE, "Communication error");
+        }
+    }
+
+    @Override
     public void readCashCounts(String[] cashCounts, boolean[] discrepancy) throws JposException {
         Dev.check(Dev.Offline, JposConst.JPOS_E_OFFLINE, "Device is offline");
         attachWaiter();
@@ -132,22 +155,8 @@ class SampleUdpDeviceBillDispenserProperties extends BillDispenserProperties {
 
     @Override
     public DispenseCash dispenseCash(String cashCounts) throws JposException {
-        String[] cashtypestr = cashCounts.split(";");
-        int[][] dispenseSlots = Dev.copySlots(Dev.CashInitialSlots);
-        if (cashtypestr[1].length() > 0) {
-            String[] countsstr = cashtypestr[1].split(",");
-            for (int i = 0; i < countsstr.length; i++) {
-                String[] parts = countsstr[i].split(":");
-                int value = Integer.parseInt(parts[0]);
-                Dev.check(!Dev.CashSlotIndex.containsKey(value), JposConst.JPOS_E_ILLEGAL, "Invalid cashCount component: " + countsstr[i]);
-                value = Dev.CashSlotIndex.get(value);
-                Dev.check(value < Dev.CashMinBillIndex || dispenseSlots.length <= value, JposConst.JPOS_E_ILLEGAL,
-                        "Invalid cashCount type component: " + countsstr[i]);
-                dispenseSlots[value][1] += Integer.parseInt(parts[1]);
-            }
-        }
         DispenseCash ret = super.dispenseCash(cashCounts);
-        ret.AdditionalData = dispenseSlots;
+        ret.AdditionalData = Dev.cashCounts2ints(cashCounts, 2);
         return ret;
     }
 
@@ -162,22 +171,28 @@ class SampleUdpDeviceBillDispenserProperties extends BillDispenserProperties {
         }
         Dev.check(status[Dev.CashOperationState] != Dev.CashIdle, JposConst.JPOS_E_FAILURE, "BillDispenser not operational");
         int[][] dispenseSlots = (int[][])request.AdditionalData;
-        for (int i = 0; i < dispenseSlots.length; i++) {
+        for (int i = Dev.CashMinBillIndex; i < dispenseSlots.length; i++) {
             Dev.checkext(currentslots[i][1] < dispenseSlots[i][1], BillDispenserConst.JPOS_EBDSP_OVERDISPENSE, "Not enough cash units " + currentslots[i][0]);
         }
         boolean again;
         do {
             String command = "";
             again = false;
-            for (int i = 0; i < dispenseSlots.length; i++) {
+            for (int i = Dev.CashMinBillIndex; i < dispenseSlots.length; i++) {
                 if (dispenseSlots[i][1] > 0) {
-                    command += ",CASHBOX:OutputB" + dispenseSlots[i][0];
-                    if (--dispenseSlots[i][1] > 0)
+                    int max = dispenseSlots[i][1];
+                    if (i < dispenseSlots.length - 1) {
+                        max = (dispenseSlots[i + 1][0] - 1) / dispenseSlots[i][0];
+                        if (max > dispenseSlots[i][1])
+                            max = dispenseSlots[i][1];
+                    }
+                    command += ",CASHBOX:OutputB" + dispenseSlots[i][0] * max;
+                    if ((dispenseSlots[i][1] -= max) > 0)
                         again = true;
                 }
             }
             if (command.length() > 0) {
-                String[] result = Dev.sendResp(command.split(","));
+                String[] result = Dev.sendResp(command.substring(1).split(","));
                 Dev.check(result == null || Dev.Offline, JposConst.JPOS_E_FAILURE, "Dispense failure");
             }
         } while (again);
