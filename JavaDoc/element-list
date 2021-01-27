@@ -1,9 +1,14 @@
 de.gmxhome.conrad.JNALinux
 de.gmxhome.conrad.JNAWindows
 de.gmxhome.conrad.jpos.jpos_base
+de.gmxhome.conrad.jpos.jpos_base.belt
+de.gmxhome.conrad.jpos.jpos_base.billacceptor
+de.gmxhome.conrad.jpos.jpos_base.billdispenser
 de.gmxhome.conrad.jpos.jpos_base.bumpbar
+de.gmxhome.conrad.jpos.jpos_base.cashchanger
 de.gmxhome.conrad.jpos.jpos_base.cashdrawer
 de.gmxhome.conrad.jpos.jpos_base.cat
+de.gmxhome.conrad.jpos.jpos_base.coinacceptor
 de.gmxhome.conrad.jpos.jpos_base.coindispenser
 de.gmxhome.conrad.jpos.jpos_base.electronicjournal
 de.gmxhome.conrad.jpos.jpos_base.fiscalprinter
