@@ -18,7 +18,7 @@
 package SampleUdpDevice;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.cashchanger.Factory;
+import de.gmxhome.conrad.jpos.jpos_base.biometrics.Factory;
 import jpos.JposConst;
 import jpos.JposException;
 import jpos.config.JposEntry;
@@ -26,9 +26,9 @@ import jpos.loader.JposServiceInstance;
 import jpos.loader.JposServiceInstanceFactory;
 
 /**
- * Factory class for CashChanger device class of sample UDP service implementation.
+ * Factory class for Biometrics device class of sample UDP service implementation.
  */
-public class CashChangerFactory extends Factory implements JposServiceInstanceFactory {
+public class BiometricsFactory extends Factory implements JposServiceInstanceFactory {
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
         try {
@@ -36,16 +36,16 @@ public class CashChangerFactory extends Factory implements JposServiceInstanceFa
             String port = jposEntry.getPropertyValue("Port").toString();
 
             synchronized(Devices) {
-                if (deviceClass.equals("CashChanger")) {
+                if (deviceClass.equals("Biometrics")) {
                     JposDevice any = getDevice(port);
-                    BeltCashboxDrawer dev;
+                    Biometrics dev;
                     boolean created = any != null;
                     if (!created) {
-                        dev = new BeltCashboxDrawer(port);
+                        dev = new Biometrics(port);
                     } else if (!(any instanceof Device))
                         throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
                     else {
-                        dev = (BeltCashboxDrawer) any;
+                        dev = (Biometrics) any;
                     }
                     dev.checkProperties(jposEntry);
                     JposServiceInstance service = addDevice(0, dev);

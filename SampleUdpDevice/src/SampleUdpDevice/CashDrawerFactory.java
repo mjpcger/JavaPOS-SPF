@@ -36,14 +36,14 @@ public class CashDrawerFactory extends Factory implements JposServiceInstanceFac
             synchronized(Devices) {
                 if (deviceClass.equals("CashDrawer")) {
                     JposDevice any = getDevice(port);
-                    Device dev;
+                    BeltCashboxDrawer dev;
                     boolean created = any != null;
                     if (!created) {
-                        dev = new Device(port);
+                        dev = new BeltCashboxDrawer(port);
                     } else if (!(any instanceof Device))
                         throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
                     else {
-                        dev = (Device) any;
+                        dev = (BeltCashboxDrawer) any;
                     }
                     dev.checkProperties(jposEntry);
                     JposServiceInstance service = addDevice(0, dev);

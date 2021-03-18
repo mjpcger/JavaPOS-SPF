@@ -30,9 +30,9 @@ import java.util.Arrays;
  * Class implementing the BillDispenser Interface for the sample udp device.
  */
 class SampleUdpDeviceBillDispenserProperties extends BillDispenserProperties {
-    private Device Dev;
+    private BeltCashboxDrawer Dev;
 
-    protected SampleUdpDeviceBillDispenserProperties(Device dev) {
+    protected SampleUdpDeviceBillDispenserProperties(BeltCashboxDrawer dev) {
         super(0);
         Dev = dev;
     }

@@ -76,7 +76,7 @@ proc startstop {} {
 # Procedure messageHandler: Reads message from a socket and calls sub-device specific frame handler until a handler
 # returns a non-empty value.
 # It is assumed that all commands have the format <subdev>:<subcommand>[,<subdev>:<subcommand>...], where <subdev> is one of
-# DRAWER, BELT and CASHBOX.
+# BELT, BIO, CASHBOX and DRAWER.
 # and <subcommand> is a sub-device specific sub-command.
 # Currently, we have the following handlers for sub-devices:
 # drawerMessage, beltMessage and cashBoxMessage
@@ -85,7 +85,7 @@ proc startstop {} {
 proc messageHandler {} {
     global Socket
 
-	set devlist {{DRAWER drawerMessage} {BELT beltMessage} {CASHBOX cashBoxMessage}}
+	set devlist {{DRAWER drawerMessage} {BELT beltMessage} {CASHBOX cashBoxMessage} {BIO bioMessage}}
     set frame [read $Socket]
     fconfigure $Socket -remote [set peer [fconfigure $Socket -peer]]
     puts -nonewline "Got >$frame< from $peer, "
@@ -546,6 +546,90 @@ proc cashBoxMessage {frame} {
 			lappend l $i $CashBoxSlot($i)
 		}
 		return "AddSlots$l"
+	}
+	return ""
+}
+
+# The Biometrics part
+
+set Bio .all.row4
+pack [labelframe $Bio -text "Biometrics (User / Password)"] -expand 1 -fill both
+pack [ttk::labelframe $Bio.user -text ""] -expand 1 -fill both -side left
+pack [ttk::entry $Bio.user.name -state disabled] -expand 1 -fill both
+pack [ttk::labelframe $Bio.pass -text ""] -expand 1 -fill both -side left
+pack [ttk::entry $Bio.pass.word -show "*" -state disabled] -expand 1 -fill both
+pack [ttk::button $Bio.stop -text "Ready" -command bioDisable -state disabled] -fill y -side right
+
+proc bioDisable {} {
+    global Bio
+    $Bio.user configure -text ""
+    $Bio.user.name configure -state disabled -show " "
+    $Bio.pass configure -text ""
+    $Bio.pass.word configure -state disabled -show " "
+    $Bio.stop configure -state disabled
+}
+
+# Command handler for CashDrawer simulation. Commands start with "BIO:", followed by
+# - "StartN": Command to start biometric input (user name and password), where N specifies whether user name and
+#   password (0) or only password (1) shall be cleared.
+#   Returns StartN, where N is 0 (just started) or 1 (start successful).
+# - "Cancel": Command to cancel biometric input. Returns CancelN, where N is 0 (input not in progress) or
+#   1 (input disabled).
+# - "Check": Command to check whether input is in progress. Returns CheckN, where N is 0 (in progress) or 1 (input
+#   finished).
+# - "Get": Command to retrieve current user name and password. Returns GetK, where K is a list of unicode values
+#   representing user name and password, where 0 will be used as separator between user name and password.
+proc bioMessage {frame} {
+	global Bio
+	if {[scan $frame "%5s%1d%s" cmd what x] == 2 && $cmd == "Start" && ($what == 0 || $what == 1)} {
+		if {[$Bio.stop cget -state] == "disabled"} {
+            $Bio.stop configure -state normal
+            $Bio.pass.word configure -state normal -show "*"
+            $Bio.pass.word delete 0 end
+		    if {$what == 0} {
+                $Bio.pass configure -text "And Password"
+                $Bio.user configure -text "Enter User Name"
+                $Bio.user.name configure -state normal
+                $Bio.user.name delete 0 end
+    		} {
+                $Bio.user configure -text "User Name"
+                $Bio.pass configure -text "Re-Enter Password"
+    		}
+            $Bio.user.name configure -show ""
+		    return "Start1"
+		} {
+		    return "Start0"
+		}
+	}
+	if {$frame == "Cancel"} {
+		if {[$Bio.stop cget -state] == "normal"} {
+		    bioDisable
+		    return "Cancel1"
+		} {
+		    return "Cancel0"
+		}
+	}
+	if {$frame == "Check"} {
+		if {[$Bio.stop cget -state] == "disabled"} {
+		    return "Check1"
+		} {
+		    return "Check0"
+		}
+	}
+	if {$frame == "Get"} {
+	    set ret ""
+	    set str [$Bio.user.name get]
+	    for {set i 0} {$i < [string length $str]} {incr i} {
+	        scan [string range $str $i $i] %c c
+	        lappend ret $c
+	    }
+	    lappend ret 0
+	    set str [$Bio.pass.word get]
+	    for {set i 0} {$i < [string length $str]} {incr i} {
+	        scan [string range $str $i $i] %c c
+	        lappend ret $c
+	    }
+	    return "Get$ret"
 	}
 	return ""
 }

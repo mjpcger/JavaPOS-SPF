@@ -29,7 +29,7 @@ import java.util.Arrays;
  * Class implementing the CashChanger Interface for the sample udp device.
  */
 class SampleUdpDeviceCashChangerProperties extends CashChangerProperties {
-    private Device Dev;
+    private BeltCashboxDrawer Dev;
 
     private String getCashSlotList(int index) {
         String[] typeList = {"", ""};
@@ -48,7 +48,7 @@ class SampleUdpDeviceCashChangerProperties extends CashChangerProperties {
         return "";
     }
 
-    protected SampleUdpDeviceCashChangerProperties(Device dev) {
+    protected SampleUdpDeviceCashChangerProperties(BeltCashboxDrawer dev) {
         super(0);
         Dev = dev;
     }
