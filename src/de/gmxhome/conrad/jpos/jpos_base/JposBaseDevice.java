@@ -21,12 +21,13 @@ import jpos.config.JposEntry;
 import jpos.events.*;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.log4j.*;
+
 import javax.swing.*;
 
 /**
@@ -597,6 +598,22 @@ public class JposBaseDevice {
     }
 
     /**
+     * Enqueues or fires transition event. If FreezeEvent is false, the event will be fired immediately. Otherwise it will
+     * be enqueued and fired after FreezeEvents will be reset.
+     *
+     * @param event Event to be fired
+     * @throws JposException If error occurs during event handling
+     */
+    public void handleEvent(JposTransitionEvent event) throws JposException {
+        JposCommonProperties props = event.getPropertySet();
+        synchronized (props.TransitionEventList) {
+            props.TransitionEventList.add(event);
+            log(Level.DEBUG, props.LogicalName + ": Buffer TransitionEvent: [" + event.toLogString() + "]");
+            processTransitionEventList(props);
+        }
+    }
+
+    /**
      * Enqueues or fires direct IO event. If FreezeEvent is false, the event will be fired immediately. Otherwise it will
      * be enqueued and fired after FreezeEvents will be reset.
      *
@@ -884,7 +901,7 @@ public class JposBaseDevice {
                     Props.ErrorEventList.remove(0);
                     if (event instanceof JposOutputCompleteEvent)
                         (ocevent = (JposOutputCompleteEvent) event).setOutputCompleteProperties();
-                    if (event instanceof JposErrorEvent)
+                    else if (event instanceof JposErrorEvent)
                         (errevent = (JposErrorEvent) event).setErrorProperties();
                     else if (event instanceof JposDirectIOEvent)
                         (dioevent = (JposDirectIOEvent) event).setDirectIOProperties();
@@ -927,6 +944,75 @@ public class JposBaseDevice {
      */
     protected void processErrorEventList(JposCommonProperties dev) throws JposException {
         if (dev.ErrorEventProcessor == null && !dev.FreezeEvents && dev.ErrorEventList.size() > 0) {
+            new ErrorEventFirer(dev);
+        }
+    }
+
+    /**
+     * Process the transition event queue. Fires TransitionEvent events while
+     * FreezeEvents = false
+     */
+    class TransitionEventFirer extends Thread {
+        private JposCommonProperties Props;
+        TransitionEventFirer(JposCommonProperties dev) throws JposException {
+            Props = dev;
+            setName("TransitionEventFirer");
+            dev.TransitionEventProcessor = this;
+            try {
+                start();
+            }
+            catch (Exception e) {
+                throw new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e);
+            }
+        }
+
+        @Override
+        public void run() {
+            JposTransitionEvent trevent = null;
+            JposDirectIOEvent dioevent = null;
+            while (true) {
+                EventSerializer.suspend(SyncObject.INFINITE);
+                synchronized (Props.TransitionEventList) {
+                    Props.TransitionEventProcessor = null;
+                    if (Props.FreezeEvents || Props.TransitionEventList.size() == 0)
+                        break;
+                    Props.TransitionEventProcessor = this;
+                    JposEvent event = Props.TransitionEventList.get(0);
+                    Props.TransitionEventList.remove(0);
+                    if (event instanceof JposTransitionEvent)
+                        (trevent = (JposTransitionEvent) event).setTransitionProperties();
+                    else if (event instanceof JposDirectIOEvent)
+                        (dioevent = (JposDirectIOEvent) event).setDirectIOProperties();
+                }
+                if (trevent != null) {
+                    try {   // fireTransitionEvent is only available in UPOS version >= 1.14.0
+                        Method fireTransitionEvent = Class.forName(Props.EventCB.getClass().getName()).getMethod("fireTransitionEvent", TransitionEvent.class);
+                        fireTransitionEvent.invoke(Props.EventCB, trevent);
+                        log(Level.DEBUG, Props.LogicalName + ": Fire Transition Event: [" + trevent.toLogString() + "]");
+                    } catch (Exception e) {
+                        log(Level.DEBUG, Props.LogicalName + ": Transition Event: [" + trevent.toLogString() + "]: Unsupported");
+                        trevent = null;
+                    }
+                    Props.postTransitionProcessing(trevent);
+                } else if (dioevent != null) {
+                    Props.EventCB.fireDirectIOEvent(dioevent);
+                    log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toLogString() + "]");
+                }
+                EventSerializer.signal();
+            }
+            EventSerializer.signal();
+        }
+    }
+
+    /**
+     * Process the transition event queue. Fires TransitionEvent events while
+     * FreezeEvents = false.
+     *
+     * @param dev Property set to be used for transition event processing
+     * @throws JposException If <i>TransitionEventFirer</i> object cannot be created.
+     */
+    protected void processTransitionEventList(JposCommonProperties dev) throws JposException {
+        if (dev.TransitionEventProcessor == null && !dev.FreezeEvents && dev.ErrorEventList.size() > 0) {
             new ErrorEventFirer(dev);
         }
     }

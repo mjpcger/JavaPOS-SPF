@@ -29,7 +29,7 @@ import jpos.services.BeltService114;
  */
 public class BeltService extends JposBase implements BeltService114 {
     /**
-     * Instance of a class implementing the BeltInterface for cash drawer specific setter and method calls bound
+     * Instance of a class implementing the BeltInterface for belt specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public BeltInterface BeltInterface;

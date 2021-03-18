@@ -204,6 +204,11 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     final public List<JposEvent> ErrorEventList = new LinkedList<JposEvent>();
 
     /**
+     * Event list, holds all transition events until they can be fired.
+     */
+    final public List<JposEvent> TransitionEventList = new LinkedList<JposEvent>();
+
+    /**
      * Event list, holds all direct IO events until they can be fired. Will be set to one of EventList,
      * DataEventList or OutputEventList, depending on preferences of the service implementation. The default is EventList.
      */
@@ -301,6 +306,11 @@ public abstract class JposCommonProperties implements JposBaseInterface {
      * Error event processor. Thread that fires output complete events, output error events and optionally direct IO events.
      */
     JposBaseDevice.ErrorEventFirer ErrorEventProcessor = null;
+
+    /**
+     * Transition event processor. Thread that fires transition events and optionally direct IO events.
+     */
+    JposBaseDevice.TransitionEventFirer TransitionEventProcessor = null;
 
     /**
      * Constructor.
@@ -469,6 +479,15 @@ public abstract class JposCommonProperties implements JposBaseInterface {
      */
     public JposCommonProperties getClaimingInstance() {
         return Device.getClaimingInstance(Claiming, Index);
+    }
+
+    /**
+     * Retrieves TransitionEvent after application could modify pData and pString. Allows the device to continue
+     * further processing as requested.
+     * @param trevent JposTransitionEvent after return from application callback. null if the device control does not
+     *                support transition events.
+     */
+    public void postTransitionProcessing(JposTransitionEvent trevent) {
     }
 
     /*

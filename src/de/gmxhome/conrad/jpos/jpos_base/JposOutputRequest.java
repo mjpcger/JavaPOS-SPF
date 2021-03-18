@@ -167,7 +167,7 @@ public class JposOutputRequest implements Runnable {
                 if (!Device.AsyncProcessorRunning[0]) {
                     Device.AsyncProcessorRunning[0] = true;
                     Thread handler = new Thread(new JposOutputRequest(Device));
-                    handler.setName("OutputRequestExecutor");
+                    handler.setName(Device.ID + " OutputRequestExecutor");
                     handler.start();
                 }
             }

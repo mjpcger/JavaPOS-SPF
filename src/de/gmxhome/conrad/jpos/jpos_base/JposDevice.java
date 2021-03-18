@@ -19,15 +19,20 @@ package de.gmxhome.conrad.jpos.jpos_base;
 import de.gmxhome.conrad.jpos.jpos_base.belt.BeltProperties;
 import de.gmxhome.conrad.jpos.jpos_base.billacceptor.BillAcceptorProperties;
 import de.gmxhome.conrad.jpos.jpos_base.billdispenser.BillDispenserProperties;
+import de.gmxhome.conrad.jpos.jpos_base.biometrics.BiometricsProperties;
 import de.gmxhome.conrad.jpos.jpos_base.bumpbar.BumpBarProperties;
 import de.gmxhome.conrad.jpos.jpos_base.cashchanger.CashChangerProperties;
 import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerProperties;
+import de.gmxhome.conrad.jpos.jpos_base.checkscanner.CheckScannerProperties;
 import de.gmxhome.conrad.jpos.jpos_base.coinacceptor.CoinAcceptorProperties;
+import de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw.ElectronicValueRWProperties;
 import de.gmxhome.conrad.jpos.jpos_base.gate.GateProperties;
 import de.gmxhome.conrad.jpos.jpos_base.cat.CATProperties;
 import de.gmxhome.conrad.jpos.jpos_base.coindispenser.CoinDispenserProperties;
 import de.gmxhome.conrad.jpos.jpos_base.electronicjournal.ElectronicJournalProperties;
 import de.gmxhome.conrad.jpos.jpos_base.fiscalprinter.FiscalPrinterProperties;
+import de.gmxhome.conrad.jpos.jpos_base.hardtotals.HardTotalsProperties;
+import de.gmxhome.conrad.jpos.jpos_base.imagescanner.ImageScannerProperties;
 import de.gmxhome.conrad.jpos.jpos_base.itemdispenser.ItemDispenserProperties;
 import de.gmxhome.conrad.jpos.jpos_base.keylock.KeylockProperties;
 import de.gmxhome.conrad.jpos.jpos_base.lights.LightsProperties;
@@ -35,16 +40,19 @@ import de.gmxhome.conrad.jpos.jpos_base.linedisplay.LineDisplayProperties;
 import de.gmxhome.conrad.jpos.jpos_base.micr.MICRProperties;
 import de.gmxhome.conrad.jpos.jpos_base.motionsensor.MotionSensorProperties;
 import de.gmxhome.conrad.jpos.jpos_base.msr.MSRProperties;
+import de.gmxhome.conrad.jpos.jpos_base.pinpad.PINPadProperties;
+import de.gmxhome.conrad.jpos.jpos_base.pointcardrw.PointCardRWProperties;
 import de.gmxhome.conrad.jpos.jpos_base.poskeyboard.POSKeyboardProperties;
 import de.gmxhome.conrad.jpos.jpos_base.pospower.POSPowerProperties;
 import de.gmxhome.conrad.jpos.jpos_base.posprinter.POSPrinterProperties;
 import de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay.RemoteOrderDisplayProperties;
+import de.gmxhome.conrad.jpos.jpos_base.rfidscanner.RFIDScannerProperties;
 import de.gmxhome.conrad.jpos.jpos_base.scale.ScaleProperties;
 import de.gmxhome.conrad.jpos.jpos_base.scanner.ScannerProperties;
 import de.gmxhome.conrad.jpos.jpos_base.signaturecapture.SignatureCaptureProperties;
+import de.gmxhome.conrad.jpos.jpos_base.smartcardrw.SmartCardRWProperties;
 import de.gmxhome.conrad.jpos.jpos_base.toneindicator.ToneIndicatorProperties;
-import jpos.FiscalPrinterConst;
-import jpos.SignatureCapture;
+import jpos.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,17 +87,22 @@ public class JposDevice extends JposBaseDevice {
     public int noOfPropertySets() {
         return super.noOfPropertySets() +
                 getCount(Belts) +
-                getCount(Belts) +
-                getCount(Belts) +
+                getCount(BillAcceptors) +
+                getCount(BillDispensers) +
+                getCount(Biometricss) +
                 getCount(BumpBars) +
-                getCount(Belts) +
+                getCount(CashChangers) +
                 getCount(CashDrawers) +
                 getCount(CATs) +
-                getCount(Belts) +
+                getCount(CheckScanners) +
+                getCount(CoinAcceptors) +
                 getCount(CoinDispensers) +
                 getCount(ElectronicJournals) +
+                getCount(ElectronicValueRWs) +
                 getCount(FiscalPrinters) +
                 getCount(Gates) +
+                getCount(HardTotalss) +
+                getCount(ImageScanners) +
                 getCount(ItemDispensers) +
                 getCount(Keylocks) +
                 getCount(Lightss) +
@@ -97,13 +110,17 @@ public class JposDevice extends JposBaseDevice {
                 getCount(MICRs) +
                 getCount(MotionSensors) +
                 getCount(MSRs) +
+                getCount(PINPads) +
+                getCount(PointCardRWs) +
                 getCount(POSKeyboards) +
                 getCount(POSPowers) +
                 getCount(POSPrinters) +
                 getCount(RemoteOrderDisplays) +
+                getCount(RFIDScanners) +
                 getCount(Scales) +
                 getCount(Scanners) +
                 getCount(SignatureCaptures) +
+                getCount(SmartCardRWs) +
                 getCount(ToneIndicators);
     }
 
@@ -273,6 +290,61 @@ public class JposDevice extends JposBaseDevice {
     }
 
     /*
+     * Biometrics specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for Biometrics devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of biometrics instances the device service supports. Each
+     * list element contains a list of all property sets owned by BiometricsService
+     * objects belonging to the same biometrics instance.
+     */
+    public List<JposCommonProperties>[] Biometricss = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of biometrics property sets, one element for each biometrics instance the device service
+     * supports. Whenever a biometrics device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public BiometricsProperties[] ClaimedBiometrics;
+
+    /**
+     * Allocate device specific property set list for biometrics devices. One list must be allocated for each biometrics
+     * instance the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxBiometrics Maximum number of biometrics that can be controlled by the physical device
+     */
+    protected void biometricsInit(int maxBiometrics) {
+        if (Biometricss.length == 0 && maxBiometrics > 0) {
+            ClaimedBiometrics = new BiometricsProperties[maxBiometrics];
+            Biometricss = (List<JposCommonProperties>[])new List[maxBiometrics];
+            for (int i = 0; i < maxBiometrics; i++) {
+                Biometricss[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support biometrics services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(BiometricsProperties props) {
+    }
+
+    /**
+     * Returns device implementation of BiometricsProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of BiometricsProperties that matches the requirements of the corresponding device service.
+     */
+    public BiometricsProperties getBiometricsProperties(int index) {
+        return null;
+    }
+
+    /*
      * BumpBar specific implementations
      */
 
@@ -435,6 +507,61 @@ public class JposDevice extends JposBaseDevice {
      * @return Instance of CashDrawerProperties that matches the requirements of the corresponding device service.
      */
     public CashDrawerProperties getCashDrawerProperties(int index) {
+        return null;
+    }
+
+    /*
+     * CheckScanner specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for CheckScanner devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of check scanner the device service supports. Each
+     * list element contains a list of all property sets owned by CheckScannerService
+     * objects belonging to the same check scanner.
+     */
+    public List<JposCommonProperties>[] CheckScanners = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of check scanner property sets, one element for each check scanner the device service
+     * supports. Whenever a check scanner device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public CheckScannerProperties[] ClaimedCheckScanner;
+
+    /**
+     * Allocate device specific property set list for check scanner devices. One list must be allocated for each check
+     * scanner the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxCheckScanner Maximum number of check scanners that can be controlled by the physical device
+     */
+    protected void checkScannerInit(int maxCheckScanner) {
+        if (CheckScanners.length == 0 && maxCheckScanner > 0) {
+            ClaimedCheckScanner = new CheckScannerProperties[maxCheckScanner];
+            CheckScanners = (List<JposCommonProperties>[])new List[maxCheckScanner];
+            for (int i = 0; i < maxCheckScanner; i++) {
+                CheckScanners[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support check scanner services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(CheckScannerProperties props) {
+    }
+
+    /**
+     * Returns device implementation of CheckScannerProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of CheckScannerProperties that matches the requirements of the corresponding device service.
+     */
+    public CheckScannerProperties getCheckScannerProperties(int index) {
         return null;
     }
 
@@ -659,6 +786,63 @@ public class JposDevice extends JposBaseDevice {
     }
 
     /*
+     * ElectronicValueRW specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for ElectronicValueRW devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of electronic value reader / writer devices the service supports. Each
+     * list element contains a list of all property sets owned by ElectronicValueRWService
+     * objects belonging to the same electronic value reader / writer.
+     */
+    public List<JposCommonProperties>[] ElectronicValueRWs = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of electronic value reader / writer property sets, one element for each electronic value reader / writer
+     * the device service supports. Whenever an electronic value reader / writer device will be claimed, the
+     * corresponding property set will be stored within this array.
+     */
+    public ElectronicValueRWProperties[] ClaimedElectronicValueRW;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support electronic value reader /
+     * writer services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(ElectronicValueRWProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for electronic value reader / writer devices. One list must be
+     * allocated for each electronic value reader / writer the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxElectronicValueRW Maximum number of electronic value reader / writer devices that can be controlled by
+     *                             the physical device
+     */
+    protected void electronicValueRWInit(int maxElectronicValueRW) {
+        if (ElectronicValueRWs.length == 0 && maxElectronicValueRW > 0) {
+            ClaimedElectronicValueRW = new ElectronicValueRWProperties[maxElectronicValueRW];
+            ElectronicValueRWs = (List<JposCommonProperties>[])new List[maxElectronicValueRW];
+            for (int i = 0; i < maxElectronicValueRW; i++) {
+                ElectronicValueRWs[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of ElectronicValueRWProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of ElectronicValueRWProperties that matches the requirements of the corresponding device service.
+     */
+    public ElectronicValueRWProperties getElectronicValueRWProperties(int index) {
+        return null;
+    }
+
+    /*
      * FiscalPrinter specific implementations
      */
 
@@ -767,6 +951,116 @@ public class JposDevice extends JposBaseDevice {
      * @return Instance of GateProperties that matches the requirements of the corresponding device service.
      */
     public GateProperties getGateProperties(int index) {
+        return null;
+    }
+
+    /*
+     * HardTotals specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for HardTotals devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of hard totals instances the service supports. Each
+     * list element contains a list of all property sets owned by HardTotalsService
+     * objects belonging to the same hard totals instance.
+     */
+    public List<JposCommonProperties>[] HardTotalss = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of hard totals property sets, one element for each hard totals instance the device service
+     * supports. Whenever a hard totals device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public HardTotalsProperties[] ClaimedHardTotals;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support hard totals services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(HardTotalsProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for hard totals instances. One list must be allocated for each
+     * hard totals instance the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxHardTotals Maximum number of hard totals instances that can be controlled by the physical device
+     */
+    protected void hardTotalsInit(int maxHardTotals) {
+        if (HardTotalss.length == 0 && maxHardTotals > 0) {
+            ClaimedHardTotals = new HardTotalsProperties[maxHardTotals];
+            HardTotalss = (List<JposCommonProperties>[])new List[maxHardTotals];
+            for (int i = 0; i < maxHardTotals; i++) {
+                HardTotalss[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of HardTotalsProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of HardTotalsProperties that matches the requirements of the corresponding device service.
+     */
+    public HardTotalsProperties getHardTotalsProperties(int index) {
+        return null;
+    }
+
+    /*
+     * ImageScanner specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for ImageScanner devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of image scanners the service supports. Each
+     * list element contains a list of all property sets owned by ImageScannerService
+     * objects belonging to the same image scanner.
+     */
+    public List<JposCommonProperties>[] ImageScanners = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of image scanner property sets, one element for each image scanner the device service
+     * supports. Whenever a image scanner device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public ImageScannerProperties[] ClaimedImageScanner;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support image scanner services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(ImageScannerProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for image scanners. One list must be allocated for each
+     * image scanner the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxImageScanner Maximum number of image scanners that can be controlled by the physical device
+     */
+    protected void imageScannerInit(int maxImageScanner) {
+        if (ImageScanners.length == 0 && maxImageScanner > 0) {
+            ClaimedImageScanner = new ImageScannerProperties[maxImageScanner];
+            ImageScanners = (List<JposCommonProperties>[])new List[maxImageScanner];
+            for (int i = 0; i < maxImageScanner; i++) {
+                ImageScanners[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of ImageScannerProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of ImageScannerProperties that matches the requirements of the corresponding device service.
+     */
+    public ImageScannerProperties getImageScannerProperties(int index) {
         return null;
     }
 
@@ -1154,6 +1448,116 @@ public class JposDevice extends JposBaseDevice {
     }
 
     /*
+     * PINPad specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for PINPad devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of PIN pads the service supports. Each
+     * list element contains a list of all property sets owned by PINPadService
+     * objects belonging to the same PIN pad.
+     */
+    public List<JposCommonProperties>[] PINPads = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of PIN pad property sets, one element for each PIN pad the device service
+     * supports. Whenever a PIN pad device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public PINPadProperties[] ClaimedPINPad;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support PIN pad services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(PINPadProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for PIN pads. One list must be allocated for each
+     * PIN pad the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxPINPad Maximum number of PIN pads that can be controlled by the physical device
+     */
+    protected void pINPadInit(int maxPINPad) {
+        if (PINPads.length == 0 && maxPINPad > 0) {
+            ClaimedPINPad = new PINPadProperties[maxPINPad];
+            PINPads = (List<JposCommonProperties>[])new List[maxPINPad];
+            for (int i = 0; i < maxPINPad; i++) {
+                PINPads[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of PINPadProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of PINPadProperties that matches the requirements of the corresponding device service.
+     */
+    public PINPadProperties getPINPadProperties(int index) {
+        return null;
+    }
+
+    /*
+     * PointCardRW specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for PointCardRW devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of point card reader / writers the service supports. Each
+     * list element contains a list of all property sets owned by PointCardRWService
+     * objects belonging to the same point card reader / writer.
+     */
+    public List<JposCommonProperties>[] PointCardRWs = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of point card reader / writer property sets, one element for each point card reader / writer the device service
+     * supports. Whenever a point card reader / writer device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public PointCardRWProperties[] ClaimedPointCardRW;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support point card reader / writer services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(PointCardRWProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for point card reader / writers. One list must be allocated for each
+     * point card reader / writer the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxPointCardRW Maximum number of point card reader / writers that can be controlled by the physical device
+     */
+    protected void pointCardRWInit(int maxPointCardRW) {
+        if (PointCardRWs.length == 0 && maxPointCardRW > 0) {
+            ClaimedPointCardRW = new PointCardRWProperties[maxPointCardRW];
+            PointCardRWs = (List<JposCommonProperties>[])new List[maxPointCardRW];
+            for (int i = 0; i < maxPointCardRW; i++) {
+                PointCardRWs[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of PointCardRWProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of PointCardRWProperties that matches the requirements of the corresponding device service.
+     */
+    public PointCardRWProperties getPointCardRWProperties(int index) {
+        return null;
+    }
+
+    /*
      * POSKeyboard specific implementations
      */
 
@@ -1373,6 +1777,61 @@ public class JposDevice extends JposBaseDevice {
     }
 
     /*
+     * RFIDScanner specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for RFIDScanner devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of RFID scanners the service supports. Each
+     * list element contains a list of all property sets owned by RFIDScannerService
+     * objects belonging to the same RFID scanner.
+     */
+    public List<JposCommonProperties>[] RFIDScanners = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of RFID scanner property sets, one element for each RFID scanner the device service
+     * supports. Whenever a RFID scanner device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public RFIDScannerProperties[] ClaimedRFIDScanner;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support RFID scanner services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(RFIDScannerProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for RFID scanners. One list must be allocated for each
+     * RFID scanner the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxRFIDScanner Maximum number of RFID scanners that can be controlled by the physical device
+     */
+    protected void rFIDScannerInit(int maxRFIDScanner) {
+        if (RFIDScanners.length == 0 && maxRFIDScanner > 0) {
+            ClaimedRFIDScanner = new RFIDScannerProperties[maxRFIDScanner];
+            RFIDScanners = (List<JposCommonProperties>[])new List[maxRFIDScanner];
+            for (int i = 0; i < maxRFIDScanner; i++) {
+                RFIDScanners[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of RFIDScannerProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of RFIDScannerProperties that matches the requirements of the corresponding device service.
+     */
+    public RFIDScannerProperties getRFIDScannerProperties(int index) {
+        return null;
+    }
+
+    /*
      * Scale specific implementations
      */
 
@@ -1533,6 +1992,61 @@ public class JposDevice extends JposBaseDevice {
      * @return Instance of SignatureCaptureProperties that matches the requirements of the corresponding device service.
      */
     public SignatureCaptureProperties getSignatureCaptureProperties(int index) {
+        return null;
+    }
+
+    /*
+     * SmartCardRW specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for SmartCardRW devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of smart card reader / writers the service supports. Each
+     * list element contains a list of all property sets owned by SmartCardRWService
+     * objects belonging to the same smart card reader / writer.
+     */
+    public List<JposCommonProperties>[] SmartCardRWs = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of smart card reader / writer property sets, one element for each smart card reader / writer the device service
+     * supports. Whenever a smart card reader / writer device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public SmartCardRWProperties[] ClaimedSmartCardRW;
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support smart card reader / writer services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(SmartCardRWProperties props) {
+    }
+
+    /**
+     * Allocate device specific property set list for smart card reader / writers. One list must be allocated for each
+     * smart card reader / writer the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxSmartCardRW Maximum number of smart card reader / writers that can be controlled by the physical device
+     */
+    protected void smartCardRWInit(int maxSmartCardRW) {
+        if (SmartCardRWs.length == 0 && maxSmartCardRW > 0) {
+            ClaimedSmartCardRW = new SmartCardRWProperties[maxSmartCardRW];
+            SmartCardRWs = (List<JposCommonProperties>[])new List[maxSmartCardRW];
+            for (int i = 0; i < maxSmartCardRW; i++) {
+                SmartCardRWs[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Returns device implementation of SmartCardRWProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of SmartCardRWProperties that matches the requirements of the corresponding device service.
+     */
+    public SmartCardRWProperties getSmartCardRWProperties(int index) {
         return null;
     }
 
