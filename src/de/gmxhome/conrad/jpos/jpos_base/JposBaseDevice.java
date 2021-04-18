@@ -101,7 +101,6 @@ public class JposBaseDevice {
      * Methods and Events.
      */
     public int CapPowerReporting = JposConst.JPOS_PR_NONE;
-    ;
 
     /**
      * Device identifier, specifies the interface the device is connected. For example, COM port name
@@ -138,6 +137,11 @@ public class JposBaseDevice {
      * Format string for logging line. See Log4j specification
      */
     public String LoggerFormat;
+
+    /**
+     * Maximum number of array elements used for its string representation. Default: 100. Can be changed via jpos.xml.
+     */
+    public int MaxArrayStringElements = 100;
 
     /**
      * List holds all outstanding output requests.
@@ -464,6 +468,9 @@ public class JposBaseDevice {
                 else
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid warning level");
             }
+            int val;
+            if ((o = entry.getPropertyValue("MaxArrayStringElements")) != null && (val = MaxArrayStringElements = Integer.parseInt(o.toString())) > 0)
+                MaxArrayStringElements = val;
             if ((o = entry.getPropertyValue("SerialIOAdapterClass")) != null) {
                 if (SerialIOAdapterClass == null) {
                     try {

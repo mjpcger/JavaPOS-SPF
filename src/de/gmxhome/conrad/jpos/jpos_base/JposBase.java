@@ -111,7 +111,9 @@ public class JposBase implements BaseService {
      * Returns a property value of an object as String, using its getter method. Usually, simply the toString method
      * of the specified object will be used to retrieve its string representation. If the property is an array, the
      * string representations of all elements stored within the array will be concatenated separated by comma. Keep
-     * in mind that this might be confusing if the string representation of an element itself contains a comma.
+     * in mind that this might be confusing if the string representation of an element itself contains a comma, and
+     * that at least MaxArrayStringElements will be retrieved. If an array has more than MaxArrayStringElements
+     * elements, further elements will be represented by "...".
      * @param obj           Object that contains the requested property.
      * @param propertyName  Name of the requested property.
      * @return              String representation of the property.
@@ -127,7 +129,9 @@ public class JposBase implements BaseService {
         Object value = property.get(obj);
         String valueString = value == null ? "[null]" : value.toString();
         if (value.getClass().isArray()) {
-            for (int i = 0; i < Array.getLength(value); i++) {
+            int max = Array.getLength(value);
+            int limit = max < Device.MaxArrayStringElements ? max : Device.MaxArrayStringElements;
+            for (int i = 0; i < limit; i++) {
                 Object component = Array.get(value, i);
                 String componentString = null == component ? "[null]" : component.toString();
                 if (0 == i)
@@ -135,6 +139,8 @@ public class JposBase implements BaseService {
                 else
                     valueString += "," + componentString;
             }
+            if (limit < max)
+                valueString += ",...";
         }
         return valueString;
     }
