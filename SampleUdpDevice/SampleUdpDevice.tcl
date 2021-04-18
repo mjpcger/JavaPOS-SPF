@@ -26,10 +26,7 @@ if {[catch {package require udp}] != 0} {
 wm title . "UDPDevice Simulator"
 
 # The common part
-set Setup .all.row1.co
-pack [ttk::frame .all] -expand 1 -fill both
-pack [ttk::frame .all.row1] -expand 1 -fill both
-pack [ttk::labelframe $Setup -text Setup] -fill both -side left
+place [ttk::labelframe [set Setup .setup] -text Setup] -x 0 -y 0
 pack [ttk::labelframe $Setup.port -text "Port"] -fill y -side left
 pack [ttk::entry $Setup.port.e -textvariable Port -width 5] -fill both -side left
 if {[catch {console hide}] == 0} {
@@ -132,10 +129,117 @@ proc messageHandler {} {
 	puts "put INVALID:$resp"
 }
 
+set Geometries "Setup"
+
+# Shows the specified window
+proc show {window} {
+    global $window Geometries Setup
+    global [set lastwin [lindex $Geometries end]]
+
+    place [set $window] -x 0 -y [winfo height [set $lastwin]]
+    lappend Geometries "$window"
+    set btn $Setup.[string tolower $window]
+    $btn configure -command "hide $window"
+    set tx [split [$btn cget -text] "\n"]
+    lset tx 0 "Hide"
+    $btn configure -text [join $tx "\n"]
+    updateWindow
+}
+
+# Hides the specified window
+proc hide {window} {
+    global $window Geometries Setup
+
+    set res {}
+    foreach win $Geometries {
+        global $win
+
+        if {[lindex $win 0] != $window} {
+            lappend res $win
+        }
+    }
+    set Geometries $res
+    place forget [set $window]
+    set btn $Setup.[string tolower $window]
+    $btn configure -command "show $window"
+    set tx [split [$btn cget -text] "\n"]
+    lset tx 0 "Show"
+    $btn configure -text [join $tx "\n"]
+    updateWindow
+}
+
+# Re-position and resize subdevice windows
+proc updateWindow {} {
+    global Geometries ApplicationWindow
+
+    set maxwidth 0
+    foreach win $Geometries {
+        global $win
+
+        if {[set w [winfo reqwidth [set $win]]] > $maxwidth} {
+            set maxwidth $w
+        }
+    }
+    set totalwidth 0
+    set linelist {}
+    set lineheight 0
+    set linex 0
+    foreach win $Geometries {
+        set winwidth [winfo reqwidth [set w [set $win]]]
+        if {$totalwidth + $winwidth <= $maxwidth} {
+            incr totalwidth $winwidth
+            lappend linelist $w
+            if {[set winheight [winfo reqheight $w]] > $lineheight} {
+                set lineheight $winheight
+            }
+        } {
+            updateWindowLine $linelist $maxwidth $totalwidth $lineheight $linex
+            incr linex $lineheight
+            set totalwidth $winwidth
+            set linelist [list $w]
+            set lineheight [winfo reqheight $w]
+        }
+    }
+    updateWindowLine $linelist $maxwidth $totalwidth $lineheight $linex
+    wm geometry $ApplicationWindow [set maxwidth]x[expr $lineheight + $linex]
+}
+
+proc updateWindowLine {line width used height vertical} {
+    if {[set linelength [llength $line]] == 1} {
+        global $line
+        place configure [set line] -x 0 -y $vertical -width $width -height $height
+    } {
+        set add [expr ($width - $used) / $linelength]
+        set moretimes [expr ($width - $used) % $linelength]
+        set xpos 0
+        for {set i 0} {$i < $linelength} {incr i} {
+            set w [lindex $line $i]
+            set winwidth [expr [winfo reqwidth $w] + $add + ($i < $moretimes ? 1 : 0)]
+            place configure $w -x $xpos -y $vertical -height $height -width $winwidth
+            incr xpos $winwidth
+        }
+    }
+}
+
+# The application window
+set ApplicationWindow .
+
+# Initialize subdevice window
+proc initWindow {name description} {
+    global $name Geometries Setup
+
+    set $name [ttk::labelframe .[string tolower $name] -text $description]
+    pack [ttk::button $Setup.[string tolower $name] -text "Init\n$description"] -side left -expand 1 -fill both
+    hide $name
+}
+
+after idle {
+    after 100 updateWindow
+}
+
 # The Drawer part
 
-set Drawer .all.row1.drw
-pack [ttk::labelframe $Drawer -text "Drawer Status"] -expand 1 -fill both -side left
+initWindow Drawer Drawer
 pack [ttk::radiobutton $Drawer.off -text Closed -variable DrawerState -value 0] -expand 1 -side left
 pack [ttk::radiobutton $Drawer.slow -text Opened -variable DrawerState -value 1] -expand 1 -side left
 
@@ -145,7 +249,7 @@ pack [ttk::radiobutton $Drawer.slow -text Opened -variable DrawerState -value 1]
 # Returns the frame to be sent as response: "DRAWER:" followed by the command and the current drawer state (0 = closed, 1 = open)
 # or an empty string if the frame is no valid drawer command.
 proc drawerMessage {frame} {
-	global DrawerState
+    global DrawerState
 	if {$frame == "Open"} {
 		set DrawerState 1
 	}
@@ -159,8 +263,7 @@ set DrawerState 0
 
 # The Belt part
 
-set Belt .all.row2
-pack [ttk::labelframe $Belt -text Belt] -expand 1 -fill both
+initWindow Belt Belt
 pack [ttk::labelframe $Belt.status -text "Belt Status"] -expand 1 -fill both
 pack [ttk::label $Belt.status.label -text Stopped -background red -anchor center] -expand 1 -fill both
 pack [ttk::frame $Belt.status.fields] -expand 1 -fill both
@@ -212,8 +315,6 @@ set BeltSecurityFlap 0
 
 # The Cash box (Device to accept and dispense coins and bills
 
-set CashBox .all.row3
-
 # Set cash slot variables
 set CashBoxSlotValues {1 2 5 10 20 50 100 200 500 1000 2000 5000 10000 20000 50000}
 foreach i $CashBoxSlotValues {
@@ -224,7 +325,7 @@ set CashBoxInput 0
 set CashBoxFilling 0
 set CashBoxSavedSlots ""
 
-pack [ttk::labelframe $CashBox -text CashBox] -expand 1 -fill both
+initWindow CashBox "Cash Box"
 pack [ttk::frame $CashBox.u] -expand 1 -fill both
 foreach i $CashBoxSlotValues {
 	if {$i % 100 == 0} {
@@ -552,8 +653,7 @@ proc cashBoxMessage {frame} {
 
 # The Biometrics part
 
-set Bio .all.row4
-pack [labelframe $Bio -text "Biometrics (User / Password)"] -expand 1 -fill both
+initWindow Bio "Biometrics"
 pack [ttk::labelframe $Bio.user -text ""] -expand 1 -fill both -side left
 pack [ttk::entry $Bio.user.name -state disabled] -expand 1 -fill both
 pack [ttk::labelframe $Bio.pass -text ""] -expand 1 -fill both -side left
