@@ -97,6 +97,6 @@ public class BiometricsStatusUpdateEvent extends JposStatusUpdateEvent {
             case BiometricsConst.BIO_SUE_SENSOR_COMPLETE:
                 return "Biometrics sensor complete";
         }
-        return "Unknown CashChanger Status Change: " + getStatus();
+        return "Unknown Biometrics Status Change: " + getStatus();
     }
 }

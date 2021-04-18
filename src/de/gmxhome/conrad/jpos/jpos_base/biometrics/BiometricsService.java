@@ -136,7 +136,7 @@ public class BiometricsService extends JposBase implements BiometricsService114 
         checkEnabled();
         Device.check(Data.RawSensorData == null, JposConst.JPOS_E_ILLEGAL, "RawSensorData currently not available");
         logGet("RawSensorData");
-        return Data.RawSensorData;
+        return Arrays.copyOf(Data.RawSensorData, Data.RawSensorData.length);
     }
 
     @Override

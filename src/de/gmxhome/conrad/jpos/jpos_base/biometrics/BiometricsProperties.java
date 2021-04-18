@@ -213,6 +213,7 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
         return false;
     }
 
+    @Override
     public boolean initOnFirstEnable() {
         if (!super.initOnFirstEnable()) {
             CapSensorType = CapSensorTypeDef;
