@@ -54,6 +54,9 @@ public interface MICRInterface extends JposBaseInterface {
      *     <li>checkBusy did not throw an exception,</li>
      *     <li>The timeout is &ge; 0 or JPOS_FOREVER.</li>
      * </ul>
+     * If the service enters insertion mode successfully after BeginInsertion failed, e.g. due to a
+     * timeout condition during delayed asynchronous insertion handling, property InsertionMode must
+     * be set to true by the specific service implementation to avoid EndInsertion to fail.
      *
      * @param timeout    See UPOS specification, method BeginInsertion.
      * @throws JposException    See UPOS specification, method DisplayText.
@@ -68,6 +71,9 @@ public interface MICRInterface extends JposBaseInterface {
      *     <li>checkBusy did not throw an exception,</li>
      *     <li>The timeout is &ge; 0 or JPOS_FOREVER.</li>
      * </ul>
+     * If the service enters removal mode successfully after BeginRemoval failed, e.g. due to a
+     * timeout condition during delayed asynchronous removal handling, property RemovalMode must
+     * be set to true by the specific service implementation to avoid EndRemoval to fail.
      *
      * @param timeout    See UPOS specification, method BeginRemoval.
      * @throws JposException    See UPOS specification, method DisplayText.
