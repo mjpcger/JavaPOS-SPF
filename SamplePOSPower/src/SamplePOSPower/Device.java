@@ -19,7 +19,6 @@ package SamplePOSPower;
 
 import com.sun.jna.Native;
 import com.sun.jna.Structure;
-import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.win32.StdCallLibrary;
 import com.sun.jna.win32.W32APIOptions;
