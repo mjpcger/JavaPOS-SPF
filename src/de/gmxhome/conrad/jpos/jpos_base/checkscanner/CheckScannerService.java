@@ -402,6 +402,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
         checkEnabled();
         JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
         CheckScanner.beginInsertion(timeout);
+        Data.InsertionMode = true;
         logCall("BeginInsertion");
     }
 
@@ -411,6 +412,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
         checkEnabled();
         Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
         CheckScanner.beginRemoval(timeout);
+        Data.RemovalMode = true;
         logCall("BeginRemoval");
     }
 
@@ -452,6 +454,8 @@ public class CheckScannerService extends JposBase implements CheckScannerService
     public void endInsertion() throws JposException {
         logPreCall("EndInsertion");
         checkEnabled();
+        Device.check(!Data.InsertionMode, JposConst.JPOS_E_ILLEGAL, "Not in insertion mode");
+        Data.InsertionMode = false;
         CheckScanner.endInsertion();
         logCall("EndInsertion");
     }
@@ -460,6 +464,8 @@ public class CheckScannerService extends JposBase implements CheckScannerService
     public void endRemoval() throws JposException {
         logPreCall("EndRemoval");
         checkEnabled();
+        Device.check(!Data.RemovalMode, JposConst.JPOS_E_ILLEGAL, "Not in removal mode");
+        Data.RemovalMode = false;
         CheckScanner.endRemoval();
         logCall("EndRemoval");
     }
@@ -468,6 +474,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
     public void retrieveImage(int cropAreaID) throws JposException {
         logPreCall("RetrieveImage", "" + cropAreaID);
         checkEnabled();
+        JposDevice.check(Data.InsertionMode || Data.RemovalMode, JposConst.JPOS_E_FAILURE, "Bad device state (" + (Data.InsertionMode ? "insertion" : "removal") + " mode)");
         JposDevice.check(!Data.CapDefineCropArea && cropAreaID != CheckScannerConst.CHK_CROP_AREA_ENTIRE_IMAGE, JposConst.JPOS_E_ILLEGAL, "Invalid Crop area: " + cropAreaID);
         CheckScanner.retrieveImage(cropAreaID);
         logCall("RetrieveImage");
