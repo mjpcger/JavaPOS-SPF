@@ -293,6 +293,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
+     *     <li>CapStoreImageFiles is true,</li>
      *     <li>by equals LOCATE_BY_FILEID and FileID is a non-empty string or</li>
      *     <li>by equals LOCATE_BY_FILEINDEX or</li>
      *     <li>by equals LOCATE_BY_IMAGETAGDATA, CapImageTagData is true and ImageTagData is a non-empty string.</li>

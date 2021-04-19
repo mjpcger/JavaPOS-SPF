@@ -498,6 +498,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
                         (Data.CapImageTagData ? "No ImageTagData support" : "Missing ImageTagData")}
         };
         checkEnabled();
+        JposDevice.check(!Data.CapStoreImageFiles, JposConst.JPOS_E_ILLEGAL, "No image file available");
         for (Object[] pair : allowedValue) {
             if (by == (Integer) pair[0]) {
                 if(!(Boolean)pair[1])
@@ -514,7 +515,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
     public void storeImage(int cropAreaID) throws JposException {
         logPreCall("StoreImage", "" + cropAreaID);
         checkEnabled();
-        JposDevice.check(Data.CapStoreImageFiles, JposConst.JPOS_E_ILLEGAL, "StoreImage not supported");
+        JposDevice.check(!Data.CapStoreImageFiles, JposConst.JPOS_E_ILLEGAL, "StoreImage not supported");
         JposDevice.check(!Data.CapDefineCropArea && cropAreaID != CheckScannerConst.CHK_CROP_AREA_ENTIRE_IMAGE, JposConst.JPOS_E_ILLEGAL, "Invalid Crop area: " + cropAreaID);
         CheckScanner.storeImage(cropAreaID);
         logCall("StoreImage");

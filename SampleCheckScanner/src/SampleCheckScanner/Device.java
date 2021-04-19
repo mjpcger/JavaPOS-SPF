@@ -144,7 +144,9 @@ public class Device extends JposDevice implements Runnable {
                     startAsyncOperation("DoTheScan");
                 attachWaiter();
             }
-            if (!waitWaiter(timeout == JposConst.JPOS_FOREVER ? SyncObject.INFINITE : timeout)) {
+            boolean waitResult = waitWaiter(timeout == JposConst.JPOS_FOREVER ? SyncObject.INFINITE : timeout);
+            releaseWaiter();
+            if (!waitResult) {
                 InsertionMode = true;
                 throw new JposException(JposConst.JPOS_E_TIMEOUT, "Timeout BeginInsertion");
             }
@@ -155,15 +157,20 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void endInsertion() throws JposException {
+            boolean waitResult = false;
             synchronized (IsRunning) {
                 if (IsRunning[0]) {
                     attachWaiter();
-                    waitWaiter(SyncObject.INFINITE);
+                    waitResult = true;
                 }
-                checkext(DialogResult != JOptionPane.OK_OPTION, CheckScannerConst.JPOS_ECHK_NOCHECK, "No check available");
-                handleEvent(new CheckScannerStatusUpdateEvent(EventSource, CheckScannerConst.CHK_SUE_SCANCOMPLETE));
-                Inserted = true;
             }
+            if (waitResult) {
+                waitWaiter(SyncObject.INFINITE);
+                releaseWaiter();
+            }
+            checkext(DialogResult != JOptionPane.OK_OPTION, CheckScannerConst.JPOS_ECHK_NOCHECK, "No check available");
+            handleEvent(new CheckScannerStatusUpdateEvent(EventSource, CheckScannerConst.CHK_SUE_SCANCOMPLETE));
+            Inserted = true;
         }
 
         @Override
