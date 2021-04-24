@@ -309,6 +309,12 @@ public class CheckScannerService extends JposBase implements CheckScannerService
         logPreSet("DocumentHeight");
         checkOpened();
         Device.check(documentHeight < 0, JposConst.JPOS_E_ILLEGAL, "DocumentHeight must be a positive value");
+        for (int[] pair : Data.getMM_Factors()) {
+            if (Data.MapMode == pair[0]) {
+                JposDevice.check((documentHeight * 1000 + (pair[1] >> 1)) / pair[1] > Data.DocumentHeightDef, JposConst.JPOS_E_ILLEGAL, "Invalid height: " + documentHeight);
+                break;
+            }
+        }
         CheckScanner.documentHeight(documentHeight);
         logSet("DocumentHeight");
     }
@@ -318,6 +324,12 @@ public class CheckScannerService extends JposBase implements CheckScannerService
         logPreSet("DocumentWidth");
         checkOpened();
         Device.check(documentWidth < 0, JposConst.JPOS_E_ILLEGAL, "DocumentWidth must be a positive value");
+        for (int[] pair : Data.getMM_Factors()) {
+            if (Data.MapMode == pair[0]) {
+                JposDevice.check((documentWidth * 1000 + (pair[1] >> 1)) / pair[1] > Data.DocumentWidthDef, JposConst.JPOS_E_ILLEGAL, "Invalid width: " + documentWidth);
+                break;
+            }
+        }
         CheckScanner.documentWidth(documentWidth);
         logSet("DocumentWidth");
     }

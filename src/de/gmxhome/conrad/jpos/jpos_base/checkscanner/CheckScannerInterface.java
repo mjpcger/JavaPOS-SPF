@@ -81,7 +81,9 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>documentHeight is not negative.</li>
+     *     <li>documentHeight is not negative,</li>
+     *     <li>documentHeight in combination with MapMode does not specify a height above the initial DocumentHeight
+     *     value.</li>
      * </ul>
      *
      * @param documentHeight New value for DocumentHeight property.
@@ -94,7 +96,9 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>documentWidth is not negative.</li>
+     *     <li>documentWidth is not negative,</li>
+     *     <li>documentWidth in combination with MapMode does not specify a width above the initial DocumentWidth
+     *     value.</li>
      * </ul>
      *
      * @param documentWidth New value for DocumentWidth property.

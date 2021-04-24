@@ -407,7 +407,7 @@ public class CheckScannerProperties extends JposCommonProperties implements Chec
      * Returns array containing the MapMode values and the corresponding units per inch.
      * @return Array containing value pairs for MM_DOTS, MM_TWIPS, MM_ENGLISH and MM_METRIC.
      */
-    int[][] getMM_Factors() {
+    public int[][] getMM_Factors() {
         int[][] mm_Factors = {
                 {CheckScannerConst.CHK_MM_DOTS, Quality},
                 {CheckScannerConst.CHK_MM_TWIPS, 1440},
