@@ -18,18 +18,27 @@
 package SampleCheckScanner;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import de.gmxhome.conrad.jpos.jpos_base.checkscanner.CheckScannerDataEvent;
-import de.gmxhome.conrad.jpos.jpos_base.checkscanner.CheckScannerProperties;
-import de.gmxhome.conrad.jpos.jpos_base.checkscanner.CheckScannerStatusUpdateEvent;
+import de.gmxhome.conrad.jpos.jpos_base.checkscanner.*;
 import jpos.*;
 import jpos.config.*;
 
 import javax.swing.*;
-import java.awt.*;
 
 /**
  * JposDevice based dummy implementation of JavaPOS CheckScanner device service implementation.
- * No real hardware. Scanned images always with dummy values, operator interaction via message boxes.
+ * No real hardware. Scanned images always with dummy values, operator interaction via message boxes.<br>
+ * Supported configuration values for jpos.xml are:
+ * <ul>
+ *     <li>Contrast: The value of the Contract property. Must be a value between 0 and 100, default: 50.</li>
+ *     <li>MaxHeight: The maximum height of a scan in (0.001 inch) units, default: 3000 (3 inch).</li>
+ *     <li>MaxWidth: The maximum width of a scan in (0.001 inch) units, default: 6000 (6 inch).</li>
+ * </ul>
+ * In this simulator implementation, image data will be returned in a byte array with one bit per dot,
+ * starting with the left-most column, with the bit values of the first row in the MSB of the first byte
+ * of each row. Depending on the Quality property which can be set to 100 or 300, each column consists of 300
+ * or 900 dots stored in 38 or 113 bytes, therefore a full scan with 600 0o 1800 colums consists of 22800 or
+ * 203400 byte. <b>Surprise:</b> Since this simulator cannot really scan a check, all dot values will always
+ * be 0 (white).
  */
 public class Device extends JposDevice implements Runnable {
     protected Device(String id) {
@@ -57,8 +66,8 @@ public class Device extends JposDevice implements Runnable {
         }
     }
 
-    private int MaxHeight = 1000;
-    private int MaxWidth = 2000;
+    private int MaxHeight = 3000;
+    private int MaxWidth = 6000;
     private int Contrast = 50;
 
     @Override
@@ -137,11 +146,20 @@ public class Device extends JposDevice implements Runnable {
             super(0);
         }
 
+        private int[] ScanSizeMode = null;
+
         @Override
         public void beginInsertion(int timeout) throws JposException {
             synchronized (IsRunning) {
-                if (!IsRunning[0])
+                if (!IsRunning[0]) {
                     startAsyncOperation("DoTheScan");
+                    for (int[] pairs : getMM_Factors()) {
+                        if (pairs[0] == MapMode) {
+                            ScanSizeMode = new int[]{DocumentHeight, DocumentWidth, Quality, pairs[1]};
+                            break;
+                        }
+                    }
+                }
                 attachWaiter();
             }
             boolean waitResult = waitWaiter(timeout == JposConst.JPOS_FOREVER ? SyncObject.INFINITE : timeout);
@@ -189,7 +207,10 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public void retrieveImage(int id) throws JposException {
             checkext(DialogResult == null || DialogResult != JOptionPane.OK_OPTION, CheckScannerConst.JPOS_ECHK_NOCHECK, "No check available");
-            byte[] data = new byte[((MaxHeight + Byte.SIZE - 1) / Byte.SIZE) * MaxWidth];   // One bit per dot, vertical orientation
+            check(ScanSizeMode == null, JposConst.JPOS_E_FAILURE, "Internal error: No Dimension");
+            int scanheight = (ScanSizeMode[0] * ScanSizeMode[2] / ScanSizeMode[3] + Byte.SIZE - 1) / Byte.SIZE;
+            int scanwidth = ScanSizeMode[1] * ScanSizeMode[2] / ScanSizeMode[3];
+            byte[] data = new byte[scanheight * scanwidth];
             // Currently, graphic not filled with any contents
             handleEvent(new CheckScannerDataEvent(EventSource, 0, 0, data, null, null, "", "", null));
             DialogResult = null;
