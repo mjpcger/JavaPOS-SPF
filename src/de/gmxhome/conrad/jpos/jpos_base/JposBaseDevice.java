@@ -740,9 +740,9 @@ public class JposBaseDevice {
 
         @Override
         public void run() {
-            JposStatusUpdateEvent stevent = null;
-            JposDirectIOEvent dioevent = null;
             while(true) {
+                JposStatusUpdateEvent stevent = null;
+                JposDirectIOEvent dioevent = null;
                 EventSerializer.suspend(SyncObject.INFINITE);
                 synchronized (Props.EventList) {
                     Props.EventProcessor = null;
@@ -804,10 +804,10 @@ public class JposBaseDevice {
 
         @Override
         public void run() {
-            JposErrorEvent errevent = null;
-            JposDataEvent dataevent = null;
-            JposDirectIOEvent dioevent = null;
             while (true) {
+                JposErrorEvent errevent = null;
+                JposDataEvent dataevent = null;
+                JposDirectIOEvent dioevent = null;
                 EventSerializer.suspend(SyncObject.INFINITE);
                 synchronized (Props.DataEventList) {
                     Props.DataEventProcessor = null;
@@ -894,10 +894,10 @@ public class JposBaseDevice {
 
         @Override
         public void run() {
-            JposErrorEvent errevent = null;
-            JposOutputCompleteEvent ocevent = null;
-            JposDirectIOEvent dioevent = null;
             while (true) {
+                JposErrorEvent errevent = null;
+                JposOutputCompleteEvent ocevent = null;
+                JposDirectIOEvent dioevent = null;
                 EventSerializer.suspend(SyncObject.INFINITE);
                 synchronized (Props.ErrorEventList) {
                     Props.ErrorEventProcessor = null;
@@ -975,9 +975,9 @@ public class JposBaseDevice {
 
         @Override
         public void run() {
-            JposTransitionEvent trevent = null;
-            JposDirectIOEvent dioevent = null;
             while (true) {
+                JposTransitionEvent trevent = null;
+                JposDirectIOEvent dioevent = null;
                 EventSerializer.suspend(SyncObject.INFINITE);
                 synchronized (Props.TransitionEventList) {
                     Props.TransitionEventProcessor = null;
