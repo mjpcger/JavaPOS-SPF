@@ -155,6 +155,7 @@ public class Device extends JposDevice {
         private JDialog Dialog;
         private ComponentAdapter Adapter = null;
         private SyncObject Ready = new SyncObject();
+        private Boolean Finished = false;
 
         private void synchronizedConfirmationBox(final String message, final String title, final String[] options, final String defaultOption, final int messageType, final int timeout) {
             SwingUtilities.invokeLater(new Runnable() {
@@ -170,8 +171,12 @@ public class Device extends JposDevice {
                                 new Timer(timeout, new ActionListener() {
                                     @Override
                                     public void actionPerformed(ActionEvent e) {
-                                        Box.setValue("");
-                                        Dialog.setVisible(false);
+                                        synchronized (Sync) {
+                                            if (Dialog != null && Dialog.isVisible() && Result == null) {
+                                                Box.setValue("");
+                                                Dialog.setVisible(false);
+                                            }
+                                        }
                                     }
                                 }).start();
                             }
