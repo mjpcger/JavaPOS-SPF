@@ -42,6 +42,7 @@ public class Factory extends JposDeviceFactory {
         props.addProperties(dev.ImageScanners);
         props.Claiming = dev.ClaimedImageScanner;
         dev.changeDefaults(props);
+        dev.check(!props.CapVideoData && !props.CapImageData && !props.CapDecodeData, JposConst.JPOS_E_ILLEGAL, "Missing video, image or decode capability");
         service.DeviceInterface = service.ImageScanner = props;
         return service;
     }
