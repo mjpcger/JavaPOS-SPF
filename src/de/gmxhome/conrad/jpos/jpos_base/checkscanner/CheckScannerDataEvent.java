@@ -68,6 +68,15 @@ public class CheckScannerDataEvent extends JposDataEvent {
      *
      * @param source Source, for services implemented with this framework, the (<i>deviceclass</i>.)<i>DeviceClass</i>Service object.
      * @param state  Status, see UPOS specification.
+     * @param fileIndex         Value to be set in property FileIndex before this DataEvent will be delivered.
+     * @param imageData         Value to be set in property ImageData before this DataEvent will be delivered.
+     * @param documentHeight    Document height in dots, used to compute property DocumentHeight before this DataEvent
+     *                          will be delivered.
+     * @param documentWidth     Document width in dots, used to compute property DocumentWidth before this DataEvent
+     *                          will be delivered.
+     * @param fileID            Value to be set in property FileID before this DataEvent will be delivered.
+     * @param imageTagData      Value to be set in property ImageTagData before this DataEvent will be delivered.
+     * @param quality           Value to be set in property Quality before this DataEvent will be delivered.
      */
     public CheckScannerDataEvent(JposBase source, int state, int fileIndex, byte[] imageData, Integer documentHeight,
                                  Integer documentWidth, String fileID, String imageTagData, Integer quality) {
