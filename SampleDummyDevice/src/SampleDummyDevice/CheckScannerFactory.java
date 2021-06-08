@@ -15,7 +15,7 @@
  *
  */
 
-package SampleCheckScanner;
+package SampleDummyDevice;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.checkscanner.*;
