@@ -412,9 +412,25 @@ public class CheckScannerProperties extends JposCommonProperties implements Chec
                 {CheckScannerConst.CHK_MM_DOTS, Quality},
                 {CheckScannerConst.CHK_MM_TWIPS, 1440},
                 {CheckScannerConst.CHK_MM_ENGLISH, 1000},
-                {CheckScannerConst.CHK_MM_METRIC, 254},
+                {CheckScannerConst.CHK_MM_METRIC, 2540},
         };
         return mm_Factors;
+    }
+
+    /**
+     * Compute the size of one inch for the given MapMode constant. For MM_Metric, this is 2540 (since one inch equals
+     * 25.4 millimeter). For MM_DOTS, his is the value specified by property Quality. For MM_ENGLISH and MM_TWIPS
+     * this is 1000 / 1440, corresponding to the MapMode specification.
+     * @param mode MapMode constant, valid values are MM_DOTS, MM_TWIPS, MM_ENGLISH and MM_METRIC.
+     * @return Current MapMode units for one inch or null if mode is not a valid MapMode constant.
+     */
+    public Integer getMM_Factor(int mode) {
+        for (int[] res : getMM_Factors())
+        {
+            if (res[0] == mode)
+                return res[1];
+        }
+        return null;
     }
 
     @Override
