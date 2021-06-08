@@ -68,7 +68,7 @@ public class JposErrorEvent extends ErrorEvent {
      * @return Describing string.
      */
     public String toLogString() {
-        return Integer.toString(getErrorCode()) + "/" + getErrorCodeExtended() + (Message.equals("") ? "" : "/" + Message);
+        return Integer.toString(getErrorCode()) + "/" + getErrorCodeExtended() + "/" + getErrorLocus() + (Message.equals("") ? "" : "/" + Message);
     }
 
     /**
