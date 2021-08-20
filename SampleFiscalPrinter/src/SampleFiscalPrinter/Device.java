@@ -340,6 +340,7 @@ public class Device extends JposDevice implements Runnable {
     static final int MAXPERIOD = 100;       // Maximum period of simulator (real fiscal printers have higher values)
 
     private final static int Version = 1014001;
+    private final static int FiscalPrinterVersion = 1015001;    // FiscalPrinter conforms to UPOS version 1.15
 
     /**
      * Maximum time between acknowledge and response frame. Default: 2000. Can be set via jpos.xml.
@@ -706,7 +707,7 @@ public class Device extends JposDevice implements Runnable {
     @Override
     public void changeDefaults(FiscalPrinterProperties props) {
         props.DeviceServiceDescription = "Fiscal printer service for sample fiscal printer";
-        props.DeviceServiceVersion = Version;
+        props.DeviceServiceVersion = FiscalPrinterVersion;
         props.ActualCurrencyDef = FiscalPrinterConst.FPTR_AC_EUR;
         props.CapAdditionalHeader = true;
         props.CapAdditionalLines = true;

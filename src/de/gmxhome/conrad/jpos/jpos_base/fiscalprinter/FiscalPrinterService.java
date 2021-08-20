@@ -18,7 +18,7 @@ package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.FiscalPrinterService114;
+import jpos.services.FiscalPrinterService115;
 
 import java.math.BigDecimal;
 import java.text.ParsePosition;
@@ -29,7 +29,7 @@ import java.util.Date;
  * FiscalPrinter service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class FiscalPrinterService extends JposBase implements FiscalPrinterService114 {
+public class FiscalPrinterService extends JposBase implements FiscalPrinterService115 {
     /**
      * Instance of a class implementing the FiscalPrinterInterface for fiscal printer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
@@ -682,7 +682,9 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
                 FiscalPrinterConst.FPTR_DT_RESET,
                 FiscalPrinterConst.FPTR_DT_RTC,
                 FiscalPrinterConst.FPTR_DT_VAT,
-                FiscalPrinterConst.FPTR_DT_START
+                FiscalPrinterConst.FPTR_DT_START,
+                FiscalPrinterConst.FPTR_DT_TICKET_START,
+                FiscalPrinterConst.FPTR_DT_TICKET_END
         };
         logPreSet("DateType");
         checkOpened();

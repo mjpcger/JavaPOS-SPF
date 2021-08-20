@@ -97,7 +97,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>type is one of DT_CONF, DT_EOD, DT_RESET, DT_RTC, DT_VAT or DT_START.</li>
+     *     <li>type is one of DT_CONF, DT_EOD, DT_RESET, DT_RTC, DT_VAT, DT_START, DT_TICKET_START or DT_TICKET_END.</li>
      * </ul>
      *
      * @param type One of DT_CONF, DT_EOD, DT_RESET, DT_RTC, DT_VAT or DT_START.
