@@ -18,18 +18,21 @@ package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.FiscalPrinterService115;
+import jpos.services.*;
 
 import java.math.BigDecimal;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 /**
  * FiscalPrinter service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
+ * This implementation is temporarily for jpos 1.14 but with support for jpos 1.15 (Germany support) if
+ * jpos library supports version 1.15 for fiscal printer.
  */
-public class FiscalPrinterService extends JposBase implements FiscalPrinterService115 {
+public class FiscalPrinterService extends JposBase implements FiscalPrinterService114 {
     /**
      * Instance of a class implementing the FiscalPrinterInterface for fiscal printer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
@@ -37,6 +40,8 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public FiscalPrinterInterface FiscalPrinterInterface;
 
     private FiscalPrinterProperties Data;
+
+    private static class MyConstants implements FiscalPrinterConst {}
 
     private void checkBusySync() throws JposException {
         Device.check(Data.State == JposConst.JPOS_S_BUSY && !Data.AsyncMode, JposConst.JPOS_E_BUSY, "Output in progress");
@@ -676,16 +681,27 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void setDateType(int type) throws JposException {
+        Integer DT_TICKET_START;
+        Integer DT_TICKET_END;
+        try {
+            DT_TICKET_START = MyConstants.class.getField("FPTR_DT_TICKET_START").getInt(null);
+            DT_TICKET_END = MyConstants.class.getField("FPTR_DT_TICKET_END").getInt(null);
+        } catch (Exception e) {
+            DT_TICKET_START = DT_TICKET_END = null;
+        }
         long[] allowed = new long[]{
                 FiscalPrinterConst.FPTR_DT_CONF,
                 FiscalPrinterConst.FPTR_DT_EOD,
                 FiscalPrinterConst.FPTR_DT_RESET,
                 FiscalPrinterConst.FPTR_DT_RTC,
                 FiscalPrinterConst.FPTR_DT_VAT,
-                FiscalPrinterConst.FPTR_DT_START,
-                FiscalPrinterConst.FPTR_DT_TICKET_START,
-                FiscalPrinterConst.FPTR_DT_TICKET_END
+                FiscalPrinterConst.FPTR_DT_START
         };
+        if (DT_TICKET_END != null && DT_TICKET_START != null) {
+            allowed = Arrays.copyOf(allowed, allowed.length + 2);
+            allowed[allowed.length - 2] = DT_TICKET_START;
+            allowed[allowed.length - 1] = DT_TICKET_END;
+        }
         logPreSet("DateType");
         checkOpened();
         Device.checkMember(type, allowed, JposConst.JPOS_E_ILLEGAL, "Illegal date specifier: " + type);
