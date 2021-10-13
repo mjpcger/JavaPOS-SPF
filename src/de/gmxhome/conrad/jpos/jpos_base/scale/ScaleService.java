@@ -31,6 +31,12 @@ public class ScaleService extends JposBase implements ScaleService114 {
      */
     public ScaleInterface ScaleInterface;
 
+    /**
+     * Value of UPOS constant SCAL_SUE_WEIGHT_UNDERWEIGHT. Must be specified if the scale supports underweight detection
+     * and the javapos framework does not due to an implementation error (true for standard controls &lt; 1.14.3).
+     */
+    public Integer SUE_UNDERWEIGHT = null;
+
     private ScaleProperties Data;
 
     /**
@@ -42,6 +48,9 @@ public class ScaleService extends JposBase implements ScaleService114 {
     public ScaleService(ScaleProperties props, JposDevice device) {
         super(props, device);
         Data = props;
+        try {
+            SUE_UNDERWEIGHT = ScaleConst.class.getField("SCAL_SUE_WEIGHT_UNDERWEIGHT").getInt(null);
+        } catch (Exception e) {}
     }
 
     @Override

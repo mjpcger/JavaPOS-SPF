@@ -39,6 +39,9 @@ public class ScaleStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         ScaleProperties props = (ScaleProperties)getPropertySet();
         switch (getStatus()) {
+            default:
+                if (getStatus() != ((ScaleService)getSource()).SUE_UNDERWEIGHT)
+                    break;
             case ScaleConst.SCAL_SUE_STABLE_WEIGHT:
             case ScaleConst.SCAL_SUE_WEIGHT_UNSTABLE:
             case ScaleConst.SCAL_SUE_WEIGHT_ZERO:
@@ -56,6 +59,9 @@ public class ScaleStatusUpdateEvent extends JposStatusUpdateEvent {
         if (super.checkStatusCorresponds())
             return true;
         switch (getStatus()) {
+            default:
+                if (getStatus() != ((ScaleService)getSource()).SUE_UNDERWEIGHT)
+                    break;
             case ScaleConst.SCAL_SUE_STABLE_WEIGHT:
             case ScaleConst.SCAL_SUE_WEIGHT_UNSTABLE:
             case ScaleConst.SCAL_SUE_WEIGHT_ZERO:
@@ -73,6 +79,9 @@ public class ScaleStatusUpdateEvent extends JposStatusUpdateEvent {
         if (super.setAndCheckStatusProperties())
             return true;
         switch (getStatus()) {
+            default:
+                if (getStatus() != ((ScaleService)getSource()).SUE_UNDERWEIGHT)
+                    break;
             case ScaleConst.SCAL_SUE_STABLE_WEIGHT:
             case ScaleConst.SCAL_SUE_WEIGHT_UNSTABLE:
             case ScaleConst.SCAL_SUE_WEIGHT_ZERO:
@@ -102,6 +111,9 @@ public class ScaleStatusUpdateEvent extends JposStatusUpdateEvent {
                 return "Scale not ready";
             case ScaleConst.SCAL_SUE_WEIGHT_UNDER_ZERO:
                 return "Weight under zero";
+            default:
+                if (getStatus() == ((ScaleService)getSource()).SUE_UNDERWEIGHT)
+                    return "Under weight";
         }
         return "Unknown Status Change: "+ getStatus();
     }

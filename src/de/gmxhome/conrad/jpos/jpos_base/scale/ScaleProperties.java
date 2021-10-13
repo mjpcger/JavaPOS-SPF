@@ -171,6 +171,12 @@ public class ScaleProperties extends JposCommonProperties implements ScaleInterf
         super.initOnOpen();
         StatusNotify = ScaleConst.SCAL_SN_DISABLED;
         ZeroValid = false;
+        ScaleService srv = (ScaleService)EventSource;
+        if (srv.SUE_UNDERWEIGHT == null) {
+            // workaround: Use highest SUE-Value + 1 as default. Device specific implementation can set this value in
+            // method checkProperty or changeDefaults.
+            srv.SUE_UNDERWEIGHT = ScaleConst.SCL_SUE_WEIGHT_UNDER_ZERO + 1;
+        }
     }
 
     @Override

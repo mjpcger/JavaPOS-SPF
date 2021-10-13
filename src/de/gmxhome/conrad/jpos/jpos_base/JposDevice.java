@@ -884,8 +884,6 @@ public class JposDevice extends JposBaseDevice {
             for (int i = 0; i < maxFiscalPrinter; i++) {
                 FiscalPrinters[i] = new ArrayList<JposCommonProperties>(0);
             }
-            FPTR_AT_DISCOUNT = FiscalPrinterConst.FPTR_AT_AMOUNT_DISCOUNT;      // Default for package discount
-            FPTR_AT_SURCHARGE = FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE;    // Default for package surcharge
         }
     }
 

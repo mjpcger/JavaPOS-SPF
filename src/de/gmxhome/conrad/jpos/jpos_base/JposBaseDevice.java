@@ -66,6 +66,29 @@ import javax.swing.*;
  * Keep in mind that the time this method is called is always the time
  * where the processing shall start. This is typically within the output request worker
  * thread.
+ * <p>Here a full list of all properties, common for all device classes, that can be changed via jpos.xml:
+ * <ul>
+ *     <li>DrawerBeepVolume: For all CashDrawer devices, a beep volume between 0 and 127 can be specified. Default is
+ *     implementation specific.</li>
+ *     <li>LoggerName: Name of the logger. See Log4j specification for more details.</li>
+ *     <li>LoggerFormat: Layout pattern, if not set, SimpleLayout will be used. See Log4j specification for more details.</li>
+ *     <li>LogFilePath: Path of log file.</li>
+ *     <li>LogFilePattern: If set, file pattern for DailyRollingFileAppender, otherwise FileAppender will be used.
+ *     See Log4j specification for more details.</li>
+ *     <li>LogLevel: One of <b>all</b>, <b>trace</b>, <b>debug</b>, <b>info</b>, <b>warn</b>, <b>error</b>, <b>fatal</b>
+ *     or <b>off</b>. Specifies the logging level. See Log4j specification for more details.</li>
+ *     <li>MaxArrayStringElements: Specifies the maximum number of elements of an object to be logged that are fully logged.
+ *     If an object to be logged has more elements, the remaining elements will be logged as "...".</li>
+ *     <li>SerialIOAdapterClass: Name of the SerialIOAdapter class. No default, must be set if serial communication shall
+ *     be used. The following adapter classes have been implemented:
+ *     <ul>
+ *         <li>de.gmxhome.conrad.JNAWindows.JnaSerial: Serial IO implementation using WIN32 API via JNA.</li>
+ *         <li>de.gmxhome.conrad.JNALinux.JnaLinuxSerial: Serial IO implementation using Linux API via JNA.</li>
+ *         <li>de.gmxhome.conrad.jSerialComm.JSCSerial: Serial IO implementation using jSerialComm framework.</li>
+ *         <li>de.gmxhome.conrad.jSSC.JSSCSerial: Serial IO implementation using jSSC framework.</li>
+ *     </ul>
+ *     </li>
+ * </ul>
  */
 public class JposBaseDevice {
     /*
@@ -400,17 +423,9 @@ public class JposBaseDevice {
     public Integer JposVersion = null;
 
     /**
-     * Holds the discount value for parameter adjustmentType of FiscalPrinter methods PrintRecPackageAdjustment and
-     * PrintRecPackageAdjustVoid.
+     * Name of the SerialIOAdapter class. No default, must be set in device specific implementation if serial
+     * communication shall be supported.
      */
-    public Integer FPTR_AT_DISCOUNT = null;
-
-    /**
-     * Holds the discount value for parameter adjustmentType of FiscalPrinter methods PrintRecPackageAdjustment and
-     * PrintRecPackageAdjustVoid.
-     */
-    public Integer FPTR_AT_SURCHARGE = null;
-
     public static String SerialIOAdapterClass = null;
 
     /**
@@ -488,12 +503,6 @@ public class JposBaseDevice {
                 DrawerBeepVolume = Integer.parseInt(o.toString());
                 if (DrawerBeepVolume < 0 || DrawerBeepVolume > 127)
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "Drawer beep value not between 0 and 127: " + DrawerBeepVolume);
-            }
-            if (FPTR_AT_DISCOUNT != null && (o = entry.getPropertyValue("FPTR_AT_DISCOUNT")) != null) {
-                FPTR_AT_DISCOUNT = Integer.parseInt(o.toString());
-            }
-            if (FPTR_AT_SURCHARGE != null && (o = entry.getPropertyValue("FPTR_AT_SURCHARGE")) != null) {
-                FPTR_AT_SURCHARGE = Integer.parseInt(o.toString());
             }
         } catch (JposException e) {
             throw e;

@@ -147,6 +147,26 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     }
 
     /**
+     * Value of UPOS constant FPTR_AT_SURCHARGE. Must be specified if the fiscal printer supports package adjustments
+     * and the javapos framework does specify constant FPTR_AT_SURCHARGE due to an implementation error (true for standard
+     * controls &lt; 1.14.3).
+     */
+    public Integer FPTR_AT_SURCHARGE = null;
+
+    /**
+     * Value of UPOS constant FPTR_AT_DISCOUNT. Must be specified if the fiscal printer supports package adjustments
+     * and the javapos framework does specify constant FPTR_AT_DISCOUNT due to an implementation error (true for standard
+     * controls &lt; 1.14.3).
+     */
+    public Integer FPTR_AT_DISCOUNT = null;
+
+    /**
+     * True if package adjustments may have the same (or a sub-set of) adjustment types as item adjustments. False if
+     * only FPTR_AT_DISCOUNT and FPTR_AT_SURCHARGE are valid package adjustment types, as specified in the UPOS specification.
+     */
+    public Boolean AllowItemAdjustmentTypesInPackageAdjustment = false;
+
+    /**
      * Constructor. Stores given property set and device implementation object.
      *
      * @param props  Property set.
@@ -154,6 +174,11 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
      */
     public FiscalPrinterService(FiscalPrinterProperties props, JposDevice device) {
         super(props, device);
+
+        try {
+            FPTR_AT_DISCOUNT = FiscalPrinterConst.class.getField("FPTR_AT_DISCOUNT").getInt(null);
+            FPTR_AT_SURCHARGE = FiscalPrinterConst.class.getField("FPTR_AT_SURCHARGE").getInt(null);
+        } catch (Exception e) {}
         Data = props;
     }
 
@@ -2003,10 +2028,14 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
                 FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
                 FiscalPrinterConst.FPTR_RT_REFUND
         };
-        long[] allowedType = new long[]{
-                Device.FPTR_AT_DISCOUNT,
-                Device.FPTR_AT_SURCHARGE
-        };
+        long[] allowedType = AllowItemAdjustmentTypesInPackageAdjustment ? new long[]{
+                FiscalPrinterConst.FPTR_AT_AMOUNT_DISCOUNT,
+                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
+                FiscalPrinterConst.FPTR_AT_COUPON_AMOUNT_DISCOUNT,
+                FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT,
+                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE,
+                FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
+        } : new long[]{FPTR_AT_DISCOUNT, FPTR_AT_SURCHARGE};
         Device.check(vatAdjustment == null || description == null, JposConst.JPOS_E_ILLEGAL, "description and vatAdjustment must not be null");
         logPreCall("PrintRecPackageAdjustment", adjustmentType + ", " + description + ", " + vatAdjustment);
         checkEnabled();
@@ -2040,10 +2069,14 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
                 FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
                 FiscalPrinterConst.FPTR_RT_REFUND
         };
-        long[] allowedType = new long[]{
-                Device.FPTR_AT_DISCOUNT,
-                Device.FPTR_AT_SURCHARGE
-        };
+        long[] allowedType = AllowItemAdjustmentTypesInPackageAdjustment ? new long[]{
+                FiscalPrinterConst.FPTR_AT_AMOUNT_DISCOUNT,
+                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
+                FiscalPrinterConst.FPTR_AT_COUPON_AMOUNT_DISCOUNT,
+                FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT,
+                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE,
+                FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
+        } : new long[]{FPTR_AT_DISCOUNT, FPTR_AT_SURCHARGE};
         Device.check(vatAdjustment == null, JposConst.JPOS_E_ILLEGAL, "vatAdjustment must not be null");
         logPreCall("PrintRecPackageAdjustVoid", adjustmentType + ", " + vatAdjustment);
         checkEnabled();
