@@ -454,7 +454,7 @@ public class Device extends JposDevice{
             try {
                 th.join();
                 break;
-            } catch (Exception e) {}
+            } catch (InterruptedException e) {}
         }
     }
 
