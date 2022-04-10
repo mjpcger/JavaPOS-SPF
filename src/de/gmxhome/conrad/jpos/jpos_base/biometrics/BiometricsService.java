@@ -18,9 +18,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.biometrics;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.services.BiometricsService114;
+import jpos.*;
+import jpos.services.*;
 
 import java.util.Arrays;
 
@@ -28,7 +27,7 @@ import java.util.Arrays;
  * Biometrics service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class BiometricsService extends JposBase implements BiometricsService114 {
+public class BiometricsService extends JposBase implements BiometricsService115 {
     /**
      * Instance of a class implementing the BiometricsInterface for biometrics specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

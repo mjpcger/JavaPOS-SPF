@@ -21,7 +21,7 @@ import jpos.JposConst;
 import jpos.JposException;
 import jpos.events.JposEvent;
 import jpos.services.EventCallbacks;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -583,7 +583,8 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     }
 
     @Override
-    public void directIO(int command, int[] data, Object object) throws JposException {
+    public DirectIO directIO(int command, int[] data, Object object) throws JposException {
+        return new DirectIO(this, command, data[0], object);
     }
 
     @Override
@@ -771,7 +772,8 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     }
 
     @Override
-    public void updateFirmware(String firmwareFileName) throws JposException {
+    public UpdateFirmware updateFirmware(String firmwareFileName) throws JposException {
+        return new UpdateFirmware(this, firmwareFileName);
     }
 
     @Override

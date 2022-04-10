@@ -22,7 +22,7 @@ import jpos.JposException;
 import jpos.config.JposEntry;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.coindispenser.*;
-import org.apache.log4j.Level;;
+import net.bplaced.conrad.log4jpos.Level;;
 
 /**
  * Base of a JposDevice based implementation of a JavaPOS CoinDispenser device service implementation for the

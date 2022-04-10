@@ -18,16 +18,14 @@
 package de.gmxhome.conrad.jpos.jpos_base.billdispenser;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.BillDispenser;
-import jpos.JposConst;
-import jpos.JposException;
+import jpos.*;
 import jpos.services.*;
 
 /**
  * BillDispenser service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class BillDispenserService extends JposBase implements BillDispenserService114 {
+public class BillDispenserService extends JposBase implements BillDispenserService115 {
     /**
      * Instance of a class implementing the BillDispenserInterface for cash drawer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

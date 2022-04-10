@@ -16,18 +16,15 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.lights;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposBase;
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.LightsConst;
-import jpos.services.LightsService114;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
+import jpos.services.*;
 
 /**
  * Lights service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class LightsService extends JposBase implements LightsService114 {
+public class LightsService extends JposBase implements LightsService115 {
     /**
      * Instance of a class implementing the LightsInterface for lights specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

@@ -22,7 +22,7 @@ import jpos.JposConst;
 import jpos.JposException;
 import jpos.MICRConst;
 import jpos.config.JposEntry;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
 /**
  * Base of a JposDevice based implementation of JavaPOS MICR device service implementation for the sample device

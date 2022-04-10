@@ -18,7 +18,7 @@ package de.gmxhome.conrad.jpos.jpos_base.msr;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.MSRService114;
+import jpos.services.*;
 
 import java.util.Arrays;
 
@@ -26,7 +26,7 @@ import java.util.Arrays;
  * MSR service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class MSRService extends JposBase implements MSRService114 {
+public class MSRService extends JposBase implements MSRService115 {
     /**
      * Instance of a class implementing the MSRInterface for magnetic stripe reader specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

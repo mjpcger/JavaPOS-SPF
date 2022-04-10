@@ -18,17 +18,15 @@ package de.gmxhome.conrad.jpos.jpos_base.posprinter;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.POSPrinterService114;
+import jpos.services.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * POSPrinter service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class POSPrinterService extends JposBase implements POSPrinterService114 {
+public class POSPrinterService extends JposBase implements POSPrinterService115 {
     /**
      * Instance of a class implementing the POSPrinterInterface for pos printer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

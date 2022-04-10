@@ -18,8 +18,8 @@ package de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.RemoteOrderDisplayService114;
-import org.apache.log4j.Level;
+import jpos.services.*;
+import net.bplaced.conrad.log4jpos.Level;
 
 /**
  * RemoteOrderDisplay service implementation. For more details about getter, setter and method implementations,
@@ -28,7 +28,7 @@ import org.apache.log4j.Level;
  * property for remote order displays, two commands have been added to the UPOS standard. See the description of
  * method DirectIO for details.
  */
-public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDisplayService114 {
+public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDisplayService115 {
     private RemoteOrderDisplayProperties Data;
 
     private static final long[] validUnitIDs = new long[] {

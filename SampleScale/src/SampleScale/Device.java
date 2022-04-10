@@ -6,7 +6,7 @@ import jpos.JposConst;
 import jpos.JposException;
 import jpos.ScaleConst;
 import jpos.config.JposEntry;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
 import javax.swing.*;
 import java.nio.charset.Charset;
@@ -348,9 +348,9 @@ public class Device extends JposDevice implements Runnable {
         }
 
         @Override
-        public void readWeight(int[] weight, int timeout) throws JposException {
+        public ReadWeight readWeight(int[] weight, int timeout) throws JposException {
             check(State == JposConst.JPOS_S_ERROR, JposConst.JPOS_E_BUSY, "Device busy (in error)");
-            new ReadWeight(this, weight[0], timeout).throwRequest();
+            return super.readWeight(weight, timeout);
         }
 
         @Override
@@ -399,7 +399,7 @@ public class Device extends JposDevice implements Runnable {
         }
 
         @Override
-        public void doPriceCalculating(int[] weightData, int[] tare, long[] unitPrice, long[] unitPriceX, int[] weightUnitX, int[] weightNumeratorX, int[] weightDenominatorX, long[] price, int timeout) throws JposException {
+        public DoPriceCalculating doPriceCalculating(int[] weightData, int[] tare, long[] unitPrice, long[] unitPriceX, int[] weightUnitX, int[] weightNumeratorX, int[] weightDenominatorX, long[] price, int timeout) throws JposException {
             throw new JposException(JposConst.JPOS_E_ILLEGAL, "Parameter values for unitPriceX, weightUnitX, weightNumeratorX and weightDenominatorX are not available.");
         }
     }

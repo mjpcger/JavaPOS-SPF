@@ -18,16 +18,14 @@
 package de.gmxhome.conrad.jpos.jpos_base.belt;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.BeltConst;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.services.BeltService114;
+import jpos.*;
+import jpos.services.*;
 
 /**
  * Belt service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class BeltService extends JposBase implements BeltService114 {
+public class BeltService extends JposBase implements BeltService115 {
     /**
      * Instance of a class implementing the BeltInterface for belt specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

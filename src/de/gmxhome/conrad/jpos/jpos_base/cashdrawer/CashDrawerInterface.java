@@ -39,25 +39,6 @@ public interface CashDrawerInterface extends JposBaseInterface {
 
     /**
      * Final part of WaitForDrawerClose method. Can be overwritten in derived class, if necessary.
-     * This method will be called only if the following plausibility checks lead to a positive result:
-     * <ul>
-     *     <li>Device is enabled,</li>
-     *     <li>CapStatus is true,</li>
-     *     <li>beepTimeout, beepDuration and beepDelay are positive values,</li>
-     *     <li>beepFrequency is between 10 and 40000 (this is more than the human audible range).</li>
-     * </ul>
-     *
-     * @param beepTimeout   Number of milliseconds to wait before starting an alert beeper.
-     * @param beepFrequency Audio frequency of the alert beeper in hertz.
-     * @param beepDuration  Number of milliseconds that the beep tone will be sounded.
-     * @param beepDelay     Number of milliseconds between the sounding of beeper tones.
-     * @throws JposException If an error occurs.
-     */
-    @Deprecated
-    public void waitForDrawerClose(int beepTimeout, int beepFrequency, int beepDuration, int beepDelay) throws JposException;
-
-    /**
-     * Final part of WaitForDrawerClose method. Can be overwritten in derived class, if necessary.
      * The parameters beepTimeout, beepDuration, beepFrequency and beepDelay will not be used by
      * this method because beeping will be performed directly by the service.
      * This method will be called only if the following plausibility checks lead to a positive result:

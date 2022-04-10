@@ -18,13 +18,13 @@ package de.gmxhome.conrad.jpos.jpos_base.micr;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.MICRService114;
+import jpos.services.*;
 
 /**
  * MICR service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class MICRService extends JposBase implements MICRService114 {
+public class MICRService extends JposBase implements MICRService115 {
     /**
      * Instance of a class implementing the MICRInterface for magnetic ink character recognition reader specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

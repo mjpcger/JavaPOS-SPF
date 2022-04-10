@@ -26,7 +26,7 @@ import jpos.JposConst;
 import jpos.JposException;
 import jpos.RemoteOrderDisplayConst;
 import jpos.config.JposEntry;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
 import java.util.ArrayList;
 import java.util.Arrays;

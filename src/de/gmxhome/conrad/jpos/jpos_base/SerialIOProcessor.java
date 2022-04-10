@@ -18,7 +18,7 @@ package de.gmxhome.conrad.jpos.jpos_base;
 
 import jpos.JposConst;
 import jpos.JposException;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
 import java.io.IOException;
 import java.lang.reflect.*;

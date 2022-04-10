@@ -18,14 +18,14 @@
 package de.gmxhome.conrad.jpos.jpos_base.rfidscanner;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.JposException;
-import jpos.services.RFIDScannerService114;
+import jpos.*;
+import jpos.services.*;
 
 /**
  * RFIDScanner service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class RFIDScannerService extends JposBase implements RFIDScannerService114 {
+public class RFIDScannerService extends JposBase implements RFIDScannerService115 {
     /**
      * Instance of a class implementing the RFIDScannerInterface for RFID scanner specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

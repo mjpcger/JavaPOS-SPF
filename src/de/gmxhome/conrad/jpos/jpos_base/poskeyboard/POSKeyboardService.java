@@ -18,13 +18,13 @@ package de.gmxhome.conrad.jpos.jpos_base.poskeyboard;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.POSKeyboardService114;
+import jpos.services.*;
 
 /**
  * POSKeyboard service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class POSKeyboardService extends JposBase implements POSKeyboardService114 {
+public class POSKeyboardService extends JposBase implements POSKeyboardService115 {
     /**
      * Instance of a class implementing the POSKeyboardInterface for pos keyboard specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

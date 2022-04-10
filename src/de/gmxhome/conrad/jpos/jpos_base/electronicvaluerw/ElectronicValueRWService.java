@@ -18,14 +18,14 @@
 package de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.JposException;
-import jpos.services.ElectronicValueRWService114;
+import jpos.*;
+import jpos.services.*;
 
 /**
  * ElectronicValueRW service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class ElectronicValueRWService extends JposBase implements ElectronicValueRWService114 {
+public class ElectronicValueRWService extends JposBase implements ElectronicValueRWService115 {
     /**
      * Instance of a class implementing the ElectronicValueRWInterface for electronic value reader / writer specific
      * setter and method calls bound
@@ -86,7 +86,217 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     }
 
     @Override
+    public boolean getCapAdditionalSecurityInformation() throws JposException {
+        return false;
+    }
+
+    @Override
+    public boolean getCapAuthorizeCompletion() throws JposException {
+        return false;
+    }
+
+    @Override
+    public boolean getCapAuthorizePreSales() throws JposException {
+        return false;
+    }
+
+    @Override
+    public boolean getCapAuthorizeRefund() throws JposException {
+        return false;
+    }
+
+    @Override
+    public boolean getCapAuthorizeVoid() throws JposException {
+        return false;
+    }
+
+    @Override
+    public boolean getCapAuthorizeVoidPreSales() throws JposException {
+        return false;
+    }
+
+    @Override
+    public boolean getCapCashDeposit() throws JposException {
+        return false;
+    }
+
+    @Override
+    public boolean getCapCenterResultCode() throws JposException {
+        return false;
+    }
+
+    @Override
+    public boolean getCapCheckCard() throws JposException {
+        return false;
+    }
+
+    @Override
+    public int getCapDailyLog() throws JposException {
+        return 0;
+    }
+
+    @Override
+    public boolean getCapInstallments() throws JposException {
+        return false;
+    }
+
+    @Override
+    public boolean getCapPaymentDetail() throws JposException {
+        return false;
+    }
+
+    @Override
+    public boolean getCapTaxOthers() throws JposException {
+        return false;
+    }
+
+    @Override
+    public boolean getCapTransactionNumber() throws JposException {
+        return false;
+    }
+
+    @Override
+    public boolean getCapMembershipCertificate() throws JposException {
+        return false;
+    }
+
+    @Override
+    public String getCardCompanyID() throws JposException {
+        return null;
+    }
+
+    @Override
+    public String getCenterResultCode() throws JposException {
+        return null;
+    }
+
+    @Override
+    public String getDailyLog() throws JposException {
+        return null;
+    }
+
+    @Override
+    public int getPaymentCondition() throws JposException {
+        return 0;
+    }
+
+    @Override
+    public String getPaymentDetail() throws JposException {
+        return null;
+    }
+
+    @Override
+    public int getPaymentMedia() throws JposException {
+        return 0;
+    }
+
+    @Override
+    public String getSlipNumber() throws JposException {
+        return null;
+    }
+
+    @Override
+    public String getTransactionNumber() throws JposException {
+        return null;
+    }
+
+    @Override
+    public int getTransactionType() throws JposException {
+        return 0;
+    }
+
+    @Override
+    public int getServiceType() throws JposException {
+        return 0;
+    }
+
+    @Override
+    public void accessDailyLog(int i, int i1, int i2) throws JposException {
+
+    }
+
+    @Override
+    public void accessData(int i, int[] ints, Object[] objects) throws JposException {
+
+    }
+
+    @Override
+    public void activateEVService(int[] ints, Object[] objects) throws JposException {
+
+    }
+
+    @Override
+    public void authorizeCompletion(int i, long l, long l1, int i1) throws JposException {
+
+    }
+
+    @Override
+    public void authorizePreSales(int i, long l, long l1, int i1) throws JposException {
+
+    }
+
+    @Override
+    public void authorizeRefund(int i, long l, long l1, int i1) throws JposException {
+
+    }
+
+    @Override
+    public void authorizeSales(int i, long l, long l1, int i1) throws JposException {
+
+    }
+
+    @Override
+    public void authorizeVoid(int i, long l, long l1, int i1) throws JposException {
+
+    }
+
+    @Override
+    public void authorizeVoidPreSales(int i, long l, long l1, int i1) throws JposException {
+
+    }
+
+    @Override
+    public void cashDeposit(int i, long l, int i1) throws JposException {
+
+    }
+
+    @Override
+    public void checkCard(int i, int i1) throws JposException {
+
+    }
+
+    @Override
+    public void checkServiceRegistrationToMedium(int i, int i1) throws JposException {
+
+    }
+
+    @Override
+    public void closeDailyEVService(int[] ints, Object[] objects) throws JposException {
+
+    }
+
+    @Override
+    public void deactivateEVService(int[] ints, Object[] objects) throws JposException {
+
+    }
+
+    @Override
+    public void openDailyEVService(int[] ints, Object[] objects) throws JposException {
+
+    }
+
+    @Override
     public void retrieveResultInformation(String s, String[] strings) throws JposException {
+
+    }
+
+    @Override
+    public void unregisterServiceToMedium(int i, int i1) throws JposException {
+
+    }
+
+    @Override
+    public void updateData(int i, int[] ints, Object[] objects) throws JposException {
 
     }
 

@@ -18,11 +18,9 @@
 package de.gmxhome.conrad.jpos.jpos_base.imagescanner;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.ImageScannerConst;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.services.ImageScannerService114;
-import org.apache.log4j.Level;
+import jpos.*;
+import jpos.services.*;
+import net.bplaced.conrad.log4jpos.Level;
 
 import java.util.Arrays;
 
@@ -30,7 +28,7 @@ import java.util.Arrays;
  * ImageScanner service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class ImageScannerService extends JposBase implements ImageScannerService114 {
+public class ImageScannerService extends JposBase implements ImageScannerService115 {
     /**
      * Instance of a class implementing the ImageScannerInterface for image scanner specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

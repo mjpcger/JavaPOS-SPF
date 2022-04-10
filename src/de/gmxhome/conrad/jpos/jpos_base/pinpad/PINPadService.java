@@ -18,14 +18,14 @@
 package de.gmxhome.conrad.jpos.jpos_base.pinpad;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.JposException;
-import jpos.services.PINPadService114;
+import jpos.*;
+import jpos.services.*;
 
 /**
  * PINPad service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class PINPadService extends JposBase implements PINPadService114 {
+public class PINPadService extends JposBase implements PINPadService115 {
     /**
      * Instance of a class implementing the PINPadInterface for PIN pad specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

@@ -18,14 +18,14 @@
 package de.gmxhome.conrad.jpos.jpos_base.pointcardrw;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.JposException;
-import jpos.services.PointCardRWService114;
+import jpos.*;
+import jpos.services.*;
 
 /**
  * PointCardRW service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class PointCardRWService extends JposBase implements PointCardRWService114 {
+public class PointCardRWService extends JposBase implements PointCardRWService115 {
     /**
      * Instance of a class implementing the PointCardRWInterface for point card reader / writer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

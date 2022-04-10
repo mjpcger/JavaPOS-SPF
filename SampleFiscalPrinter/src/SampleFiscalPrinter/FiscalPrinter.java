@@ -106,7 +106,7 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
      * @throws JposException If device nor claimed or in case of communication errors.
      */
     @Override
-    public void directIO(int command, int[] data, Object obj) throws JposException {
+    public DirectIO directIO(int command, int[] data, Object obj) throws JposException {
         switch (command) {
             case SAMPLEFISCALPRINTERDIO_EXECCOMMAND:
                 EventSource.checkClaimed();
@@ -131,6 +131,7 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
                 releaseWaiter();
                 break;
         }
+        return null;
     }
 
     @Override

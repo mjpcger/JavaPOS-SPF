@@ -17,21 +17,18 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.signaturecapture;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposBase;
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.services.SignatureCaptureService114;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
+import jpos.services.*;
 
 import java.awt.*;
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * SignatureCapture service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class SignatureCaptureService extends JposBase implements SignatureCaptureService114 {
+public class SignatureCaptureService extends JposBase implements SignatureCaptureService115 {
     /**
      * Instance of a class implementing the SignatureCaptureInterface for signature capture specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

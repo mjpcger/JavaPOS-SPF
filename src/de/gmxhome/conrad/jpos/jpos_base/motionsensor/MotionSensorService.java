@@ -18,13 +18,13 @@ package de.gmxhome.conrad.jpos.jpos_base.motionsensor;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.MotionSensorService114;
+import jpos.services.*;
 
 /**
  * MotionSensor service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class MotionSensorService extends JposBase implements MotionSensorService114 {
+public class MotionSensorService extends JposBase implements MotionSensorService115 {
     /**
      * Instance of a class implementing the MotionSensorInterface for motion sensor specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

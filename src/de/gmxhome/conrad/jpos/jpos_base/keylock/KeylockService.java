@@ -18,7 +18,7 @@ package de.gmxhome.conrad.jpos.jpos_base.keylock;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.KeylockService114;
+import jpos.services.*;
 
 import java.util.Arrays;
 
@@ -26,7 +26,7 @@ import java.util.Arrays;
  * Keylock service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class KeylockService extends JposBase implements KeylockService114 {
+public class KeylockService extends JposBase implements KeylockService115 {
     /**
      * Instance of a class implementing the KeylockInterface for keylock specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

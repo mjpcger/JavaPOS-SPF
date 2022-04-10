@@ -18,7 +18,7 @@ package de.gmxhome.conrad.jpos.jpos_base.scanner;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.ScannerService114;
+import jpos.services.*;
 
 import java.util.Arrays;
 
@@ -26,7 +26,7 @@ import java.util.Arrays;
  * Scanner service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class ScannerService extends JposBase implements ScannerService114 {
+public class ScannerService extends JposBase implements ScannerService115 {
     /**
      * Instance of a class implementing the ScannerInterface for scanner specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

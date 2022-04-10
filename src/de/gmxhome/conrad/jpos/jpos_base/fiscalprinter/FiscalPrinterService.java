@@ -29,10 +29,8 @@ import java.util.Date;
 /**
  * FiscalPrinter service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
- * This implementation is temporarily for jpos 1.14 but with support for jpos 1.15 (Germany support) if
- * jpos library supports version 1.15 for fiscal printer.
  */
-public class FiscalPrinterService extends JposBase implements FiscalPrinterService114 {
+public class FiscalPrinterService extends JposBase implements FiscalPrinterService115 {
     /**
      * Instance of a class implementing the FiscalPrinterInterface for fiscal printer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

@@ -18,13 +18,13 @@ package de.gmxhome.conrad.jpos.jpos_base.toneindicator;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.ToneIndicatorService114;
+import jpos.services.*;
 
 /**
  * ToneIndicator service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class ToneIndicatorService extends JposBase implements ToneIndicatorService114 {
+public class ToneIndicatorService extends JposBase implements ToneIndicatorService115 {
     /**
      * Instance of a class implementing the ToneIndicatorInterface for tone indicator specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

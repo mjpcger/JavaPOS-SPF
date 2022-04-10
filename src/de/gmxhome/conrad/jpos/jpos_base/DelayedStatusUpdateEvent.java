@@ -18,7 +18,7 @@
 package de.gmxhome.conrad.jpos.jpos_base;
 
 import jpos.JposException;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
 /**
  * This class provides additional methods that allow firing StatusUpdateEvents with a specific delay. In this

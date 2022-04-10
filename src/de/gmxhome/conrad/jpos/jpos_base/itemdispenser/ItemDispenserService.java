@@ -17,19 +17,15 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.itemdispenser;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposBase;
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import jpos.ItemDispenser;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.services.ItemDispenserService114;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
+import jpos.services.*;
 
 /**
  * ItemDispenser service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class ItemDispenserService extends JposBase implements ItemDispenserService114 {
+public class ItemDispenserService extends JposBase implements ItemDispenserService115 {
     /**
      * Instance of a class implementing the ItemDispenserInterface for item dispenser specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

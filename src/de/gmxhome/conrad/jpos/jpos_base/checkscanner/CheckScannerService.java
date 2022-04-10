@@ -18,10 +18,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.checkscanner;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.CheckScannerConst;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.services.CheckScannerService114;
+import jpos.*;
+import jpos.services.*;
 
 import java.util.Arrays;
 
@@ -29,7 +27,7 @@ import java.util.Arrays;
  * CheckScanner service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class CheckScannerService extends JposBase implements CheckScannerService114 {
+public class CheckScannerService extends JposBase implements CheckScannerService115 {
     /**
      * Instance of a class implementing the CheckScannerInterface for check scanner specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

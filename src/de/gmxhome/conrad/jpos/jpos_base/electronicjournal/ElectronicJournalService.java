@@ -18,7 +18,7 @@ package de.gmxhome.conrad.jpos.jpos_base.electronicjournal;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.ElectronicJournalService114;
+import jpos.services.*;
 
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
@@ -27,7 +27,7 @@ import java.text.SimpleDateFormat;
  * ElectronicJournal service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class ElectronicJournalService extends JposBase implements ElectronicJournalService114 {
+public class ElectronicJournalService extends JposBase implements ElectronicJournalService115 {
     /**
      * Instance of a class implementing the ElectronicJournalInterface for electronic journal specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

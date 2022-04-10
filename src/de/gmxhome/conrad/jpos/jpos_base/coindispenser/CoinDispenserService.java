@@ -18,13 +18,13 @@ package de.gmxhome.conrad.jpos.jpos_base.coindispenser;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.CoinDispenserService114;
+import jpos.services.*;
 
 /**
  * CoinDispenser service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class CoinDispenserService extends JposBase implements CoinDispenserService114 {
+public class CoinDispenserService extends JposBase implements CoinDispenserService115 {
     /**
      * Instance of a class implementing the CoinDispenserInterface for coin dispenser specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

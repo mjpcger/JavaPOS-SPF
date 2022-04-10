@@ -168,16 +168,16 @@ public interface JposBaseInterface {
      * Final or validation part of DirectIO method. Can be overwritten in derived class, if necessary.
      * This method will be called whenever the service's directIO method will be called.
      * All checks, if necessary, must be implemented within the derived service implementation.
-     * <br>In case of validation only (asynchronous mode), a DirectIO object must be be created with
-     * command, data[0] and object as parameters. Last action in validation must be to call its throwRequest
-     * method.
+     * <br>In case of validation only (asynchronous mode), a DirectIO object created with
+     * command, data[0] and object as parameters must be returned.
      *
      * @param command See UPOS specification, method DirectIO
      * @param data    See UPOS specification, method DirectIO
      * @param object  See UPOS specification, method DirectIO
+     * @return DirectIO object for use in final part or null if method has been performed synchronously.
      * @throws JposException See UPOS specification, method DirectIO.
      */
-    public void directIO(int command, int[] data, Object object) throws JposException;
+    public DirectIO directIO(int command, int[] data, Object object) throws JposException;
 
     /**
      * Final part of DirectIO method. Can be overwritten within derived classes, if necessary.
@@ -265,15 +265,14 @@ public interface JposBaseInterface {
      *     <li>Device is enabled,</li>
      *     <li>CapUpdateFirmware is true.</li>
      * </ul>
-     * In case of validation only (asynchronous mode), an UpdateFirmware object must be created with
-     * firmwareFileName as parameters. Last action in validation must be to call its throwRequest method.
-     * Otherwise, the service must implement the necessary functionality to perform the firmware update
-     * in background.
+     * In case of successful validation, an UpdateFirmware object created with
+     * firmwareFileName as parameters must be returned because updateFirmware will always be performed asynchronously.
      *
      * @param firmwareFileName See UPOS specification, method UpdateFirmware
+     * @return UpdateFirmware object for use in final part.
      * @throws JposException See UPOS specification, method UpdateFirmware
      */
-    public void updateFirmware(String firmwareFileName) throws JposException;
+    public UpdateFirmware updateFirmware(String firmwareFileName) throws JposException;
 
     /**
      * Final part of UpdateFirmware method. Can be overwritten within derived classes, if necessary.

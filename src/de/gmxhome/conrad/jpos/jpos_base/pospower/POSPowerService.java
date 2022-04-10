@@ -19,13 +19,13 @@ package de.gmxhome.conrad.jpos.jpos_base.pospower;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.POSPowerService114;
+import jpos.services.*;
 
 /**
  * POSPower service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class POSPowerService extends JposBase implements POSPowerService114 {
+public class POSPowerService extends JposBase implements POSPowerService115 {
     /**
      * Instance of a class implementing the POSPowerInterface for POS power device specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

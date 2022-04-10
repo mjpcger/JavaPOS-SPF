@@ -17,20 +17,15 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.billacceptor;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposBase;
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import jpos.BillAcceptor;
-import jpos.BillAcceptorConst;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.services.BillAcceptorService114;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
+import jpos.services.*;
 
 /**
  * BillAcceptor service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class BillAcceptorService extends JposBase implements BillAcceptorService114 {
+public class BillAcceptorService extends JposBase implements BillAcceptorService115 {
     /**
      * Instance of a class implementing the BillAcceptorInterface for cash drawer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

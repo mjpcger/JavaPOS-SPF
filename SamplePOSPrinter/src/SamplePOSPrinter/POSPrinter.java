@@ -20,7 +20,7 @@ package SamplePOSPrinter;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.posprinter.*;
 import jpos.*;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
 import java.nio.*;
 import java.nio.charset.*;

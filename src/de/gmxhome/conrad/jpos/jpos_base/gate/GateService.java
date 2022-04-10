@@ -18,13 +18,13 @@ package de.gmxhome.conrad.jpos.jpos_base.gate;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.GateService114;
+import jpos.services.*;
 
 /**
  * Gate service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class GateService extends JposBase implements GateService114 {
+public class GateService extends JposBase implements GateService115 {
     /**
      * Instance of a class implementing the GateInterface for gate specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

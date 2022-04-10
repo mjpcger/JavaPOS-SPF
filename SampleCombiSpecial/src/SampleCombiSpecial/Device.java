@@ -25,7 +25,7 @@ import de.gmxhome.conrad.jpos.jpos_base.motionsensor.*;
 import de.gmxhome.conrad.jpos.jpos_base.signaturecapture.*;
 import jpos.*;
 import jpos.config.JposEntry;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
 import javax.swing.*;
 import java.awt.Point;

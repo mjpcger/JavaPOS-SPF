@@ -18,14 +18,14 @@
 package de.gmxhome.conrad.jpos.jpos_base.hardtotals;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.JposException;
-import jpos.services.HardTotalsService114;
+import jpos.*;
+import jpos.services.*;
 
 /**
  * HardTotals service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class HardTotalsService extends JposBase implements HardTotalsService114 {
+public class HardTotalsService extends JposBase implements HardTotalsService115 {
     /**
      * Instance of a class implementing the HardTotalsInterface for hard totals specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

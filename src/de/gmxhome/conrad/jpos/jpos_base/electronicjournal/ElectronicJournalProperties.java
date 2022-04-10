@@ -18,7 +18,7 @@ package de.gmxhome.conrad.jpos.jpos_base.electronicjournal;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import org.apache.log4j.*;
+import net.bplaced.conrad.log4jpos.*;
 
 /**
  * Class containing the electronic journal specific properties, their default values and default implementations of

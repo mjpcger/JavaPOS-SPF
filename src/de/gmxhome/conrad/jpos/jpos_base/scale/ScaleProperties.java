@@ -216,7 +216,8 @@ public class ScaleProperties extends JposCommonProperties implements ScaleInterf
     }
 
     @Override
-    public void doPriceCalculating(int[] weightData, int[] tare, long[] unitPrice, long[] unitPriceX, int[] weightUnitX, int[] weightNumeratorX, int[] weightDenominatorX, long[] price, int timeout) throws JposException {
+    public DoPriceCalculating doPriceCalculating(int[] weightData, int[] tare, long[] unitPrice, long[] unitPriceX, int[] weightUnitX, int[] weightNumeratorX, int[] weightDenominatorX, long[] price, int timeout) throws JposException {
+        return new DoPriceCalculating(this, weightData[0], tare[0], unitPrice[0], unitPriceX[0], weightUnitX[0], weightNumeratorX[0], weightDenominatorX[0], price[0], timeout);
     }
 
     @Override
@@ -228,7 +229,8 @@ public class ScaleProperties extends JposCommonProperties implements ScaleInterf
     }
 
     @Override
-    public void readLiveWeightWithTare(int[] weightData, int[] tare, int timeout) throws JposException {
+    public ReadLiveWeightWithTare readLiveWeightWithTare(int[] weightData, int[] tare, int timeout) throws JposException {
+        return new ReadLiveWeightWithTare(this, weightData[0], tare[0], timeout);
     }
 
     @Override
@@ -236,7 +238,8 @@ public class ScaleProperties extends JposCommonProperties implements ScaleInterf
     }
 
     @Override
-    public void readWeight(int[] weightData, int timeout) throws JposException {
+    public ReadWeight readWeight(int[] weightData, int timeout) throws JposException {
+        return new ReadWeight(this, weightData[0], timeout);
     }
 
     @Override

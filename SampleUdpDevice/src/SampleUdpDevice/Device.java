@@ -20,7 +20,7 @@ package SampleUdpDevice;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.config.JposEntry;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
 /**
  * JposDevice based implementation base for JavaPOS device service implementations for the

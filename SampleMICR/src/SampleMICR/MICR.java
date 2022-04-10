@@ -133,9 +133,10 @@ public class MICR extends MICRProperties {
     }
 
     @Override
-    public void directIO(int command, int[] data, Object obj) throws JposException {
+    public DirectIO directIO(int command, int[] data, Object obj) throws JposException {
         if (command == 1) {
             EventSource.setDataEventEnabled(true);
         }
+        return null;
     }
 }

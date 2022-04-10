@@ -18,13 +18,13 @@ package de.gmxhome.conrad.jpos.jpos_base.cat;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.CATService114;
+import jpos.services.*;
 
 /**
  * CAT service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class CATService extends JposBase implements CATService114 {
+public class CATService extends JposBase implements CATService115 {
     /**
      * Instance of a class implementing the CATInterface for credit authorization terminal specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

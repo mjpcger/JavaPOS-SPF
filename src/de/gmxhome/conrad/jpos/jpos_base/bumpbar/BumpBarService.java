@@ -17,17 +17,15 @@
 package de.gmxhome.conrad.jpos.jpos_base.bumpbar;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.BumpBarConst;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.services.BumpBarService114;
-import org.apache.log4j.Level;
+import jpos.*;
+import jpos.services.*;
+import net.bplaced.conrad.log4jpos.Level;
 
 /**
  * BumpBar service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class BumpBarService extends JposBase implements BumpBarService114 {
+public class BumpBarService extends JposBase implements BumpBarService115 {
     private BumpBarProperties Data;
 
     private static final long[] validUnitIDs = new long[] {

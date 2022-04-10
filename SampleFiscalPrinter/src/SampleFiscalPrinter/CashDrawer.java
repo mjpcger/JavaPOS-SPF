@@ -18,9 +18,7 @@ package SampleFiscalPrinter;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.*;
-import jpos.CashDrawerConst;
-import jpos.JposConst;
-import jpos.JposException;
+import jpos.*;
 
 import javax.swing.*;
 

@@ -18,14 +18,14 @@
 package de.gmxhome.conrad.jpos.jpos_base.smartcardrw;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.JposException;
-import jpos.services.SmartCardRWService114;
+import jpos.*;
+import jpos.services.*;
 
 /**
  * SmartCardRW service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class SmartCardRWService extends JposBase implements SmartCardRWService114 {
+public class SmartCardRWService extends JposBase implements SmartCardRWService115 {
     /**
      * Instance of a class implementing the SmartCardRWInterface for smart card reader / writer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

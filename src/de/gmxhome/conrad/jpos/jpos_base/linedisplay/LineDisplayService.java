@@ -18,7 +18,7 @@ package de.gmxhome.conrad.jpos.jpos_base.linedisplay;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.LineDisplayService114;
+import jpos.services.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +27,7 @@ import java.util.List;
  * LineDisplay service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class LineDisplayService extends JposBase implements LineDisplayService114{
+public class LineDisplayService extends JposBase implements LineDisplayService115{
     /**
      * Instance of a class implementing the LineDisplayInterface for line display specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

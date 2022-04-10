@@ -25,7 +25,7 @@ import jpos.services.*;
  * CoinAcceptor service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class CoinAcceptorService extends JposBase implements CoinAcceptorService114 {
+public class CoinAcceptorService extends JposBase implements CoinAcceptorService115 {
     /**
      * Instance of a class implementing the CoinAcceptorInterface for cash drawer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.

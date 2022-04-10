@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.log4j.*;
+import net.bplaced.conrad.log4jpos.*;
 
 import javax.swing.*;
 
@@ -379,10 +379,12 @@ public class JposBaseDevice {
      * However, if logger intialization is not possible due to missing entries in jpos.xml, no logging
      * will be made.
      *
-     * @param loglevel Logging level, see Log4j specification
+     * @param loglevel Logging loglevel, any Level object from log4j, log4jpos or java.util.logging
      * @param message  Message to be logged
      */
-    public void log(Level loglevel, String message) {
+    public void log(Object loglevel, String message) {
+        Level level;
+        level = loglevel instanceof Level ? (Level) loglevel : getLog4posLevel(loglevel);
         synchronized (LoggerSync) {
             if (Log == null && LogLevel != Level.OFF) {
                 Log = Logger.getLogger(LoggerName);
@@ -405,8 +407,49 @@ public class JposBaseDevice {
             }
         }
         if (Log != null) {
-            Log.log(loglevel, message);
+            Log.log(level, message);
         }
+    }
+
+    // Convert log4j-Level and java.util.logging-Level to log4pos-Level
+    private Level getLog4posLevel(Object loglevel) {
+        if (loglevel instanceof java.util.logging.Level) {
+            int level = ((java.util.logging.Level)loglevel).intValue();
+            if (level == java.util.logging.Level.ALL.intValue())
+                return Level.ALL;
+            if (level <= java.util.logging.Level.FINE.intValue())
+                return Level.TRACE;
+            if (level <= java.util.logging.Level.CONFIG.intValue())
+                return Level.DEBUG;
+            if (level <= java.util.logging.Level.INFO.intValue())
+                return Level.INFO;
+            if (level <= java.util.logging.Level.WARNING.intValue())
+                return Level.WARN;
+            if (level <= java.util.logging.Level.SEVERE.intValue())
+                return Level.ERROR;
+            if (level <= java.util.logging.Level.SEVERE.intValue() + 100)
+                return Level.FATAL;
+            return Level.OFF;
+        }
+        String classname = loglevel.getClass().getName();
+        if (classname.equals("org.apache.log4j.Level")) {
+            if (loglevel.toString().equals("FATAL"))
+                return Level.FATAL;
+            if (loglevel.toString().equals("ERROR"))
+                return Level.ERROR;
+            if (loglevel.toString().equals("WARN"))
+                return Level.WARN;
+            if (loglevel.toString().equals("INFO"))
+                return Level.INFO;
+            if (loglevel.toString().equals("DEBUG"))
+                return Level.DEBUG;
+            if (loglevel.toString().equals("TRACE"))
+                return Level.TRACE;
+            if (loglevel.toString().equals("ALL"))
+                return Level.ALL;
+            return Level.OFF;
+        }
+        return null;
     }
 
     /**
@@ -1093,7 +1136,7 @@ public class JposBaseDevice {
      * @param propertysetindex Index of the requested property set.
      * @return Requested property set or null if deviceindex or propertysetindex is out of range.
      */
-        public JposCommonProperties getPropertySetInstance(List<JposCommonProperties>[] propertysets, int deviceindex, int propertysetindex) {
+    public JposCommonProperties getPropertySetInstance(List<JposCommonProperties>[] propertysets, int deviceindex, int propertysetindex) {
         if (deviceindex >= 0 && deviceindex < propertysets.length) {
             synchronized(propertysets[deviceindex]) {
                 if (propertysetindex >= 0 && propertysetindex < propertysets[deviceindex].size())

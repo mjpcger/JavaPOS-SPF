@@ -23,7 +23,7 @@ import de.gmxhome.conrad.jpos.jpos_base.electronicjournal.*;
 import jpos.*;
 import jpos.config.JposEntry;
 import jpos.events.*;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
 import javax.swing.*;
 import java.io.UnsupportedEncodingException;

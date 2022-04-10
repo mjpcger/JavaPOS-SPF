@@ -20,7 +20,7 @@ import jpos.JposConst;
 import jpos.JposException;
 import jpos.services.BaseService;
 import jpos.services.EventCallbacks;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -564,14 +564,13 @@ public class JposBase implements BaseService {
         checkEnabled();
         Device.check(!Device.CapUpdateFirmware, JposConst.JPOS_E_ILLEGAL, "Device does not support update firmware");
         Device.check(firmwareFileName == null, JposConst.JPOS_E_ILLEGAL, "Missing firmwareFileName");
-        try {
-            DeviceInterface.updateFirmware(firmwareFileName);
-        } catch (JposOutputRequest.OkException e) {
-            Device.check(!(e.getOutputRequest() instanceof UpdateFirmware), JposConst.JPOS_E_FAILURE, "Bad request from validation: " + e.getOutputRequest().getClass().getName());
-            e.getOutputRequest().enqueue();
+        UpdateFirmware request = DeviceInterface.updateFirmware(firmwareFileName);
+        if (request != null) {
+            request.enqueue();
             logAsyncCall("UpdateFirmware");
         }
-        logCall("UpdateFirmware");
+        else
+            logCall("UpdateFirmware");
     }
 
     /**
@@ -774,14 +773,13 @@ public class JposBase implements BaseService {
     @Override
     public void directIO(int command, int[] data, Object object) throws JposException {
         logPreCall("DirectIO", "" + command + ", " + (data == null ? "" : data[0]) + ", " + (object == null ? "" : object.toString()));
-        try {
-            DeviceInterface.directIO(command, data, object);
-        } catch (JposOutputRequest.OkException e) {
-            Device.check(!(e.getOutputRequest() instanceof DirectIO), JposConst.JPOS_E_FAILURE, "Bad request from validation: " + e.getOutputRequest().getClass().getName());
-            e.getOutputRequest().enqueue();
+        DirectIO request = DeviceInterface.directIO(command, data, object);
+        if (request != null) {
+            request.enqueue();
             logAsyncCall("DirectIO");
         }
-        logCall("DirectIO", "" + command + ", " + (data == null ? "" : data[0]) + ", " + (object == null ? "" : object.toString()));
+        else
+            logCall("DirectIO", "" + command + ", " + (data == null ? "" : data[0]) + ", " + (object == null ? "" : object.toString()));
     }
 
     @Override

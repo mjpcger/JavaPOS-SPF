@@ -18,7 +18,7 @@ package de.gmxhome.conrad.jpos.jpos_base;
 
 import jpos.JposConst;
 import jpos.JposException;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -95,34 +95,6 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
         } catch (Exception e) {
             logerror("UdpIOProcessor", JposConst.JPOS_E_FAILURE, e);
         }
-    }
-
-    @Deprecated
-    public UdpIOProcessor(JposDevice device, String addr) throws JposException {
-        super(device, "0.0.0.0:0");
-        try {
-            SourceIP = InetAddress.getByName("0.0.0.0");
-            SourcePort = 0;
-            LoggingPrefix = "";
-        } catch (Exception e) {
-            logerror("UdpIOProcessor", JposConst.JPOS_E_FAILURE, e);
-        }
-        setTarget(addr);
-    }
-
-    /**
-     * Sets UDP specific communication parameter.
-     * @param ownport           Own port address
-     * @param maxdatasize       Maximum size of a frame. May be set to Integer.MAX_VALUE to use the limits given by
-     *                          network configuration and hardware.
-     * @throws JposException    If port address &lt; 0 or port address &gt; 65535
-     */
-    @Deprecated
-    public void setParameters(int ownport, int maxdatasize) throws JposException {
-        if (ownport < 0 || ownport > 0xffff)
-            logerror("SetParam", JposConst.JPOS_E_ILLEGAL, "Invalid port: " + ownport + ", must be between 0 and 65535");
-        OwnPort = ownport;
-        MaxDataSize = maxdatasize;
     }
 
     @Override

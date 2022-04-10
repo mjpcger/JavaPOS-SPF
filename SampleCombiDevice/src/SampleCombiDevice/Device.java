@@ -26,9 +26,8 @@ import de.gmxhome.conrad.jpos.jpos_base.msr.*;
 import de.gmxhome.conrad.jpos.jpos_base.poskeyboard.*;
 import de.gmxhome.conrad.jpos.jpos_base.scanner.*;
 import de.gmxhome.conrad.jpos.jpos_base.toneindicator.*;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
-import javax.swing.*;
 import java.io.*;
 import java.util.*;
 

@@ -23,7 +23,7 @@ import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.*;
 import de.gmxhome.conrad.jpos.jpos_base.electronicjournal.*;
 import jpos.*;
 import jpos.config.JposEntry;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 import java.io.*;
 import java.util.*;
 

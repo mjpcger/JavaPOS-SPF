@@ -112,10 +112,9 @@ public interface ScaleInterface extends JposBaseInterface {
      * weightNumeratorX and weightDenominatorX as set via method SetUnitPriceWithWeightUnit.
      * <br>A service may perform the full weight process inside this method, but this is not recommended, especially
      * in asynchronous operation. The recommended functionality is to perform only validation in this method and
-     * to perform weighing inside the final part. If implemented the latter way, a DoPriceCalculating object must be
+     * to perform weighing inside the final part. If implemented the latter way, a DoPriceCalculating object
      * created with weightData[0], tare[0], unitPrice[0], unitPriceX[0], weightUnitX[0], weightNumeratorX[0],
-     * weightDenominatorX[0], price[0] and timeout as parameters. Last action in validation must be to call its
-     * throwRequest method.
+     * weightDenominatorX[0], price[0] and timeout as parameters must be returned.
      *
      * @param weightData         The value for the net weight in the price calculation algorithm.
      * @param tare               The value used to determine the item net weight in the price calculation algorithm.
@@ -126,10 +125,10 @@ public interface ScaleInterface extends JposBaseInterface {
      * @param weightDenominatorX See UPOS specification, chapter Scale - Methods - doPriceCalculating Method.
      * @param price              The calculated monetary value for the item on the scale.
      * @param timeout            The number of milliseconds to wait for a settled weight before failing the method.
-     * @throws JposException    See UPOS specification, method DoPriceCalculating. To signal successful validation,
-     *                          property ErrorCode will be 0.
+     * @return DoPriceCalculating object for use in final part.
+     * @throws JposException    See UPOS specification, method DoPriceCalculating.
      */
-    public void doPriceCalculating(int[] weightData, int[] tare, long[] unitPrice, long[] unitPriceX, int[] weightUnitX, int[] weightNumeratorX, int[] weightDenominatorX, long[] price, int timeout) throws JposException;
+    public DoPriceCalculating doPriceCalculating(int[] weightData, int[] tare, long[] unitPrice, long[] unitPriceX, int[] weightUnitX, int[] weightNumeratorX, int[] weightDenominatorX, long[] price, int timeout) throws JposException;
 
     /**
      * Final part of DoPriceCalculating method. Can be overwritten within derived classes, if necessary.
@@ -178,17 +177,16 @@ public interface ScaleInterface extends JposBaseInterface {
      * because this will be done within the calling method.
      * <br>A service may perform the full weight process inside this method, but this is not recommended, especially
      * in asynchronous operation. The recommended functionality is to perform only validation in this method and
-     * to perform weighing inside the final part. If implemented the latter way, a ReadLiveWeightWithTare object must be
-     * created with weightData[0], tare[0] and timeout as parameters. Last action in validation must be to call its
-     * throwRequest method.
+     * to perform weighing inside the final part. If implemented the latter way, a ReadLiveWeightWithTare object
+     * created with weightData[0], tare[0] and timeout as parameters must be returned.
      *
      * @param weightData    On return, net weight calculated by the scale.
      * @param tare          On return, tare weight used to calculate the net weight.
      * @param timeout       Number of milliseconds to wait for a settled weight before failing the method.
-     * @throws JposException    See UPOS specification, method ReadLiveWeightWithTare. To signal successful validation,
-     *                          property ErrorCode will be 0.
+     * @return ReadLiveWeightWithTare object for use in final part.
+     * @throws JposException    See UPOS specification, method ReadLiveWeightWithTare.
      */
-    public void readLiveWeightWithTare(int[] weightData, int[] tare, int timeout) throws JposException;
+    public ReadLiveWeightWithTare readLiveWeightWithTare(int[] weightData, int[] tare, int timeout) throws JposException;
 
     /**
      * Final part of ReadLiveWeightWithTare method. Can be overwritten within derived classes, if necessary.
@@ -219,15 +217,15 @@ public interface ScaleInterface extends JposBaseInterface {
      * because this will be done within the calling method.
      * <br>A service may perform the full weight process inside this method, but this is not recommended, especially
      * in asynchronous operation. The recommended functionality is to perform only validation in this method and
-     * to perform weighing inside the final part. If implemented the latter way, a ReadWeight object must be created with
-     * weightData[0] and timeout as parameters. Last action in validation must be to call its throwRequest method.
+     * to perform weighing inside the final part. If implemented the latter way, a ReadWeight object created with
+     * weightData[0] and timeout as parameters must be returned.
      *
      * @param weightData The weight measured by the scale.
      * @param timeout    The number of milliseconds to wait for a settled weight before failing the method.
-     * @throws JposException    See UPOS specification, method ReadWeight. To signal successful validation,
-     *                          property ErrorCode will be 0.
+     * @return ReadWeight object for use in final part.
+     * @throws JposException    See UPOS specification, method ReadWeight.
      */
-    public void readWeight(int[] weightData, int timeout) throws JposException;
+    public ReadWeight readWeight(int[] weightData, int timeout) throws JposException;
 
     /**
      * Final part of ReadWeight method. Can be overwritten within derived classes, if necessary.

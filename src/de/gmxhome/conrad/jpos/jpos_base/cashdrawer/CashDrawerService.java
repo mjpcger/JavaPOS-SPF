@@ -18,13 +18,13 @@ package de.gmxhome.conrad.jpos.jpos_base.cashdrawer;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.CashDrawerService114;
+import jpos.services.*;
 
 /**
  * CashDrawer service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class CashDrawerService extends JposBase implements CashDrawerService114, Runnable {
+public class CashDrawerService extends JposBase implements CashDrawerService115, Runnable {
     /**
      * Instance of a class implementing the CashDrawerInterface for cash drawer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
@@ -99,7 +99,6 @@ public class CashDrawerService extends JposBase implements CashDrawerService114,
         Device.checkRange(beepFrequency, 10, 24000 , JposConst.JPOS_E_CLOSED, "beep frequency out of range: " + beepFrequency);
         Device.check(beepDuration < 0 && beepDuration != JposConst.JPOS_FOREVER, JposConst.JPOS_E_CLOSED, "Negative beep duration");
         Device.check(beepDelay < 0 && beepDelay != JposConst.JPOS_FOREVER, JposConst.JPOS_E_CLOSED, "Negative beep delay");
-        CashDrawerInterface.waitForDrawerClose(beepTimeout, beepFrequency, beepDuration, beepDelay);
         if (Data.DrawerOpened) {
             Sound = new MySoundPlayer(beepTimeout, beepFrequency, beepDuration, beepDelay);
             new Thread(this, Data.LogicalName + ".WaitForDrawerCloseHandler").start();

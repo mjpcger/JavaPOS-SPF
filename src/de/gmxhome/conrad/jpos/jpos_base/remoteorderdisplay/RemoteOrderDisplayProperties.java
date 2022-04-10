@@ -19,7 +19,7 @@ package de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.events.JposEvent;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
 /**
  * Class containing the remote order display specific properties, their default values and default implementations of

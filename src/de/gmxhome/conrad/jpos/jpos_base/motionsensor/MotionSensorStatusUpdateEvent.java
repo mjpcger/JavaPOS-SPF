@@ -18,7 +18,7 @@ package de.gmxhome.conrad.jpos.jpos_base.motionsensor;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import org.apache.log4j.Level;
+import net.bplaced.conrad.log4jpos.Level;
 
 /**
  * Status update event implementation for MotionSensor devices.

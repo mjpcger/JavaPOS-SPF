@@ -67,6 +67,19 @@ public interface BillDispenserInterface  extends JposBaseInterface {
      */
     public void adjustCashCounts(String cashCounts) throws JposException;
 
+    /**
+     * Final part of readCashCounts method. Can be overwritten in derived class, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>cashCounts is not null and has dimension 1,</li>
+     *     <li>discrepancy is not null and has dimension 1.</li>
+     * </ul>
+     *
+     * @param cashCounts  The cash count data is placed into cashCounts.
+     * @param discrepancy Specifies whether there is some cash which could not to be included in the counts reported.
+     * @throws JposException If an error occurs.
+     */
     public void readCashCounts(String[] cashCounts, boolean[] discrepancy) throws JposException;
 
     /**
