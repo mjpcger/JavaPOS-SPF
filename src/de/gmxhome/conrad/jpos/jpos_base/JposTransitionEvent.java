@@ -59,4 +59,18 @@ public class JposTransitionEvent extends TransitionEvent {
      */
     public void setTransitionProperties() {
     }
+
+    boolean WriteProtected = false;
+
+    @Override
+    public void setData(int data) {
+        if (!WriteProtected)
+            super.setData(data);
+    }
+
+    @Override
+    public void setString(String string) {
+        if (!WriteProtected)
+            super.setString(string);
+    }
 }

@@ -812,6 +812,7 @@ public class JposBaseDevice {
                 if (dioevent != null) {
                     Props.EventCB.fireDirectIOEvent(dioevent);
                     log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toLogString() + "]");
+                    postDirectIOProcessing(dioevent);
                 }
                 else if (stevent != null) {
                     Props.EventCB.fireStatusUpdateEvent(stevent);
@@ -906,6 +907,7 @@ public class JposBaseDevice {
                 } else if (dioevent != null) {
                     Props.EventCB.fireDirectIOEvent(dioevent);
                     log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toLogString() + "]");
+                    postDirectIOProcessing(dioevent);
                 }
                 EventSerializer.signal();
             }
@@ -986,6 +988,7 @@ public class JposBaseDevice {
                 } else if (dioevent != null) {
                     Props.EventCB.fireDirectIOEvent(dioevent);
                     log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toLogString() + "]");
+                    postDirectIOProcessing(dioevent);
                 }
                 EventSerializer.signal();
             }
@@ -1052,10 +1055,11 @@ public class JposBaseDevice {
                         log(Level.DEBUG, Props.LogicalName + ": Transition Event: [" + trevent.toLogString() + "]: Unsupported");
                         trevent = null;
                     }
-                    Props.postTransitionProcessing(trevent);
+                    postTransitionProcessing(trevent);
                 } else if (dioevent != null) {
                     Props.EventCB.fireDirectIOEvent(dioevent);
                     log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toLogString() + "]");
+                    postDirectIOProcessing(dioevent);
                 }
                 EventSerializer.signal();
             }
@@ -1083,6 +1087,25 @@ public class JposBaseDevice {
             processErrorEventList(props);
         else if (props.DirectIOEventList == props.DataEventList)
             processDataEventList(props);
+    }
+
+    /**
+     * Retrieves TransitionEvent after application could modify pData and pString. Allows the device service to continue
+     * further processing as requested.
+     * @param trevent JposTransitionEvent after return from application callback. null if the device control does not
+     *                support transition events.
+     */
+    public void postTransitionProcessing(JposTransitionEvent trevent) {
+        trevent.WriteProtected = true;
+    }
+
+    /**
+     * Retrieves DirectIOEvent after application could modify data and obj. Allows the device service to continue
+     * further processing as requested.
+     * @param dioevent JposDirectIOEvent after return from application callback.
+     */
+    public void postDirectIOProcessing(JposDirectIOEvent dioevent) {
+        dioevent.WriteProtected = true;
     }
 
     /**

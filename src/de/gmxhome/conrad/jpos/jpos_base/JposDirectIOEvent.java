@@ -61,5 +61,20 @@ public class JposDirectIOEvent extends DirectIOEvent {
      * defined within derived classes.
      */
     public void setDirectIOProperties() {
+        this.setData(1);
+    }
+
+    boolean WriteProtected = false;
+
+    @Override
+    public void setData(int data) {
+        if (!WriteProtected)
+            super.setData(data);
+    }
+
+    @Override
+    public void setObject(Object obj) {
+        if (!WriteProtected)
+            super.setObject(obj);
     }
 }

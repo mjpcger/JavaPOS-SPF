@@ -481,15 +481,6 @@ public abstract class JposCommonProperties implements JposBaseInterface {
         return Device.getClaimingInstance(Claiming, Index);
     }
 
-    /**
-     * Retrieves TransitionEvent after application could modify pData and pString. Allows the device to continue
-     * further processing as requested.
-     * @param trevent JposTransitionEvent after return from application callback. null if the device control does not
-     *                support transition events.
-     */
-    public void postTransitionProcessing(JposTransitionEvent trevent) {
-    }
-
     /*
      * Methods that implement common property setter and common method calls
      */
