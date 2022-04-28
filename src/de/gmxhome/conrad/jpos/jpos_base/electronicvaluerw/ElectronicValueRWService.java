@@ -286,6 +286,11 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     }
 
     @Override
+    public void registerServiceToMedium(int i, int i1) throws JposException {
+
+    }
+
+    @Override
     public void retrieveResultInformation(String s, String[] strings) throws JposException {
 
     }
