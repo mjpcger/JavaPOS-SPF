@@ -1075,8 +1075,8 @@ public class JposBaseDevice {
      * @throws JposException If <i>TransitionEventFirer</i> object cannot be created.
      */
     protected void processTransitionEventList(JposCommonProperties dev) throws JposException {
-        if (dev.TransitionEventProcessor == null && !dev.FreezeEvents && dev.ErrorEventList.size() > 0) {
-            new ErrorEventFirer(dev);
+        if (dev.TransitionEventProcessor == null && !dev.FreezeEvents && dev.TransitionEventList.size() > 0) {
+            new TransitionEventFirer(dev);
         }
     }
 
@@ -1087,6 +1087,8 @@ public class JposBaseDevice {
             processErrorEventList(props);
         else if (props.DirectIOEventList == props.DataEventList)
             processDataEventList(props);
+        else if (props.DirectIOEventList == props.TransitionEventList)
+            processTransitionEventList(props);
     }
 
     /**
