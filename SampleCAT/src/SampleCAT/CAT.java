@@ -17,7 +17,6 @@
 
 package SampleCAT;
 
-import de.gmxhome.conrad.jpos.jpos_base.UniqueIOProcessor;
 import de.gmxhome.conrad.jpos.jpos_base.cat.*;
 import jpos.JposConst;
 import jpos.JposException;

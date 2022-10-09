@@ -16,7 +16,7 @@ test "$Debug" = "" && exec wish $0 || exec xterm -e wish $0
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Simulator for an EFT device, for handling with a CAST service. Communication happens
+# Simulator for an EFT device, for handling with a CAT service. Communication happens
 # via TCP service port. A description of all supported frames can be found near the
 #end of this script, at procedure processInput.
 

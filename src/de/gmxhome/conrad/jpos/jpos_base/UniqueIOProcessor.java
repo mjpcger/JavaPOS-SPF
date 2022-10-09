@@ -68,7 +68,7 @@ public class UniqueIOProcessor {
     public String setTarget(String target) throws JposException { return Target = target; }
     /**
      * Communication port of the processor. Can be the name of a COM port
-     * in case of RS232 or the the (own) port number in case of TCP or UDP.
+     * in case of RS232 or the (own) port number in case of TCP or UDP.
      */
     protected String Port;
 

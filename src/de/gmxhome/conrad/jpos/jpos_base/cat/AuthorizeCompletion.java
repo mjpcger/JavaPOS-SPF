@@ -19,7 +19,7 @@ package de.gmxhome.conrad.jpos.jpos_base.cat;
 import jpos.*;
 
 /**
- * Output request executor for CAT method AuthorizeCompletion.
+ * Base of Output request executor for CAT authorization methods
  */
 public class AuthorizeCompletion extends CashDeposit {
     /**

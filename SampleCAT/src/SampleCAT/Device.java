@@ -223,7 +223,7 @@ public class Device extends JposDevice implements Runnable{
     DisplayOutput Display = null;
 
     /**
-     * Ticket output object. Used to process ticket data providedby the terminal.
+     * Ticket output object. Used to process ticket data provided by the terminal.
      */
     TicketOutput  Ticket = null;
 
