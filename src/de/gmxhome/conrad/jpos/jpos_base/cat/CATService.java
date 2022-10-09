@@ -444,14 +444,4 @@ public class CATService extends JposBase implements CATService115 {
         else
             logCall(name);
     }
-
-    /**
-     * Checks whether the device is enabled. If not, throws a JposException with an error code and message that describe
-     * the state of the device.
-     * @throws JposException Will be thrown whenever the device is not enabled.
-     */
-    public void checkBusy() throws JposException {
-        checkEnabled();
-        Device.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Device is busy");
-    }
 }

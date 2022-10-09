@@ -209,10 +209,10 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     final public List<JposEvent> TransitionEventList = new LinkedList<JposEvent>();
 
     /**
-     * Event list, holds all direct IO events until they can be fired. Will be set to one of EventList,
-     * DataEventList or OutputEventList, depending on preferences of the service implementation. The default is EventList.
+     * Event list, holds all direct IO events until they can be fired. Will be set to one of EventList, TransitionEventList,
+     * DataEventList or OutputEventList, depending on preferences of the service implementation. The default is TransitionEventList.
      */
-    public List<JposEvent> DirectIOEventList = EventList;
+    public List<JposEvent> DirectIOEventList = TransitionEventList;
 
     /**
      * List of all property sets sharing the same UPOS device.

@@ -232,8 +232,8 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, property AutoDisable
      */
     public boolean getAutoDisable() throws JposException {
-        checkOpened();
         logGet("AutoDisable");
+        checkOpened();
         return Props.AutoDisable;
     }
 
@@ -255,8 +255,8 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, property DataCount
      */
     public int getDataCount() throws JposException {
-        checkOpened();
         logGet("DataCount");
+        checkOpened();
         return Props.DataCount;
     }
 
@@ -266,8 +266,8 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, property DataEventEnabled
      */
     public boolean getDataEventEnabled() throws JposException {
-        checkOpened();
         logGet("DataEventEnabled");
+        checkOpened();
         return Props.DataEventEnabled;
     }
 
@@ -320,8 +320,8 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, property CapUpdateStatistics
      */
     public boolean getCapUpdateStatistics() throws JposException {
-        checkOpened();
         logGet("CapUpdateStatistics");
+        checkOpened();
         return Props.CapUpdateStatistics;
     }
 
@@ -332,6 +332,7 @@ public class JposBase implements BaseService {
      */
     public int getCapPowerReporting() throws JposException {
         logGet(Device, "CapPowerReporting");
+        checkOpened();
         return Device.CapPowerReporting;
     }
 
@@ -341,8 +342,8 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, property PowerNotify
      */
     public int getPowerNotify() throws JposException {
-        checkOpened();
         logGet("PowerNotify");
+        checkOpened();
         return Props.PowerNotify;
     }
 
@@ -371,8 +372,8 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, property
      */
     public int getPowerState() throws JposException {
-        checkOpened();
         logGet("PowerState");
+        checkOpened();
         return Props.PowerState;
     }
 
@@ -382,8 +383,8 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, property
      */
     public boolean getAsyncMode() throws JposException {
-        checkOpened();
         logGet("AsyncMode");
+        checkOpened();
         return Props.AsyncMode;
     }
 
@@ -407,6 +408,16 @@ public class JposBase implements BaseService {
     public void checkEnabled() throws JposException {
         checkClaimed();
         Device.check(!Props.DeviceEnabled, JposConst.JPOS_E_DISABLED, "Device not enabled");
+    }
+
+    /**
+     * Checks whether the device is enabled and not busy. If not, throws a JposException with an error code and message
+     * that describe the state of the device.
+     * @throws JposException Will be thrown whenever the device is not enabled or busy.
+     */
+    public void checkBusy() throws JposException {
+        checkEnabled();
+        Device.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Device is busy");
     }
 
     /**
