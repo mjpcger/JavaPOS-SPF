@@ -145,20 +145,6 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     }
 
     /**
-     * Value of UPOS constant FPTR_AT_SURCHARGE. Must be specified if the fiscal printer supports package adjustments
-     * and the javapos framework does specify constant FPTR_AT_SURCHARGE due to an implementation error (true for standard
-     * controls &lt; 1.14.3).
-     */
-    public Integer FPTR_AT_SURCHARGE = null;
-
-    /**
-     * Value of UPOS constant FPTR_AT_DISCOUNT. Must be specified if the fiscal printer supports package adjustments
-     * and the javapos framework does specify constant FPTR_AT_DISCOUNT due to an implementation error (true for standard
-     * controls &lt; 1.14.3).
-     */
-    public Integer FPTR_AT_DISCOUNT = null;
-
-    /**
      * True if package adjustments may have the same (or a sub-set of) adjustment types as item adjustments. False if
      * only FPTR_AT_DISCOUNT and FPTR_AT_SURCHARGE are valid package adjustment types, as specified in the UPOS specification.
      */
@@ -173,10 +159,6 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public FiscalPrinterService(FiscalPrinterProperties props, JposDevice device) {
         super(props, device);
 
-        try {
-            FPTR_AT_DISCOUNT = FiscalPrinterConst.class.getField("FPTR_AT_DISCOUNT").getInt(null);
-            FPTR_AT_SURCHARGE = FiscalPrinterConst.class.getField("FPTR_AT_SURCHARGE").getInt(null);
-        } catch (Exception e) {}
         Data = props;
     }
 
@@ -704,27 +686,16 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void setDateType(int type) throws JposException {
-        Integer DT_TICKET_START;
-        Integer DT_TICKET_END;
-        try {
-            DT_TICKET_START = MyConstants.class.getField("FPTR_DT_TICKET_START").getInt(null);
-            DT_TICKET_END = MyConstants.class.getField("FPTR_DT_TICKET_END").getInt(null);
-        } catch (Exception e) {
-            DT_TICKET_START = DT_TICKET_END = null;
-        }
         long[] allowed = new long[]{
                 FiscalPrinterConst.FPTR_DT_CONF,
                 FiscalPrinterConst.FPTR_DT_EOD,
                 FiscalPrinterConst.FPTR_DT_RESET,
                 FiscalPrinterConst.FPTR_DT_RTC,
                 FiscalPrinterConst.FPTR_DT_VAT,
-                FiscalPrinterConst.FPTR_DT_START
+                FiscalPrinterConst.FPTR_DT_START,
+                FiscalPrinterConst.FPTR_DT_TICKET_START,
+                FiscalPrinterConst.FPTR_DT_TICKET_END
         };
-        if (DT_TICKET_END != null && DT_TICKET_START != null) {
-            allowed = Arrays.copyOf(allowed, allowed.length + 2);
-            allowed[allowed.length - 2] = DT_TICKET_START;
-            allowed[allowed.length - 1] = DT_TICKET_END;
-        }
         logPreSet("DateType");
         checkOpened();
         Device.checkMember(type, allowed, JposConst.JPOS_E_ILLEGAL, "Illegal date specifier: " + type);
@@ -2033,7 +2004,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
                 FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT,
                 FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE,
                 FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
-        } : new long[]{FPTR_AT_DISCOUNT, FPTR_AT_SURCHARGE};
+        } : new long[]{FiscalPrinterConst.FPTR_AT_DISCOUNT, FiscalPrinterConst.FPTR_AT_SURCHARGE};
         Device.check(vatAdjustment == null || description == null, JposConst.JPOS_E_ILLEGAL, "description and vatAdjustment must not be null");
         logPreCall("PrintRecPackageAdjustment", adjustmentType + ", " + description + ", " + vatAdjustment);
         checkEnabled();
@@ -2074,7 +2045,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
                 FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT,
                 FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE,
                 FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
-        } : new long[]{FPTR_AT_DISCOUNT, FPTR_AT_SURCHARGE};
+        } : new long[]{FiscalPrinterConst.FPTR_AT_DISCOUNT, FiscalPrinterConst.FPTR_AT_SURCHARGE};
         Device.check(vatAdjustment == null, JposConst.JPOS_E_ILLEGAL, "vatAdjustment must not be null");
         logPreCall("PrintRecPackageAdjustVoid", adjustmentType + ", " + vatAdjustment);
         checkEnabled();

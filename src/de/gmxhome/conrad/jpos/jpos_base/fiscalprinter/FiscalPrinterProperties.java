@@ -707,15 +707,6 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
         MessageType = FiscalPrinterConst.FPTR_MT_FREE_TEXT;
         // Next line: Must be initialized here because relevant for ErrorStation
         FiscalReceiptStation = FiscalPrinterConst.FPTR_RS_RECEIPT;
-        if (CapPackageAdjustment) {
-            FiscalPrinterService srv = (FiscalPrinterService) EventSource;
-            // Erroneous jpos jar file workaround: If constants not present, fetch them from implementation default or
-            // jpos.xml properties (if set).
-            if (!srv.AllowItemAdjustmentTypesInPackageAdjustment && srv.FPTR_AT_DISCOUNT != null && srv.FPTR_AT_SURCHARGE != null) {
-                srv.FPTR_AT_DISCOUNT = FiscalPrinterConst.FPTR_AT_AMOUNT_DISCOUNT;
-                srv.FPTR_AT_SURCHARGE = FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE;
-            }
-        }
     }
 
     @Override

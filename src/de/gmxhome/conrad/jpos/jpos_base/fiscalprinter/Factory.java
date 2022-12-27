@@ -25,8 +25,6 @@ import java.lang.reflect.Constructor;
  * General part of FiscalPrinterService factory for JPOS devices using this framework.
  */
 public class Factory extends JposDeviceFactory {
-    private static class MyConstants implements FiscalPrinterConst {}
-
     /**
      * Perform basic initialization of given device and property set. Links property
      * set and driver to each other and sets driver specific property defaults.
@@ -38,14 +36,7 @@ public class Factory extends JposDeviceFactory {
     public FiscalPrinterService addDevice(int index, JposDevice dev) throws JposException {
         FiscalPrinterProperties props = dev.getFiscalPrinterProperties(index);
         dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getFiscalPrinterProperties()");
-        FiscalPrinterService service = null;
-        try {
-            MyConstants.class.getField("FPTR_CC_GERMANY").getInt(null);
-            Constructor[] constructors = Class.forName("de.gmxhome.conrad.jpos.jpos_base.fiscalprinter.FiscalPrinterServiceX").getConstructors();
-            service = (FiscalPrinterService) constructors[0].newInstance(props, dev);
-
-        } catch (Throwable e) {}
-        service = (FiscalPrinterService)(props.EventSource = service == null ? new FiscalPrinterService(props, dev) : service);
+        FiscalPrinterService service = (FiscalPrinterService)(props.EventSource = new FiscalPrinterService(props, dev));
         props.Device = dev;
         props.addProperties(dev.FiscalPrinters);
         props.Claiming = dev.ClaimedFiscalPrinter;
