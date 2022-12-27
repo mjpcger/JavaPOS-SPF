@@ -208,10 +208,6 @@ public class Device extends JposDevice implements Runnable {
             FiscalPrinterService srv = (FiscalPrinterService) getPropertySetInstance(FiscalPrinters, 0, 0).EventSource;
             if ((o = entry.getPropertyValue("AllowItemAdjustmentTypesInPackageAdjustment")) != null)
                 srv.AllowItemAdjustmentTypesInPackageAdjustment = Boolean.parseBoolean(o.toString());
-            if ((o = entry.getPropertyValue("FPTR_AT_DISCOUNT")) != null)
-                srv.FPTR_AT_DISCOUNT = Integer.parseInt(o.toString());
-            if ((o = entry.getPropertyValue("FPTR_AT_SURCHARGE")) != null)
-                srv.FPTR_AT_SURCHARGE = Integer.parseInt(o.toString());
             check(SignOffHeader.length() > MAXPRINTLINELENGTH, JposConst.JPOS_E_ILLEGAL, "Signoff header too long");
             check(SignOnHeader.length() > MAXPRINTLINELENGTH, JposConst.JPOS_E_ILLEGAL, "Signon header too long");
             check(CashierName.length() > MAXFIXEDTEXTLENGTH, JposConst.JPOS_E_ILLEGAL, "Cashier prefix too long");
