@@ -39,8 +39,6 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     private FiscalPrinterProperties Data;
 
-    private static class MyConstants implements FiscalPrinterConst {}
-
     private void checkBusySync() throws JposException {
         Device.check(Data.State == JposConst.JPOS_S_BUSY && !Data.AsyncMode, JposConst.JPOS_E_BUSY, "Output in progress");
     }
@@ -148,6 +146,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
      * True if package adjustments may have the same (or a sub-set of) adjustment types as item adjustments. False if
      * only FPTR_AT_DISCOUNT and FPTR_AT_SURCHARGE are valid package adjustment types, as specified in the UPOS specification.
      */
+    @Deprecated
     public Boolean AllowItemAdjustmentTypesInPackageAdjustment = false;
 
     /**
