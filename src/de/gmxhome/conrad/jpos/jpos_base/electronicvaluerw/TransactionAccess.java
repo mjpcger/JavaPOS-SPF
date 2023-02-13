@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Output request executor for ElectronicValueRW method
+ * Output request executor for ElectronicValueRW method TransactionAccess.
  */
 public class TransactionAccess extends OutputRequest {
     /**

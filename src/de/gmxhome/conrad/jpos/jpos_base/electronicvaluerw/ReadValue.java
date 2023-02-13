@@ -21,7 +21,7 @@ import de.gmxhome.conrad.jpos.jpos_base.JposInputRequest;
 import jpos.JposException;
 
 /**
- * Output request executor for ElectronicValueRW method
+ * Output request executor for ElectronicValueRW method ReadValue.
  */
 public class ReadValue extends JposInputRequest {
     /**

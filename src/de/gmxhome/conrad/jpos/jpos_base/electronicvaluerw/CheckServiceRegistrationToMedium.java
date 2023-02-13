@@ -20,7 +20,7 @@ package de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw;
 import jpos.JposException;
 
 /**
- * Output request executor for ElectronicValueRW method
+ * Output request executor for ElectronicValueRW method CheckServiceRegistrationToMedium.
  */
 public class CheckServiceRegistrationToMedium extends NumberTimeoutRequest {
     /**
