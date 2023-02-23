@@ -754,12 +754,63 @@ public class JposBase implements BaseService {
     public void claim(int timeout) throws JposException {
         logPreCall("Claim", "" + timeout);
         checkOpened();
-        Device.check(Props.Claimed, JposConst.JPOS_E_CLAIMED, "Device just claimed");
-        Device.check(Props.getClaimingInstance() != null, JposConst.JPOS_E_CLAIMED, "Device claimed by other instance");
-        Device.check(Props.ExclusiveUse == JposCommonProperties.ExclusiveNo, JposConst.JPOS_E_ILLEGAL, "Device always shareable");
-        Device.check(timeout != JposConst.JPOS_FOREVER && timeout < 0,JposConst.JPOS_E_ILLEGAL, "Invalid timeout value");
-        DeviceInterface.claim(timeout);
+        JposDevice.check(Props.Claimed, JposConst.JPOS_E_CLAIMED, "Device just claimed");
+        JposDevice.check(Props.ExclusiveUse == JposCommonProperties.ExclusiveNo, JposConst.JPOS_E_ILLEGAL, "Device always shareable");
+        JposDevice.check(timeout != JposConst.JPOS_FOREVER && timeout < 0, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value");
+        long start = System.currentTimeMillis();
+        JposCommonProperties props;
+        while (true) {
+            SyncObject waiter = new SyncObject();
+            props = startClaiming(waiter);
+            if (props == null) break;
+            if (props != null) {
+                if (timeout == JposConst.JPOS_FOREVER || (timeout > 0 && System.currentTimeMillis() - start < timeout)) {
+                    waiter.suspend(timeout == JposConst.JPOS_FOREVER ? SyncObject.INFINITE : timeout);
+                } else
+                    throw new JposException(JposConst.JPOS_E_TIMEOUT, "Claim timed out");
+            }
+        }
+        try {
+            DeviceInterface.claim(timeout);
+        } catch (JposException e) {
+            signalRelease();
+            throw e;
+        }
         logCall("Claim");
+    }
+
+    /**
+     * Starts claiming. Should be called whenever a device tries to claim a device.
+     * <br>Returns null, if the device is not claimed. Otherwise, the given SyncObject instance will be
+     * inserted into the ClaimWaiters list of the claiming instance. Since this object will be signalled
+     * during release or close of that instance, it should be used to wait before retrying start claiming.
+     * @param waiter    SyncOject to be used for synchronization with currently claiming instance, if any.
+     * @return          null on success, property set of currently claiming instance otherwise.
+     */
+    public JposCommonProperties startClaiming(SyncObject waiter) {
+        JposCommonProperties props;
+        synchronized (Props.Claiming) {
+            if ((props = Props.Claiming[Props.Index]) == null) {
+                Props.Claiming[Props.Index] = Props;
+                return null;
+            } else {
+                props.ClaimWaiters.add(waiter);
+            }
+        }
+        return props;
+    }
+
+    /**
+     * Signals release after claim. Should be called whenever a claimed device becomes unclaimed to wake up any other
+     * waiting instances.
+     */
+    public void signalRelease() {
+        synchronized (Props.Claiming) {
+            Props.Claiming[Props.Index] = null;
+        }
+        for (SyncObject waiter : Props.ClaimWaiters)
+            waiter.signal();
+        Props.ClaimWaiters.clear();
     }
 
     @Override
@@ -810,6 +861,7 @@ public class JposBase implements BaseService {
         if (Props.DeviceEnabled && Props.ExclusiveUse == JposCommonProperties.ExclusiveYes)
             setDeviceEnabled(false);
         DeviceInterface.release();
+        signalRelease();
         logCall("Release");
     }
 }

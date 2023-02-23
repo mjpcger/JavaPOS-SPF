@@ -187,6 +187,14 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     public JposBase EventSource;
 
     /**
+     * List containing SyncObject instances to be signalled after releasing a claimed object. Whenever a service
+     * tries to claim a device which has been claimed before by another instance, if adds a SyncObject to this list
+     * and waits until the object will be signalled. During release or close, all objects within this list will be
+     * signalled to allow all waiting instances to try claiming again.
+     */
+    final public List<SyncObject> ClaimWaiters = new LinkedList<SyncObject>();
+
+    /**
      * Event list, holds at least JposStatusUpdateEvent events until they can be fired. Keep in mind:
      * By default, DirectIOEvent events will hold in this list as well.
      * data events and (input) error events will be passed via DataEventList instead.
@@ -557,11 +565,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     @Override
     public void claim(int timeout) throws JposException {
         initOnClaim();
-        synchronized(Claiming) {
-            Device.check(Claiming[Index] != null, JposConst.JPOS_E_CLAIMED, "Device claimed by other instance");
-            Claimed = true;
-            Claiming[Index] = this;
-        }
+        Claimed = true;
     }
 
     @Override
@@ -590,10 +594,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
 
     @Override
     public void release() throws JposException {
-        synchronized(Claiming) {
-            Claiming[Index] = null;
-            Claimed = false;
-        }
+        Claimed = false;
         if (ExclusiveUse == JposCommonProperties.ExclusiveYes) {
                 synchronized (DataEventList) {
                     DataEventList.clear();
