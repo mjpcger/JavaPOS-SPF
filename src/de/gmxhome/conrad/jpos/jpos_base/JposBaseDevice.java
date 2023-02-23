@@ -198,7 +198,7 @@ public class JposBaseDevice {
      * @param device List of list to be processed
      * @return No. of non-null property set objects stored within list of list
      */
-    int getCount(List<JposCommonProperties>[] device) {
+    public int getCount(List<JposCommonProperties>[] device) {
         int count = 0;
 
         for (int i = 0; i < device.length; i++) {
