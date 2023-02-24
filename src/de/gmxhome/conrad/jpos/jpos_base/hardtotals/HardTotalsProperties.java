@@ -25,7 +25,6 @@ import jpos.JposException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Class containing the hard totals specific properties, their default values and default implementations of
@@ -73,7 +72,7 @@ public class HardTotalsProperties extends JposCommonProperties implements HardTo
     /**
      * Buffered SetAll and Write requests, to be performed at transaction end.
      */
-    public List<ChangeRequest> Transaction = null;
+    public List<ChangeRequest> Transaction = new ArrayList<ChangeRequest>();
 
     /**
      * Constructor.
@@ -82,7 +81,7 @@ public class HardTotalsProperties extends JposCommonProperties implements HardTo
      */
     protected HardTotalsProperties(int dev) {
         super(dev);
-        ExclusiveUse = ExclusiveNo;
+        ExclusiveUse = ExclusiveAllowed;
     }
 
     private SyncObject HandleWaiter = new SyncObject();
@@ -94,6 +93,13 @@ public class HardTotalsProperties extends JposCommonProperties implements HardTo
      */
     public int claimedHandles() {
         return Factory.ClaimedHardTotals.get(Device)[Index].size();
+    }
+
+    @Override
+    public void close() throws JposException {
+        if (TransactionInProgress)
+            rollback();
+        super.close();
     }
 
     @Override
@@ -113,6 +119,7 @@ public class HardTotalsProperties extends JposCommonProperties implements HardTo
         }
         TransactionInProgress = false;
         EventSource.logSet("TransactionInProgress");
+        Transaction.clear();
     }
 
     @Override
@@ -170,17 +177,16 @@ public class HardTotalsProperties extends JposCommonProperties implements HardTo
 
     @Override
     public void rename(int hTotalsFile, String fileName) throws JposException {
-
     }
 
     @Override
     public void rollback() throws JposException {
         TransactionInProgress = false;
         EventSource.logSet("TransactionInProgress");
+        Transaction.clear();
     }
 
     @Override
     public void validateData(int hTotalsFile) throws JposException {
-
     }
 }

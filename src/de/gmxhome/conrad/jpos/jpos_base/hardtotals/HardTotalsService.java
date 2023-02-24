@@ -179,19 +179,12 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
     }
 
     @Override
-    public void close() throws JposException {
-        super.close();
-        Data.Transaction.clear();
-    }
-
-    @Override
     public void beginTrans() throws JposException {
         logPreCall("BeginTrans");
         checkEnabled();
         JposDevice.check(!Data.CapTransactions, JposConst.JPOS_E_ILLEGAL, "Transactions not supported by service");
         JposDevice.check(Data.TransactionInProgress, JposConst.JPOS_E_ILLEGAL, "Transaction just in progress");
         HardTotals.beginTrans();
-        Data.Transaction = new ArrayList<ChangeRequest>();
         logCall("BeginTrans");
     }
 
@@ -236,7 +229,6 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
             JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
         }
         HardTotals.commitTrans(Data.Transaction);
-        Data.Transaction.clear();
         logCall("CommitTrans");
     }
 
@@ -370,7 +362,6 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         JposDevice.check(!Data.CapTransactions, JposConst.JPOS_E_ILLEGAL, "Transactions not supported by service");
         JposDevice.check(!Data.TransactionInProgress, JposConst.JPOS_E_ILLEGAL, "Transaction has not been started");
         HardTotals.rollback();
-        Data.Transaction.clear();
         logCall("Rollback");
     }
 
