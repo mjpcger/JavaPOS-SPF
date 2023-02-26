@@ -49,8 +49,7 @@ public class HardTotalsFactory extends Factory implements JposServiceInstanceFac
                     else {
                         dev = (Device) any;
                     }
-                    dev.checkProperties(jposEntry);
-                    dev.checkRange(index, 0, dev.HardTotalss.length - 1, JposConst.JPOS_E_ILLEGAL, "HardTotals index out of range");
+                    dev.checkProperties(jposEntry, index);
                     JposServiceInstance srv = addDevice(index, dev);
                     if (create) {
                         putDevice(file, dev);
