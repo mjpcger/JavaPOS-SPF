@@ -45,6 +45,6 @@ public class SetAll extends ChangeRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((HardTotalsService) Props.EventSource).HardTotals.setAll(getHTotalsFile(), Value);
+        ((HardTotalsService) Props.EventSource).HardTotals.setAll(this);
     }
 }

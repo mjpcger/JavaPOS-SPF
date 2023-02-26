@@ -69,6 +69,6 @@ public class Write extends ChangeRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((HardTotalsService) Props.EventSource).HardTotals.write(getHTotalsFile(), Data, Offset, Count);
+        ((HardTotalsService) Props.EventSource).HardTotals.write(this);
     }
 }
