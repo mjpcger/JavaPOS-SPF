@@ -84,7 +84,6 @@ public class Device extends JposDevice {
     private byte[][] FileBuffers;                       // Buffer for HardTotals contents
     private long[] HardTotalOffsets;                    // Offset of HardTotals representation disk file
     private int NextHandle = 0;                         // Next file handle to try when creating a file
-    private ArrayList<ChangeRequest>[] OpenChangess;    // Holds uncommitted Write and SetAll calls for each HardTotals device
     private ArrayList<DirEntry>[] Directories;          // Holds directore for each HardTotals device
     private HashMap<Integer, DirEntry>[] Handless;      // Holds handles of all files per HardTotals device
 
@@ -129,16 +128,14 @@ public class Device extends JposDevice {
             HardTotalFileSizes = new Integer[MaxTotals];
             SingleFileOnlys = new Boolean[MaxTotals];
             HardTotalOffsets = new long[MaxTotals];
-            OpenChangess = (ArrayList<ChangeRequest>[])new ArrayList[MaxTotals];
             Directories = (ArrayList<DirEntry>[])new ArrayList[MaxTotals];
             Handless = (HashMap<Integer,DirEntry>[])new HashMap[MaxTotals];
             FileBuffers = new byte[MaxTotals][];
             for (int i = 0; i < MaxTotals; i++) {
                 HardTotalFileSizes[i] = file.readInt();
                 SingleFileOnlys[i] = file.readBoolean();
-                OpenChangess[i] = new ArrayList<ChangeRequest>();
-                Directories[i] = new ArrayList<DirEntry>();
-                Handless[i] = new HashMap<Integer, DirEntry>();
+                Directories[i] = new ArrayList<>();
+                Handless[i] = new HashMap<>();
             }
             HardTotalOffsets[0] = file.getFilePointer();
             for (int i = 1; i < MaxTotals; i++) {
@@ -181,7 +178,7 @@ public class Device extends JposDevice {
 
     synchronized private void createHardTotals(String id) throws JposException {
         if (HardTotalOffsets == null) {
-            try (RandomAccessFile file = new RandomAccessFile(id, "r")) {
+            try (RandomAccessFile ignored = new RandomAccessFile(id, "r")) {
                 throw new JposException(JposConst.JPOS_E_FAILURE, "Unexpected HardTotals file present: " + id);
             } catch (IOException e) {
                 try (RandomAccessFile file = new RandomAccessFile(id, "rws")){
@@ -192,13 +189,11 @@ public class Device extends JposDevice {
                         file.writeInt(HardTotalFileSizes[i] != null ? HardTotalFileSizes[i] : (HardTotalFileSizes[i] = 0x8000));
                         file.writeBoolean(SingleFileOnlys[i] != null ? SingleFileOnlys[i] : (SingleFileOnlys[i] = false));
                     }
-                    OpenChangess = (ArrayList<ChangeRequest>[])new ArrayList[MaxTotals];
                     Directories = (ArrayList<DirEntry>[])new ArrayList[MaxTotals];
                     Handless = (HashMap<Integer, DirEntry>[])new HashMap[MaxTotals];
                     HardTotalOffsets = new long[MaxTotals];
                     FileBuffers = new byte[MaxTotals][];
                     for (int i = 0; i < MaxTotals; i++) {
-                        OpenChangess[i] = new ArrayList<ChangeRequest>();
                         Directories[i] = new ArrayList<DirEntry>();
                         Handless[i] = new HashMap<Integer, DirEntry>();
                         HardTotalOffsets[i] = file.getFilePointer();
@@ -277,7 +272,6 @@ public class Device extends JposDevice {
         private int HardTotalFileSize;            // Capacity of HardTotals
         private byte[] FileBuffer;                // Buffer for HardTotals contents
         private long HardTotalOffset;             // Offset of HardTotals representation in disk file
-        private List<ChangeRequest> OpenChanges;  // Holds uncommitted Write and SetAll calls
         private List<DirEntry> Directory;         // Holds directory
         private HashMap<Integer, DirEntry> Files; // Holds file handles
 
@@ -302,7 +296,6 @@ public class Device extends JposDevice {
                 Files = Handless[Index];
                 FileBuffer = FileBuffers[Index];
                 HardTotalOffset = HardTotalOffsets[Index];
-                OpenChanges = OpenChangess[Index];
                 HardTotalFileSize = HardTotalFileSizes[Index];
             }
             super.deviceEnabled(enable);
@@ -437,16 +430,6 @@ public class Device extends JposDevice {
                     EventSource.logSet("FreeData");
                     NumberOfFiles--;
                     EventSource.logSet("NumberOfFiles");
-                    for (int i = 0; i < OpenChanges.size(); i++) {
-                        if (OpenChanges.get(i).getHTotalsFile() == entry.Handle) {
-                            OpenChanges.remove(i--);
-                        }
-                    }
-                    for (int i = 0; i < Transaction.size(); i++) {
-                        if (Transaction.get(i).getHTotalsFile() == entry.Handle) {
-                            Transaction.remove(i--);
-                        }
-                    }
                 } catch (IOException e) {
                     throw new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e);
                 }
@@ -483,7 +466,7 @@ public class Device extends JposDevice {
                         byte[] buffer = new byte[count];
                         check(offset + count > e.Size, JposConst.JPOS_E_ILLEGAL, "Read out of file size");
                         System.arraycopy(FileBuffer, e.Offset + offset, buffer, 0, count);
-                        for (ChangeRequest cr : OpenChanges) {
+                        for (ChangeRequest cr : transaction) {
                             if (cr.getHTotalsFile() == e.Handle) {
                                 if (cr instanceof SetAll) {
                                     SetAll req = (SetAll) cr;
@@ -512,16 +495,13 @@ public class Device extends JposDevice {
         public SetAll setAll(int hTotalsFile, byte value) throws JposException {
             synchronized (Device.this) {
                 check(!Files.containsKey(hTotalsFile), JposConst.JPOS_E_ILLEGAL, "Bad handle: " + hTotalsFile);
-                SetAll req = super.setAll(hTotalsFile, value);
-                OpenChanges.add(req);
-                return req;
+                return super.setAll(hTotalsFile, value);
             }
         }
 
         @Override
         public void setAll(SetAll request) throws JposException {
             synchronized (Device.this) {
-                OpenChanges.remove(request);
                 DirEntry e = Files.get(request.getHTotalsFile());
                 check(e == null, JposConst.JPOS_E_ILLEGAL, "Handle no longer valid: " + request.getHTotalsFile());
                 byte[] buffer = new byte[e.Size];
@@ -542,16 +522,13 @@ public class Device extends JposDevice {
                 DirEntry e = Files.get(hTotalsFile);
                 check(e == null, JposConst.JPOS_E_ILLEGAL, "Bad handle: " + hTotalsFile);
                 check(offset + count > e.Size, JposConst.JPOS_E_ILLEGAL, "Write out of range");
-                Write req = super.write(hTotalsFile, data, offset, count);
-                OpenChanges.add(req);
-                return req;
+                return super.write(hTotalsFile, data, offset, count);
             }
         }
 
         @Override
         public void write(Write request) throws JposException {
             synchronized (Device.this) {
-                OpenChanges.remove(request);
                 DirEntry e = Files.get(request.getHTotalsFile());
                 check(e == null, JposConst.JPOS_E_ILLEGAL, "Bad handle: " + request.getHTotalsFile());
                 try (RandomAccessFile file = new RandomAccessFile(ID, "rws")) {
@@ -565,44 +542,30 @@ public class Device extends JposDevice {
         }
 
         @Override
-        public void rollback() throws JposException {
+        public void commitTrans() throws JposException {
             synchronized (Device.this) {
-                for (ChangeRequest cr : Transaction) {
-                    OpenChanges.remove(cr);
-                }
-                super.rollback();
-            }
-        }
-
-        @Override
-        public void commitTrans(List<ChangeRequest> transaction) throws JposException {
-            synchronized (Device.this) {
-                byte[] buffer = Arrays.copyOf(FileBuffer, FileBuffer.length);
-                for (ChangeRequest cr : transaction) {                              // Perform everything in RAM
+                byte[] savedBuffer = Arrays.copyOf(FileBuffer, FileBuffer.length);
+                for (ChangeRequest cr : Transaction) {                              // Perform everything in RAM
                     DirEntry e = Files.get(cr.getHTotalsFile());
-                    check(e == null, JposConst.JPOS_E_ILLEGAL, "Commit failed because handle became illegal: " + cr.getHTotalsFile());
-                    if (cr instanceof SetAll) {
-                        byte[] data = new byte[e.Size];
-                        Arrays.fill(data, ((SetAll) cr).getValue());
-                        System.arraycopy(data, 0, buffer, e.Offset, e.Size);
-                    } else if (cr instanceof Write) {
-                        Write wr = (Write) cr;
-                        System.arraycopy(wr.getData(), 0, buffer, e.Offset + wr.getOffset(), wr.getCount());
+                    if(e != null) {         // File has not been deleted in the meantime
+                        if (cr instanceof SetAll) {
+                            byte[] data = new byte[e.Size];
+                            Arrays.fill(data, ((SetAll) cr).getValue());
+                            System.arraycopy(data, 0, FileBuffer, e.Offset, e.Size);
+                        } else if (cr instanceof Write) {
+                            Write wr = (Write) cr;
+                            System.arraycopy(wr.getData(), 0, FileBuffer, e.Offset + wr.getOffset(), wr.getCount());
+                        }
                     }
                 }
-
                 try (RandomAccessFile file = new RandomAccessFile(ID, "rws")) {   // Now do the I/O
                     file.seek(HardTotalOffset);
-                    file.write(buffer);
+                    file.write(FileBuffer);
                 } catch (IOException ee) {
+                    System.arraycopy(savedBuffer, 0, FileBuffer, 0, FileBuffer.length);
                     throw new JposException(JposConst.JPOS_E_FAILURE, ee.getMessage(), ee);
                 }                                                                   // Cleanup
-                FileBuffer = buffer;
-                for (ChangeRequest cr : transaction) {
-                    OpenChanges.remove(cr);
-                }
-                TransactionInProgress = false;
-                EventSource.logSet("TransactionInProgress");
+                super.commitTrans();
             }
         }
     }
