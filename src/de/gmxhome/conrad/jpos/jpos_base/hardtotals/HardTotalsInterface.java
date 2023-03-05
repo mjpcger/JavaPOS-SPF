@@ -69,14 +69,12 @@ public interface HardTotalsInterface extends JposBaseInterface {
      *     <li>CapTransactions is true,</li>
      *     <li>TransactionInProgress is true,</li>
      *     <li>Device has not been claimed by another instance,</li>
-     *     <li>All files used in stored Write or SetAll operations have bon been claimed by another instance.</li>
+     *     <li>All files used in stored Write or SetAll operations have not been claimed by another instance.</li>
      * </ul>
-     * @param transaction   List of ChangeRequest objects describing the Write and SetAll operations performed during
-     *                      the transaction. Can be used to create an atomic operation that includes all stored
-     *                      operations. The default operation is simply performing the stored operations in a loop.
+     * The ChangeRequest instances to be processed can be found in property Transaction.
      * @throws JposException If an error occurs.
      */
-    public void commitTrans(List<ChangeRequest> transaction) throws JposException;
+    public void commitTrans() throws JposException;
 
     /**
      * Final part of Create method. Can be overwritten in derived class, if necessary.
@@ -109,7 +107,6 @@ public interface HardTotalsInterface extends JposBaseInterface {
      *          0x7f,</li>
      *     <li>Device has not been claimed by another instance.</li>
      * </ul>
-     *
      * @param fileName          Name of file to be deleted.
      * @throws JposException If an error occurs.
      */
@@ -159,15 +156,17 @@ public interface HardTotalsInterface extends JposBaseInterface {
      *     <li>Neither the device nor the file referenced by hTotalsFile has been claimed by another instance.</li>
      * </ul>
      * The list of ChangeRequest objects passed via <i>transaction</i> consists of stored Write and SetAll requests
-     * stored due to transaction processing. The contents of these objects can be used to modify data read to get the
-     * expected results, if necessary.
+     * stored due to transaction processing for the given file. The contents of these objects can be used to modify data
+     * read to get the expected results, if necessary. However, after a transaction ends in one instance of the service,
+     * remaining operations of other transactions can lead to a different read result whenever a previously buffered
+     * operation will be committed later, resulting in not being overwritten by the finished transaction.
      *
      * @param hTotalsFile   Handle of a totals file.
      * @param data          Data buffer for read.
      * @param offset        Starting offset for read operation.
      * @param count         Number of bytes to be read.
-     * @param transaction   List of ChangeRequest objects stored within the current transaction. An empty list if
-     *                      TransactionInProgress is false.
+     * @param transaction   List of ChangeRequest objects stored within all current transactions. An empty list if
+     *                      no transaction is in progress.
      * @throws JposException If an error occurs.
      */
     public void read(int hTotalsFile, byte[] data, int offset, int count, List<ChangeRequest> transaction) throws JposException;
@@ -178,7 +177,8 @@ public interface HardTotalsInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>Device has not been claimed by other instance,</li>
-     *     <li>The file referenced by hTotalsFile has not been claimed by other instance.</li>
+     *     <li>The file referenced by hTotalsFile has not been claimed by other instance,</li>
+     *     <li>Device supports advanced error detection.</li>
      * </ul>
      *
      * @param hTotalsFile   Handle of a totals file.
@@ -233,7 +233,8 @@ public interface HardTotalsInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>Device has not been claimed by other instance,</li>
-     *     <li>The file referenced by hTotalsFile has not been claimed by other instance.</li>
+     *     <li>The file referenced by hTotalsFile has not been claimed by other instance,</li>
+     *     <li>Device supports advanced error detection.</li>
      * </ul>
      *
      * @param hTotalsFile   Handle of a totals file.

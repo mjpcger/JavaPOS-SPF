@@ -54,8 +54,9 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
     public void deleteInstance() throws JposException {
         super.deleteInstance();
         synchronized (Factory.ClaimedHardTotals) {
-            if (Device.getCount(Device.HardTotalss) == 0)
+            if (Device.getCount(Device.HardTotalss) == 0) {
                 Factory.ClaimedHardTotals.remove(Device);
+            }
         }
     }
 
@@ -185,6 +186,9 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         JposDevice.check(!Data.CapTransactions, JposConst.JPOS_E_ILLEGAL, "Transactions not supported by service");
         JposDevice.check(Data.TransactionInProgress, JposConst.JPOS_E_ILLEGAL, "Transaction just in progress");
         HardTotals.beginTrans();
+        synchronized (Device.HardTotalss[Data.Index]) {
+            Data.Transaction.clear();
+        }
         logCall("BeginTrans");
     }
 
@@ -224,11 +228,16 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         JposDevice.check(!Data.TransactionInProgress, JposConst.JPOS_E_ILLEGAL, "Transaction has not been started");
         JposCommonProperties props = Props.getClaimingInstance();
         JposDevice.check(props != null && props != Data, JposConst.JPOS_E_CLAIMED, "Device claimed");
-        for (ChangeRequest cr : Data.Transaction) {
-            Boolean res = myHandle(cr.getHTotalsFile());
-            JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
+        synchronized (Device.HardTotalss[Data.Index]) {
+            for (ChangeRequest cr : Data.Transaction) {
+                Boolean res = myHandle(cr.getHTotalsFile());
+                JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
+            }
         }
-        HardTotals.commitTrans(Data.Transaction);
+        HardTotals.commitTrans();
+        synchronized (Device.HardTotalss[Data.Index]) {
+            Data.Transaction.clear();
+        }
         logCall("CommitTrans");
     }
 
@@ -311,11 +320,20 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         JposDevice.check(data.length < count, JposConst.JPOS_E_ILLEGAL, "Data buffer too small: " + data.length);
         JposCommonProperties props = Props.getClaimingInstance();
         JposDevice.check(props != null && props != Data, JposConst.JPOS_E_CLAIMED, "Device claimed");
-        for (ChangeRequest cr : Data.Transaction) {
-            Boolean res = myHandle(cr.getHTotalsFile());
-            JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
+        Boolean res = myHandle(hTotalsFile);
+        JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
+        List<ChangeRequest> openChanges = new ArrayList<>();
+        synchronized (Device.HardTotalss[Data.Index]) {
+            for (JposCommonProperties cp : Device.HardTotalss[Data.Index]) {
+                HardTotalsProperties currentprops = (HardTotalsProperties) cp;
+                for (ChangeRequest cr : currentprops.Transaction) {
+                    if (cr.getHTotalsFile() == hTotalsFile)
+                        openChanges.add(cr);
+                }
+            }
         }
-        HardTotals.read(hTotalsFile, data, offset, count, Data.Transaction);
+        HardTotals.read(hTotalsFile, data, offset, count, openChanges);
+        openChanges.clear();
         logCall("Read", "" + data.toString());
     }
 
@@ -327,6 +345,7 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         JposDevice.check(props != null && props != Data, JposConst.JPOS_E_CLAIMED, "Device claimed");
         Boolean res = myHandle(hTotalsFile);
         JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
+        JposDevice.check(!Data.CapErrorDetection, JposConst.JPOS_E_ILLEGAL, "Error detection not supported");
         HardTotals.recalculateValidationData(hTotalsFile);
         logCall("RecalculateValidationData");
     }
@@ -362,6 +381,9 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         JposDevice.check(!Data.CapTransactions, JposConst.JPOS_E_ILLEGAL, "Transactions not supported by service");
         JposDevice.check(!Data.TransactionInProgress, JposConst.JPOS_E_ILLEGAL, "Transaction has not been started");
         HardTotals.rollback();
+        synchronized (Device.HardTotalss[Data.Index]) {
+            Data.Transaction.clear();
+        }
         logCall("Rollback");
     }
 
@@ -375,7 +397,9 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
         SetAll request = HardTotals.setAll(hTotalsFile, value);
         if (Data.TransactionInProgress) {
-            Data.Transaction.add(request);
+            synchronized (Device.HardTotalss[Data.Index]) {
+                Data.Transaction.add(request);
+            }
         }
         else {
             request.invoke();
@@ -391,6 +415,7 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         JposDevice.check(props != null && props != Data, JposConst.JPOS_E_CLAIMED, "Device claimed");
         Boolean res = myHandle(hTotalsFile);
         JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
+        JposDevice.check(!Data.CapErrorDetection, JposConst.JPOS_E_ILLEGAL, "Error detection not supported");
         HardTotals.validateData(hTotalsFile);
         logCall("ValidateData");
     }
@@ -412,7 +437,9 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
         Write request = HardTotals.write(hTotalsFile, data, offset, count);
         if (Data.TransactionInProgress) {
-            Data.Transaction.add(request);
+            synchronized (Device.HardTotalss[Data.Index]) {
+                Data.Transaction.add(request);
+            }
         }
         else {
             request.invoke();

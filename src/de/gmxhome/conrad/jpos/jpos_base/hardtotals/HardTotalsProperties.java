@@ -17,14 +17,10 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.hardtotals;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.SyncObject;
-import jpos.JposConst;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Class containing the hard totals specific properties, their default values and default implementations of
@@ -70,9 +66,11 @@ public class HardTotalsProperties extends JposCommonProperties implements HardTo
     public boolean TransactionInProgress = false;
 
     /**
-     * Buffered SetAll and Write requests, to be performed at transaction end.
+     * Buffered SetAll and Write requests, to be performed at transaction end. This list will be cleared and filled by
+     * the service implementation. A Device implementation must never change this list, but use the list as far as
+     * TransactionInProgress is true.
      */
-    public List<ChangeRequest> Transaction = new ArrayList<ChangeRequest>();
+    public List<ChangeRequest> Transaction = new ArrayList<>();
 
     /**
      * Constructor.
@@ -83,9 +81,6 @@ public class HardTotalsProperties extends JposCommonProperties implements HardTo
         super(dev);
         ExclusiveUse = ExclusiveAllowed;
     }
-
-    private SyncObject HandleWaiter = new SyncObject();
-    private List<HardTotalsProperties> WaitingForHandle = new ArrayList<HardTotalsProperties>();
 
     /**
      * Returns the number of currently claimed hard total files.
@@ -113,13 +108,9 @@ public class HardTotalsProperties extends JposCommonProperties implements HardTo
     }
 
     @Override
-    public void commitTrans(List<ChangeRequest> transaction) throws JposException {
-        for (ChangeRequest cr : transaction) {
-            cr.invoke();
-        }
+    public void commitTrans() throws JposException {
         TransactionInProgress = false;
         EventSource.logSet("TransactionInProgress");
-        Transaction.clear();
     }
 
     @Override
@@ -183,7 +174,6 @@ public class HardTotalsProperties extends JposCommonProperties implements HardTo
     public void rollback() throws JposException {
         TransactionInProgress = false;
         EventSource.logSet("TransactionInProgress");
-        Transaction.clear();
     }
 
     @Override
