@@ -18,7 +18,6 @@
 package SampleDummyDevice;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.imagescanner.ImageScannerService;
 import de.gmxhome.conrad.jpos.jpos_base.smartcardrw.Factory;
 import de.gmxhome.conrad.jpos.jpos_base.smartcardrw.SmartCardRWService;
 import jpos.JposConst;

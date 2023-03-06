@@ -124,18 +124,19 @@ public class SCRWDevice extends JposDevice implements Runnable {
     private enum Status { idle, gotCard, cardReadable, cardAborted, cardRemovable };
     private Status ReaderState = Status.idle;
     private SyncObject WaitCardInserted = null, WaitCardRemoved = null;
-    private int CardAborted;
     private boolean CardInserted = false;
     private long LastActionTime;
+    private boolean ToBeFinished = false;
+    SynchronizedMessageBox TheBox;
 
     @Override
     public void run() {
-        SynchronizedMessageBox TheBox = new SynchronizedMessageBox();
         String title = "Dummy SmardCardRW Simulator";
         String message;
         String[] options;
-        while (SmartCardRWs[0].size() > 0) {
+        while (SmartCardRWs[0].size() > 0 && !ToBeFinished) {
             SmartCardRWProperties props;
+            TheBox = new SynchronizedMessageBox();
             switch (ReaderState) {
                 case idle: {
                     message = "A card must be inserted. Press 'Card Inserted' when ready.";
@@ -190,17 +191,26 @@ public class SCRWDevice extends JposDevice implements Runnable {
                     options = new String[]{"Finish Operation", "AbortOperation"};
                     int timeout = (int)(CardReadyDelay - (System.currentTimeMillis() - LastActionTime));
                     TheBox.synchronizedConfirmationBox(message, title, options, options[1], JOptionPane.INFORMATION_MESSAGE, timeout <= 0 ? 1 : timeout);
-                    if (System.currentTimeMillis() - LastActionTime < CardReadyDelay)
+                    if (System.currentTimeMillis() - LastActionTime < CardReadyDelay && (TheBox.Result < 0 || TheBox.Result >= options.length))
                         continue;
+                    JposStatusUpdateEvent suev = null;
                     synchronized (ReaderState) {
-                        CardAborted = 0;
-                        ReaderState = Status.cardRemovable;
-                        getProperties().TransactionInProgress = false;
+                        (props = getProperties()).TransactionInProgress = false;
+                        if(TheBox.Result == 0) {
+                            ReaderState =  Status.cardRemovable;
+                        } else {
+                            ReaderState = Status.idle;
+                            suev = new SmartCardRWStatusUpdateEvent(props.EventSource, SmartCardRWConst.SC_SUE_NO_CARD);
+                        }
+                    }
+                    if (suev != null) {
+                        try {
+                            handleEvent(suev);
+                        } catch (JposException ignore) {}
                     }
                     continue;
                 }
                 case cardAborted:
-                    CardAborted = 1;
                 case cardRemovable: {
                     message = "Operation has been finished or aborted. Press 'Card Removed' to continue.";
                     options = new String[]{"Card Removed"};
@@ -243,6 +253,7 @@ public class SCRWDevice extends JposDevice implements Runnable {
             if (TheRunner == null) {
                 TheRunner = new Thread(SCRWDevice.this);
                 TheRunner.setName("SCRWDeviceRunner");
+                TheRunner.start();
             }
         }
 
@@ -256,6 +267,16 @@ public class SCRWDevice extends JposDevice implements Runnable {
                 }
             } else {
                 CardInserted = false;
+            }
+        }
+
+        @Override
+        synchronized public void close() throws JposException {
+            if (SmartCardRWs[0].size() == 1) {
+                ToBeFinished = true;
+                SynchronizedMessageBox box = TheBox;
+                if (box != null)
+                    box.abortDialog();
             }
         }
 
