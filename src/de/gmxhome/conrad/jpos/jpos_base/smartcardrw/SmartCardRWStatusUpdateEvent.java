@@ -19,9 +19,6 @@ package de.gmxhome.conrad.jpos.jpos_base.smartcardrw;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposBase;
 import de.gmxhome.conrad.jpos.jpos_base.JposStatusUpdateEvent;
-import de.gmxhome.conrad.jpos.jpos_base.posprinter.POSPrinterProperties;
-import jpos.JposConst;
-import jpos.POSPrinterConst;
 import jpos.SmartCardRWConst;
 
 /**
@@ -42,7 +39,7 @@ public class SmartCardRWStatusUpdateEvent extends JposStatusUpdateEvent {
     public boolean setStatusProperties() {
         if (super.setStatusProperties())
             return true;
-        POSPrinterProperties props = (POSPrinterProperties)getPropertySet();
+        SmartCardRWProperties props = (SmartCardRWProperties)getPropertySet();
         switch (getStatus()) {
             case SmartCardRWConst.SC_SUE_NO_CARD:
                 props.signalWaiter();
