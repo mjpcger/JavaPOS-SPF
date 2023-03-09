@@ -145,6 +145,7 @@ public interface SmartCardRWInterface extends JposBaseInterface {
      * @param count  The total number of data bytes that shall be sent.
      * @param data   The data to be sent.
      * @throws JposException    If an error occurs.
+     * @return WriteData object for use in final part.
      */
     WriteData writeData(int action, int count, String data) throws JposException;
 

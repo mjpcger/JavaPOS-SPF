@@ -134,9 +134,9 @@ public class SCRWDevice extends JposDevice implements Runnable {
         String title = "Dummy SmardCardRW Simulator";
         String message;
         String[] options;
+        TheBox = new SynchronizedMessageBox();
         while (SmartCardRWs[0].size() > 0 && !ToBeFinished) {
             SmartCardRWProperties props;
-            TheBox = new SynchronizedMessageBox();
             switch (ReaderState) {
                 case idle: {
                     message = "A card must be inserted. Press 'Card Inserted' when ready.";
@@ -191,7 +191,7 @@ public class SCRWDevice extends JposDevice implements Runnable {
                     options = new String[]{"Finish Operation", "AbortOperation"};
                     int timeout = (int)(CardReadyDelay - (System.currentTimeMillis() - LastActionTime));
                     TheBox.synchronizedConfirmationBox(message, title, options, options[1], JOptionPane.INFORMATION_MESSAGE, timeout <= 0 ? 1 : timeout);
-                    if (System.currentTimeMillis() - LastActionTime < CardReadyDelay && (TheBox.Result < 0 || TheBox.Result >= options.length))
+                    if (System.currentTimeMillis() - LastActionTime < CardReadyDelay && TheBox.Result < 0)
                         continue;
                     JposStatusUpdateEvent suev = null;
                     synchronized (ReaderState) {
@@ -282,7 +282,7 @@ public class SCRWDevice extends JposDevice implements Runnable {
 
         @Override
         public void beginInsertion(int timeout) throws JposException {
-            if(!CardInserted) {
+            if(!CardInserted || ReaderState == Status.idle) {
                 SyncObject waiter = null;
                 synchronized (ReaderState) {
                     if (ReaderState == Status.idle) {
@@ -299,31 +299,24 @@ public class SCRWDevice extends JposDevice implements Runnable {
 
         @Override
         public void endInsertion() throws JposException {
-            if (!CardInserted) {
-                JposDataEvent dataev = null;
-                JposErrorEvent errev = null;
-                synchronized (ReaderState) {
-                    if (ReaderState == Status.cardReadable)
-                        dataev = new JposDataEvent(EventSource, 0);
-                    else if (ReaderState != Status.idle) {
-                        if (CapCardErrorDetection)
-                            errev = new JposErrorEvent(EventSource, JposConst.JPOS_E_EXTENDED, SmartCardRWConst.JPOS_ESC_TORN, JposConst.JPOS_EL_INPUT, "Unexpected card removal");
-                        else
-                            errev = new JposErrorEvent(EventSource, JposConst.JPOS_E_FAILURE, 0, JposConst.JPOS_EL_INPUT, "Unexpected card error");
-                    } else
-                        throw new JposException(JposConst.JPOS_E_FAILURE, "Card not present");
-                    CardInserted = true;
-                }
-                if (errev != null)
-                    handleEvent(errev);
-                else if (dataev != null)
-                    handleEvent(dataev);
+            JposDataEvent dataev = null;
+            JposErrorEvent errev = null;
+            synchronized (ReaderState) {
+                if (ReaderState == Status.cardReadable)
+                    dataev = new JposDataEvent(EventSource, 0);
+                else if (ReaderState != Status.gotCard)
+                    throw new JposException(JposConst.JPOS_E_FAILURE, "Card not present");
+                CardInserted = true;
             }
+            if (errev != null)
+                handleEvent(errev);
+            else if (dataev != null)
+                handleEvent(dataev);
         }
 
         @Override
         public void beginRemoval(int timeout) throws JposException {
-            if(CardInserted) {
+            if(CardInserted || ReaderState != Status.idle) {
                 SyncObject waiter = null;
                 synchronized (ReaderState) {
                     if (ReaderState != Status.idle) {
@@ -340,18 +333,17 @@ public class SCRWDevice extends JposDevice implements Runnable {
 
         @Override
         public void endRemoval() throws JposException {
-            if (CardInserted) {
-                synchronized (ReaderState) {
-                    if (ReaderState != Status.idle)
-                        throw new JposException(JposConst.JPOS_E_FAILURE, "Card still present");
-                    CardInserted = false;
-                }
+            synchronized (ReaderState) {
+                if (ReaderState != Status.idle)
+                    throw new JposException(JposConst.JPOS_E_FAILURE, "Card still present");
+                CardInserted = false;
             }
         }
 
         @Override
         public WriteData writeData(int action, int count, String data) throws JposException {
             synchronized (ReaderState) {
+                check(!CardInserted, JposConst.JPOS_E_ILLEGAL, "Card not inserted");
                 check(ReaderState != Status.cardReadable, JposConst.JPOS_E_FAILURE, "Card not processable");
                 byte[] bytes = data.getBytes();
                 check(bytes.length < count, JposConst.JPOS_E_ILLEGAL, "Too few characters given: " + data);
@@ -372,7 +364,8 @@ public class SCRWDevice extends JposDevice implements Runnable {
         @Override
         public void readData(int action, int[] count, String[] data) throws JposException {
             synchronized (ReaderState) {
-                check(ReaderState != Status.cardRemovable, JposConst.JPOS_E_FAILURE, "Card not processable");
+                check(!CardInserted, JposConst.JPOS_E_ILLEGAL, "Card not inserted");
+                check(ReaderState != Status.cardReadable, JposConst.JPOS_E_FAILURE, "Card not processable");
                 data[0] = String.valueOf(LastActionTime = System.currentTimeMillis());
                 count[0] = data[0].length();
             }

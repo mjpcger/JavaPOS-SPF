@@ -211,9 +211,6 @@ public class JposBaseDevice {
         return count;
     }
 
-    // private helper variables
-    private boolean DialogReady;    // Helper variable for synchronized message box handling
-
     /**
      * Show message dialog within swing thread + synchronization. Useful in interactive CheckHealth methods
      *
@@ -221,33 +218,9 @@ public class JposBaseDevice {
      * @param title       see JoptionPane.showMessageBox
      * @param messageType see JoptionPane.showMessageBox
      */
-    public void synchronizedMessageBox(final String message, final String title, final int messageType) {
-        DialogReady = false;
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                JOptionPane.showMessageDialog(null, message, title, messageType);
-                dialogReady(true);
-            }
-        });
-        while (!dialogReady(false)) {
-            try {
-                Thread.sleep(100);
-            } catch (Exception e) {
-            }
-        }
-    }
-
-    /**
-     * Set or queries DialogReady value.
-     *
-     * @param set if true, sets DialogReady = true, else don't change its value
-     * @return value of DialogReady
-     */
-    private synchronized boolean dialogReady(boolean set) {
-        if (set)
-            DialogReady = true;
-        return DialogReady;
+    static public void synchronizedMessageBox(final String message, final String title, final int messageType) {
+        SynchronizedMessageBox box = new SynchronizedMessageBox();
+        box.synchronizedConfirmationBox(message, title, null, null, messageType, JposConst.JPOS_FOREVER);
     }
 
     /**

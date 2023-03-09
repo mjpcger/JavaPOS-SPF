@@ -129,12 +129,15 @@ public class Device extends JposDevice {
             Sync = sync;
             Finalizer = finalizer;
         }
+
+        private SynchronizedMessageBox Box = new SynchronizedMessageBox();
+
         @Override
         public void run() {
             if (OperationName.equals("DoCheckScan")) {
                 Integer index = Defaults.get(OperationName);
                 String defOption = index == null || index < 0 || index >= CheckScannerOptions.length ? null : CheckScannerOptions[index];
-                synchronizedConfirmationBox("Scan Simulation Successful?", "Check Scanner", CheckScannerOptions, defOption, JOptionPane.QUESTION_MESSAGE, JposConst.JPOS_FOREVER);
+                Box.synchronizedConfirmationBox("Scan Simulation Successful?", "Check Scanner", CheckScannerOptions, defOption, JOptionPane.QUESTION_MESSAGE, JposConst.JPOS_FOREVER);
                 if (Defaults.containsKey(OperationName))
                     Defaults.remove(OperationName);
                 if (Result >= 0 && Result < CheckScannerOptions.length)
@@ -142,83 +145,13 @@ public class Device extends JposDevice {
             } else if (OperationName.equals("DoImageScan")) {
                 Integer index = Defaults.get(OperationName);
                 String defOption = index == null || index < 0 || index >= ImageScannerOptions.length ? null : ImageScannerOptions[index];
-                synchronizedConfirmationBox("Scan Simulation Successful?", "Image Scanner", ImageScannerOptions, defOption, JOptionPane.QUESTION_MESSAGE, SessionTimeoutImage);
+                Box.synchronizedConfirmationBox("Scan Simulation Successful?", "Image Scanner", ImageScannerOptions, defOption, JOptionPane.QUESTION_MESSAGE, SessionTimeoutImage);
                 if (Defaults.containsKey(OperationName))
                     Defaults.remove(OperationName);
                 if (Result >= 0 && Result < ImageScannerOptions.length)
                     Defaults.put(OperationName, Result);
             }
             Finalizer.finish(OperationName, Result);
-        }
-
-        private JOptionPane Box;
-        private JDialog Dialog;
-        private ComponentAdapter Adapter = null;
-        private SyncObject Ready = new SyncObject();
-        private Boolean Finished = false;
-
-        private void synchronizedConfirmationBox(final String message, final String title, final String[] options, final String defaultOption, final int messageType, final int timeout) {
-            SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
-                    int result;
-                    Box = new JOptionPane(message, messageType, JOptionPane.DEFAULT_OPTION, null, options, defaultOption);
-                    Dialog = Box.createDialog(title);
-                    if (timeout > 0) {
-                        Dialog.addComponentListener(Adapter = new ComponentAdapter() {
-                            @Override
-                            public void componentShown(ComponentEvent e) {
-                                super.componentShown(e);
-                                new Timer(timeout, new ActionListener() {
-                                    @Override
-                                    public void actionPerformed(ActionEvent e) {
-                                        synchronized (Sync) {
-                                            if (Dialog != null && Dialog.isVisible() && Result == null) {
-                                                Box.setValue("");
-                                                Dialog.setVisible(false);
-                                            }
-                                        }
-                                    }
-                                }).start();
-                            }
-                        });
-                    }
-                    Dialog.setVisible(true);
-                    Object selected = Box.getValue();
-                    for (result = 0; result < options.length; result++) {
-                        if (options[result].equals(selected))
-                            break;
-                    }
-                    if (selected == null)
-                        result++;
-                    synchronized (Sync) {
-                        Result = result;
-                        Ready.signal();
-                        Dialog.dispose();
-                        Dialog = null;
-                    }
-                }
-            });
-
-            Ready.suspend(SyncObject.INFINITE);
-        }
-
-        /**
-         * Method to abort the dialog.
-         */
-        void abortDialog() {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    synchronized (Sync) {
-                        if (Dialog != null && Dialog.isVisible()) {
-                            Box.setValue("");
-                            Dialog.setVisible(false);
-                            Result = -1;
-                            Ready.signal();
-                        }
-                    }
-                }
-            });
         }
     }
 
@@ -359,7 +292,7 @@ public class Device extends JposDevice {
                 TheWaiter = null;
             }
             if (waiter != null)
-                waiter.abortDialog();
+                waiter.Box.abortDialog();
             SyncObj.signal();
             while (SyncObj.suspend(0))
                 continue;
@@ -549,7 +482,7 @@ public class Device extends JposDevice {
                 }
             }
             if (waiter != null)
-                waiter.abortDialog();
+                waiter.Box.abortDialog();
         }
 
         @Override
