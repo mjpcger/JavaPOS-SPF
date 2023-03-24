@@ -46,6 +46,7 @@ SampleCombiSpecial
 SampleDummyDevice
 SampleElectronicValueRW
 SampleFiscalPrinter
+SampleHardTotals
 SampleMICR
 SamplePOSPower
 SamplePOSPrinter
