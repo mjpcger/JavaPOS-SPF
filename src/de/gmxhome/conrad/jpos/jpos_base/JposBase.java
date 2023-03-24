@@ -849,7 +849,14 @@ public class JposBase implements BaseService {
         Device.log(Level.DEBUG, logicalName + ": Enter Open()...");
         Props.LogicalName = logicalName;
         Props.EventCB = eventCallbacks;
-        DeviceInterface.open();
+        try {
+            DeviceInterface.open();
+        } catch(Exception e) {
+            deleteInstance();
+            if (e instanceof JposException)
+                throw e;
+            throw new JposException(JposConst.JPOS_E_NOSERVICE, e.getMessage(), e);
+        }
         logCall("Open");
     }
 
