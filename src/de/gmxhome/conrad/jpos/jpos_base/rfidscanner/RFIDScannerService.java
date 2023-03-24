@@ -21,6 +21,9 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 /**
  * RFIDScanner service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
@@ -31,6 +34,17 @@ public class RFIDScannerService extends JposBase implements RFIDScannerService11
      * to the property set. Almost always the same object as Data.
      */
     public RFIDScannerInterface RFIDScanner;
+    /**
+     * Internally used list of tag data of a label that match the filter given by ReadTags or StartReadTags. Filled from
+     * DataEvent whenever delivered or cleared by ErrorEvent with ErrorLocus EL_INPUT.
+     */
+    ArrayList<RFIDScannerTagData> CurrentLabelData = new ArrayList<>();
+    /**
+     * Internally used index to current tag in CurrentLabelData. Initialized whenever DataEvent is delivered, updated
+     * whenever firstTag, nextTag or previousTag is called. -1 if not initialized, otherwise a value between 0 and
+     * TagCount.
+     */
+    int CurrentTagIndex = -1;
 
     private RFIDScannerProperties Data;
     /**
@@ -46,27 +60,37 @@ public class RFIDScannerService extends JposBase implements RFIDScannerService11
 
     @Override
     public boolean getCapContinuousRead() throws JposException {
-        return false;
+        logGet("CapContinuousRead");
+        checkOpened();
+        return Data.CapContinuousRead;
     }
 
     @Override
     public boolean getCapDisableTag() throws JposException {
-        return false;
+        logGet("CapDisableTag");
+        checkOpened();
+        return Data.CapDisableTag;
     }
 
     @Override
     public boolean getCapLockTag() throws JposException {
-        return false;
+        logGet("CapLockTag");
+        checkOpened();
+        return Data.CapLockTag;
     }
 
     @Override
     public int getCapMultipleProtocols() throws JposException {
-        return 0;
+        logGet("MultipleProtocols");
+        checkOpened();
+        return Data.CapMultipleProtocols;
     }
 
     @Override
     public boolean getCapReadTimer() throws JposException {
-        return false;
+        logGet("CapReadTimer");
+        checkOpened();
+        return Data.CapReadTimer;
     }
 
     @Override
@@ -76,101 +100,280 @@ public class RFIDScannerService extends JposBase implements RFIDScannerService11
 
     @Override
     public int getCapWriteTag() throws JposException {
-        return 0;
+        logGet("CapWriteTag");
+        checkOpened();
+        return Data.CapWriteTag;
     }
 
     @Override
     public boolean getContinuousReadMode() throws JposException {
-        return false;
+        logGet("ContinuousReadMode");
+        checkOpened();
+        return Data.ContinuousReadMode;
     }
 
     @Override
     public byte[] getCurrentTagID() throws JposException {
-        return new byte[0];
+        logGet("CurrentTagID");
+        checkOpened();
+        synchronized (CurrentLabelData) {
+            JposDevice.check(Data.TagCount == 0, JposConst.JPOS_E_ILLEGAL, "No tag available");
+            return Arrays.copyOf(Data.CurrentTagID, Data.CurrentTagID.length);
+        }
     }
 
     @Override
     public int getCurrentTagProtocol() throws JposException {
-        return 0;
+        logGet("CurrentTagProtocol");
+        checkOpened();
+        synchronized (CurrentLabelData) {
+            JposDevice.check(Data.TagCount == 0, JposConst.JPOS_E_ILLEGAL, "No tag available");
+            return Data.CurrentTagProtocol;
+        }
     }
 
     @Override
     public byte[] getCurrentTagUserData() throws JposException {
-        return new byte[0];
+        logGet("CurrentTagUserData");
+        checkOpened();
+        synchronized (CurrentLabelData) {
+            JposDevice.check(Data.TagCount == 0, JposConst.JPOS_E_ILLEGAL, "No tag available");
+            return Arrays.copyOf(Data.CurrentTagUserData, Data.CurrentTagUserData.length);
+        }
     }
 
     @Override
     public int getProtocolMask() throws JposException {
-        return 0;
-    }
-
-    @Override
-    public void setProtocolMask(int i) throws JposException {
-
+        logGet("ProtocolMask");
+        checkClaimed();
+        return Data.ProtocolMask;
     }
 
     @Override
     public int getReadTimerInterval() throws JposException {
-        return 0;
-    }
-
-    @Override
-    public void setReadTimerInterval(int i) throws JposException {
-
+        logGet("ReadTimerInterval");
+        checkClaimed();
+        return Data.ReadTimerInterval;
     }
 
     @Override
     public int getTagCount() throws JposException {
-        return 0;
+        logGet("TagCount");
+        checkOpened();
+        return Data.TagCount;
     }
 
     @Override
-    public void disableTag(byte[] bytes, int i, byte[] bytes1) throws JposException {
+    public void setProtocolMask(int mask) throws JposException {
+        logPreSet("ProtocolMask");
+        checkClaimed();
+        if ((mask & RFIDScannerConst.RFID_PR_ALL) == 0)
+            JposDevice.check((mask & ~Data.CapMultipleProtocols) != 0, JposConst.JPOS_E_ILLEGAL, "Invalid Protocol Mask: " + Integer.toHexString(mask));
+        RFIDScanner.protocolMask(mask);
+        logSet("ProtocolMask");
+    }
 
+    @Override
+    public void setReadTimerInterval(int interval) throws JposException {
+        logPreSet("ProtocolMask");
+        checkClaimed();
+        JposDevice.check(!Data.CapReadTimer, JposConst.JPOS_E_ILLEGAL, "Setting read timer interval not supported");
+        JposDevice.check(Data.ContinuousReadMode, JposConst.JPOS_E_ILLEGAL, "Setting read timer interval not possible in continuous read mode");
+        JposDevice.check(interval < 0, JposConst.JPOS_E_ILLEGAL, "Read timer interval must not be negative: " + interval);
+        RFIDScanner.readTimerInterval(interval);
+        logSet("ProtocolMask");
+    }
+
+    /**
+     * Sets the current tag properties to the tag pointed to by the given index in the list of tags read, provided by the
+     * last delivered RFIDScannerDataEvent event.
+     * @param index Index within the tag list, must be a value between 0 and TagCount - 1.
+     * @throws JposException if index is out of range.
+     */
+    public void setCurrentTagData(int index) throws JposException {
+        synchronized (CurrentLabelData) {
+            JposDevice.check(index < 0 || index >= CurrentLabelData.size(), JposConst.JPOS_E_ILLEGAL,
+                    "No tag data " + (index < 0 ? "before first tag" : "after last tag") + " available");
+            RFIDScannerTagData tagData = CurrentLabelData.get(CurrentTagIndex = index);
+            if (Data.CurrentTagProtocol != tagData.getTagProtocol()) {
+                Data.CurrentTagProtocol = tagData.getTagProtocol();
+                logSet("CurrentTagProtocol");
+            }
+            byte[] bytes = tagData.getTagID();
+            if (!Arrays.equals(bytes, Data.CurrentTagID)) {
+                Data.CurrentTagID = bytes;
+                logSet("CurrentTagID");
+            }
+            bytes = tagData.getTagUserData();
+            if (!Arrays.equals(bytes, Data.CurrentTagUserData)) {
+                Data.CurrentTagUserData = bytes;
+                logSet("CurrentTagUserData");
+            }
+        }
     }
 
     @Override
     public void firstTag() throws JposException {
-
-    }
-
-    @Override
-    public void lockTag(byte[] bytes, int i, byte[] bytes1) throws JposException {
-
+        logPreCall("FirstTag");
+        checkOpened();
+        JposDevice.check(Data.TagCount == 0, JposConst.JPOS_E_ILLEGAL, "No tags available");
+        setCurrentTagData(0);
+        logCall("FirstTag");
     }
 
     @Override
     public void nextTag() throws JposException {
-
+        logPreCall("NextTag");
+        checkOpened();
+        JposDevice.check(Data.TagCount == 0, JposConst.JPOS_E_ILLEGAL, "No tags available");
+        setCurrentTagData(CurrentTagIndex + 1);
+        logCall("NextTag");
     }
 
     @Override
     public void previousTag() throws JposException {
+        logPreCall("PreviousTag");
+        checkOpened();
+        JposDevice.check(Data.TagCount == 0, JposConst.JPOS_E_ILLEGAL, "No tags available");
+        setCurrentTagData(CurrentTagIndex - 1);
+        logCall("PreviousTag");
+    }
 
+    private long[] validCmds = {
+            RFIDScannerConst.RFID_RT_ID,
+            RFIDScannerConst.RFID_RT_FULLUSERDATA,
+            RFIDScannerConst.RFID_RT_PARTIALUSERDATA,
+            RFIDScannerConst.RFID_RT_ID_FULLUSERDATA,
+            RFIDScannerConst.RFID_RT_ID_PARTIALUSERDATA
+    };
+    private long[] relevantStartLengthCmds = {
+            RFIDScannerConst.RFID_RT_ID_PARTIALUSERDATA,
+            RFIDScannerConst.RFID_RT_PARTIALUSERDATA
+    };
+
+    @Override
+    public void startReadTags(int cmd, byte[] filterID, byte[] filtermask, int start, int length, byte[] password) throws JposException {
+        if (password == null)
+            password = new byte[0];
+        if (filterID == null)
+            filterID = new byte[0];
+        if (filtermask == null)
+            filtermask = new byte[0];
+        logPreCall("StartReadTags", "" + cmd + ", " + filterID.toString() + ", " + filtermask.toString() + ", " + start + ", " + length + ", " + password.toString());
+        checkEnabled();
+        JposDevice.check(!Data.CapContinuousRead, JposConst.JPOS_E_ILLEGAL, "Continuous read mode not supported");
+        JposDevice.check(Data.ContinuousReadMode, JposConst.JPOS_E_ILLEGAL, "Continuous read mode just active");
+        JposDevice.check(Data.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_ILLEGAL, "Device is busy");
+        JposDevice.check(filterID.length != filtermask.length, JposConst.JPOS_E_ILLEGAL, "Length of filter ID does not match length of filter mask");
+        JposDevice.checkMember(cmd, validCmds, JposConst.JPOS_E_ILLEGAL, "Invalid cmd: " + cmd);
+        if (cmd == RFIDScannerConst.RFID_RT_PARTIALUSERDATA || cmd == RFIDScannerConst.RFID_RT_ID_PARTIALUSERDATA) {
+            JposDevice.check(start < 0 && JposDevice.member(cmd, relevantStartLengthCmds), JposConst.JPOS_E_ILLEGAL, "Invalid starting position: " + start);
+            JposDevice.check(length < 0 && JposDevice.member(cmd, relevantStartLengthCmds), JposConst.JPOS_E_ILLEGAL, "Invalid read length: " + length);
+        }
+        callNowOrLater(RFIDScanner.startReadTags(cmd, filterID, filtermask, start, length, password));
+        logAsyncCall("StartReadTags");
     }
 
     @Override
-    public void readTags(int i, byte[] bytes, byte[] bytes1, int i1, int i2, int i3, byte[] bytes2) throws JposException {
-
+    public void stopReadTags(byte[] password) throws JposException {
+        if (password == null)
+            password = new byte[0];
+        logPreCall("StopReadTags", password.toString());
+        checkEnabled();
+        JposDevice.check(!Data.ContinuousReadMode, JposConst.JPOS_E_ILLEGAL, "Not in continuous read mode");
+        RFIDScanner.stopReadTags(password);
+        logCall("StopReadTags");
     }
 
     @Override
-    public void startReadTags(int i, byte[] bytes, byte[] bytes1, int i1, int i2, byte[] bytes2) throws JposException {
-
+    public void readTags(int cmd, byte[] filterID, byte[] filtermask, int start, int length, int timeout, byte[] password) throws JposException {
+        if (password == null)
+            password = new byte[0];
+        if (filterID == null)
+            filterID = new byte[0];
+        if (filtermask == null)
+            filtermask = new byte[0];
+        logPreCall("ReadTags", "" + cmd + ", " + filterID.toString() + ", " + filtermask.toString() + ", " + start + ", " + length + ", " + timeout + ", " + password.toString());
+        checkEnabled();
+        JposDevice.check(Data.ContinuousReadMode, JposConst.JPOS_E_ILLEGAL, "Device in continuous read mode");
+        JposDevice.check(Data.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_ILLEGAL, "Device is busy");
+        JposDevice.check(filterID.length != filtermask.length, JposConst.JPOS_E_ILLEGAL, "Length of filter ID does not match length of filter mask");
+        JposDevice.checkMember(cmd, validCmds, JposConst.JPOS_E_ILLEGAL, "Invalid cmd: " + cmd);
+        JposDevice.check(start < 0 && JposDevice.member(cmd, relevantStartLengthCmds), JposConst.JPOS_E_ILLEGAL, "Invalid starting position: " + start);
+        JposDevice.check(length < 0 && JposDevice.member(cmd, relevantStartLengthCmds), JposConst.JPOS_E_ILLEGAL, "Invalid read length: " + length);
+        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        callNowOrLater(RFIDScanner.readTags(cmd, filterID, filtermask, start, length, timeout, password));
+        logAsyncCall("ReadTags");
     }
 
     @Override
-    public void stopReadTags(byte[] bytes) throws JposException {
-
+    public void disableTag(byte[] tagID, int timeout, byte[] password) throws JposException {
+        if (tagID == null)
+            tagID = new byte[0];
+        if (password == null)
+            password = new byte[0];
+        logPreCall("DisableTag", tagID.toString() + ", " + timeout + ", " + password.toString());
+        checkEnabled();
+        JposDevice.check(!Data.CapDisableTag, JposConst.JPOS_E_ILLEGAL, "Disable tag not supported");
+        JposDevice.check(Data.ContinuousReadMode, JposConst.JPOS_E_ILLEGAL, "Device in continuous read mode");
+        JposDevice.check(Data.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_ILLEGAL, "Device is busy");
+        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        callNowOrLater(RFIDScanner.disableTag(tagID, timeout, password));
+        logAsyncCall("DisableTag");
     }
 
     @Override
-    public void writeTagData(byte[] bytes, byte[] bytes1, int i, int i1, byte[] bytes2) throws JposException {
-
+    public void lockTag(byte[] tagID, int timeout, byte[] password) throws JposException {
+        if (tagID == null)
+            tagID = new byte[0];
+        if (password == null)
+            password = new byte[0];
+        logPreCall("LockTag", tagID.toString() + ", " + timeout + ", " + password.toString());
+        checkEnabled();
+        JposDevice.check(!Data.CapLockTag, JposConst.JPOS_E_ILLEGAL, "Lock tag not supported");
+        JposDevice.check(Data.ContinuousReadMode, JposConst.JPOS_E_ILLEGAL, "Device in continuous read mode");
+        JposDevice.check(Data.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_ILLEGAL, "Device is busy");
+        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        callNowOrLater(RFIDScanner.lockTag(tagID, timeout, password));
+        logAsyncCall("LockTag");
     }
 
     @Override
-    public void writeTagID(byte[] bytes, byte[] bytes1, int i, byte[] bytes2) throws JposException {
+    public void writeTagData(byte[] tagID, byte[] userdata, int start, int timeout, byte[] password) throws JposException {
+        long[] valid = {RFIDScannerConst.RFID_CWT_ALL, RFIDScannerConst.RFID_CWT_USERDATA};
+        if (tagID == null)
+            tagID = new byte[0];
+        if (password == null)
+            password = new byte[0];
+        if (userdata == null)
+            userdata = new byte[0];
+        logPreCall("WriteTagData", tagID.toString() + ", " + userdata.toString() + ", " + start + ", " + timeout + ", " + password.toString());
+        checkEnabled();
+        JposDevice.checkMember(Data.CapWriteTag, valid, JposConst.JPOS_E_ILLEGAL, "Device does not support writing user data");
+        JposDevice.check(Data.ContinuousReadMode, JposConst.JPOS_E_ILLEGAL, "Device in continuous read mode");
+        JposDevice.check(Data.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_ILLEGAL, "Device is busy");
+        JposDevice.check(start < 0, JposConst.JPOS_E_ILLEGAL, "Invalid starting position: " + start);
+        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        callNowOrLater(RFIDScanner.writeTagData(tagID, userdata, start, timeout, password));
+        logAsyncCall("WriteTagData");
+    }
 
+    @Override
+    public void writeTagID(byte[] sourceID, byte[] destID, int timeout, byte[] password) throws JposException {
+        long[] valid = {RFIDScannerConst.RFID_CWT_ALL, RFIDScannerConst.RFID_CWT_ID};
+        if (sourceID == null)
+            sourceID = new byte[0];
+        if (password == null)
+            password = new byte[0];
+        if (destID == null)
+            destID = new byte[0];
+        logPreCall("WriteTagID", sourceID.toString() + ", " + destID.toString() + ", " + timeout + ", " + password.toString());
+        checkEnabled();
+        JposDevice.checkMember(Data.CapWriteTag, valid, JposConst.JPOS_E_ILLEGAL, "Device does not support writing tag ID");
+        JposDevice.check(Data.ContinuousReadMode, JposConst.JPOS_E_ILLEGAL, "Device in continuous read mode");
+        JposDevice.check(Data.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_ILLEGAL, "Device is busy");
+        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        callNowOrLater(RFIDScanner.writeTagID(sourceID, destID, timeout, password));
+        logAsyncCall("WriteTagID");
     }
 }
