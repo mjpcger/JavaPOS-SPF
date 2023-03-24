@@ -26,6 +26,9 @@ import jpos.config.JposEntry;
 import jpos.loader.JposServiceInstance;
 import jpos.loader.JposServiceInstanceFactory;
 
+/**
+ * Factory class for sample SmartCardRW device implementation
+ */
 public class SmartCardRWFactory extends Factory implements JposServiceInstanceFactory {
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
@@ -40,7 +43,7 @@ public class SmartCardRWFactory extends Factory implements JposServiceInstanceFa
                     if (create) {
                         dev = new SCRWDevice("SampleSmartCardRW");
                     } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: SampleImageScanner");
+                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: SampleSmartCardRW");
                     else {
                         dev = (SCRWDevice) any;
                     }

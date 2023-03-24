@@ -109,7 +109,7 @@ public class SCRWDevice extends JposDevice implements Runnable {
                 else if (attr[0].equals("2"))
                     value = (int) Long.parseLong(attr[1]);
                 else
-                    value = JposConst.class.getField(attr[1]).get(null);
+                    value = SmartCardRWConst.class.getField(attr[1]).get(null);
                 props.getClass().getField(capa).set(props, value);
             } catch (Exception ignored) {}
         }
