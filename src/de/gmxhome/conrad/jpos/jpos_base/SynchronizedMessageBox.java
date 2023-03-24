@@ -50,8 +50,11 @@ public class SynchronizedMessageBox {
      * @param defaultOption The default option.
      * @param messageType   JOptionPane message type.
      * @param timeout       timeout in milliseconds. If &le; 0, no timeout handling will occur.
+     * @return      If timeout occurred, CLOSED_OPTION - 1. If box has been close by user or via AbortDialog, CLOSED_OPTION.
+     *              If options is null, YES_OPTION, NO_OPTION or CANCEL_OPTION. If option is array of String, the index
+     *              of the selected option.
      */
-    public void synchronizedConfirmationBox(final String message, final String title, final String[] options, final String defaultOption, final int messageType, final int timeout) {
+    public int synchronizedConfirmationBox(final String message, final String title, final String[] options, final String defaultOption, final int messageType, final int timeout) {
         Result = null;
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -110,6 +113,7 @@ public class SynchronizedMessageBox {
             }
         });
         Ready.suspend(SyncObject.INFINITE);
+        return Result;
     }
 
     /**
