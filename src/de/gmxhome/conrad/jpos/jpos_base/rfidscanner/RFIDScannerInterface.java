@@ -89,7 +89,15 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * Since the UPOS specification specifies StartReadMode as asynchronous method, this method must only start
      * polling and return after setting ContinuousReadMode to true.
      *
+     * @param cmd        Read command, specifies what has to be read.
+     * @param filterID   Holds a bit pattern to be AND’ed with filtermask to specify which tags shall be read.
+     * @param filtermask Mask for filterID and tag ID, a tag will be read whenever the tag ID AND'ed with filtermask
+     *                   is equal to filterID AND'ed with filtermask.
+     * @param start      In case of partial user data read, start specifies the zero-based position within user data
+     *                   where read shall start.
+     * @param length     In case of partial user data read, length specifies the number of bytes to be read.
      * @param password Authorized key for reader, if needed, null or zero length binary otherwise.
+     * @return StartReadTags object for use in final part.
      * @throws JposException If an error occurs.
      */
     StartReadTags startReadTags(int cmd, byte[] filterID, byte[] filtermask, int start, int length, byte[] password) throws JposException;
@@ -112,7 +120,16 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * Since the UPOS specification specifies StartReadMode as asynchronous method, this method must only start
      * polling and return after setting ContinuousReadMode to true.
      *
-     * @param password Authorized key for reader, if needed, null or zero length binary otherwise.
+     * @param cmd        Read command, specifies what has to be read.
+     * @param filterID   Holds a bit pattern to be AND’ed with filtermask to specify which tags shall be read.
+     * @param filtermask Mask for filterID and tag ID, a tag will be read whenever the tag ID AND'ed with filtermask
+     *                   is equal to filterID AND'ed with filtermask.
+     * @param start      In case of partial user data read, start specifies the zero-based position within user data
+     *                   where read shall start.
+     * @param length     In case of partial user data read, length specifies the number of bytes to be read.
+     * @param timeout    Allowed execution time, in milliseconds or FOREVER for unlimited execution time.
+     * @param password   Authorized key for reader, if needed, null or zero length binary otherwise.
+     * @return ReadTags object for use in final part.
      * @throws JposException If an error occurs.
      */
     ReadTags readTags(int cmd, byte[] filterID, byte[] filtermask, int start, int length, int timeout, byte[] password) throws JposException;
@@ -134,8 +151,8 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * @param tagID    Tag ID to be processed.
      * @param timeout  Allowed execution time, in milliseconds.
      * @param password Authorized key for reader that might be required, zero length if not needed.
-     * @throws JposException    If an error occurs.
      * @return DisableTag object for use in final part.
+     * @throws JposException    If an error occurs.
      */
     DisableTag disableTag(byte[] tagID, int timeout, byte[] password) throws JposException;
 
@@ -156,8 +173,8 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * @param tagID    Tag ID to be processed.
      * @param timeout  Allowed execution time, in milliseconds.
      * @param password Authorized key for reader that might be required, zero length if not needed.
-     * @throws JposException    If an error occurs.
      * @return LockTag object for use in final part.
+     * @throws JposException    If an error occurs.
      */
     LockTag lockTag(byte[] tagID, int timeout, byte[] password) throws JposException;
 
@@ -181,8 +198,8 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * @param start    Zero-based position within the tags UserData field to begin writing.
      * @param timeout  Allowed execution time, in milliseconds.
      * @param password Authorized key for reader that might be required, zero length if not needed.
-     * @throws JposException    If an error occurs.
      * @return WriteTagData object for use in final part.
+     * @throws JposException    If an error occurs.
      */
     WriteTagData writeTagData(byte[] tagID, byte[] userdata, int start, int timeout, byte[] password) throws JposException;
 
@@ -204,8 +221,8 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * @param destID   New ID of the tag.
      * @param timeout  Allowed execution time, in milliseconds.
      * @param password Authorized key for reader that might be required, zero length if not needed.
+     * @return WriteTagID object for use in final part.
      * @throws JposException    If an error occurs.
-     * @return DisableTag object for use in final part.
      */
     WriteTagID writeTagID(byte[] sourceID, byte[] destID, int timeout, byte[] password) throws JposException;
 

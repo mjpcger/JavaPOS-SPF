@@ -26,9 +26,17 @@ import jpos.JposException;
  */
 public class StartReadTags extends ReadTags {
     /**
-     * Constructor. Stores given parameters for later use.
+     * Constructor. Stores given parameters for later use in method StartReadTags.
      *
-     * @param props Property set of device service.
+     * @param props      Property set of device service.
+     * @param cmd        Read command, specifies what has to be read.
+     * @param filterID   Holds a bit pattern to be AND’ed with filtermask to specify which tags shall be read.
+     * @param filtermask Mask for filterID and tag ID, a tag will be read whenever the tag ID AND'ed with filtermask
+     *                   is equal to filterID AND'ed with filtermask.
+     * @param start      In case of partial user data read, start specifies the zero-based position within user data
+     *                   where read shall start.
+     * @param length     In case of partial user data read, length specifies the number of bytes to be read.
+     * @param password   Authorized key for reader that might be required.
      */
     public StartReadTags(JposCommonProperties props, int cmd, byte[] filterID, byte[] filtermask, int start, int length, byte[] password) {
         super(props, cmd, filterID, filtermask, start, length, JposConst.JPOS_FOREVER, password);

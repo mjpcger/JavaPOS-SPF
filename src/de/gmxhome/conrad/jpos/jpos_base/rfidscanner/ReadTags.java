@@ -92,6 +92,15 @@ public class ReadTags extends JposInputRequest {
      * Constructor. Stores given parameters for later use.
      *
      * @param props Property set of device service.
+     * @param cmd        Read command, specifies what has to be read.
+     * @param filterID   Holds a bit pattern to be AND’ed with filtermask to specify which tags shall be read.
+     * @param filtermask Mask for filterID and tag ID, a tag will be read whenever the tag ID AND'ed with filtermask
+     *                   is equal to filterID AND'ed with filtermask.
+     * @param start      In case of partial user data read, start specifies the zero-based position within user data
+     *                   where read shall start.
+     * @param length     In case of partial user data read, length specifies the number of bytes to be read.
+     * @param timeout    Allowed execution time, in milliseconds or FOREVER for unlimited execution time.
+     * @param password   Authorized key for reader that might be required.
      */
     public ReadTags(JposCommonProperties props, int cmd, byte[] filterID, byte[] filtermask, int start, int length, int timeout, byte[] password) {
         super(props);
