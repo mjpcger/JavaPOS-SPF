@@ -89,9 +89,9 @@ public class JposErrorEvent extends ErrorEvent {
     }
 
     /**
-     * Clears all input data or buffered output requests, error and output complete events that belong to thir error
+     * Clears all input data or buffered output requests, error and output complete events that belong to this error
      * event. Neither ClearInput nor ClearOutput should throw an exception because both operations should be implemented
-     * as internal operations that do not need to throw and exception. However, if an implementation should throw a
+     * as internal operations that do not need to throw an exception. However, if an implementation should throw a
      * JposException, it will be caught and ignored.
      */
     public void clear() {

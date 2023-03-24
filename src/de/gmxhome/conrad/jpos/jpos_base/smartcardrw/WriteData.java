@@ -17,10 +17,12 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.smartcardrw;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
 import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
 import jpos.JposException;
 
+/**
+ * Output request executor for SmartCardRW method WriteData.
+ */
 public class WriteData extends JposOutputRequest {
     private int Count, Action;
     private String Data;
@@ -50,7 +52,7 @@ public class WriteData extends JposOutputRequest {
     }
 
     /**
-     * Constructor, stores given parameters for later use of Write operation.
+     * Constructor, stores given parameters for later use of WriteData operation.
      * @param props         Property set of device service.
      * @param action        Starting offset for write operation.
      * @param count         Number of bytes to be written.
