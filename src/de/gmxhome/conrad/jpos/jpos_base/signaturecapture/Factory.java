@@ -37,12 +37,12 @@ public class Factory extends JposDeviceFactory {
     public SignatureCaptureService addDevice(int index, JposDevice dev) throws JposException {
         SignatureCaptureProperties drw = dev.getSignatureCaptureProperties(index);
         SignatureCaptureService service;
-        dev.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getSignatureCaptureProperties()");
+        JposDevice.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getSignatureCaptureProperties()");
         service = (SignatureCaptureService) (drw.EventSource = new SignatureCaptureService(drw, dev));
         drw.Device = dev;
-        drw.addProperties(dev.SignatureCaptures);
         drw.Claiming = dev.ClaimedSignatureCapture;
         dev.changeDefaults(drw);
+        drw.addProperties(dev.SignatureCaptures);
         service.DeviceInterface = service.SignatureCaptureInterface = drw;
         return service;
     }

@@ -36,16 +36,16 @@ public class Factory extends JposDeviceFactory {
     public BiometricsService addDevice(int index, JposDevice dev) throws JposException {
         BiometricsService service;
         BiometricsProperties props = dev.getBiometricsProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBiometricsProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBiometricsProperties()");
         service = (BiometricsService) (props.EventSource = new BiometricsService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.Biometricss);
         props.Claiming = dev.ClaimedBiometrics;
         dev.changeDefaults(props);
-        dev.check(props.SensorBPP == null, JposConst.JPOS_E_FAILURE, "Missing initialization of SensorBPP property");
-        dev.check(props.SensorHeight == null, JposConst.JPOS_E_FAILURE, "Missing initialization of SensorHeight property");
-        dev.check(props.SensorWidth == null, JposConst.JPOS_E_FAILURE, "Missing initialization of SensorWidth property");
-        dev.check(!props.validateSensorColor(props.SensorColor), JposConst.JPOS_E_FAILURE, "SensorColor mismatch");
+        JposDevice.check(props.SensorBPP == null, JposConst.JPOS_E_FAILURE, "Missing initialization of SensorBPP property");
+        JposDevice.check(props.SensorHeight == null, JposConst.JPOS_E_FAILURE, "Missing initialization of SensorHeight property");
+        JposDevice.check(props.SensorWidth == null, JposConst.JPOS_E_FAILURE, "Missing initialization of SensorWidth property");
+        JposDevice.check(!props.validateSensorColor(props.SensorColor), JposConst.JPOS_E_FAILURE, "SensorColor mismatch");
+        props.addProperties(dev.Biometricss);
         service.DeviceInterface = service.Biometrics = props;
         return service;
     }

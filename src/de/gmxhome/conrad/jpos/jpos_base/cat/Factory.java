@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public CATService addDevice(int index, JposDevice dev) throws JposException {
         CATProperties props = dev.getCATProperties(index);
         CATService service;
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCATProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCATProperties()");
         service = (CATService) (props.EventSource = new CATService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.CATs);
         props.Claiming = dev.ClaimedCAT;
         dev.changeDefaults(props);
+        props.addProperties(dev.CATs);
         service.DeviceInterface = service.CatInterface = props;
         return service;
     }

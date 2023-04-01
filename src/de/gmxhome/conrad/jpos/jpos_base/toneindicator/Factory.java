@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public ToneIndicatorService addDevice(int index, JposDevice dev) throws JposException {
         ToneIndicatorProperties props = dev.getToneIndicatorProperties(index);
         ToneIndicatorService service;
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getToneIndicatorProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getToneIndicatorProperties()");
         service = (ToneIndicatorService) (props.EventSource = new ToneIndicatorService(props, dev));
         props.Device = dev;
-        props.addProperties(props.Device.ToneIndicators);
         props.Claiming = props.Device.ClaimedToneIndicator;
         props.Device.changeDefaults(props);
+        props.addProperties(props.Device.ToneIndicators);
         service.DeviceInterface = service.ToneIndicatorInterface = props;
         return service;
     }

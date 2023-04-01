@@ -21,9 +21,6 @@ import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
 import jpos.JposException;
 import jpos.RFIDScannerConst;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
 /**
  * Class containing the RFID scanner specific properties, their default values and default implementations of
  * RFIDScannerInterface.

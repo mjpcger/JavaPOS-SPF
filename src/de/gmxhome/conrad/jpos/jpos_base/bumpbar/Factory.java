@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public BumpBarService addDevice(int index, JposDevice dev) throws JposException {
         BumpBarService service;
         BumpBarProperties props = dev.getBumpBarProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBumpBarProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBumpBarProperties()");
         service = (BumpBarService) (props.EventSource = new BumpBarService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.BumpBars);
         props.Claiming = dev.ClaimedBumpBar;
         dev.changeDefaults(props);
+        props.addProperties(dev.BumpBars);
         service.DeviceInterface = service.BumpBarInterface = props;
         return service;
     }

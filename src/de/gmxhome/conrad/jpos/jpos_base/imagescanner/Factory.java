@@ -36,13 +36,13 @@ public class Factory extends JposDeviceFactory {
     public ImageScannerService addDevice(int index, JposDevice dev) throws JposException {
         ImageScannerService service;
         ImageScannerProperties props = dev.getImageScannerProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getImageScannerProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getImageScannerProperties()");
         service = (ImageScannerService) (props.EventSource = new ImageScannerService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.ImageScanners);
         props.Claiming = dev.ClaimedImageScanner;
         dev.changeDefaults(props);
-        dev.check(!props.CapVideoData && !props.CapImageData && !props.CapDecodeData, JposConst.JPOS_E_ILLEGAL, "Missing video, image or decode capability");
+        JposDevice.check(!props.CapVideoData && !props.CapImageData && !props.CapDecodeData, JposConst.JPOS_E_ILLEGAL, "Missing video, image or decode capability");
+        props.addProperties(dev.ImageScanners);
         service.DeviceInterface = service.ImageScanner = props;
         return service;
     }

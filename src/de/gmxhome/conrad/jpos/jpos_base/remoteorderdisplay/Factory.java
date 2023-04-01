@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public RemoteOrderDisplayService addDevice(int index, JposDevice dev) throws JposException {
         RemoteOrderDisplayService service;
         RemoteOrderDisplayProperties props = dev.getRemoteOrderDisplayProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getRemoteOrderDisplayProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getRemoteOrderDisplayProperties()");
         service = (RemoteOrderDisplayService) (props.EventSource = new RemoteOrderDisplayService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.RemoteOrderDisplays);
         props.Claiming = dev.ClaimedRemoteOrderDisplay;
         dev.changeDefaults(props);
+        props.addProperties(dev.RemoteOrderDisplays);
         service.DeviceInterface = service.RemoteOrderDisplayInterface = props;
         return service;
     }

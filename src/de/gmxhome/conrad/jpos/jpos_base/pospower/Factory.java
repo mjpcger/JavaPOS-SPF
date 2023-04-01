@@ -35,12 +35,12 @@ public class Factory extends JposDeviceFactory {
     public POSPowerService addDevice(int index, JposDevice dev) throws JposException {
         POSPowerProperties drw = dev.getPOSPowerProperties(index);
         POSPowerService service;
-        dev.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getPOSPowerProperties()");
+        JposDevice.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getPOSPowerProperties()");
         service = (POSPowerService) (drw.EventSource = new POSPowerService(drw, dev));
         drw.Device = dev;
-        drw.addProperties(dev.POSPowers);
         drw.Claiming = dev.ClaimedPOSPower;
         dev.changeDefaults(drw);
+        drw.addProperties(dev.POSPowers);
         service.DeviceInterface = service.POSPowerInterface = drw;
         return service;
     }

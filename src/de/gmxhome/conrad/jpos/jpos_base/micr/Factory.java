@@ -33,12 +33,12 @@ public class Factory extends JposDeviceFactory {
      */
     public MICRService addDevice(int index, JposDevice dev) throws JposException {
         MICRProperties props = dev.getMICRProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getMICRProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getMICRProperties()");
         MICRService service = (MICRService)(props.EventSource = new MICRService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.MICRs);
         props.Claiming = dev.ClaimedMICR;
         dev.changeDefaults(props);
+        props.addProperties(dev.MICRs);
         service.DeviceInterface = service.MICRInterface = props;
         return service;
     }

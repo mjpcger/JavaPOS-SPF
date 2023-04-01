@@ -35,20 +35,20 @@ public class Factory extends JposDeviceFactory {
     public CashChangerService addDevice(int index, JposDevice dev) throws JposException {
         CashChangerService service;
         CashChangerProperties props = dev.getCashChangerProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCashChangerProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCashChangerProperties()");
         service = (CashChangerService) (props.EventSource = new CashChangerService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.CashChangers);
         props.Claiming = dev.ClaimedCashChanger;
         dev.changeDefaults(props);
-        dev.check(props.CurrencyCode == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCode property");
-        dev.check(props.CurrencyCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCashList property");
-        dev.check(props.CurrencyCodeList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCodeList property");
-        dev.check(props.ExitCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of ExitCashList property");
-        dev.check(props.DepositCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCashList property");
-        dev.check(props.DepositCodeList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCodeList property");
-        dev.check(props.DepositCounts == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCounts property");
-        dev.check(props.RealTimeDataEnabled == null, JposConst.JPOS_E_FAILURE, "Missing initialization of RealTimeDataEnabled property");
+        JposDevice.check(props.CurrencyCode == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCode property");
+        JposDevice.check(props.CurrencyCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCashList property");
+        JposDevice.check(props.CurrencyCodeList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCodeList property");
+        JposDevice.check(props.ExitCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of ExitCashList property");
+        JposDevice.check(props.DepositCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCashList property");
+        JposDevice.check(props.DepositCodeList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCodeList property");
+        JposDevice.check(props.DepositCounts == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCounts property");
+        JposDevice.check(props.RealTimeDataEnabled == null, JposConst.JPOS_E_FAILURE, "Missing initialization of RealTimeDataEnabled property");
+        props.addProperties(dev.CashChangers);
         service.DeviceInterface = service.CashChangerInterface = props;
         return service;
     }

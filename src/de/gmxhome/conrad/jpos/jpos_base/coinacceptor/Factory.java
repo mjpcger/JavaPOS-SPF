@@ -35,17 +35,17 @@ public class Factory extends JposDeviceFactory {
     public CoinAcceptorService addDevice(int index, JposDevice dev) throws JposException {
         CoinAcceptorService service;
         CoinAcceptorProperties props = dev.getCoinAcceptorProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCoinAcceptorProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCoinAcceptorProperties()");
         service = (CoinAcceptorService) (props.EventSource = new CoinAcceptorService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.CoinAcceptors);
         props.Claiming = dev.ClaimedCoinAcceptor;
         dev.changeDefaults(props);
-        dev.check(props.CurrencyCode == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCode property");
-        dev.check(props.DepositCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCashList property");
-        dev.check(props.DepositCodeList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCodeList property");
-        dev.check(props.DepositCounts == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCounts property");
-        dev.check(props.RealTimeDataEnabled == null, JposConst.JPOS_E_FAILURE, "Missing initialization of RealTimeDataEnabled property");
+        JposDevice.check(props.CurrencyCode == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCode property");
+        JposDevice.check(props.DepositCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCashList property");
+        JposDevice.check(props.DepositCodeList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCodeList property");
+        JposDevice.check(props.DepositCounts == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCounts property");
+        JposDevice.check(props.RealTimeDataEnabled == null, JposConst.JPOS_E_FAILURE, "Missing initialization of RealTimeDataEnabled property");
+        props.addProperties(dev.CoinAcceptors);
         service.DeviceInterface = service.CoinAcceptorInterface = props;
         return service;
     }

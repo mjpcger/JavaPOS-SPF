@@ -36,12 +36,12 @@ public class Factory extends JposDeviceFactory {
     public CheckScannerService addDevice(int index, JposDevice dev) throws JposException {
         CheckScannerService service;
         CheckScannerProperties props = dev.getCheckScannerProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCheckScannerProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCheckScannerProperties()");
         service = (CheckScannerService) (props.EventSource = new CheckScannerService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.CheckScanners);
         props.Claiming = dev.ClaimedCheckScanner;
         dev.changeDefaults(props);
+        props.addProperties(dev.CheckScanners);
         service.DeviceInterface = service.CheckScanner = props;
         return service;
     }

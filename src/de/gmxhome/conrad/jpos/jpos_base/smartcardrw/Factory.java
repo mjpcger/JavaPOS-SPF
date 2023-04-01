@@ -36,12 +36,12 @@ public class Factory extends JposDeviceFactory {
     public SmartCardRWService addDevice(int index, JposDevice dev) throws JposException {
         SmartCardRWService service;
         SmartCardRWProperties props = dev.getSmartCardRWProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getSmartCardRWProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getSmartCardRWProperties()");
         service = (SmartCardRWService) (props.EventSource = new SmartCardRWService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.SmartCardRWs);
         props.Claiming = dev.ClaimedSmartCardRW;
         dev.changeDefaults(props);
+        props.addProperties(dev.SmartCardRWs);
         service.DeviceInterface = service.SmartCardRW = props;
         return service;
     }

@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public MSRService addDevice(int index, JposDevice dev) throws JposException {
         MSRService service;
         MSRProperties props = dev.getMSRProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getMSRProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getMSRProperties()");
         service = (MSRService) (props.EventSource = new MSRService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.MSRs);
         props.Claiming = dev.ClaimedMSR;
         dev.changeDefaults(props);
+        props.addProperties(dev.MSRs);
         service.DeviceInterface = service.MSRInterface = props;
         return service;
     }

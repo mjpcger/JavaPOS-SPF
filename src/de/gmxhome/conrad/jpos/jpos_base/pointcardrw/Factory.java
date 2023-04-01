@@ -36,12 +36,12 @@ public class Factory extends JposDeviceFactory {
     public PointCardRWService addDevice(int index, JposDevice dev) throws JposException {
         PointCardRWService service;
         PointCardRWProperties props = dev.getPointCardRWProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getPointCardRWProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getPointCardRWProperties()");
         service = (PointCardRWService) (props.EventSource = new PointCardRWService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.PointCardRWs);
         props.Claiming = dev.ClaimedPointCardRW;
         dev.changeDefaults(props);
+        props.addProperties(dev.PointCardRWs);
         service.DeviceInterface = service.PointCardRW = props;
         return service;
     }

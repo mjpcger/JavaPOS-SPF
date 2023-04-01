@@ -36,12 +36,12 @@ public class Factory extends JposDeviceFactory {
     public ElectronicValueRWService addDevice(int index, JposDevice dev) throws JposException {
         ElectronicValueRWService service;
         ElectronicValueRWProperties props = dev.getElectronicValueRWProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getElectronicValueRWProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getElectronicValueRWProperties()");
         service = (ElectronicValueRWService) (props.EventSource = new ElectronicValueRWService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.ElectronicValueRWs);
         props.Claiming = dev.ClaimedElectronicValueRW;
         dev.changeDefaults(props);
+        props.addProperties(dev.ElectronicValueRWs);
         service.DeviceInterface = service.ElectronicValueRW = props;
         return service;
     }

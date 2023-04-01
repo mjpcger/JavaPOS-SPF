@@ -35,12 +35,12 @@ public class Factory extends JposDeviceFactory {
     public ScaleService addDevice(int index, JposDevice dev) throws JposException {
         ScaleProperties props = dev.getScaleProperties(index);
         ScaleService service;
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getScaleProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getScaleProperties()");
         service = (ScaleService) (props.EventSource = new ScaleService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.Scales);
         props.Claiming = dev.ClaimedScale;
         dev.changeDefaults(props);
+        props.addProperties(dev.Scales);
         service.DeviceInterface = service.ScaleInterface = props;
         return service;
     }

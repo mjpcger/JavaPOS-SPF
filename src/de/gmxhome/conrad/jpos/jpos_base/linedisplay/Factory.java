@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public LineDisplayService addDevice(int index, JposDevice dev) throws JposException {
         LineDisplayProperties props = dev.getLineDisplayProperties(index);
         LineDisplayService service;
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getLineDisplayProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getLineDisplayProperties()");
         service = (LineDisplayService) (props.EventSource = new LineDisplayService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.LineDisplays);
         props.Claiming = dev.ClaimedLineDisplay;
         dev.changeDefaults(props);
+        props.addProperties(dev.LineDisplays);
         service.DeviceInterface = service.LineDisplayInterface = props;
         return service;
     }

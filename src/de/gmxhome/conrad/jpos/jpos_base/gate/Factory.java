@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public GateService addDevice(int index, JposDevice dev) throws JposException {
         GateProperties drw = dev.getGateProperties(index);
         GateService service;
-        dev.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getGateProperties()");
+        JposDevice.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getGateProperties()");
         service = (GateService) (drw.EventSource = new GateService(drw, dev));
         drw.Device = dev;
-        drw.addProperties(dev.Gates);
         drw.Claiming = dev.ClaimedGate;
         dev.changeDefaults(drw);
+        drw.addProperties(dev.Gates);
         service.DeviceInterface = service.GateInterface = drw;
         return service;
     }

@@ -35,16 +35,16 @@ public class Factory extends JposDeviceFactory {
     public BillDispenserService addDevice(int index, JposDevice dev) throws JposException {
         BillDispenserService service;
         BillDispenserProperties props = dev.getBillDispenserProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBillDispenserProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBillDispenserProperties()");
         service = (BillDispenserService) (props.EventSource = new BillDispenserService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.BillDispensers);
         props.Claiming = dev.ClaimedBillDispenser;
         dev.changeDefaults(props);
-        dev.check(props.CurrencyCode == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCode property");
-        dev.check(props.CurrencyCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCashList property");
-        dev.check(props.CurrencyCodeList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCodeList property");
-        dev.check(props.ExitCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of ExitCashList property");
+        JposDevice.check(props.CurrencyCode == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCode property");
+        JposDevice.check(props.CurrencyCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCashList property");
+        JposDevice.check(props.CurrencyCodeList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCodeList property");
+        JposDevice.check(props.ExitCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of ExitCashList property");
+        props.addProperties(dev.BillDispensers);
         service.DeviceInterface = service.BillDispenserInterface = props;
         return service;
     }

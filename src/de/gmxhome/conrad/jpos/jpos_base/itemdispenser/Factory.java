@@ -37,12 +37,12 @@ public class Factory extends JposDeviceFactory {
     public ItemDispenserService addDevice(int index, JposDevice dev) throws JposException {
         ItemDispenserProperties drw = dev.getItemDispenserProperties(index);
         ItemDispenserService service;
-        dev.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getItemDispenserProperties()");
+        JposDevice.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getItemDispenserProperties()");
         service = (ItemDispenserService) (drw.EventSource = new ItemDispenserService(drw, dev));
         drw.Device = dev;
-        drw.addProperties(dev.ItemDispensers);
         drw.Claiming = dev.ClaimedItemDispenser;
         dev.changeDefaults(drw);
+        drw.addProperties(dev.ItemDispensers);
         service.DeviceInterface = service.ItemDispenserInterface = drw;
         return service;
     }

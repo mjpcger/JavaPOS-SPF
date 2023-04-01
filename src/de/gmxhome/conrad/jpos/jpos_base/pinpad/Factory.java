@@ -34,14 +34,18 @@ public class Factory extends JposDeviceFactory {
      * @throws JposException If property set could not be retrieved.
      */
     public PINPadService addDevice(int index, JposDevice dev) throws JposException {
+        long[] noPrompt = { PINPadConst.PPAD_DISP_UNRESTRICTED, PINPadConst.PPAD_DISP_NONE };
         PINPadService service;
         PINPadProperties props = dev.getPINPadProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getPINPadProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getPINPadProperties()");
         service = (PINPadService) (props.EventSource = new PINPadService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.PINPads);
         props.Claiming = dev.ClaimedPINPad;
         dev.changeDefaults(props);
+        JposDevice.check(props.MaximumPINLength == null, JposConst.JPOS_E_FAILURE, "No default for MaximumPINLength");
+        JposDevice.check(props.MinimumPINLength == null, JposConst.JPOS_E_FAILURE, "No default for MinimumPINLength");
+        JposDevice.check(props.Prompt == null && !dev.member(props.CapDisplay, noPrompt), JposConst.JPOS_E_FAILURE, "No default for Prompt");
+        props.addProperties(dev.PINPads);
         service.DeviceInterface = service.PINPad = props;
         return service;
     }

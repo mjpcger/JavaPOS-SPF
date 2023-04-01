@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public POSPrinterService addDevice(int index, JposDevice dev) throws JposException {
         POSPrinterService service;
         POSPrinterProperties props = dev.getPOSPrinterProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getPOSPrinterProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getPOSPrinterProperties()");
         service = (POSPrinterService) (props.EventSource = new POSPrinterService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.POSPrinters);
         props.Claiming = dev.ClaimedPOSPrinter;
         dev.changeDefaults(props);
+        props.addProperties(dev.POSPrinters);
         service.DeviceInterface = service.POSPrinterInterface = props;
         return service;
     }

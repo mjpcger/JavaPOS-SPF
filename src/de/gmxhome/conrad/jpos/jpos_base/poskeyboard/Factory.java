@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public POSKeyboardService addDevice(int index, JposDevice dev) throws JposException {
         POSKeyboardProperties props = dev.getPOSKeyboardProperties(index);
         POSKeyboardService service;
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getPOSKeyboardProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getPOSKeyboardProperties()");
         service = (POSKeyboardService) (props.EventSource = new POSKeyboardService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.POSKeyboards);
         props.Claiming = dev.ClaimedPOSKeyboard;
         dev.changeDefaults(props);
+        props.addProperties(dev.POSKeyboards);
         service.DeviceInterface = service.POSKeyboardInterface = props;
         return service;
     }

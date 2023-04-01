@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public CashDrawerService addDevice(int index, JposDevice dev) throws JposException {
         CashDrawerProperties drw = dev.getCashDrawerProperties(index);
         CashDrawerService service;
-        dev.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCashDrawerProperties()");
+        JposDevice.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCashDrawerProperties()");
         service = (CashDrawerService) (drw.EventSource = new CashDrawerService(drw, dev));
         drw.Device = dev;
-        drw.addProperties(dev.CashDrawers);
         drw.Claiming = dev.ClaimedCashDrawer;
         dev.changeDefaults(drw);
+        drw.addProperties(dev.CashDrawers);
         service.DeviceInterface = service.CashDrawerInterface = drw;
         return service;
     }

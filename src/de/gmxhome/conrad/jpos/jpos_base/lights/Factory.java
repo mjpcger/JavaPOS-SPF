@@ -35,12 +35,12 @@ public class Factory extends JposDeviceFactory {
     public LightsService addDevice(int index, JposDevice dev) throws JposException {
         LightsProperties drw = dev.getLightsProperties(index);
         LightsService service;
-        dev.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getLightsProperties()");
+        JposDevice.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getLightsProperties()");
         service = (LightsService) (drw.EventSource = new LightsService(drw, dev));
         drw.Device = dev;
-        drw.addProperties(dev.Lightss);
         drw.Claiming = dev.ClaimedLights;
         dev.changeDefaults(drw);
+        drw.addProperties(dev.Lightss);
         service.DeviceInterface = service.LightsInterface = drw;
         return service;
     }

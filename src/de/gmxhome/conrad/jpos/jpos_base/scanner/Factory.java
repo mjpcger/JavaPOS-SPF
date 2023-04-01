@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public ScannerService addDevice(int index, JposDevice dev) throws JposException {
         ScannerProperties props = dev.getScannerProperties(index);
         ScannerService service;
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getScannerProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getScannerProperties()");
         service = (ScannerService) (props.EventSource = new ScannerService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.Scanners);
         props.Claiming = dev.ClaimedScanner;
         dev.changeDefaults(props);
+        props.addProperties(dev.Scanners);
         service.DeviceInterface = service.ScannerInterface = props;
         return service;
     }

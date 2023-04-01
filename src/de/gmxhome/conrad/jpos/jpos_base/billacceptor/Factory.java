@@ -35,16 +35,16 @@ public class Factory extends JposDeviceFactory {
     public BillAcceptorService addDevice(int index, JposDevice dev) throws JposException {
         BillAcceptorService service;
         BillAcceptorProperties props = dev.getBillAcceptorProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBillAcceptorProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBillAcceptorProperties()");
         service = (BillAcceptorService) (props.EventSource = new BillAcceptorService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.BillAcceptors);
         props.Claiming = dev.ClaimedBillAcceptor;
         dev.changeDefaults(props);
-        dev.check(props.CurrencyCode == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCode property");
-        dev.check(props.DepositCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCashList property");
-        dev.check(props.DepositCodeList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCodeList property");
-        dev.check(props.DepositCounts == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCounts property");
+        JposDevice.check(props.CurrencyCode == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCode property");
+        JposDevice.check(props.DepositCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCashList property");
+        JposDevice.check(props.DepositCodeList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCodeList property");
+        JposDevice.check(props.DepositCounts == null, JposConst.JPOS_E_FAILURE, "Missing initialization of DepositCounts property");
+        props.addProperties(dev.BillAcceptors);
         service.DeviceInterface = service.BillAcceptorInterface = props;
         return service;
     }

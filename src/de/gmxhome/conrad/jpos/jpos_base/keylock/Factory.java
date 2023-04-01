@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public KeylockService addDevice(int index, JposDevice dev) throws JposException {
         KeylockProperties props = dev.getKeylockProperties(index);
         KeylockService service;
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getKeylockProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getKeylockProperties()");
         service = (KeylockService) (props.EventSource = new KeylockService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.Keylocks);
         props.Claiming = dev.ClaimedKeylock;
         dev.changeDefaults(props);
+        props.addProperties(dev.Keylocks);
         service.DeviceInterface = service.KeylockInterface = props;
         return service;
     }

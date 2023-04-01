@@ -35,12 +35,12 @@ public class Factory extends JposDeviceFactory {
      */
     public FiscalPrinterService addDevice(int index, JposDevice dev) throws JposException {
         FiscalPrinterProperties props = dev.getFiscalPrinterProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getFiscalPrinterProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getFiscalPrinterProperties()");
         FiscalPrinterService service = (FiscalPrinterService)(props.EventSource = new FiscalPrinterService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.FiscalPrinters);
         props.Claiming = dev.ClaimedFiscalPrinter;
         dev.changeDefaults(props);
+        props.addProperties(dev.FiscalPrinters);
         service.DeviceInterface = service.FiscalPrinterInterface = props;
         return service;
     }

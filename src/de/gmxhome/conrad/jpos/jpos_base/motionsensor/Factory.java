@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public MotionSensorService addDevice(int index, JposDevice dev) throws JposException {
         MotionSensorProperties drw = dev.getMotionSensorProperties(index);
         MotionSensorService service;
-        dev.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getMotionSensorProperties()");
+        JposDevice.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getMotionSensorProperties()");
         service = (MotionSensorService) (drw.EventSource = new MotionSensorService(drw, dev));
         drw.Device = dev;
-        drw.addProperties(dev.MotionSensors);
         drw.Claiming = dev.ClaimedMotionSensor;
         dev.changeDefaults(drw);
+        drw.addProperties(dev.MotionSensors);
         service.DeviceInterface = service.MotionSensorInterface = drw;
         return service;
     }

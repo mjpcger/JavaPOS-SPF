@@ -36,12 +36,12 @@ public class Factory extends JposDeviceFactory {
     public BeltService addDevice(int index, JposDevice dev) throws JposException {
         BeltService service;
         BeltProperties props = dev.getBeltProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBeltProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBeltProperties()");
         service = (BeltService) (props.EventSource = new BeltService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.Belts);
         props.Claiming = dev.ClaimedBelt;
         dev.changeDefaults(props);
+        props.addProperties(dev.Belts);
         service.DeviceInterface = service.BeltInterface = props;
         return service;
     }

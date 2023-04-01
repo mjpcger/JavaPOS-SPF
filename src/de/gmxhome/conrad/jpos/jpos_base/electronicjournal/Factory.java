@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public ElectronicJournalService addDevice(int index, JposDevice dev) throws JposException {
         ElectronicJournalProperties elejou = dev.getElectronicJournalProperties(index);
         ElectronicJournalService service;
-        dev.check(elejou == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getElectronicJournalProperties()");
+        JposDevice.check(elejou == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getElectronicJournalProperties()");
         service = (ElectronicJournalService) (elejou.EventSource = new ElectronicJournalService(elejou, dev));
         elejou.Device = dev;
-        elejou.addProperties(dev.ElectronicJournals);
         elejou.Claiming = dev.ClaimedElectronicJournal;
         dev.changeDefaults(elejou);
+        elejou.addProperties(dev.ElectronicJournals);
         service.DeviceInterface = service.ElectronicJournalInterface = elejou;
         return service;
     }

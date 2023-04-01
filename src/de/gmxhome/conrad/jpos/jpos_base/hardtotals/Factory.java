@@ -63,8 +63,9 @@ public class Factory extends JposDeviceFactory {
         dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getHardTotalsProperties()");
         service = (HardTotalsService) (props.EventSource = new HardTotalsService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.HardTotalss);
         props.Claiming = dev.ClaimedHardTotals;
+        dev.changeDefaults(props);
+        props.addProperties(dev.HardTotalss);
         synchronized (ClaimedHardTotals) {
             if (!ClaimedHardTotals.containsKey(dev)) {
                 HashMap<Integer, HardTotalsProperties>[] map = new HashMap[dev.HardTotalss.length];
@@ -73,7 +74,6 @@ public class Factory extends JposDeviceFactory {
                 ClaimedHardTotals.put(dev, map);
             }
         }
-        dev.changeDefaults(props);
         service.DeviceInterface = service.HardTotals = props;
         return service;
     }

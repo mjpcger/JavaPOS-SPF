@@ -36,12 +36,12 @@ public class Factory extends JposDeviceFactory {
     public RFIDScannerService addDevice(int index, JposDevice dev) throws JposException {
         RFIDScannerService service;
         RFIDScannerProperties props = dev.getRFIDScannerProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getRFIDScannerProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getRFIDScannerProperties()");
         service = (RFIDScannerService) (props.EventSource = new RFIDScannerService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.RFIDScanners);
         props.Claiming = dev.ClaimedRFIDScanner;
         dev.changeDefaults(props);
+        props.addProperties(dev.RFIDScanners);
         service.DeviceInterface = service.RFIDScanner = props;
         return service;
     }

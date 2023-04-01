@@ -34,12 +34,12 @@ public class Factory extends JposDeviceFactory {
     public CoinDispenserService addDevice(int index, JposDevice dev) throws JposException {
         CoinDispenserService service;
         CoinDispenserProperties props = dev.getCoinDispenserProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCoinDispenserProperties()");
+        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCoinDispenserProperties()");
         service = (CoinDispenserService) (props.EventSource = new CoinDispenserService(props, dev));
         props.Device = dev;
-        props.addProperties(dev.CoinDispensers);
         props.Claiming = dev.ClaimedCoinDispenser;
         dev.changeDefaults(props);
+        props.addProperties(dev.CoinDispensers);
         service.DeviceInterface = service.CoinDispenserInterface = props;
         return service;
     }
