@@ -40,8 +40,8 @@ public class RFIDScannerFactory extends Factory implements JposServiceInstanceFa
                     boolean create = any == null;
                     if (create) {
                         dev = new RFIDDevice(file);
-                    } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: SampleRFIDScanner");
+                    } else if (!(any instanceof RFIDDevice))
+                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + file);
                     else {
                         dev = (RFIDDevice) any;
                     }

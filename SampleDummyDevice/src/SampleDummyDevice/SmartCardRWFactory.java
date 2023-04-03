@@ -42,7 +42,7 @@ public class SmartCardRWFactory extends Factory implements JposServiceInstanceFa
                     boolean create = any == null;
                     if (create) {
                         dev = new SCRWDevice("SampleSmartCardRW");
-                    } else if (!(any instanceof Device))
+                    } else if (!(any instanceof SCRWDevice))
                         throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: SampleSmartCardRW");
                     else {
                         dev = (SCRWDevice) any;
