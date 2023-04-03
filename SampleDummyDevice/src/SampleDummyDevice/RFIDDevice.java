@@ -34,7 +34,7 @@ import java.util.Map;
 /**
  * JposDevice based dummy implementation for JavaPOS RFIDScanner device service implementation.
  * No real hardware. All read data with dummy values, operator interaction via OptionDialog boxes.<br>
- * Supported configuration values for SmartCardRW in jpos.xml can be used to set the corresponding property values:
+ * Supported configuration values for RFIDScanner in jpos.xml can be used to set the corresponding property values:
  * <ul>
  *     <li>CapContinuousRead: Can be TRUE or FALSE. Default is FALSE.</li>
  *     <li>CapDisableTag: Can be TRUE or FALSE. Default is FALSE.</li>
@@ -136,8 +136,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
     @Override
     public void checkProperties(JposEntry entry) throws JposException {
         super.checkProperties(entry);
-        Object o = null;
-        int val;
+        Object o;
         for (String[] capability : Capabilities) {
             o = entry.getPropertyValue(capability[PropName]);
             if (o != null) {
