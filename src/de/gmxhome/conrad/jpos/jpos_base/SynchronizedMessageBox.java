@@ -127,8 +127,6 @@ public class SynchronizedMessageBox {
                     if (Dialog != null && Dialog.isVisible()) {
                         Box.setValue(JOptionPane.CLOSED_OPTION);
                         Dialog.setVisible(false);
-                        Result = JOptionPane.CLOSED_OPTION;
-                        Ready.signal();
                     }
                 }
             }
