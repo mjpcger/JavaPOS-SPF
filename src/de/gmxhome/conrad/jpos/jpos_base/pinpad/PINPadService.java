@@ -418,6 +418,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
         checkEnabled();
         JposDevice.check(!EFTTransactionStarted, JposConst.JPOS_E_DISABLED, "EFT Transaction not started");
         JposDevice.check(Data.PINEntryEnabled, JposConst.JPOS_E_ILLEGAL, "PIN entry active");
+        JposDevice.check(Data.MaximumPINLength < Data.MinimumPINLength, JposConst.JPOS_E_ILLEGAL, "Invalid PIN length limits");
         PINPad.enablePINEntry();
         logCall("EnablePINEntry");
     }

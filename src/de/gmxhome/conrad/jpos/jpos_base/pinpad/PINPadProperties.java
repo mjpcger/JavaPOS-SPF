@@ -230,6 +230,8 @@ public class PINPadProperties extends JposCommonProperties implements PINPadInte
 
     @Override
     public void enablePINEntry() throws JposException {
+        PINEntryEnabled = true;
+        EventSource.logSet("PINEntryEnabled");
     }
 
     @Override

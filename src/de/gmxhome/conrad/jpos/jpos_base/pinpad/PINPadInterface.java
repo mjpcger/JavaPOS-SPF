@@ -247,7 +247,8 @@ public interface PINPadInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>EFT transaction has been started,</li>
-     *     <li>PINEntryEnabled is false.</li>
+     *     <li>PINEntryEnabled is false,</li>
+     *     <li>MaximumPINLength &ge; MinimumPINLength.</li>
      * </ul>
      *
      * @throws JposException If an error occurs.
@@ -262,6 +263,8 @@ public interface PINPadInterface extends JposBaseInterface {
      *     <li>EFT transaction has been started,</li>
      *     <li>completionCode is EFT_NORMAL or EFT_ABNORMAL.</li>
      * </ul>
+     * The default implementation should be called within derived methods to ensure that the property PINEntryEnabled
+     * is updated as expected.
      *
      * @param completionCode The completion code.
      * @throws JposException If an error occurs.
