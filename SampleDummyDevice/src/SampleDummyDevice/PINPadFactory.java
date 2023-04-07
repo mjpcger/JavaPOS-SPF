@@ -17,14 +17,11 @@
 
 package SampleDummyDevice;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.rfidscanner.Factory;
-import de.gmxhome.conrad.jpos.jpos_base.rfidscanner.RFIDScannerService;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.config.JposEntry;
-import jpos.loader.JposServiceInstance;
-import jpos.loader.JposServiceInstanceFactory;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import de.gmxhome.conrad.jpos.jpos_base.pinpad.*;
+import jpos.*;
+import jpos.config.*;
+import jpos.loader.*;
 
 /**
  * Factory class for sample PINPad device implementation
@@ -48,7 +45,7 @@ public class PINPadFactory extends Factory implements JposServiceInstanceFactory
                         dev = (PINPadDevice) any;
                     }
                     dev.checkProperties(jposEntry);
-                    RFIDScannerService srv = addDevice(0, dev);
+                    PINPadService srv = addDevice(0, dev);
                     if (create)
                         putDevice("SamplePINPad", dev);
                     return srv;
