@@ -150,6 +150,7 @@ public class BiometricsService extends JposBase implements BiometricsService115 
         logPreSet("RealTimeDataEnabled");
         checkOpened();
         Device.check(newRealTimeDataEnabled && !Data.CapRealTimeData, JposConst.JPOS_E_ILLEGAL, "RealTimeData not supported");
+        checkNoChangedOrClaimed(Data.RealTimeDataEnabled, newRealTimeDataEnabled);
         Biometrics.realTimeDataEnabled(newRealTimeDataEnabled);
         logSet("RealTimeDataEnabled");
     }
@@ -173,6 +174,7 @@ public class BiometricsService extends JposBase implements BiometricsService115 
         logPreSet("SensorColor");
         checkOpened();
         Device.check(!Data.validateSensorColor(newSensorColor), JposConst.JPOS_E_ILLEGAL, "SensorColor invalid: " + newSensorColor);
+        checkNoChangedOrClaimed(Data.SensorColor, newSensorColor);
         Biometrics.sensorColor(newSensorColor);
         logSet("SensorColor");
     }

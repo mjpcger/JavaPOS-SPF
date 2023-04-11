@@ -31,7 +31,8 @@ public interface ImageScannerInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>CapAim is true or aimMode equals the previous property value.</li>
+     *     <li>CapAim is true or aimMode equals the previous property value,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or aimMode equals the previous value of AimMode.</li>
      * </ul>
      *
      * @param aimMode New value for AimMode property.
@@ -44,7 +45,8 @@ public interface ImageScannerInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>CapIlluminate is true or illuminateMode equals the previous property value.</li>
+     *     <li>CapIlluminate is true or illuminateMode equals the previous property value,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or illuminateMode equals the previous value of IlluminateMode.</li>
      * </ul>
      *
      * @param illuminateMode New value for IlluminateMode property.
@@ -58,7 +60,8 @@ public interface ImageScannerInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is open,</li>
      *     <li>imageMode is one of DECODE_ONLY, STILL_ONLY, STILL_DECODE, VIDEO_DECODE, VIDEO_STILL or ALL,</li>
-     *     <li>imageMode matches the capabilities CapDecodeData, CapImageData and CapVideoData.</li>
+     *     <li>imageMode matches the capabilities CapDecodeData, CapImageData and CapVideoData,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or imageMode equals the previous value of ImageMode.</li>
      * </ul>
      *
      * @param imageMode New value for ImageMode property.
@@ -72,7 +75,8 @@ public interface ImageScannerInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is open,</li>
      *     <li>imageQuality is one of QUAL_LOW, QUAL_MED or QUAL_HIGH,</li>
-     *     <li>if CapImageQuality is false, imageQuality equals the previous property value.</li>
+     *     <li>if CapImageQuality is false, imageQuality equals the previous property value,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or imageQuality equals the previous value of ImageQuality.</li>
      * </ul>
      *
      * @param imageQuality New value for ImageQuality property.
@@ -85,7 +89,8 @@ public interface ImageScannerInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>videoRate is a positive value.</li>
+     *     <li>videoRate is a positive value,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or videoCount equals the previous value of VideoCount.</li>
      * </ul>
      *
      * @param videoCount New value for VideoCount property.
@@ -98,7 +103,8 @@ public interface ImageScannerInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>videoRate is a positive value.</li>
+     *     <li>videoRate is a positive value,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or videoRate equals the previous value of VideoRate.</li>
      * </ul>
      *
      * @param videoRate New value for VideoRate property.

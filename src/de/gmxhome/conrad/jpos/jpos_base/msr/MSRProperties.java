@@ -347,44 +347,44 @@ public class MSRProperties extends JposCommonProperties implements MSRInterface 
     }
 
     @Override
-    public void writeCardType(String b) throws JposException {
-        WriteCardType = b;
+    public void writeCardType(String type) throws JposException {
+        WriteCardType = type;
     }
 
     @Override
-    public void tracksToWrite(int b) throws JposException {
-        TracksToWrite = b;
+    public void tracksToWrite(int t2w) throws JposException {
+        TracksToWrite = t2w;
     }
 
     @Override
-    public void transmitSentinels(boolean b) throws JposException {
-        TransmitSentinels = b;
+    public void transmitSentinels(boolean flag) throws JposException {
+        TransmitSentinels = flag;
     }
 
     @Override
-    public void decodeData(boolean b) throws JposException {
-        if ((DecodeData = b) == false) {
+    public void decodeData(boolean flag) throws JposException {
+        if ((DecodeData = flag) == false) {
             ParseDecodeData = false;
             EventSource.logSet("ParseDecodeData");
         }
     }
 
     @Override
-    public void errorReportingType(int b) throws JposException {
-        ErrorReportingType = b;
+    public void errorReportingType(int type) throws JposException {
+        ErrorReportingType = type;
     }
 
     @Override
-    public void parseDecodeData(boolean b) throws JposException {
-        if (ParseDecodeData = b) {
+    public void parseDecodeData(boolean flag) throws JposException {
+        if (ParseDecodeData = flag) {
             DecodeData = true;
             EventSource.logSet("DecodeData");
         }
     }
 
     @Override
-    public void tracksToRead(int b) throws JposException {
-        TracksToRead = b;
+    public void tracksToRead(int t2r) throws JposException {
+        TracksToRead = t2r;
     }
 
     @Override

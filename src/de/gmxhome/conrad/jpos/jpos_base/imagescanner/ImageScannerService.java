@@ -214,6 +214,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
         logPreSet("AimMode");
         checkOpened();
         JposDevice.check(!Data.CapAim && aimMode != Data.AimMode, JposConst.JPOS_E_ILLEGAL, "AimMode must not be changed");
+        checkNoChangedOrClaimed(Data.AimMode, aimMode);
         ImageScanner.aimMode(aimMode);
         logSet("AimMode");
     }
@@ -223,6 +224,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
         logPreSet("IlluminateMode");
         checkOpened();
         JposDevice.check(!Data.CapIlluminate && illuminateMode != Data.IlluminateMode, JposConst.JPOS_E_ILLEGAL, "IlluminateMode must not be changed");
+        checkNoChangedOrClaimed(Data.IlluminateMode, illuminateMode);
         ImageScanner.illuminateMode(illuminateMode);
         logSet("IlluminateMode");
     }
@@ -245,6 +247,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
             JposDevice.check(!Data.CapDecodeData || !Data.CapImageData || !Data.CapVideoData, JposConst.JPOS_E_ILLEGAL, "Unsupported ImageMode: " + imageMode);
         else
             throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid ImageMode: " + imageMode);
+        checkNoChangedOrClaimed(Data.ImageMode, imageMode);
         ImageScanner.imageMode(imageMode);
         logSet("ImageMode");
     }
@@ -256,6 +259,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
         checkOpened();
         JposDevice.checkMember(imageQuality, valid, JposConst.JPOS_E_ILLEGAL, "Invalid ImageQuality: " + imageQuality);
         JposDevice.check(!Data.CapImageQuality && Data.ImageQuality != imageQuality, JposConst.JPOS_E_ILLEGAL, "Illegal ImageQuality: " + imageQuality);
+        checkNoChangedOrClaimed(Data.ImageQuality, imageQuality);
         ImageScanner.imageQuality(imageQuality);
         logSet("ImageQuality");
     }
@@ -265,6 +269,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
         logPreSet("VideoCount");
         checkOpened();
         JposDevice.check(videoCount < 0, JposConst.JPOS_E_ILLEGAL, "Invalid VideoCount: " + videoCount);
+        checkNoChangedOrClaimed(Data.VideoCount, videoCount);
         ImageScanner.videoCount(videoCount);
         logSet("VideoCount");
     }
@@ -274,6 +279,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
         logPreSet("VideoRate");
         checkOpened();
         JposDevice.check(videoRate < 0, JposConst.JPOS_E_ILLEGAL, "Invalid VideoRate: " + videoRate);
+        checkNoChangedOrClaimed(Data.VideoRate, videoRate);
         ImageScanner.videoRate(videoRate);
         logSet("VideoRate");
     }

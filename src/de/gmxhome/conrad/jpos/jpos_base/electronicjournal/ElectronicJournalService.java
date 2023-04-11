@@ -217,6 +217,7 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
         logPreSet("Station");
         checkOpened();
         Device.check((station & ~Data.CapStation) != 0, JposConst.JPOS_E_ILLEGAL, "Invalid station: " + station);
+        checkNoChangedOrClaimed(Data.Station, station);
         ElectronicJournalInterface.station(station);
         logSet("Station");
     }
@@ -256,6 +257,7 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
         logPreSet("WaterMark");
         checkOpened();
         Device.check(!Data.CapWaterMark && flag, JposConst.JPOS_E_ILLEGAL, "No watermark support for device");
+        checkNoChangedOrClaimed(Data.WaterMark, flag);
         ElectronicJournalInterface.waterMark(flag);
         logSet("WaterMark");
     }

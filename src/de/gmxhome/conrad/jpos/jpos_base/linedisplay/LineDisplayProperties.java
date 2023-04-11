@@ -329,68 +329,68 @@ public class    LineDisplayProperties extends JposCommonProperties implements Li
     }
 
     @Override
-    public void blinkRate(int b) throws JposException {
-        BlinkRate = b;
+    public void blinkRate(int rate) throws JposException {
+        BlinkRate = rate;
     }
 
     @Override
-    public void cursorType(int b) throws JposException {
-        CursorType = b;
+    public void cursorType(int type) throws JposException {
+        CursorType = type;
     }
 
     @Override
-    public void characterSet(int b) throws JposException {
-        CharacterSet = b;
+    public void characterSet(int charset) throws JposException {
+        CharacterSet = charset;
     }
 
     @Override
-    public void currentWindow(int b) throws JposException {
-        CurrentWindow = b;
+    public void currentWindow(int windowNo) throws JposException {
+        CurrentWindow = windowNo;
     }
 
     @Override
-    public void cursorColumn(int b) throws JposException {
-        CursorColumn = b;
+    public void cursorColumn(int column) throws JposException {
+        CursorColumn = column;
     }
 
     @Override
-    public void cursorRow(int b) throws JposException {
-        CursorRow = b;
+    public void cursorRow(int row) throws JposException {
+        CursorRow = row;
     }
 
     @Override
-    public void cursorUpdate(boolean b) throws JposException {
-        CursorUpdate = b;
+    public void cursorUpdate(boolean flag) throws JposException {
+        CursorUpdate = flag;
     }
 
     @Override
-    public void deviceBrightness(int b) throws JposException {
-        DeviceBrightness = b;
+    public void deviceBrightness(int brightness) throws JposException {
+        DeviceBrightness = brightness;
     }
 
     @Override
-    public void interCharacterWait(int b) throws JposException {
-        InterCharacterWait = b;
+    public void interCharacterWait(int millisec) throws JposException {
+        InterCharacterWait = millisec;
     }
 
     @Override
-    public void marqueeFormat(int b) throws JposException {
-        MarqueeFormat = b;
+    public void marqueeFormat(int format) throws JposException {
+        MarqueeFormat = format;
     }
 
     @Override
-    public void marqueeRepeatWait(int b) throws JposException {
-        MarqueeRepeatWait = b;
+    public void marqueeRepeatWait(int millisec) throws JposException {
+        MarqueeRepeatWait = millisec;
     }
 
     @Override
-    public void marqueeType(int b) throws JposException {
-        MarqueeType = b;
+    public void marqueeType(int type) throws JposException {
+        MarqueeType = type;
     }
 
     @Override
-    public void marqueeUnitWait(int b) throws JposException {
-        MarqueeUnitWait = b;
+    public void marqueeUnitWait(int millisec) throws JposException {
+        MarqueeUnitWait = millisec;
     }
 
     @Override

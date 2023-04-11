@@ -56,21 +56,23 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is opened,</li>
-     *     <li>CapChangeDue is true.</li>
+     *     <li>CapChangeDue is true,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or changeDue equals the previous value of ChangeDue.</li>
      * </ul>
      * cashreturn must at least be checked for valid length.
      *
-     * @param cashreturn Text for cash return.
+     * @param changeDue Text for cash return.
      * @throws JposException If an error occurs.
      */
-    public void changeDue(String cashreturn) throws JposException;
+    public void changeDue(String changeDue) throws JposException;
 
     /**
      * Final part of setting CheckTotal. Can be overwritten within derived classes, if CapCheckTotal is true.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is opened,</li>
-     *     <li>CapCheckTotal is true.</li>
+     *     <li>CapCheckTotal is true,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or check equals the previous value of CheckTotal.</li>
      * </ul>
      *
      * @param check true if application and printer total must match, false otherwise.
@@ -84,7 +86,8 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapMultiContractor is true,</li>
-     *     <li>id is one of CID_FIRST, CID_SECOND or CID_SINGLE.</li>
+     *     <li>id is one of CID_FIRST, CID_SECOND or CID_SINGLE,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or id equals the previous value of ContractorId.</li>
      * </ul>
      *
      * @param id One of CID_FIRST, CID_SECOND or CID_SINGLE.
@@ -97,7 +100,8 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>type is one of DT_CONF, DT_EOD, DT_RESET, DT_RTC, DT_VAT, DT_START, DT_TICKET_START or DT_TICKET_END.</li>
+     *     <li>type is one of DT_CONF, DT_EOD, DT_RESET, DT_RTC, DT_VAT, DT_START, DT_TICKET_START or DT_TICKET_END,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or type equals the previous value of DateType.</li>
      * </ul>
      *
      * @param type One of DT_CONF, DT_EOD, DT_RESET, DT_RTC, DT_VAT or DT_START.
@@ -110,7 +114,8 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>CapDuplicateReceipt is true.</li>
+     *     <li>CapDuplicateReceipt is true,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or yes equals the previous value of DuplicateReceipt.</li>
      * </ul>
      *
      * @param yes true if service can store printer commands for generation of fiscal receipt duplication.
@@ -126,7 +131,8 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>CapFiscalReceiptStation is true,</li>
      *     <li>Printer is in monitoring state,</li>
      *     <li>station is one of RS_RECEIPT or RS_SLIP.</li>
-     *     <li>if CapSlpPresent is false, station is RS_RECEIPT.</li>
+     *     <li>if CapSlpPresent is false, station is RS_RECEIPT,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or station equals the previous value of FiscalReceiptStation.</li>
      * </ul>
      *
      * @param station One of RS_RECEIPT or RS_SLIP.
@@ -141,7 +147,8 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>Device is open,</li>
      *     <li>CapFiscalReceiptType is true,</li>
      *     <li>Printer is in monitoring state,</li>
-     *     <li>type is one of RT_CASH_IN, RT_CASH_OUT, RT_GENERIC, RT_SALES, RT_SERVICE, SIMPLE_INVOICE or RT_REFUND.</li>
+     *     <li>type is one of RT_CASH_IN, RT_CASH_OUT, RT_GENERIC, RT_SALES, RT_SERVICE, SIMPLE_INVOICE or RT_REFUND,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or type equals the previous value of FiscalReceiptType.</li>
      * </ul>
      *
      * @param type One of RT_CASH_IN, RT_CASH_OUT, RT_GENERIC, RT_SALES, RT_SERVICE, SIMPLE_INVOICE or RT_REFUND.
@@ -154,7 +161,8 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>type is one of the values listed in the UPOS specification for property MessageType.</li>
+     *     <li>type is one of the values listed in the UPOS specification for property MessageType,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or type equals the previous value of MessageType.</li>
      * </ul>
      *
      * @param type One of the values listed in the UPOS specification for property MessageType.

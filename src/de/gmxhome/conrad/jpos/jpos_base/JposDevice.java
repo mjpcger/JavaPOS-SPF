@@ -66,7 +66,7 @@ import java.util.List;
  *     <li>an array of property set lists with name <i>DeviceClass</i>s,</li>
  *     <li>an array for claimed property sets with name Claimed<i>DeviceClass</i>,</li>
  *     <li>a method <i>deviceClass</i>Init which initializes <i>DeviceClass</i>s to hold the correct number of lists,</li>
- *     <li>a method changeDefaults(<i>DeviceClass</i>Proterties) which must be oferwritten in derived classes to
+ *     <li>a method changeDefaults(<i>DeviceClass</i>Proterties) which must be overwritten in derived classes to
  *         set the correct property defaults and</li>
  *     <li>a class factory get<i>DeviceClass</i>Properties(index) which returns a device specific property set to be
  *         added to <i>DeviceClass</i>s[index].</li>
@@ -167,6 +167,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(BeltProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -222,6 +224,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(BillAcceptorProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -277,6 +281,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(BillDispenserProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -332,6 +338,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(BiometricsProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -387,6 +395,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(BumpBarProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -442,6 +452,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(CashChangerProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -498,6 +510,7 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(CashDrawerProperties props) {
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -553,6 +566,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(CheckScannerProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -608,6 +623,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(CoinAcceptorProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -646,6 +663,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(CATProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -701,6 +720,7 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(CoinDispenserProperties props) {
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -756,6 +776,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(ElectronicJournalProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -812,6 +834,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(ElectronicValueRWProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -868,6 +892,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(FiscalPrinterProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -923,6 +949,7 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(GateProperties props) {
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -978,6 +1005,7 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(HardTotalsProperties props) {
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1033,6 +1061,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(ImageScannerProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1088,6 +1118,7 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(ItemDispenserProperties props) {
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1159,6 +1190,7 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the propperty defaults
      */
     public void changeDefaults(KeylockProperties props) {
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1197,6 +1229,7 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(LightsProperties props) {
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1268,6 +1301,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the propperty defaults
      */
     public void changeDefaults(LineDisplayProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1306,6 +1341,7 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(MICRProperties props) {
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1361,6 +1397,7 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(MotionSensorProperties props) {
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1416,6 +1453,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(MSRProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1471,6 +1510,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(PINPadProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1526,6 +1567,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(PointCardRWProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1597,6 +1640,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the propperty defaults
      */
     public void changeDefaults(POSKeyboardProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1652,6 +1697,7 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the propperty defaults
      */
     public void changeDefaults(POSPowerProperties props) {
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1690,6 +1736,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(POSPrinterProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1745,6 +1793,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(RemoteOrderDisplayProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1800,6 +1850,7 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(RFIDScannerProperties props) {
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1855,6 +1906,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(ScaleProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1926,6 +1979,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the propperty defaults
      */
     public void changeDefaults(ScannerProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -1964,6 +2019,8 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(SignatureCaptureProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -2019,6 +2076,7 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(SmartCardRWProperties props) {
+        AllowAlwaysSetProperties = true;
     }
 
     /**
@@ -2090,6 +2148,7 @@ public class JposDevice extends JposBaseDevice {
      * @param props Property set for setting the property defaults
      */
     public void changeDefaults(ToneIndicatorProperties props) {
+        AllowAlwaysSetProperties = true;
     }
 
     /**

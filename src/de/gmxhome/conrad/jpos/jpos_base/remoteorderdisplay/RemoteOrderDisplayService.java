@@ -320,6 +320,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
         logPreSet("EventType");
         checkOpened();
         check(!Device.member(i, validEventTypes), Data.CurrentUnitID, JposConst.JPOS_E_ILLEGAL, 0, "EventType " + i + " invalid");
+        checkNoChangedOrClaimed(Data.EventType, i);
         RemoteOrderDisplayInterface.eventType(i);
         logSet("EventType");
     }
@@ -380,6 +381,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
         logPreSet("Timeout");
         checkOpened();
         check(i < 0, -1, JposConst.JPOS_E_ILLEGAL, 0, "Timeout " + i + " invalid");
+        checkNoChangedOrClaimed(Data.Timeout, i);
         RemoteOrderDisplayInterface.timeout(i);
         logSet("Timeout");
     }

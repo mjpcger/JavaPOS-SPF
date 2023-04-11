@@ -781,8 +781,8 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
     }
 
     @Override
-    public void changeDue(String cashreturn) throws JposException {
-        ChangeDue = cashreturn;
+    public void changeDue(String changeDue) throws JposException {
+        ChangeDue = changeDue;
     }
 
     @Override

@@ -29,15 +29,16 @@ public interface ScaleInterface extends JposBaseInterface {
      * Final part of setting StatusNotify. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled,</li>
+     *     <li>Device is not enabled,</li>
      *     <li>CapStatusUpdate is true,</li>
-     *     <li>The new status value is one of the predefined values.</li>
+     *     <li>The new status value is one of the predefined values,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or notify equals the previous value of StatusNotify.</li>
      * </ul>
      *
-     * @param i New StatusNotify value
+     * @param notify New StatusNotify value
      * @throws JposException If an error occurs
      */
-    public void statusNotify(int i) throws JposException;
+    public void statusNotify(int notify) throws JposException;
 
     /**
      * Final part of setting TareWeight. Can be overwritten within derived classes, if necessary.
@@ -69,13 +70,14 @@ public interface ScaleInterface extends JposBaseInterface {
      * Final part of setting ZeroValid. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled.</li>
+     *     <li>Device is not closed,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or flag equals the previous value of ZeroValid.</li>
      * </ul>
      *
-     * @param b New ZeroValid value
+     * @param flag New ZeroValid value
      * @throws JposException If an error occurs
      */
-    public void zeroValid(boolean b) throws JposException;
+    public void zeroValid(boolean flag) throws JposException;
 
     /**
      * Final part of DisplayText method. Can be overwritten within derived classes, if necessary.

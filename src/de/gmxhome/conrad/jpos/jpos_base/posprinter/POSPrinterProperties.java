@@ -949,8 +949,8 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     }
 
     @Override
-    public void cartridgeNotify(int i) throws JposException {
-        CartridgeNotify = i;
+    public void cartridgeNotify(int notify) throws JposException {
+        CartridgeNotify = notify;
     }
 
     @Override
@@ -1044,8 +1044,8 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     }
 
     @Override
-    public void rotateSpecial(int i) throws JposException {
-        RotateSpecial = i;
+    public void rotateSpecial(int special) throws JposException {
+        RotateSpecial = special;
     }
 
     @Override

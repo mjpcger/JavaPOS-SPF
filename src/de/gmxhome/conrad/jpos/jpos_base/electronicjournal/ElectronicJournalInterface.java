@@ -30,7 +30,8 @@ public interface ElectronicJournalInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>All bits set in station are set in CapStation as well.</li>
+     *     <li>All bits set in station are set in CapStation as well,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or station equals the previous value of Station.</li>
      * </ul>
      *
      * @param station Station for subsequent storing data into journal.
@@ -56,7 +57,8 @@ public interface ElectronicJournalInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>CapWaterMark is true or flag is false.</li>
+     *     <li>CapWaterMark is true or flag is false,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or flag equals the previous value of WaterMark.</li>
      * </ul>
      *
      * @param flag New WaterMark value.

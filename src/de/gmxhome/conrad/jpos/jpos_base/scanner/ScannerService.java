@@ -57,6 +57,7 @@ public class ScannerService extends JposBase implements ScannerService115 {
     public void setDecodeData(boolean b) throws JposException {
         logPreSet("DecodeData");
         checkOpened();
+        checkNoChangedOrClaimed(Data.DecodeData, b);
         ScannerInterface.decodeData(b);
         logSet("DecodeData");
     }

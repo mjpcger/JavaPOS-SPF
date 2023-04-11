@@ -31,7 +31,8 @@ public interface POSKeyboardInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device has not been closed,</li>
      *     <li>CapKeyUp is true: type is KBD_ET_DOWN or KBD_ET_DOWN_UP,</li>
-     *     <li>CapKeyUp is false: type is KBD_ET_DOWN.</li>
+     *     <li>CapKeyUp is false: type is KBD_ET_DOWN,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or type equals the previous value of EventTypes.</li>
      * </ul>
      *
      * @param type New EventTypes value

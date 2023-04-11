@@ -73,8 +73,11 @@ public class CATService extends JposBase implements CATService115 {
     @Override
     public void setAdditionalSecurityInformation(String addInfo) throws JposException {
         logPreSet("AdditionalSecurityInformation");
+        if (addInfo == null)
+            addInfo = "";
         checkOpened();
         Device.check(!Data.CapAdditionalSecurityInformation, JposConst.JPOS_E_ILLEGAL, "Device does not support AdditionalSecurityInformation");
+        checkNoChangedOrClaimed(Data.AdditionalSecurityInformation, addInfo);
         CatInterface.additionalSecurityInformation(addInfo);
         logSet("AdditionalSecurityInformation");
     }
@@ -273,6 +276,7 @@ public class CATService extends JposBase implements CATService115 {
         logPreSet("PaymentMedia");
         checkOpened();
         Device.checkMember(media, PaymentMedia, JposConst.JPOS_E_ILLEGAL, "Invalid medium: " + media);
+        checkNoChangedOrClaimed(Data.PaymentMedia, media);
         CatInterface.paymentMedia(media);
         logSet("PaymentMedia");
     }
@@ -310,6 +314,7 @@ public class CATService extends JposBase implements CATService115 {
         logPreSet("TrainingMode");
         checkOpened();
         Device.check(!Data.CapTrainingMode && flag, JposConst.JPOS_E_ILLEGAL, "Device does not support TrainingMode");
+        checkNoChangedOrClaimed(Data.TrainingMode, flag);
         CatInterface.trainingMode(flag);
         logSet("TrainingMode");
     }

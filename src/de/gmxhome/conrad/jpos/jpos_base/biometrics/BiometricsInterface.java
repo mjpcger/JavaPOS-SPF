@@ -45,7 +45,9 @@ public interface BiometricsInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>CapRealTimeData is true or newRealTimeData is false.</li>
+     *     <li>CapRealTimeData is true or newRealTimeData is false,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or newRealTimeDataEnabled equals the previous value of
+     *     RealTimeDataEnabled.</li>
      * </ul>
      *
      * @param newRealTimeDataEnabled New value for RealTimeDataEnabled property.
@@ -59,7 +61,8 @@ public interface BiometricsInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is open,</li>
      *     <li>newSensorColor is one of SC_MONO, SC_GRAYSCALE, SC_16, SC_256 or SC_FULL,</li>
-     *     <li>the corresponding bit in CapSensorColor is set.</li>
+     *     <li>the corresponding bit in CapSensorColor is set,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or newSensorColor equals the previous value of SensorColor.</li>
      * </ul>
      *
      * @param newSensorColor New value for SensorColor property.

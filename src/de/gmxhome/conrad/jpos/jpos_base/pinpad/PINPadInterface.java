@@ -31,7 +31,8 @@ public interface PINPadInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is opened,</li>
-     *     <li>EFT transaction has not been started.</li>
+     *     <li>EFT transaction has not been started,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or accountNumber equals the previous value of AccountNumber.</li>
      * </ul>
      *
      * @param accountNumber Account number to be used for the current EFT transaction.
@@ -45,7 +46,8 @@ public interface PINPadInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is opened,</li>
      *     <li>EFT transaction has not been started,</li>
-     *     <li>amount is not negative.</li>
+     *     <li>amount is not negative,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or amount equals the previous value of Amount.</li>
      * </ul>
      *
      * @param amount Amount of the current EFT transaction.
@@ -59,7 +61,8 @@ public interface PINPadInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is opened,</li>
      *     <li>Property PINEntryEnabled is false,</li>
-     *     <li>maximumPINLength is greater than zero.</li>
+     *     <li>maximumPINLength is greater than zero,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or maximumPINLength equals the previous value of MaximumPINLength.</li>
      * </ul>
      *
      * @param maximumPINLength Maximum acceptable number of digits in a PIN.
@@ -72,7 +75,8 @@ public interface PINPadInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is opened,</li>
-     *     <li>EFT transaction has not been started.</li>
+     *     <li>EFT transaction has not been started,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or merchantID equals the previous value of MerchantID.</li>
      * </ul>
      *
      * @param merchantID Merchant ID, as known by the EFT Transaction Host.
@@ -86,7 +90,8 @@ public interface PINPadInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is opened,</li>
      *     <li>Property PINEntryEnabled is false,</li>
-     *     <li>minimumPINLength is a positive value.</li>
+     *     <li>minimumPINLength is a positive value,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or minimumPINLength equals the previous value of MinimumPINLength.</li>
      * </ul>
      *
      * @param minimumPINLength Minimum acceptable number of digits in a PIN.
@@ -101,7 +106,8 @@ public interface PINPadInterface extends JposBaseInterface {
      *     <li>Device is opened,</li>
      *     <li>CapDisplay is one of DISP_PINRESTRICTED, DISP_RESTRICTED_LIST or DISP_RESTRICTED_ORDER,</li>
      *     <li>If CapDisplay is DISP_PINRESTRICTED, PINEntryEnabled is true,</li>
-     *     <li>prompt equals one of the values specified in property AvailablePromptsList.</li>
+     *     <li>prompt equals one of the values specified in property AvailablePromptsList,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or prompt equals the previous value of Prompt.</li>
      * </ul>
      *
      * @param prompt Identifies a predefined message to be displayed on the PIN Pad.
@@ -117,7 +123,8 @@ public interface PINPadInterface extends JposBaseInterface {
      *     <li>CapLanguage is not LANG_NONE,</li>
      *     <li>If CapLanguage is LANG_ONE, promptLanguage equals the default value of PromptLanguage,</li>
      *     <li>If CapLanguage is LANG_PINRESTRICTED, PINEntryEnabled is false,</li>
-     *     <li>promptLanguage specifies one of the languages specified in property AvailableLanguagesList.</li>
+     *     <li>promptLanguage specifies one of the languages specified in property AvailableLanguagesList,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or promptLanguage equals the previous value of PromptLanguage.</li>
      * </ul>
      * For example, if AvailableLanguagesList contains the language specification "EN,US", both, "EN,US" and "EN"
      * would be valid language specifications, but "US" would be invalid because "US" specifies a country, not a language.
@@ -134,7 +141,8 @@ public interface PINPadInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is opened,</li>
-     *     <li>EFT transaction has not been started.</li>
+     *     <li>EFT transaction has not been started,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or terminalID equals the previous value of TerminalID.</li>
      * </ul>
      *
      * @param terminalID Terminal ID, as known by the EFT Transaction Host.
@@ -147,7 +155,8 @@ public interface PINPadInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is opened,</li>
-     *     <li>EFT transaction has not been started.</li>
+     *     <li>EFT transaction has not been started,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or track1Data equals the previous value of Track1Data.</li>
      * </ul>
      *
      * @param track1Data Decoded track 1 data from the previous card swipe or an empty array.
@@ -160,7 +169,8 @@ public interface PINPadInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is opened,</li>
-     *     <li>EFT transaction has not been started.</li>
+     *     <li>EFT transaction has not been started,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or track2Data equals the previous value of Track2Data.</li>
      * </ul>
      *
      * @param track2Data Decoded track 2 data from the previous card swipe or an empty array.
@@ -173,7 +183,8 @@ public interface PINPadInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is opened,</li>
-     *     <li>EFT transaction has not been started.</li>
+     *     <li>EFT transaction has not been started,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or track3Data equals the previous value of Track3Data.</li>
      * </ul>
      *
      * @param track3Data Decoded track 3 data from the previous card swipe or an empty array.
@@ -186,7 +197,8 @@ public interface PINPadInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is opened,</li>
-     *     <li>EFT transaction has not been started.</li>
+     *     <li>EFT transaction has not been started,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or track4Data equals the previous value of Track4Data.</li>
      * </ul>
      *
      * @param track4Data Decoded track 4 (JIS-II) data from the previous card swipe or an empty array.
@@ -200,7 +212,8 @@ public interface PINPadInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is opened,</li>
      *     <li>EFT transaction has not been started,</li>
-     *     <li>transactionType is one of TRANS_DEBIT, TRANS_CREDIT, TRANS_INQ, TRANS_RECONCILE or TRANS_ADMIN.</li>
+     *     <li>transactionType is one of TRANS_DEBIT, TRANS_CREDIT, TRANS_INQ, TRANS_RECONCILE or TRANS_ADMIN,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or transactionType equals the previous value of TransactionType.</li>
      * </ul>
      *
      * @param transactionType Type of the current EFT Transaction.

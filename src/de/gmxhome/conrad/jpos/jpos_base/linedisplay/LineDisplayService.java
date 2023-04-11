@@ -220,6 +220,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         checkOpened();
         Device.check(!Data.CapBlinkRate, JposConst.JPOS_E_ILLEGAL, "Blink rate setting not supported");
         Device.check(i <= 0, JposConst.JPOS_E_ILLEGAL, "Illegal blink rate: " + i);
+        checkNoChangedOrClaimed(Data.BlinkRate, i);
         LineDisplayInterface.blinkRate(i);
         logSet("BlinkRate");
     }
@@ -253,6 +254,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
             default:
                 Device.check (true, JposConst.JPOS_E_ILLEGAL, "Invalid cursor type: " + i);
         }
+        checkNoChangedOrClaimed(Data.CursorType, i);
         LineDisplayInterface.cursorType(i);
         logSet("CursorType");
     }
@@ -290,6 +292,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         logPreSet("CharacterSet");
         checkOpened();
         Device.checkMember(i, Device.stringArrayToLongArray(Data.CharacterSetList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid Character set: " + i);
+        checkNoChangedOrClaimed(Data.CharacterSet, i);
         LineDisplayInterface.characterSet(i);
         logSet("CharacterSet");
     }
@@ -320,6 +323,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         logPreSet("CurrentWindow");
         checkOpened();
         Device.check(i < 0 || Data.DeviceWindows < i, JposConst.JPOS_E_ILLEGAL, "Current windows out of range: " + i);
+        checkNoChangedOrClaimed(Data.CurrentWindow, i);
         LineDisplayInterface.currentWindow(i);
         logSet("CurrentWindow");
     }
@@ -336,6 +340,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         logPreSet("CursorColumn");
         checkOpened();
         Device.check(Data.Columns < i || i < 0, JposConst.JPOS_E_ILLEGAL, "Cursor column out of range: " + i);
+        checkNoChangedOrClaimed(Data.CursorColumn, i);
         LineDisplayInterface.cursorColumn(i);
         logSet("CursorColumn");
     }
@@ -352,6 +357,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         logPreSet("CursorRow");
         checkOpened();
         Device.check(Data.Rows <= i || i < 0, JposConst.JPOS_E_ILLEGAL, "Cursor row out of range:" + i);
+        checkNoChangedOrClaimed(Data.CursorRow, i);
         LineDisplayInterface.cursorRow(i);
         logSet("CursorRow");
     }
@@ -367,6 +373,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setCursorUpdate(boolean b) throws JposException {
         logPreSet("CursorUpdate");
         checkOpened();
+        checkNoChangedOrClaimed(Data.CursorUpdate, b);
         LineDisplayInterface.cursorUpdate(b);
         logSet("CursorUpdate");
     }
@@ -383,6 +390,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         logPreSet("DeviceBrightness");
         checkOpened();
         Device.check(i < 0 || i > 100, JposConst.JPOS_E_ILLEGAL, "Invalid device brightness: " + i);
+        checkNoChangedOrClaimed(Data.DeviceBrightness, i);
         LineDisplayInterface.deviceBrightness(i);
         logSet("DeviceBrightness");
     }
@@ -428,6 +436,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         checkOpened();
         Device.check(!Data.CapICharWait && i > 0, JposConst.JPOS_E_ILLEGAL, "Inter-character wait not supported");
         Device.check(i < 0, JposConst.JPOS_E_ILLEGAL, "Invalid waiting time: " + i);
+        checkNoChangedOrClaimed(Data.InterCharacterWait, i);
         LineDisplayInterface.interCharacterWait(i);
         logSet("InterCharacterWait");
     }
@@ -445,6 +454,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         checkOpened();
         Device.check(Data.CurrentWindow == 0, JposConst.JPOS_E_ILLEGAL, "No marquee format for device window");
         Device.checkMember(i, new long[]{ LineDisplayConst.DISP_MF_WALK, LineDisplayConst.DISP_MF_PLACE }, JposConst.JPOS_E_ILLEGAL, "Invalid marquee format: " + i);
+        checkNoChangedOrClaimed(Data.MarqueeFormat, i);
         LineDisplayInterface.marqueeFormat(i);
         logSet("MarqueeFormat");
     }
@@ -461,6 +471,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         logPreSet("MarqueeRepeatWait");
         checkOpened();
         Device.check(i < 0, JposConst.JPOS_E_ILLEGAL, "Invalid marquee repeat wait: " + i);
+        checkNoChangedOrClaimed(Data.MarqueeRepeatWait, i);
         LineDisplayInterface.marqueeRepeatWait(i);
         logSet("MarqueeRepeatWait");
     }
@@ -481,6 +492,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         Device.check(!Data.CapHMarquee && !Device.member(i, new long[]{LineDisplayConst.DISP_MT_NONE, LineDisplayConst.DISP_MT_INIT, LineDisplayConst.DISP_MT_UP, LineDisplayConst.DISP_MT_DOWN}), JposConst.JPOS_E_ILLEGAL, "Invalid marquee type: " + i);
         Device.check(!Data.CapVMarquee && !Device.member(i, new long[]{LineDisplayConst.DISP_MT_NONE, LineDisplayConst.DISP_MT_INIT, LineDisplayConst.DISP_MT_LEFT, LineDisplayConst.DISP_MT_RIGHT}), JposConst.JPOS_E_ILLEGAL, "Invalid marquee type: " + i);
         Device.check(!Data.CapHMarquee && !Device.member(i, new long[]{LineDisplayConst.DISP_MT_NONE, LineDisplayConst.DISP_MT_INIT, LineDisplayConst.DISP_MT_UP, LineDisplayConst.DISP_MT_DOWN, LineDisplayConst.DISP_MT_LEFT, LineDisplayConst.DISP_MT_RIGHT}), JposConst.JPOS_E_ILLEGAL, "Invalid marquee type: " + i);
+        checkNoChangedOrClaimed(Data.MarqueeType, i);
         LineDisplayInterface.marqueeType(i);
         logSet("MarqueeType");
     }
@@ -498,6 +510,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         checkOpened();
         Device.check(Data.CurrentWindow == 0, JposConst.JPOS_E_ILLEGAL, "Marque not supported for device window");
         Device.check(i < 0, JposConst.JPOS_E_ILLEGAL, "Invalid marquee unit wait: " + i);
+        checkNoChangedOrClaimed(Data.MarqueeUnitWait, i);
         LineDisplayInterface.marqueeUnitWait(i);
         logSet("MarqueeUnitWait");
     }

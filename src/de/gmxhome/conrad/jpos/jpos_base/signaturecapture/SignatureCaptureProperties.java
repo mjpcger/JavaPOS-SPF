@@ -88,8 +88,8 @@ public class SignatureCaptureProperties extends JposCommonProperties implements 
     }
 
     @Override
-    public void realTimeDataEnabled(boolean b) throws JposException {
-        RealTimeDataEnabled = b;
+    public void realTimeDataEnabled(boolean flag) throws JposException {
+        RealTimeDataEnabled = flag;
     }
 
     @Override

@@ -204,6 +204,7 @@ public class BumpBarService extends JposBase implements BumpBarService115 {
         logPreSet("Timeout");
         checkOpened();
         check(i < 0, -1, JposConst.JPOS_E_ILLEGAL, 0, "Timeout " + i + " invalid");
+        checkNoChangedOrClaimed(Data.Timeout, i);
         BumpBarInterface.timeout(i);
         logSet("Timeout");
     }

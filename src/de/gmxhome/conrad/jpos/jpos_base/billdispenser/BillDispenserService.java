@@ -140,9 +140,12 @@ public class BillDispenserService extends JposBase implements BillDispenserServi
     @Override
     public void setCurrencyCode(String s) throws JposException {
         logPreSet("CurrencyCode");
+        if (s == null)
+            s = "";
         checkOpened();
         String[] allowed = Data.CurrencyCodeList.split(",");
         Device.check(!JposDevice.member(s, allowed), JposConst.JPOS_E_ILLEGAL, "Currency code " + s + " not in { " + Data.CurrencyCodeList + "}");
+        checkNoChangedOrClaimed(Data.CurrencyCode, s);
         BillDispenserInterface.currencyCode(s);
         logSet("CurrencyCode");
     }

@@ -73,7 +73,7 @@ public class ScannerProperties extends JposCommonProperties implements ScannerIn
     }
 
     @Override
-    public void decodeData(boolean b) throws JposException {
-        DecodeData = b;
+    public void decodeData(boolean flag) throws JposException {
+        DecodeData = flag;
     }
 }

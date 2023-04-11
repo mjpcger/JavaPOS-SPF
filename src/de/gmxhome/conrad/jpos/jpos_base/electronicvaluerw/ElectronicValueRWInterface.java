@@ -31,7 +31,8 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>CapAdditionalSecurityInformation is true.</li>
+     *     <li>CapAdditionalSecurityInformation is true,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or addInfo equals the previous value of AdditionalSecurityInformation.</li>
      * </ul>
      *
      * @param addInfo New value for AdditionalSecurityInformation property..
@@ -43,7 +44,8 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
      * Final part of setting Amount. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is open.</li>
+     *     <li>Device is open,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or amount equals the previous value of Amount.</li>
      * </ul>
      *
      * @param amount Payment amount for electronic money operation.
@@ -56,7 +58,8 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>code is not null.</li>
+     *     <li>code is not null,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or code equals the previous value of ApprovalCode.</li>
      * </ul>
      *
      * @param code New value for ApprovalCode property..
@@ -70,7 +73,8 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is open,</li>
      *     <li>service is one of the sevices specified in property ReaderWriterServiceList or an
-     *     empty string.</li>
+     *     empty string,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or service equals the previous value of CurrentService.</li>
      * </ul>
      *
      * @param service New service specifier.
@@ -83,7 +87,8 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>CDC_APPLICATIONCONTROL is set in CapDetectionControl or flag is false.</li>
+     *     <li>CDC_APPLICATIONCONTROL is set in CapDetectionControl or flag is false,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or flag equals the previous value of DetectionControl.</li>
      * </ul>
      *
      * @param flag New value for DetectionControl property..
@@ -96,7 +101,8 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>id is not null.</li>
+     *     <li>id is not null,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or id equals the previous value of MediumID.</li>
      * </ul>
      *
      * @param id New value for MediumID property..
@@ -109,7 +115,8 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>media is one of MEDIA_UNSPECIFIED, MEDIA_CREDIT, MEDIA_DEBIT or MEDIA_ELECTRONIC_MONEY.</li>
+     *     <li>media is one of MEDIA_UNSPECIFIED, MEDIA_CREDIT, MEDIA_DEBIT or MEDIA_ELECTRONIC_MONEY,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or media equals the previous value of PaymentMedia.</li>
      * </ul>
      *
      * @param media PaymentMedia for subsequent CAT service operations.
@@ -122,7 +129,8 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>value is one of PIN_ENTRY_NONE, PIN_ENTRY_EXTERNAL, PIN_ENTRY_INTERNAL or PIN_ENTRY_UNKNOWN.</li>
+     *     <li>value is one of PIN_ENTRY_NONE, PIN_ENTRY_EXTERNAL, PIN_ENTRY_INTERNAL or PIN_ENTRY_UNKNOWN,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or value equals the previous value of PINEntry.</li>
      * </ul>
      *
      * @param value New value for PINEntry property.
@@ -134,7 +142,8 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
      * Final part of setting Point. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is open.</li>
+     *     <li>Device is open,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or count equals the previous value of Point.</li>
      * </ul>
      *
      * @param count New value for Point property.
@@ -148,7 +157,8 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is open,</li>
      *     <li>CapTrainingMode is true or state is not TM_TRUE,</li>
-     *     <li>state is one of TM_FALSE, TM_TRUE or TM_UNKNOWN.</li>
+     *     <li>state is one of TM_FALSE, TM_TRUE or TM_UNKNOWN,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or state equals the previous value of TrainingModeState.</li>
      * </ul>
      *
      * @param state TrainingModeState for subsequent operation.
@@ -163,7 +173,8 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
      *     <li>Device is open,</li>
      *     <li>id is not null.</li>
      *     <li>id id has the form "ttt:cc", where ttt is a voucher/ticket identifier and cc the
-     *     corresponding count &gt; 0.</li>
+     *     corresponding count &gt; 0,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or id equals the previous value of VoucherID.</li>
      * </ul>
      *
      * @param id New value for VoucherID property..
@@ -180,6 +191,7 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
      *     <li>id id has the form "ttt1:cc1[,ttt2:cc2[,...]]", where ttt1 and tt2 are voucher/ticket
      *     identifiers, cc1 and cc2 the corresponding counts, where ttt2:cc2 is optional as well as
      *     further identifier:count pairs, represented by "...".</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or ids equals the previous value of VoucherIDList.</li>
      * </ul>
      *
      * @param ids New value for VoucherIDList property..

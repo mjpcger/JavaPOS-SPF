@@ -55,7 +55,8 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>CapMICRDevice is false or CapConcurrentMICR is true or concurrentMICR is false.</li>
+     *     <li>CapMICRDevice is false or CapConcurrentMICR is true or concurrentMICR is false,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or concurrentMICR equals the previous value of ConcurrentMICR.</li>
      * </ul>
      *
      * @param concurrentMICR New value for ConcurrentMICR property.
@@ -83,7 +84,8 @@ public interface CheckScannerInterface extends JposBaseInterface {
      *     <li>Device is open,</li>
      *     <li>documentHeight is not negative,</li>
      *     <li>documentHeight in combination with MapMode does not specify a height above the initial DocumentHeight
-     *     value.</li>
+     *     value,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or documentHeight equals the previous value of DocumentHeight.</li>
      * </ul>
      *
      * @param documentHeight New value for DocumentHeight property.
@@ -98,7 +100,8 @@ public interface CheckScannerInterface extends JposBaseInterface {
      *     <li>Device is open,</li>
      *     <li>documentWidth is not negative,</li>
      *     <li>documentWidth in combination with MapMode does not specify a width above the initial DocumentWidth
-     *     value.</li>
+     *     value,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or documentWidth equals the previous value of DocumentWidth.</li>
      * </ul>
      *
      * @param documentWidth New value for DocumentWidth property.
@@ -111,7 +114,8 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>fileID is not null.</li>
+     *     <li>fileID is not null,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or fileID equals the previous value of FileID.</li>
      * </ul>
      *
      * @param fileID New value for FileID property.
@@ -123,7 +127,8 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * Final part of setting FileIndex. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is open.</li>
+     *     <li>Device is open,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or fileIndex equals the previous value of FileIndex.</li>
      * </ul>
      *
      * @param fileIndex New value for FileIndex property.
@@ -137,7 +142,8 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is open,</li>
      *     <li>imageFormat is one of IF_NATIVE, IF_TIFF, IF_BMP, IF_JPEG, or IF_GIF,</li>
-     *     <li>the corresponding bit in CapImageFormat (CIF_NATIVE, ...) is set.</li>
+     *     <li>the corresponding bit in CapImageFormat (CIF_NATIVE, ...) is set,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or imageFormat equals the previous value of ImageFormat.</li>
      * </ul>
      *
      * @param imageFormat New value for ImageFormat property.
@@ -150,7 +156,8 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>imageTagData is not null.</li>
+     *     <li>imageTagData is not null,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or imageTagData equals the previous value of ImageTagData.</li>
      * </ul>
      *
      * @param imageTagData New value for ImageTagData property.
@@ -163,7 +170,8 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>mapMode is one of MM_DOTS, MM_TWIPS, MM_ENGLISH or MM_METRIC.</li>
+     *     <li>mapMode is one of MM_DOTS, MM_TWIPS, MM_ENGLISH or MM_METRIC,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or mapMode equals the previous value of MapMode.</li>
      * </ul>
      *
      * @param mapMode New value for MapMode property.
@@ -176,7 +184,8 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>quality is one of the values stored in the QualityList property.</li>
+     *     <li>quality is one of the values stored in the QualityList property,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or quality equals the previous value of Quality.</li>
      * </ul>
      *
      * @param quality New value for Quality property.

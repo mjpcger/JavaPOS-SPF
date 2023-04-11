@@ -177,6 +177,7 @@ public class ScaleService extends JposBase implements ScaleService115 {
         Device.check(!Data.CapStatusUpdate, JposConst.JPOS_E_ILLEGAL, "Status notification not supported");
         Device.check(Data.DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device enabled");
         Device.checkMember(i, new long[]{ScaleConst.SCAL_SN_ENABLED, ScaleConst.SCAL_SN_DISABLED}, JposConst.JPOS_E_ILLEGAL, "Invalid status notification value: " + i);
+        checkNoChangedOrClaimed(Data.StatusNotify, i);
         ScaleInterface.statusNotify(i);
         logSet("StatusNotify");
     }
@@ -231,6 +232,7 @@ public class ScaleService extends JposBase implements ScaleService115 {
     public void setZeroValid(boolean b) throws JposException {
         logPreSet("UnitPrice");
         checkOpened();
+        checkNoChangedOrClaimed(Data.ZeroValid, b);
         ScaleInterface.zeroValid(b);
         logSet("ZeroValid");
     }

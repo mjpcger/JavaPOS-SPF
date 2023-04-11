@@ -71,7 +71,8 @@ public interface BumpBarInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device has been opened,</li>
-     *     <li>The new property value is positive.</li>
+     *     <li>The new property value is positive,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or milliseconds equals the previous value of Timeout.</li>
      * </ul>
      *
      * @param milliseconds New Timeout value

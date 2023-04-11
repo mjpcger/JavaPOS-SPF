@@ -616,11 +616,14 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     }
 
     @Override
-    public void setChangeDue(String cashreturn) throws JposException {
+    public void setChangeDue(String changeDue) throws JposException {
         logPreSet("ChangeDue");
+        if (changeDue == null)
+            changeDue = "";
         checkOpened();
         Device.check(!Data.CapChangeDue, JposConst.JPOS_E_ILLEGAL, "Invalid property 'ChangeDue'");
-        FiscalPrinterInterface.changeDue(cashreturn);
+        checkNoChangedOrClaimed(Data.ChangeDue, changeDue);
+        FiscalPrinterInterface.changeDue(changeDue);
         logSet("ChangeDue");
     }
 
@@ -636,6 +639,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         logPreSet("CheckTotal");
         checkOpened();
         Device.check(!Data.CapCheckTotal, JposConst.JPOS_E_ILLEGAL, "Invalid property 'CheckTotal'");
+        checkNoChangedOrClaimed(Data.CheckTotal, check);
         FiscalPrinterInterface.checkTotal(check);
         logSet("CheckTotal");
     }
@@ -658,6 +662,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         checkOpened();
         Device.check(!Data.CapMultiContractor, JposConst.JPOS_E_ILLEGAL, "Changing 'ContractorId' invalid");
         Device.checkMember(id, allowed,JposConst.JPOS_E_ILLEGAL, "Invalid contractor ID: " + id);
+        checkNoChangedOrClaimed(Data.ContractorId, id);
         FiscalPrinterInterface.contractorId(id);
         logSet("ContractorId");
     }
@@ -698,6 +703,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         logPreSet("DateType");
         checkOpened();
         Device.checkMember(type, allowed, JposConst.JPOS_E_ILLEGAL, "Illegal date specifier: " + type);
+        checkNoChangedOrClaimed(Data.DateType, type);
         FiscalPrinterInterface.dateType(type);
         logSet("DateType");
     }
@@ -728,6 +734,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         logPreSet("DuplicateReceipt");
         checkOpened();
         Device.check(!Data.CapDuplicateReceipt, JposConst.JPOS_E_ILLEGAL, "Changing 'DuplicateReceipt' invalid");
+        checkNoChangedOrClaimed(Data.DuplicateReceipt, yes);
         FiscalPrinterInterface.duplicateReceipt(yes);
         logSet("DuplicateReceipt");
     }
@@ -786,6 +793,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR && Data.PrinterState != FiscalPrinterConst.FPTR_PS_LOCKED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Neither locked nor in monitor state");
         Device.check(station == FiscalPrinterConst.FPTR_RS_SLIP && !Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "No slip station");
         Device.check(station == FiscalPrinterConst.FPTR_RS_RECEIPT && !Data.CapRecPresent, JposConst.JPOS_E_ILLEGAL, "No receipt station");
+        checkNoChangedOrClaimed(Data.FiscalReceiptStation, station);
         FiscalPrinterInterface.fiscalReceiptStation(station);
         logSet("FiscalReceiptStation");
     }
@@ -813,6 +821,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         Device.check(!Data.CapFiscalReceiptType, JposConst.JPOS_E_ILLEGAL, "Invalid property 'FiscalReceiptType'");
         Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in monitor state");
         Device.checkMember(type, allowed, JposConst.JPOS_E_ILLEGAL, "Invalid receipt type: " + type);
+        checkNoChangedOrClaimed(Data.FiscalReceiptType, type);
         FiscalPrinterInterface.fiscalReceiptType(type);
         logSet("FiscalReceiptType");
     }
@@ -917,6 +926,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         logPreSet("MessageType");
         checkOpened();
         Device.checkMember(type, allowed, JposConst.JPOS_E_ILLEGAL, "Invalid message type: " + type);
+        checkNoChangedOrClaimed(Data.MessageType, type);
         FiscalPrinterInterface.messageType(type);
         logSet("MessageType");
     }

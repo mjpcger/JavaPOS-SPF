@@ -31,7 +31,8 @@ public interface BeltInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>CapAutoStopBackward is true or flag is false.</li>
+     *     <li>CapAutoStopBackward is true or flag is false,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or flag equals the previous value of AutoStopBackward.</li>
      * </ul>
      *
      * @param flag New value for AutoStopBackward property.
@@ -45,7 +46,8 @@ public interface BeltInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is open,</li>
      *     <li>CapAutoStopBackward is true,</li>
-     *     <li>delay is FOREVER or positive.</li>
+     *     <li>delay is FOREVER or positive,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or delay equals the previous value of AutoStopBackwardDelayTime.</li>
      * </ul>
      *
      * @param delay Time delay in milliseconds for automatic stop in backward direction.
@@ -58,7 +60,8 @@ public interface BeltInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>CapAutoStopForward is true or flag is false.</li>
+     *     <li>CapAutoStopForward is true or flag is false,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or flag equals the previous value of AutoStopForward.</li>
      * </ul>
      *
      * @param flag New value for AutoStopForward property.
@@ -72,7 +75,8 @@ public interface BeltInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is open,</li>
      *     <li>CapAutoStopForward is true,</li>
-     *     <li>delay is FOREVER or positive.</li>
+     *     <li>delay is FOREVER or positive,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or delay equals the previous value of AutoStopForwardDelayTime.</li>
      * </ul>
      *
      * @param delay Time delay in milliseconds for automatic stop in forward direction.

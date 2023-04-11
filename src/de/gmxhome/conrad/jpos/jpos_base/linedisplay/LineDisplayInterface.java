@@ -59,13 +59,14 @@ public interface LineDisplayInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device has not been closed,</li>
      *     <li>CapBlinkRate is true.</li>
-     *     <li>New blink rate is &gt; 0.</li>
+     *     <li>New blink rate is &gt; 0,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or rate equals the previous value of BlinkRate.</li>
      * </ul>
      *
-     * @param b New BlinkRate value
+     * @param rate New BlinkRate value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void blinkRate(int b) throws JposException;
+    public void blinkRate(int rate) throws JposException;
 
     /**
      * Final part of setting CursorType. Can be overwritten within derived classes, if necessary.
@@ -74,90 +75,97 @@ public interface LineDisplayInterface extends JposBaseInterface {
      *     <li>Device has not been closed,</li>
      *     <li>CapCursorType is neither DISP_CCT_NONE nor DISP_CCT_FIXED,</li>
      *     <li>Either CapCursorType bit DISP_CCT_BLINK is set or bit DISP_CT_BLINK is not set in new value,</li>
-     *     <li>The new value is valid due to a match with the corresponding value in CapCursorType.</li>
+     *     <li>The new value is valid due to a match with the corresponding value in CapCursorType,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or type equals the previous value of CursorType.</li>
      * </ul>
      *
-     * @param b New CursorType value
+     * @param type New CursorType value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void cursorType(int b) throws JposException;
+    public void cursorType(int type) throws JposException;
 
     /**
      * Final part of setting CharacterSet. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device has not been closed,</li>
-     *     <li>The new value is one of the values specified in CharacterSetList.</li>
+     *     <li>The new value is one of the values specified in CharacterSetList,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or charset equals the previous value of CharacterSet.</li>
      * </ul>
      *
-     * @param b New CharacterSet value
+     * @param charset New CharacterSet value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void characterSet(int b) throws JposException;
+    public void characterSet(int charset) throws JposException;
 
     /**
      * Final part of setting CurrentWindow. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device has not been closed,</li>
-     *     <li>The new value is &ge; 0 and &le; DeviceWindows.</li>
+     *     <li>The new value is &ge; 0 and &le; DeviceWindows,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or windowNo equals the previous value of CurrentWindow.</li>
      * </ul>
      *
-     * @param b New CurrentWindow value
+     * @param windowNo New CurrentWindow value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void currentWindow(int b) throws JposException;
+    public void currentWindow(int windowNo) throws JposException;
 
     /**
      * Final part of setting CursorColumn. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device has not been closed,</li>
-     *     <li>The new value is &ge; 0 and &le; Columns.</li>
+     *     <li>The new value is &ge; 0 and &le; Columns,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or column equals the previous value of CursorColumn.</li>
      * </ul>
      *
-     * @param b New CursorColumn value
+     * @param column New CursorColumn value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void cursorColumn(int b) throws JposException;
+    public void cursorColumn(int column) throws JposException;
 
     /**
      * Final part of setting CursorRow. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device has not been closed,</li>
-     *     <li>The new value is &ge; 0 and &lt; Rows.</li>
+     *     <li>The new value is &ge; 0 and &lt; Rows,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or row equals the previous value of CursorRow.</li>
      * </ul>
      *
-     * @param b New CursorRow value
+     * @param row New CursorRow value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void cursorRow(int b) throws JposException;
+    public void cursorRow(int row) throws JposException;
 
     /**
      * Final part of setting CursorUpdate. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device has not been closed.</li>
+     *     <li>Device has not been closed,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or flag equals the previous value of CursorUpdate.</li>
      * </ul>
      *
-     * @param b New CursorUpdate value
+     * @param flag New CursorUpdate value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void cursorUpdate(boolean b) throws JposException;
+    public void cursorUpdate(boolean flag) throws JposException;
 
     /**
      * Final part of setting DeviceBrightness. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device has not been closed,</li>
-     *     <li>The new value is &ge; 0 and &le; 100.</li>
+     *     <li>The new value is &ge; 0 and &le; 100,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or brightness equals the previous value of DeviceBrightness.</li>
      * </ul>
      *
-     * @param b New DeviceBrightness value
+     * @param brightness New DeviceBrightness value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void deviceBrightness(int b) throws JposException;
+    public void deviceBrightness(int brightness) throws JposException;
 
     /**
      * Final part of setting InterCharacterWait. Can be overwritten within derived classes, if necessary.
@@ -165,13 +173,14 @@ public interface LineDisplayInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device has not been closed,</li>
      *     <li>CapICharWait is false: The new value is 0,</li>
-     *     <li>CapICharWait is true: The new value is &ge; 0.</li>
+     *     <li>CapICharWait is true: The new value is &ge; 0,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or millisec equals the previous value of InterCharacterWait.</li>
      * </ul>
      *
-     * @param b New InterCharacterWait value
+     * @param millisec New InterCharacterWait value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void interCharacterWait(int b) throws JposException;
+    public void interCharacterWait(int millisec) throws JposException;
 
     /**
      * Final part of setting MarqueeFormat. Can be overwritten within derived classes, if necessary.
@@ -179,26 +188,28 @@ public interface LineDisplayInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device has not been closed,</li>
      *     <li>CurrentWindow is not the device window,</li>
-     *     <li>The new value is DISP_MF_WALK or DISP_MF_PLACE.</li>
+     *     <li>The new value is DISP_MF_WALK or DISP_MF_PLACE,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or format equals the previous value of MarqueeFormat.</li>
      * </ul>
      *
-     * @param b New MarqueeFormat value
+     * @param format New MarqueeFormat value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void marqueeFormat(int b) throws JposException;
+    public void marqueeFormat(int format) throws JposException;
 
     /**
      * Final part of setting MarqueeRepeatWait. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device has not been closed,</li>
-     *     <li>The new value is &ge; 0.</li>
+     *     <li>The new value is &ge; 0,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or millisec equals the previous value of MarqueeRepeatWait.</li>
      * </ul>
      *
-     * @param b New MarqueeRepeatWait value
+     * @param millisec New MarqueeRepeatWait value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void marqueeRepeatWait(int b) throws JposException;
+    public void marqueeRepeatWait(int millisec) throws JposException;
 
     /**
      * Final part of setting MarqueeType. Can be overwritten within derived classes, if necessary.
@@ -209,13 +220,14 @@ public interface LineDisplayInterface extends JposBaseInterface {
      *     <li>CapVMarquee and CapHMarquee are false: New value is DISP_MT_NONE.</li>
      *     <li>Only CapVMarquee is false: New value is neither DISP_MT_UP nor DISP_MT_DOWN,</li>
      *     <li>Only CapHMarquee is false: New value is neither DISP_MT_LEFT nor DISP_MT_RIGHT,</li>
-     *     <li>New value is DISP_MT_NONE, DISP_MT_INIT, DISP_MT_UP, DISP_MT_DOWN, DISP_MT_LEFT or DISP_MT_RIGHT.</li>
+     *     <li>New value is DISP_MT_NONE, DISP_MT_INIT, DISP_MT_UP, DISP_MT_DOWN, DISP_MT_LEFT or DISP_MT_RIGHT,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or type equals the previous value of MarqueeType.</li>
      * </ul>
      *
-     * @param b New MarqueeType value
+     * @param type New MarqueeType value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void marqueeType(int b) throws JposException;
+    public void marqueeType(int type) throws JposException;
 
     /**
      * Final part of setting MarqueeUnitWait. Can be overwritten within derived classes, if necessary.
@@ -223,13 +235,14 @@ public interface LineDisplayInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device has not been closed,</li>
      *     <li>CurrentWindow is not the device window,</li>
-     *     <li>The new value is &ge; 0.</li>
+     *     <li>The new value is &ge; 0,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or millisec equals the previous value of MarqueeUnitWait.</li>
      * </ul>
      *
-     * @param b New MarqueeUnitWait value
+     * @param millisec New MarqueeUnitWait value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void marqueeUnitWait(int b) throws JposException;
+    public void marqueeUnitWait(int millisec) throws JposException;
 
     /**
      * Final part of DisplayBitmap method. Can be overwritten in derived class, if necessary.

@@ -209,6 +209,7 @@ public class BeltService extends JposBase implements BeltService115 {
         logPreSet("AutoStopBackward");
         checkOpened();
         Device.check(!Data.CapAutoStopBackward && b, JposConst.JPOS_E_ILLEGAL, "Device does not support AutoStopBackward");
+        checkNoChangedOrClaimed(Data.AutoStopBackward, b);
         BeltInterface.autoStopBackward(b);
         logSet("AutoStopBackward");
 
@@ -220,6 +221,7 @@ public class BeltService extends JposBase implements BeltService115 {
         checkOpened();
         if (Data.CapAutoStopBackward) {
             Device.check(i < 0 && i != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Device does not support negative AutoStopBackwardDelayTime");
+            checkNoChangedOrClaimed(Data.AutoStopBackwardDelayTime, i);
             BeltInterface.autoStopBackwardDelayTime(i);
         }
         logSet("AutoStopBackwardDelayTime");
@@ -230,6 +232,7 @@ public class BeltService extends JposBase implements BeltService115 {
         logPreSet("AutoStopForward");
         checkOpened();
         Device.check(!Data.CapAutoStopForward, JposConst.JPOS_E_ILLEGAL, "Device does not support AutoStopForward");
+        checkNoChangedOrClaimed(Data.AutoStopForward, b);
         BeltInterface.autoStopForward(b);
         logSet("AutoStopForward");
     }
@@ -240,6 +243,7 @@ public class BeltService extends JposBase implements BeltService115 {
         checkOpened();
         if (Data.CapAutoStopForward) {
             Device.check(i < 0 && i != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Device does not support negative AutoStopForwardDelayTime");
+            checkNoChangedOrClaimed(Data.AutoStopForwardDelayTime, i);
             BeltInterface.autoStopForwardDelayTime(i);
         }
         logSet("AutoStopForwardDelayTime");

@@ -31,13 +31,14 @@ public interface SignatureCaptureInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device has been opened,</li>
-     *     <li>The new property value is false or CapRealTimeData is true.</li>
+     *     <li>The new property value is false or CapRealTimeData is true,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or flag equals the previous value of RealTimeDataEnabled.</li>
      * </ul>
      *
-     * @param b     New property value.
+     * @param flag     New property value.
      * @throws JposException If an error occurs.
      */
-    void realTimeDataEnabled(boolean b) throws JposException;
+    void realTimeDataEnabled(boolean flag) throws JposException;
 
     /**
      * Final part of BeginCapture method. Can be overwritten in derived class, if necessary.

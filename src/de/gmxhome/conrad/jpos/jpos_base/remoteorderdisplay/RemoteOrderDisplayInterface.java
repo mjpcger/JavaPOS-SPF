@@ -71,7 +71,8 @@ public interface RemoteOrderDisplayInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device has been opened,</li>
-     *     <li>The new property value is a bitwise combination of DE_TOUCH_UP, DE_TOUCH_DOWN and DE_TOUCH_MOVE.</li>
+     *     <li>The new property value is a bitwise combination of DE_TOUCH_UP, DE_TOUCH_DOWN and DE_TOUCH_MOVE,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or type equals the previous value of EventType.</li>
      * </ul>
      * <br>-
      * <br>-
@@ -99,7 +100,8 @@ public interface RemoteOrderDisplayInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device has been opened,</li>
-     *     <li>The new property value is positive.</li>
+     *     <li>The new property value is positive,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or milliseconds equals the previous value of Timeout.</li>
      * </ul>
      *
      * @param milliseconds New Timeout value

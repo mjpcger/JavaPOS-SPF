@@ -113,6 +113,7 @@ public class SignatureCaptureService extends JposBase implements SignatureCaptur
         logPreSet("RealTimeDataEnabled");
         checkOpened();
         Device.check(b && !Data.CapRealTimeData, JposConst.JPOS_E_ILLEGAL, "Activating real time data not supported");
+        checkNoChangedOrClaimed(Data.RealTimeDataEnabled, b);
         SignatureCaptureInterface.realTimeDataEnabled(b);
         logSet("RealTimeDataEnabled");
     }

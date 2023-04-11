@@ -31,7 +31,8 @@ public interface CATInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>CapAdditionalSecurityInformation is true.</li>
+     *     <li>CapAdditionalSecurityInformation is true,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or addInfo equals the previous value of AdditionalSecurityInformation.</li>
      * </ul>
      *
      * @param addInfo AdditionalSecurityInformation for subsequent storing data into journal.
@@ -44,7 +45,8 @@ public interface CATInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>media is one of MEDIA_UNSPECIFIED, MEDIA_CREDIT, MEDIA_DEBIT or MEDIA_ELECTRONIC_MONEY.</li>
+     *     <li>media is one of MEDIA_UNSPECIFIED, MEDIA_CREDIT, MEDIA_DEBIT or MEDIA_ELECTRONIC_MONEY,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or media equals the previous value of PaymentMedia.</li>
      * </ul>
      *
      * @param media PaymentMedia for subsequent storing data into journal.
@@ -57,7 +59,8 @@ public interface CATInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>CapTrainingMode is true or flag is false.</li>
+     *     <li>CapTrainingMode is true or flag is false,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or flag equals the previous value of TrainingMode.</li>
      * </ul>
      *
      * @param flag TrainingMode for subsequent storing data into journal.

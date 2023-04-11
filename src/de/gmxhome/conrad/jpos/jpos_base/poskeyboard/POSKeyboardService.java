@@ -64,6 +64,7 @@ public class POSKeyboardService extends JposBase implements POSKeyboardService11
         checkOpened();
         Device.check(!Data.CapKeyUp && type != POSKeyboardConst.KBD_ET_DOWN, JposConst.JPOS_E_ILLEGAL, "No support for key up events");
         Device.check(type != POSKeyboardConst.KBD_ET_DOWN && type != POSKeyboardConst.KBD_ET_DOWN_UP, JposConst.JPOS_E_ILLEGAL, "Invalid event type: " + type);
+        checkNoChangedOrClaimed(Data.EventTypes, type);
         POSKeyboardInterface.eventTypes(type);
         logSet("EventTypes");
     }

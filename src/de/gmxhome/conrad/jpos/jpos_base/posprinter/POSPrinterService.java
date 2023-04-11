@@ -575,6 +575,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         Device.check(Data.DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device enabled");
         Device.check((Data.CapJrnCartridgeSensor | Data.CapRecCartridgeSensor | Data.CapSlpCartridgeSensor) == 0 && i != POSPrinterConst.PTR_CN_DISABLED, JposConst.JPOS_E_ILLEGAL, "No cartridge sensor notification");
         Device.check(i != POSPrinterConst.PTR_CN_DISABLED && i != POSPrinterConst.PTR_CN_ENABLED, JposConst.JPOS_E_ILLEGAL, "Invalid cartridge notification value: " + i);
+        checkNoChangedOrClaimed(Data.CartridgeNotify, i);
         POSPrinterInterface.cartridgeNotify(i);
         logSet("CartridgeNotify");
     }
@@ -1093,6 +1094,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         logPreSet("RotateSpecial");
         checkOpened();
         Device.check(!Data.CapRecBarCode && !Data.CapSlpBarCode, JposConst.JPOS_E_ILLEGAL, "Barcode not supported");
+        checkNoChangedOrClaimed(Data.RotateSpecial, i);
         POSPrinterInterface.rotateSpecial(i);
         logSet("RotateSpecial");
     }

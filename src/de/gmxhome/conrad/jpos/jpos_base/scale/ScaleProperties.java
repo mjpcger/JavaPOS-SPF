@@ -187,8 +187,8 @@ public class ScaleProperties extends JposCommonProperties implements ScaleInterf
     }
 
     @Override
-    public void statusNotify(int i) throws JposException {
-        StatusNotify = i;
+    public void statusNotify(int notify) throws JposException {
+        StatusNotify = notify;
     }
 
     @Override
@@ -202,8 +202,8 @@ public class ScaleProperties extends JposCommonProperties implements ScaleInterf
     }
 
     @Override
-    public void zeroValid(boolean b) throws JposException {
-        ZeroValid = b;
+    public void zeroValid(boolean flag) throws JposException {
+        ZeroValid = flag;
     }
 
     @Override

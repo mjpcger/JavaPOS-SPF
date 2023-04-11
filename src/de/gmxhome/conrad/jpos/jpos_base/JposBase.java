@@ -24,6 +24,7 @@ import net.bplaced.conrad.log4jpos.Level;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 /**
  * Base class for all UPOS device services using this framework. Each service owns a
@@ -458,6 +459,27 @@ public class JposBase implements BaseService {
      */
     public void checkOpened() throws JposException {
         Device.check(Props.State == JposConst.JPOS_S_CLOSED, JposConst.JPOS_E_CLOSED, "Device not opened");
+    }
+
+    /**
+     * Checks within property set methods whether old and new values are equal or the device has been claimed. If the
+     * device is an exclusive-use device and AllowAlwaysSetProperties has been set to false via jpos.xml, a
+     * JposException will be thrown.
+     *
+     * @param oldval Property value to be changed.
+     * @param newval New property value.
+     * @throws JposException Will be thrown whenever the throwing condition is met.
+     */
+    public void checkNoChangedOrClaimed(Object oldval, Object newval) throws JposException {
+        boolean change;
+        if (oldval == null)
+            change = newval != null;
+        else if (oldval.getClass().isArray())
+            change = !Arrays.equals((Object[]) oldval, (Object[]) newval);
+        else
+            change = !oldval.equals(newval);
+        if (change && !Device.AllowAlwaysSetProperties && Props.ExclusiveUse == JposCommonProperties.ExclusiveYes)
+            Device.check(!Props.Claimed, JposConst.JPOS_E_NOTCLAIMED, "Device not claimed");
     }
 
     /**

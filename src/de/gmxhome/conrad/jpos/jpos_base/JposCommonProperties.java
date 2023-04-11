@@ -187,6 +187,11 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     public JposBase EventSource;
 
     /**
+     * Value of property AllowAlwaysSetProperties in jpos.xml for the specified device
+     */
+    public boolean AllowAlwaysSetProperties = true;
+
+    /**
      * List containing SyncObject instances to be signalled after releasing a claimed object. Whenever a service
      * tries to claim a device which has been claimed before by another instance, if adds a SyncObject to this list
      * and waits until the object will be signalled. During release or close, all objects within this list will be

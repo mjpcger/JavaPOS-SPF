@@ -31,7 +31,8 @@ public interface BillDispenserInterface  extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>code is one of the values specified in CurrencyCodeList.</li>
+     *     <li>code is one of the values specified in CurrencyCodeList,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or code equals the previous value of CurrencyCode.</li>
      * </ul>
      *
      * @param code New value for CurrencyCode property.

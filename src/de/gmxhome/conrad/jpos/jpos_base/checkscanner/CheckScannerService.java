@@ -284,6 +284,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
         logPreSet("ConcurrentMICR");
         checkOpened();
         Device.check(Data.CapMICRDevice && !Data.CapConcurrentMICR && concurrentMICR, JposConst.JPOS_E_ILLEGAL, "Setting ConcurrentMICR invalid");
+        checkNoChangedOrClaimed(Data.ConcurrentMICR, concurrentMICR);
         CheckScanner.concurrentMICR(concurrentMICR);
         logSet("ConcurrentMICR");
     }
@@ -313,6 +314,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
                 break;
             }
         }
+        checkNoChangedOrClaimed(Data.DocumentHeight, documentHeight);
         CheckScanner.documentHeight(documentHeight);
         logSet("DocumentHeight");
     }
@@ -328,6 +330,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
                 break;
             }
         }
+        checkNoChangedOrClaimed(Data.DocumentWidth, documentWidth);
         CheckScanner.documentWidth(documentWidth);
         logSet("DocumentWidth");
     }
@@ -338,6 +341,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
             fileID = "";
         logPreSet("FileID");
         checkOpened();
+        checkNoChangedOrClaimed(Data.FileID, fileID);
         CheckScanner.fileID(fileID);
         logSet("FileID");
     }
@@ -346,6 +350,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
     public void setFileIndex(int fileIndex) throws JposException {
         logPreSet("FileIndex");
         checkOpened();
+        checkNoChangedOrClaimed(Data.FileIndex, fileIndex);
         CheckScanner.fileIndex(fileIndex);
         logSet("FileIndex");
     }
@@ -364,6 +369,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
         for (int[] format : formats) {
             if (imageFormat == format[0]) {
                 Device.check((Data.CapImageFormat & format[1]) == 0, JposConst.JPOS_E_ILLEGAL, "Unsupported ImageFormat value: " + imageFormat);
+                checkNoChangedOrClaimed(Data.ImageFormat, imageFormat);
                 CheckScanner.imageFormat(imageFormat);
                 logSet("ImageFormat");
                 return;
@@ -378,6 +384,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
             imageTagData = "";
         logPreSet("ImageTagData");
         checkOpened();
+        checkNoChangedOrClaimed(Data.ImageTagData, imageTagData);
         CheckScanner.imageTagData(imageTagData);
         logSet("ImageTagData");
     }
@@ -393,6 +400,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
         logPreSet("MapMode");
         checkOpened();
         Device.checkMember(mapMode, modes, JposConst.JPOS_E_ILLEGAL, "Illegal MapMode value: " + mapMode);
+        checkNoChangedOrClaimed(Data.MapMode, mapMode);
         CheckScanner.mapMode(mapMode);
         logSet("MapMode");
     }
@@ -402,6 +410,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
         logPreSet("Quality");
         checkOpened();
         Device.checkMember(quality, Device.stringArrayToLongArray(Data.QualityList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid Quality value: " + quality);
+        checkNoChangedOrClaimed(Data.Quality, quality);
         CheckScanner.quality(quality);
         logSet("Quality");
     }

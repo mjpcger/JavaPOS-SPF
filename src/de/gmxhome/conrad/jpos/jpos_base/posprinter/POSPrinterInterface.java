@@ -31,13 +31,14 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is disabled,</li>
      *     <li>CapJrnCartridgeSensor, CapRecCartridgeSensor or CapSlpCartridgeSensor is not 0,</li>
-     *     <li>The new value is one of the predefined values.</li>
+     *     <li>The new value is one of the predefined values,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or notify equals the previous value of CartridgeNotify.</li>
      * </ul>
      *
-     * @param i New CartridgeNotify value
+     * @param notify New CartridgeNotify value
      * @throws JposException If an error occurs
      */
-    public void cartridgeNotify(int i) throws JposException;
+    public void cartridgeNotify(int notify) throws JposException;
 
     /**
      * Final part of setting CharacterSet. Can be overwritten within derived classes, if necessary.
@@ -288,14 +289,15 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * Final part of setting RotateSpecial. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled,</li>
-     *     <li>CapRecBarCode or CapSlpBarCode is true.</li>
+     *     <li>Device is not closed,</li>
+     *     <li>CapRecBarCode or CapSlpBarCode is true,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or special equals the previous value of RotateSpecial.</li>
      * </ul>
      *
-     * @param i New RotateSpecial value
+     * @param special New RotateSpecial value
      * @throws JposException If an error occurs
      */
-    public void rotateSpecial(int i) throws JposException;
+    public void rotateSpecial(int special) throws JposException;
 
     /**
      * Final part of setting SlpCurrentCartridge. Can be overwritten within derived classes, if necessary.

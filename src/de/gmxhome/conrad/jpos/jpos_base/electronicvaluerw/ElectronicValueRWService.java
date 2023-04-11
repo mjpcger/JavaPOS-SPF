@@ -570,6 +570,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
         JposDevice.check(!Data.CapAdditionalSecurityInformation, JposConst.JPOS_E_ILLEGAL, "AdditionalSecurityInformation not supported by service");
         if (s == null)
             s = "";
+        checkNoChangedOrClaimed(Data.AdditionalSecurityInformation, s);
         ElectronicValueRW.additionalSecurityInformation(s);
         logSet("AdditionalSecurityInformation");
     }
@@ -578,6 +579,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void setAmount(long l) throws JposException {
         logPreSet("Amount");
         checkOpened();
+        checkNoChangedOrClaimed(Data.Amount, l);
         ElectronicValueRW.amount(l);
         logSet("Amount");
     }
@@ -585,9 +587,10 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     @Override
     public void setApprovalCode(String s) throws JposException {
         logPreSet("ApprovalCode");
-        checkOpened();
         if (s == null)
             s = "";
+        checkOpened();
+        checkNoChangedOrClaimed(Data.ApprovalCode, s);
         ElectronicValueRW.approvalCode(s);
         logSet("ApprovalCode");
     }
@@ -595,9 +598,9 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     @Override
     public void setCurrentService(String s) throws JposException {
         logPreSet("CurrentService");
-        checkOpened();
         if (s == null)
             s = "";
+        checkOpened();
         if (s.length() > 0) {
             JposDevice.check(Data.ReaderWriterServiceList == null, JposConst.JPOS_E_FAILURE, "Implementation error: ReaderWriterServiceList not initialized");
             String[] services = Data.ReaderWriterServiceList.split(",");
@@ -610,6 +613,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
             }
             JposDevice.check(missing, JposConst.JPOS_E_ILLEGAL, "Service " + s + " not supported");
         }
+        checkNoChangedOrClaimed(Data.CurrentService, s);
         ElectronicValueRW.currentService(s);
         logSet("CurrentService");
     }
@@ -619,6 +623,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
         logPreSet("DetectionControl");
         checkOpened();
         JposDevice.check((Data.CapDetectionControl & ElectronicValueRWConst.EVRW_CDC_APPLICATIONCONTROL) == 0 && b, JposConst.JPOS_E_ILLEGAL, "Application control for card handling not supported by service");
+        checkNoChangedOrClaimed(Data.DetectionControl, b);
         ElectronicValueRW.detectionControl(b);
         logSet("DetectionControl");
     }
@@ -626,9 +631,10 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     @Override
     public void setMediumID(String s) throws JposException {
         logPreSet("MediumID");
-        checkOpened();
         if (s == null)
             s = "";
+        checkOpened();
+        checkNoChangedOrClaimed(Data.MediumID, s);
         ElectronicValueRW.mediumID(s);
         logSet("MediumID");
     }
@@ -644,6 +650,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
         logPreSet("PaymentMedia");
         checkOpened();
         JposDevice.checkMember(i, validvalues, JposConst.JPOS_E_ILLEGAL, "Invalid PaymentMedia: " + i);
+        checkNoChangedOrClaimed(Data.PaymentMedia, i);
         ElectronicValueRW.paymentMedia(i);
         logSet("PaymentMedia");
     }
@@ -659,6 +666,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
         logPreSet("PINEntry");
         checkOpened();
         JposDevice.checkMember(i, validvalues, JposConst.JPOS_E_ILLEGAL, "Invalid PINEntry: " + i);
+        checkNoChangedOrClaimed(Data.PINEntry, i);
         ElectronicValueRW.PINEntry(i);
         logSet("PINEntry");
     }
@@ -667,6 +675,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void setPoint(long l) throws JposException {
         logPreSet("Point");
         checkOpened();
+        checkNoChangedOrClaimed(Data.Point, l);
         ElectronicValueRW.point(l);
         logSet("Point");
     }
@@ -682,6 +691,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
         checkOpened();
         JposDevice.check(!Data.CapTrainingMode && i == ElectronicValueRWConst.EVRW_TM_TRUE, JposConst.JPOS_E_ILLEGAL, "TrainingModeState cannot be set to TM_TRUE");
         JposDevice.checkMember(i, validvalues, JposConst.JPOS_E_ILLEGAL, "Invalid TrainingModeState: " + i);
+        checkNoChangedOrClaimed(Data.TrainingModeState, i);
         ElectronicValueRW.trainingModeState(i);
         logSet("TrainingModeState");
     }
@@ -689,9 +699,9 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     @Override
     public void setVoucherID(String s) throws JposException {
         logPreSet("VoucherID");
-        checkOpened();
         if (s == null)
             s = "";
+        checkOpened();
         if (s.length() > 0) {
             String[] parts = s.split(":");
             JposDevice.check(parts.length != 2, JposConst.JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
@@ -703,6 +713,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
             }
             JposDevice.check(i <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
         }
+        checkNoChangedOrClaimed(Data.VoucherID, s);
         ElectronicValueRW.voucherID(s);
         logSet("VoucherID");
     }
@@ -710,9 +721,9 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     @Override
     public void setVoucherIDList(String s) throws JposException {
         logPreSet("VoucherIDList");
-        checkOpened();
         if (s == null)
             s = "";
+        checkOpened();
         if (s.length() > 0) {
             String[] ids = s.split(",");
             for (String id : ids) {
@@ -727,6 +738,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
                 JposDevice.check(i <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
             }
         }
+        checkNoChangedOrClaimed(Data.VoucherIDList, s);
         ElectronicValueRW.voucherIDList(s);
         logSet("VoucherIDList");
     }

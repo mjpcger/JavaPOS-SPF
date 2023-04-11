@@ -27,14 +27,15 @@ import jpos.*;
  */
 public interface ScannerInterface extends JposBaseInterface {
     /**
-     * Final part of setting scannerDecodeData. Can be overwritten within derived classes, if necessary.
+     * Final part of setting DecodeData. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device has not been closed.</li>
+     *     <li>Device has not been closed,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or flag equals the previous value of DecodeData.</li>
      * </ul>
      *
-     * @param b New DecodeData value
+     * @param flag New DecodeData value
      * @throws JposException If an error occurs
      */
-    public void decodeData(boolean b) throws JposException;
+    public void decodeData(boolean flag) throws JposException;
 }

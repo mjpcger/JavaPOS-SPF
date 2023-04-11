@@ -68,6 +68,13 @@ import javax.swing.*;
  * thread.
  * <p>Here a full list of all properties, common for all device classes, that can be changed via jpos.xml:
  * <ul>
+ *     <li>AllowAlwaysSetProperties: For all exclusive-use devices where UPOS specifies properties with read-write access
+ *     before the device has been opened, This property specifies whether write access will be suppressed by the service
+ *     (false) or not (true) until the device has been claimed. The default must be set within the constructor of a
+ *     device derived from JposDevice.
+ *     <br>However, even if set, the individual service implementation can decide to throw a JposException whenever the
+ *     application tries to change a writable property until the device has been claimed, but only if not set, the service
+ *     method <i>checkOpenNotClaimed</i> will throw the JposException without calling the device specific set method.</li>
  *     <li>DrawerBeepVolume: For all CashDrawer devices, a beep volume between 0 and 127 can be specified. Default is
  *     implementation specific.</li>
  *     <li>LoggerName: Name of the logger. See Log4j specification for more details.</li>
@@ -432,6 +439,20 @@ public class JposBaseDevice {
     public Integer DrawerBeepVolume = null;
 
     /**
+     * Temporary storage for jpos.xml property AllowAlwaysSetProperties. Specifies how the service instance shall handle
+     * write access to writable properties while the device has not been claimed for exclusive-use devices:
+     * <br>If true, setting such properties will remain possible and it is up to the service how to handle the new value.
+     * Since no physical access to the device is allowed until the device has been claimed, the service can buffer the
+     * new value for later use after a successful call of method claim.
+     * <br>If false, only read access will be possible until the device has been claimed. If the application tries to
+     * change a writable property, a JposException will be thrown with error code E_NOTCLAIMED.
+     * The default value is true. Method <i>checkProperties</i> will be used to change it to the value specified in
+     * jpos.xml, if specified, and method <i>changeDefaults</i> will be used to copy this value to the corresponding
+     * property set and to reset it back to its default.
+     */
+    public boolean AllowAlwaysSetProperties = true;
+
+    /**
      * Holds the JavaPOS control version. Must be unique for all JavaPOS devices supported by a device implementation.
      * For example, if an implementation for a device supports logical devices for a POSPrinter and two CashDrawers,
      * the version must be the same for all logical devices (and it must be specified for all devices).
@@ -519,6 +540,9 @@ public class JposBaseDevice {
                 DrawerBeepVolume = Integer.parseInt(o.toString());
                 if (DrawerBeepVolume < 0 || DrawerBeepVolume > 127)
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "Drawer beep value not between 0 and 127: " + DrawerBeepVolume);
+            }
+            if ((o = entry.getPropertyValue("AllowAlwaysSetProperties")) != null) {
+                AllowAlwaysSetProperties = Boolean.parseBoolean(o.toString());
             }
         } catch (JposException e) {
             throw e;

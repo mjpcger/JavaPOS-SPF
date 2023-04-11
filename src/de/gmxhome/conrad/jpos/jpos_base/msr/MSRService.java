@@ -247,8 +247,11 @@ public class MSRService extends JposBase implements MSRService115 {
     @Override
     public void setWriteCardType(String s) throws JposException {
         logPreSet("WriteCardType");
+        if (s == null)
+            s = "";
         checkOpened();
         Device.check(!Device.member(s, Data.CardTypeList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid card type: "+ s);
+        checkNoChangedOrClaimed(Data.WriteCardType, s);
         MSRInterface.writeCardType(s);
         logSet("WriteCardType");
     }
@@ -272,6 +275,7 @@ public class MSRService extends JposBase implements MSRService115 {
         logPreSet("TracksToWrite");
         checkOpened();
         Device.check((Data.CapWritableTracks & i) != i, JposConst.JPOS_E_ILLEGAL, "Invalid track selection: " + i);
+        checkNoChangedOrClaimed(Data.TracksToWrite, i);
         MSRInterface.tracksToWrite(i);
         logSet("TracksToWrite");
     }
@@ -295,6 +299,7 @@ public class MSRService extends JposBase implements MSRService115 {
         logPreSet("TransmitSentinels");
         checkOpened();
         Device.check(!Data.CapTransmitSentinels && b, JposConst.JPOS_E_ILLEGAL, "Sentinel transmission not supported");
+        checkNoChangedOrClaimed(Data.TransmitSentinels, b);
         MSRInterface.transmitSentinels(b);
         logSet("TransmitSentinels");
     }
@@ -317,6 +322,7 @@ public class MSRService extends JposBase implements MSRService115 {
     public void setDecodeData(boolean b) throws JposException {
         logPreSet("DecodeData");
         checkOpened();
+        checkNoChangedOrClaimed(Data.DecodeData, b);
         MSRInterface.decodeData(b);
         logSet("DecodeData");
     }
@@ -333,6 +339,7 @@ public class MSRService extends JposBase implements MSRService115 {
         logPreSet("ErrorReportingType");
         checkOpened();
         Device.checkMember(i, new long[]{MSRConst.MSR_ERT_CARD, MSRConst.MSR_ERT_TRACK}, JposConst.JPOS_E_ILLEGAL, "Invalid error reporting: " + i);
+        checkNoChangedOrClaimed(Data.ErrorReportingType, i);
         MSRInterface.errorReportingType(i);
         logSet("ErrorReportingType");
     }
@@ -369,6 +376,7 @@ public class MSRService extends JposBase implements MSRService115 {
     public void setParseDecodeData(boolean b) throws JposException {
         logPreSet("ParseDecodeData");
         checkOpened();
+        checkNoChangedOrClaimed(Data.ParseDecodeData, b);
         MSRInterface.parseDecodeData(b);
         logSet("ParseDecodeData");
     }
@@ -448,6 +456,7 @@ public class MSRService extends JposBase implements MSRService115 {
         logPreSet("TracksToRead");
         checkOpened();
         Device.check((MSRConst.MSR_TR_1_2_3_4 & i) != i, JposConst.JPOS_E_ILLEGAL, "Invalid track selection: " + i);
+        checkNoChangedOrClaimed(Data.TracksToRead, i);
         MSRInterface.tracksToRead(i);
         logSet("TracksToRead");
     }

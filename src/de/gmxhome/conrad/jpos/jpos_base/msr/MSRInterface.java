@@ -53,52 +53,56 @@ public interface MSRInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device has not been closed,</li>
-     *     <li>The new card type matches one of the names specified in CardTypeList.</li>
+     *     <li>The new card type matches one of the names specified in CardTypeList,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or type equals the previous value of WriteCardType.</li>
      * </ul>
      *
-     * @param b New WriteCardType value
+     * @param type New WriteCardType value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void writeCardType(String b) throws JposException;
+    public void writeCardType(String type) throws JposException;
 
     /**
      * Final part of setting TracksToWrite. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device has not been closed,</li>
-     *     <li>The given value for tracks to write specifies only tracks present in CapWritableTracks.</li>
+     *     <li>The given value for tracks to write specifies only tracks present in CapWritableTracks,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or t2w equals the previous value of TracksToWrite.</li>
      * </ul>
      *
-     * @param b New TracksToWrite value
+     * @param t2w New TracksToWrite value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void tracksToWrite(int b) throws JposException;
+    public void tracksToWrite(int t2w) throws JposException;
 
     /**
      * Final part of setting TransmitSentinels. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device has not been closed,</li>
-     *     <li>CapTransmitSentinels is false: The new value is false as well.</li>
+     *     <li>CapTransmitSentinels is false: The new value is false as well,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or flag equals the previous value of TransmitSentinels.</li>
      * </ul>
      *
-     * @param b New TransmitSentinels value
+     * @param flag New TransmitSentinels value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void transmitSentinels(boolean b) throws JposException;
+    public void transmitSentinels(boolean flag) throws JposException;
 
     /**
      * Final part of setting DecodeData. Can be overwritten within derived classes, if necessary. If set to false,
      * ParseDecodeData will be set to false as well.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device has not been closed.</li>
+     *     <li>Device has not been closed,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or flag equals the previous value of DecodeData.</li>
      * </ul>
      *
-     * @param b New DecodeData value
+     * @param flag New DecodeData value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void decodeData(boolean b) throws JposException;
+    public void decodeData(boolean flag) throws JposException;
 
     /**
      * Final part of setting ErrorReportingType. Can be overwritten within derived classes, if necessary.
@@ -106,39 +110,42 @@ public interface MSRInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device has not been closed,</li>
      *     <li>CapDataEncryption != MSR_DE_NONE,</li>
-     *     <li>The new value is one of MSR_ERT_CARD or MSR_ERT_TRACK.</li>
+     *     <li>The new value is one of MSR_ERT_CARD or MSR_ERT_TRACK,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or type equals the previous value of ErrorReportingType.</li>
      * </ul>
      *
-     * @param b New ErrorReportingType value
+     * @param type New ErrorReportingType value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void errorReportingType(int b) throws JposException;
+    public void errorReportingType(int type) throws JposException;
 
     /**
      * Final part of setting ParseDecodeData. Can be overwritten within derived classes, if necessary. If ParseDecodeData
      * becomes true, DecodeData will be set to rue as well.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device has not been closed.</li>
+     *     <li>Device has not been closed,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or flag equals the previous value of ParseDecodeData.</li>
      * </ul>
      *
-     * @param b New ParseDecodeData value
+     * @param flag New ParseDecodeData value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void parseDecodeData(boolean b) throws JposException;
+    public void parseDecodeData(boolean flag) throws JposException;
 
     /**
      * Final part of setting TracksToRead. Can be overwritten within derived classes, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device has not been closed,</li>
-     *     <li>Track to be read specifies a combination of up to 4 tracks.</li>
+     *     <li>Track to be read specifies a combination of up to 4 tracks,</li>
+     *     <li>internal property AllowAlwaysSetProperties is true or t2r equals the previous value of TracksToRead.</li>
      * </ul>
      *
-     * @param b New TracksToRead value
+     * @param t2r New TracksToRead value
      * @throws JposException If an error occurs during enable or disable
      */
-    public void tracksToRead(int b) throws JposException;
+    public void tracksToRead(int t2r) throws JposException;
 
     /**
      * Final part of AuthenticateDevice method. Can be overwritten in derived class, if necessary.
