@@ -39,7 +39,7 @@ public interface ItemDispenserInterface extends JposBaseInterface {
      * @param slotNumber    Slot number.
      * @throws JposException If an error occurs.
      */
-    void adjustItemCount(int itemCount, int slotNumber) throws JposException;
+    public void adjustItemCount(int itemCount, int slotNumber) throws JposException;
 
     /**
      * Final part of DispenseItem method. Can be overwritten in derived class, if necessary.
@@ -54,7 +54,7 @@ public interface ItemDispenserInterface extends JposBaseInterface {
      * @param slotNumber    Slot number to be used to dispense item(s).
      * @throws JposException If an error occurs.
      */
-    void dispenseItem(int[] numItem, int slotNumber) throws JposException;
+    public void dispenseItem(int[] numItem, int slotNumber) throws JposException;
 
     /**
      * Final part of ReadItemCount method. Can be overwritten in derived class, if necessary.
@@ -69,5 +69,5 @@ public interface ItemDispenserInterface extends JposBaseInterface {
      * @param slotNumber    Slot number to be used to read slot specific item count.
      * @throws JposException If an error occurs.
      */
-    void readItemCount(int[] itemCount, int slotNumber) throws JposException;
+    public void readItemCount(int[] itemCount, int slotNumber) throws JposException;
 }

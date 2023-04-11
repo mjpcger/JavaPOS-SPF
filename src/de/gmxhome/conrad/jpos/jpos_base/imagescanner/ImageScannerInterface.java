@@ -38,7 +38,7 @@ public interface ImageScannerInterface extends JposBaseInterface {
      * @param aimMode New value for AimMode property.
      * @throws JposException If an error occurs.
      */
-    void aimMode(boolean aimMode) throws JposException;
+    public void aimMode(boolean aimMode) throws JposException;
 
     /**
      * Final part of setting IlluminateMode. Can be overwritten within derived classes, if necessary.
@@ -52,7 +52,7 @@ public interface ImageScannerInterface extends JposBaseInterface {
      * @param illuminateMode New value for IlluminateMode property.
      * @throws JposException If an error occurs.
      */
-    void illuminateMode(boolean illuminateMode) throws JposException;
+    public void illuminateMode(boolean illuminateMode) throws JposException;
 
     /**
      * Final part of setting ImageMode. Can be overwritten within derived classes, if necessary.
@@ -67,7 +67,7 @@ public interface ImageScannerInterface extends JposBaseInterface {
      * @param imageMode New value for ImageMode property.
      * @throws JposException If an error occurs.
      */
-    void imageMode(int imageMode) throws JposException;
+    public void imageMode(int imageMode) throws JposException;
 
     /**
      * Final part of setting ImageQuality. Can be overwritten within derived classes, if necessary.
@@ -82,7 +82,7 @@ public interface ImageScannerInterface extends JposBaseInterface {
      * @param imageQuality New value for ImageQuality property.
      * @throws JposException If an error occurs.
      */
-    void imageQuality(int imageQuality) throws JposException;
+    public void imageQuality(int imageQuality) throws JposException;
 
     /**
      * Final part of setting VideoCount. Can be overwritten within derived classes, if necessary.
@@ -96,7 +96,7 @@ public interface ImageScannerInterface extends JposBaseInterface {
      * @param videoCount New value for VideoCount property.
      * @throws JposException If an error occurs.
      */
-    void videoCount(int videoCount) throws JposException;
+    public void videoCount(int videoCount) throws JposException;
 
     /**
      * Final part of setting VideoRate. Can be overwritten within derived classes, if necessary.
@@ -110,7 +110,7 @@ public interface ImageScannerInterface extends JposBaseInterface {
      * @param videoRate New value for VideoRate property.
      * @throws JposException If an error occurs.
      */
-    void videoRate(int videoRate) throws JposException;
+    public void videoRate(int videoRate) throws JposException;
 
     /**
      * Final part of StartSession method. Can be overwritten in derived class, if necessary.
@@ -122,7 +122,7 @@ public interface ImageScannerInterface extends JposBaseInterface {
      *
      * @throws JposException    If an error occurs or in case of a timeout.
      */
-    void startSession() throws JposException;
+    public void startSession() throws JposException;
 
     /**
      * Final part of StopSession method. Can be overwritten in derived class, if necessary.
@@ -134,5 +134,5 @@ public interface ImageScannerInterface extends JposBaseInterface {
      *
      * @throws JposException    If an error occurs or in case of a timeout.
      */
-    void stopSession() throws JposException;
+    public void stopSession() throws JposException;
 }

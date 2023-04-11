@@ -48,7 +48,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param color New value for Color property.
      * @throws JposException If an error occurs.
      */
-    void color(int color) throws JposException;
+    public void color(int color) throws JposException;
 
     /**
      * Final part of setting ConcurrentMICR. Can be overwritten within derived classes, if necessary.
@@ -62,7 +62,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param concurrentMICR New value for ConcurrentMICR property.
      * @throws JposException If an error occurs.
      */
-    void concurrentMICR(boolean concurrentMICR) throws JposException;
+    public void concurrentMICR(boolean concurrentMICR) throws JposException;
 
     /**
      * Final part of setting Contrast. Can be overwritten within derived classes, if necessary.
@@ -75,7 +75,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param contrast New value for Contrast property.
      * @throws JposException If an error occurs.
      */
-    void contrast(int contrast) throws JposException;
+    public void contrast(int contrast) throws JposException;
 
     /**
      * Final part of setting DocumentHeight. Can be overwritten within derived classes, if necessary.
@@ -91,7 +91,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param documentHeight New value for DocumentHeight property.
      * @throws JposException If an error occurs.
      */
-    void documentHeight(int documentHeight) throws JposException;
+    public void documentHeight(int documentHeight) throws JposException;
 
     /**
      * Final part of setting DocumentWidth. Can be overwritten within derived classes, if necessary.
@@ -107,7 +107,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param documentWidth New value for DocumentWidth property.
      * @throws JposException If an error occurs.
      */
-    void documentWidth(int documentWidth) throws JposException;
+    public void documentWidth(int documentWidth) throws JposException;
 
     /**
      * Final part of setting FileID. Can be overwritten within derived classes, if necessary.
@@ -121,7 +121,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param fileID New value for FileID property.
      * @throws JposException If an error occurs.
      */
-    void fileID(String fileID) throws JposException;
+    public void fileID(String fileID) throws JposException;
 
     /**
      * Final part of setting FileIndex. Can be overwritten within derived classes, if necessary.
@@ -134,7 +134,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param fileIndex New value for FileIndex property.
      * @throws JposException If an error occurs.
      */
-    void fileIndex(int fileIndex) throws JposException;
+    public void fileIndex(int fileIndex) throws JposException;
 
     /**
      * Final part of setting ImageFormat. Can be overwritten within derived classes, if necessary.
@@ -149,7 +149,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param imageFormat New value for ImageFormat property.
      * @throws JposException If an error occurs.
      */
-    void imageFormat(int imageFormat) throws JposException;
+    public void imageFormat(int imageFormat) throws JposException;
 
     /**
      * Final part of setting ImageTagData. Can be overwritten within derived classes, if necessary.
@@ -163,7 +163,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param imageTagData New value for ImageTagData property.
      * @throws JposException If an error occurs.
      */
-    void imageTagData(String imageTagData) throws JposException;
+    public void imageTagData(String imageTagData) throws JposException;
 
     /**
      * Final part of setting MapMode. Can be overwritten within derived classes, if necessary.
@@ -177,7 +177,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param mapMode New value for MapMode property.
      * @throws JposException If an error occurs.
      */
-    void mapMode(int mapMode) throws JposException;
+    public void mapMode(int mapMode) throws JposException;
 
     /**
      * Final part of setting Quality. Can be overwritten within derived classes, if necessary.
@@ -191,7 +191,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param quality New value for Quality property.
      * @throws JposException If an error occurs.
      */
-    void quality(int quality) throws JposException;
+    public void quality(int quality) throws JposException;
 
     /**
      * Final part of BeginInsertion method. Can be overwritten in derived class, if necessary.
@@ -207,7 +207,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param timeout   Maximum time in milliseconds BeginInsertion delays execution.
      * @throws JposException    If an error occurs or in case of a timeout.
      */
-    void beginInsertion(int timeout) throws JposException;
+    public void beginInsertion(int timeout) throws JposException;
 
     /**
      * Final part of BeginRemoval method. Can be overwritten in derived class, if necessary.
@@ -223,7 +223,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param timeout   Maximum time in milliseconds BeginRemoval delays execution.
      * @throws JposException    If an error occurs or in case of a timeout.
      */
-    void beginRemoval(int timeout) throws JposException;
+    public void beginRemoval(int timeout) throws JposException;
 
     /**
      * Final part of ClearImage method. Can be overwritten in derived class, if necessary.
@@ -237,7 +237,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      *              will be used to access the device's image storage.
      * @throws JposException    If an error occurs.
      */
-    void clearImage(int by) throws JposException;
+    public void clearImage(int by) throws JposException;
 
     /**
      * Final part of DefineCropArea method. Can be overwritten in derived class, if necessary.
@@ -261,7 +261,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param cy            Value to be added to y coordinate to compute the ending y coordinate of the cropping area.
      * @throws JposException  If an error occurs.
      */
-    void defineCropArea(int cropAreaID, int x, int y, int cx, int cy) throws JposException;
+    public void defineCropArea(int cropAreaID, int x, int y, int cx, int cy) throws JposException;
 
     /**
      * Final part of EndInsertion method. Can be overwritten in derived class, if necessary.
@@ -273,7 +273,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      *
      * @throws JposException    If an error occurs.
      */
-    void endInsertion() throws JposException;
+    public void endInsertion() throws JposException;
 
     /**
      * Final part of EndRemoval method. Can be overwritten in derived class, if necessary.
@@ -285,7 +285,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      *
      * @throws JposException    If an error occurs.
      */
-    void endRemoval() throws JposException;
+    public void endRemoval() throws JposException;
 
     /**
      * Final part of RetrieveImage method. Can be overwritten in derived class, if necessary.
@@ -299,7 +299,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param cropAreaID    Crop area ID as specified in DefineCropArea or CROP_AREA_ENTIRE_IMAGE.
      * @throws JposException    If an error occurs.
      */
-    void retrieveImage(int cropAreaID) throws JposException;
+    public void retrieveImage(int cropAreaID) throws JposException;
 
     /**
      * Final part of RetrieveMemory method. Can be overwritten in derived class, if necessary.
@@ -315,7 +315,7 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param by    One of LOCATE_BY_FILEID, LOCATE_BY_FILEINDEX or LOCATE_BY_IMAGETAGDATA.
      * @throws JposException    If an error occurs.
      */
-    void retrieveMemory(int by) throws JposException;
+    public void retrieveMemory(int by) throws JposException;
 
     /**
      * Final part of StoreImage method. Can be overwritten in derived class, if necessary.
@@ -329,5 +329,5 @@ public interface CheckScannerInterface extends JposBaseInterface {
      * @param cropAreaID    Crop area ID as specified in DefineCropArea or CROP_AREA_ENTIRE_IMAGE.
      * @throws JposException If an error occurs.
      */
-    void storeImage(int cropAreaID) throws JposException;
+    public void storeImage(int cropAreaID) throws JposException;
 }

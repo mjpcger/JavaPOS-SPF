@@ -36,7 +36,7 @@ public interface LightsInterface extends JposBaseInterface {
      * @param lightNumber   light number between 1 and MaxLights.
      * @throws JposException If an error occurs.
      */
-    void switchOff(int lightNumber) throws JposException;
+    public void switchOff(int lightNumber) throws JposException;
 
     /**
      * Final part of SwitchOn method. Can be overwritten in derived class, if necessary.
@@ -55,5 +55,5 @@ public interface LightsInterface extends JposBaseInterface {
      * @param alarm         Alarm value as specified by CapAlarm.
      * @throws JposException If an error occurs.
      */
-    void switchOn(int lightNumber, int blinkOnCycle, int blinkOffCycle, int color, int alarm) throws JposException;
+    public void switchOn(int lightNumber, int blinkOnCycle, int blinkOffCycle, int color, int alarm) throws JposException;
 }

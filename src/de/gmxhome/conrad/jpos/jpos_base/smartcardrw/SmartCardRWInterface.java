@@ -40,7 +40,7 @@ public interface SmartCardRWInterface extends JposBaseInterface {
      * @param mode AdditionalSecurityInformation for subsequent storing data into journal.
      * @throws JposException If an error occurs.
      */
-    void interfaceMode(int mode) throws JposException;
+    public void interfaceMode(int mode) throws JposException;
 
     /**
      * Final part of setting IsoEmvMode. Can be overwritten within derived classes, if necessary.
@@ -54,7 +54,7 @@ public interface SmartCardRWInterface extends JposBaseInterface {
      * @param mode Indicates the message modes the SCR/W shall use.
      * @throws JposException If an error occurs.
      */
-    void isoEmvMode(int mode) throws JposException;
+    public void isoEmvMode(int mode) throws JposException;
 
     /**
      * Final part of setting SCSlot. Can be overwritten within derived classes, if necessary.
@@ -68,7 +68,7 @@ public interface SmartCardRWInterface extends JposBaseInterface {
      * @param slot New current slot.
      * @throws JposException If an error occurs.
      */
-    void sCSlot(int slot) throws JposException;
+    public void sCSlot(int slot) throws JposException;
 
     /**
      * Final part of BeginInsertion method. Can be overwritten in derived class, if necessary.
@@ -80,7 +80,7 @@ public interface SmartCardRWInterface extends JposBaseInterface {
      * @param timeout The number of milliseconds before failing the method.
      * @throws JposException If an error occurs.
      */
-    void beginInsertion(int timeout) throws JposException;
+    public void beginInsertion(int timeout) throws JposException;
 
     /**
      * Final part of BeginRemoval method. Can be overwritten in derived class, if necessary.
@@ -92,7 +92,7 @@ public interface SmartCardRWInterface extends JposBaseInterface {
      * @param timeout The number of milliseconds before failing the method.
      * @throws JposException If an error occurs.
      */
-    void beginRemoval(int timeout) throws JposException;
+    public void beginRemoval(int timeout) throws JposException;
 
     /**
      * Final part of EndInsertion method. Can be overwritten in derived class, if necessary.
@@ -102,7 +102,7 @@ public interface SmartCardRWInterface extends JposBaseInterface {
      * </ul>
      * @throws JposException If an error occurs.
      */
-    void endInsertion() throws JposException;
+    public void endInsertion() throws JposException;
 
     /**
      * Final part of EndRemoval method. Can be overwritten in derived class, if necessary.
@@ -112,7 +112,7 @@ public interface SmartCardRWInterface extends JposBaseInterface {
      * </ul>
      * @throws JposException If an error occurs.
      */
-    void endRemoval() throws JposException;
+    public void endRemoval() throws JposException;
 
     /**
      * Final part of ReadData method. Can be overwritten in derived class, if necessary.
@@ -127,7 +127,7 @@ public interface SmartCardRWInterface extends JposBaseInterface {
      * @param data   The data that is returned.
      * @throws JposException If an error occurs.
      */
-    void readData(int action, int[] count, String[] data) throws JposException;
+    public void readData(int action, int[] count, String[] data) throws JposException;
 
     /**
      * Validation part of WriteData method. Can be overwritten within derived
@@ -147,7 +147,7 @@ public interface SmartCardRWInterface extends JposBaseInterface {
      * @throws JposException    If an error occurs.
      * @return WriteData object for use in final part.
      */
-    WriteData writeData(int action, int count, String data) throws JposException;
+    public WriteData writeData(int action, int count, String data) throws JposException;
 
     /**
      * Final part of WriteData method. Can be overwritten within derived classes, if necessary.
@@ -161,5 +161,5 @@ public interface SmartCardRWInterface extends JposBaseInterface {
      *                          to be used by WriteData.
      * @throws JposException    If an error occurs.
      */
-    void writeData(WriteData request) throws JposException;
+    public void writeData(WriteData request) throws JposException;
 }

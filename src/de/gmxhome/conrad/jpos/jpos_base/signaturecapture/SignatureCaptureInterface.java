@@ -38,7 +38,7 @@ public interface SignatureCaptureInterface extends JposBaseInterface {
      * @param flag     New property value.
      * @throws JposException If an error occurs.
      */
-    void realTimeDataEnabled(boolean flag) throws JposException;
+    public void realTimeDataEnabled(boolean flag) throws JposException;
 
     /**
      * Final part of BeginCapture method. Can be overwritten in derived class, if necessary.
@@ -50,7 +50,7 @@ public interface SignatureCaptureInterface extends JposBaseInterface {
      * @param formName          Identifier for signature capture form.
      * @throws JposException    If an error occurs.
      */
-    void beginCapture(String formName) throws JposException;
+    public void beginCapture(String formName) throws JposException;
 
     /**
      * Final part of EndCapture method. Can be overwritten in derived class, if necessary.
@@ -61,5 +61,5 @@ public interface SignatureCaptureInterface extends JposBaseInterface {
      *
      * @throws JposException    If an error occurs.
      */
-    void endCapture() throws JposException;
+    public void endCapture() throws JposException;
 }

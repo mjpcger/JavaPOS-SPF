@@ -41,7 +41,7 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * @param mask Bit pattern wherein each bit signifies one predefined RFID tag protocol.
      * @throws JposException If an error occurs.
      */
-    void protocolMask(int mask) throws JposException;
+    public void protocolMask(int mask) throws JposException;
 
     /**
      * Final part of setting ReadTimerInterval. Can be overwritten within derived classes, if necessary.
@@ -56,7 +56,7 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * @param interval The minimum time interval between tag reads in milliseconds.
      * @throws JposException If an error occurs.
      */
-    void readTimerInterval(int interval) throws JposException;
+    public void readTimerInterval(int interval) throws JposException;
 
     /**
      * Final part of StopReadTags method. Can be overwritten in derived class, if necessary.
@@ -70,7 +70,7 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * @param password Authorized key for reader, if needed, null or zero length binary otherwise.
      * @throws JposException If an error occurs.
      */
-    void stopReadTags(byte[] password) throws JposException;
+    public void stopReadTags(byte[] password) throws JposException;
 
     /**
      * Final part of StartReadTags method. Can be overwritten in derived class, if necessary.
@@ -100,7 +100,7 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * @return StartReadTags object for use in final part.
      * @throws JposException If an error occurs.
      */
-    StartReadTags startReadTags(int cmd, byte[] filterID, byte[] filtermask, int start, int length, byte[] password) throws JposException;
+    public StartReadTags startReadTags(int cmd, byte[] filterID, byte[] filtermask, int start, int length, byte[] password) throws JposException;
 
 
     /**
@@ -132,7 +132,7 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * @return ReadTags object for use in final part.
      * @throws JposException If an error occurs.
      */
-    ReadTags readTags(int cmd, byte[] filterID, byte[] filtermask, int start, int length, int timeout, byte[] password) throws JposException;
+    public ReadTags readTags(int cmd, byte[] filterID, byte[] filtermask, int start, int length, int timeout, byte[] password) throws JposException;
 
     /**
      * Validation part of DisableTag method. Can be overwritten within derived
@@ -154,7 +154,7 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * @return DisableTag object for use in final part.
      * @throws JposException    If an error occurs.
      */
-    DisableTag disableTag(byte[] tagID, int timeout, byte[] password) throws JposException;
+    public DisableTag disableTag(byte[] tagID, int timeout, byte[] password) throws JposException;
 
     /**
      * Validation part of LockTag method. Can be overwritten within derived
@@ -176,7 +176,7 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * @return LockTag object for use in final part.
      * @throws JposException    If an error occurs.
      */
-    LockTag lockTag(byte[] tagID, int timeout, byte[] password) throws JposException;
+    public LockTag lockTag(byte[] tagID, int timeout, byte[] password) throws JposException;
 
     /**
      * Validation part of WriteTagData method. Can be overwritten within derived
@@ -201,7 +201,7 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * @return WriteTagData object for use in final part.
      * @throws JposException    If an error occurs.
      */
-    WriteTagData writeTagData(byte[] tagID, byte[] userdata, int start, int timeout, byte[] password) throws JposException;
+    public WriteTagData writeTagData(byte[] tagID, byte[] userdata, int start, int timeout, byte[] password) throws JposException;
 
     /**
      * Validation part of DisableTag method. Can be overwritten within derived
@@ -224,7 +224,7 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      * @return WriteTagID object for use in final part.
      * @throws JposException    If an error occurs.
      */
-    WriteTagID writeTagID(byte[] sourceID, byte[] destID, int timeout, byte[] password) throws JposException;
+    public WriteTagID writeTagID(byte[] sourceID, byte[] destID, int timeout, byte[] password) throws JposException;
 
     /**
      * Final part of DisableTag method. Can be overwritten within derived classes, if necessary.
@@ -236,7 +236,7 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      *                          to be used by DisableTag.
      * @throws JposException    If an error occurs.
      */
-    void disableTag(DisableTag request) throws JposException;
+    public void disableTag(DisableTag request) throws JposException;
 
     /**
      * Final part of LockTag method. Can be overwritten within derived classes, if necessary.
@@ -248,7 +248,7 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      *                          to be used by LockTag.
      * @throws JposException    If an error occurs.
      */
-    void lockTag(LockTag request) throws JposException;
+    public void lockTag(LockTag request) throws JposException;
 
     /**
      * Final part of WriteTagData method. Can be overwritten within derived classes, if necessary.
@@ -260,7 +260,7 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      *                          to be used by WriteTagData.
      * @throws JposException    If an error occurs.
      */
-    void writeTagData(WriteTagData request) throws JposException;
+    public void writeTagData(WriteTagData request) throws JposException;
 
     /**
      * Final part of WriteTagID method. Can be overwritten within derived classes, if necessary.
@@ -272,7 +272,7 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      *                          to be used by WriteTagID.
      * @throws JposException    If an error occurs.
      */
-    void writeTagID(WriteTagID request) throws JposException;
+    public void writeTagID(WriteTagID request) throws JposException;
 
 
     /**
@@ -285,7 +285,7 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      *                          to be used by ReadTags.
      * @throws JposException    If an error occurs.
      */
-    void readTags(ReadTags request) throws JposException;
+    public void readTags(ReadTags request) throws JposException;
 
     /**
      * Final part of StartReadTags method. Can be overwritten within derived classes, if necessary.
@@ -297,5 +297,5 @@ public interface RFIDScannerInterface extends JposBaseInterface {
      *                          to be used by StartReadTags.
      * @throws JposException    If an error occurs.
      */
-    void startReadTags(StartReadTags request) throws JposException;
+    public void startReadTags(StartReadTags request) throws JposException;
 }

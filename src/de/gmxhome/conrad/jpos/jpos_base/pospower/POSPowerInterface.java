@@ -36,7 +36,7 @@ public interface POSPowerInterface extends JposBaseInterface {
      * @param threshold Time delay for motion
      * @throws JposException If an error occurs.
      */
-    void batteryCriticallyLowThreshold(int threshold) throws JposException;
+    public void batteryCriticallyLowThreshold(int threshold) throws JposException;
 
     /**
      * Final part of setBatteryLowThreshold method. Can be overwritten in derived class, if necessary.
@@ -48,7 +48,7 @@ public interface POSPowerInterface extends JposBaseInterface {
      * @param threshold Time delay for motion
      * @throws JposException If an error occurs.
      */
-    void batteryLowThreshold(int threshold) throws JposException;
+    public void batteryLowThreshold(int threshold) throws JposException;
 
     /**
      * Final part of setEnforcedShutdownDelayTime method. Can be overwritten in derived class, if necessary.
@@ -60,7 +60,7 @@ public interface POSPowerInterface extends JposBaseInterface {
      * @param delay Time delay for motion
      * @throws JposException If an error occurs.
      */
-    void enforcedShutdownDelayTime(int delay) throws JposException;
+    public void enforcedShutdownDelayTime(int delay) throws JposException;
 
     /**
      * Final part of restartPOS method. Can be overwritten in derived class, if necessary.
@@ -73,7 +73,7 @@ public interface POSPowerInterface extends JposBaseInterface {
      *
      * @throws JposException If an error occurs.
      */
-    void restartPOS() throws JposException;
+    public void restartPOS() throws JposException;
 
     /**
      * Final part of shutdownPOS method. Can be overwritten in derived class, if necessary.
@@ -86,7 +86,7 @@ public interface POSPowerInterface extends JposBaseInterface {
      *
      * @throws JposException If an error occurs.
      */
-    void shutdownPOS() throws JposException;
+    public void shutdownPOS() throws JposException;
 
     /**
      * Final part of standbyPOS method. Can be overwritten in derived class, if necessary.
@@ -101,7 +101,7 @@ public interface POSPowerInterface extends JposBaseInterface {
      * @param reason   Reason for the call. See UPOS specification.
      * @throws JposException If an error occurs.
      */
-    void standbyPOS(int reason) throws JposException;
+    public void standbyPOS(int reason) throws JposException;
 
     /**
      * Final part of suspendPOS method. Can be overwritten in derived class, if necessary.
@@ -116,5 +116,5 @@ public interface POSPowerInterface extends JposBaseInterface {
      * @param reason   Reason for the call. See UPOS specification.
      * @throws JposException If an error occurs.
      */
-    void suspendPOS(int reason) throws JposException;
+    public void suspendPOS(int reason) throws JposException;
 }

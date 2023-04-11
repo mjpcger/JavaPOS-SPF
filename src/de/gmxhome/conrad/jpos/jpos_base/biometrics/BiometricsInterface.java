@@ -68,7 +68,7 @@ public interface BiometricsInterface extends JposBaseInterface {
      * @param newSensorColor New value for SensorColor property.
      * @throws JposException If an error occurs.
      */
-    void sensorColor(int newSensorColor) throws JposException;
+    public void sensorColor(int newSensorColor) throws JposException;
 
     /**
      * Final part of setting SensorOrientation. Can be overwritten within derived classes, if necessary.
@@ -83,7 +83,7 @@ public interface BiometricsInterface extends JposBaseInterface {
      * @param newSensorOrientation New value for SensorOrientation property.
      * @throws JposException If an error occurs.
      */
-    void sensorOrientation(int newSensorOrientation) throws JposException;
+    public void sensorOrientation(int newSensorOrientation) throws JposException;
 
     /**
      * Final part of setting SensorType. Can be overwritten within derived classes, if necessary.
@@ -99,7 +99,7 @@ public interface BiometricsInterface extends JposBaseInterface {
      * @param newSensorType New value for SensorType property.
      * @throws JposException If an error occurs.
      */
-    void sensorType(int newSensorType) throws JposException;
+    public void sensorType(int newSensorType) throws JposException;
 
     /**
      * Final part of BeginEnrollCapture method. Can be overwritten in derived class, if necessary.
@@ -114,7 +114,7 @@ public interface BiometricsInterface extends JposBaseInterface {
      * @param payload      Data that will be stored by the BSP.
      * @throws JposException If an error occurs.
      */
-    void beginEnrollCapture(byte[] referenceBIR, byte[] payload) throws JposException;
+    public void beginEnrollCapture(byte[] referenceBIR, byte[] payload) throws JposException;
 
     /**
      * Final part of BeginVerifyCapture method. Can be overwritten in derived class, if necessary.
@@ -125,7 +125,7 @@ public interface BiometricsInterface extends JposBaseInterface {
      *
      * @throws JposException If an error occurs.
      */
-    void beginVerifyCapture() throws JposException;
+    public void beginVerifyCapture() throws JposException;
 
     /**
      * Final part of EndCapture method. Can be overwritten in derived class, if necessary.
@@ -136,7 +136,7 @@ public interface BiometricsInterface extends JposBaseInterface {
      *
      * @throws JposException If an error occurs.
      */
-    void endCapture() throws JposException;
+    public void endCapture() throws JposException;
 
     /**
      * Final part of Identify method. Can be overwritten in derived class, if necessary.
@@ -160,7 +160,7 @@ public interface BiometricsInterface extends JposBaseInterface {
      * @param timeout                Timeout for successful biometric capture.
      * @throws JposException If an error occurs.
      */
-    void identify(int maxFARRequested, int maxFRRRequested, boolean fARPrecedence, byte[][] referenceBIRPopulation, int[][] candidateRanking, int timeout) throws JposException;
+    public void identify(int maxFARRequested, int maxFRRRequested, boolean fARPrecedence, byte[][] referenceBIRPopulation, int[][] candidateRanking, int timeout) throws JposException;
 
     /**
      * Final part of IdentifyMatch method. Can be overwritten in derived class, if necessary.
@@ -182,7 +182,7 @@ public interface BiometricsInterface extends JposBaseInterface {
      * @param candidateRanking       Array reference of BIR indices from the referenceBIRPopulation listed in rank order.
      * @throws JposException If an error occurs.
      */
-    void identifyMatch(int maxFARRequested, int maxFRRRequested, boolean fARPrecedence, byte[] sampleBIR, byte[][] referenceBIRPopulation, int[][] candidateRanking) throws JposException;
+    public void identifyMatch(int maxFARRequested, int maxFRRRequested, boolean fARPrecedence, byte[] sampleBIR, byte[][] referenceBIRPopulation, int[][] candidateRanking) throws JposException;
 
     /**
      * Final part of ProcessPrematchData method. Can be overwritten in derived class, if necessary.
@@ -200,7 +200,7 @@ public interface BiometricsInterface extends JposBaseInterface {
      * @param processedBIR    Reference for the new constructed BIR.
      * @throws JposException If an error occurs.
      */
-    void processPrematchData(byte[] sampleBIR, byte[] prematchDataBIR, byte[][] processedBIR) throws JposException;
+    public void processPrematchData(byte[] sampleBIR, byte[] prematchDataBIR, byte[][] processedBIR) throws JposException;
 
     /**
      * Final part of Verify method. Can be overwritten in derived class, if necessary.
@@ -230,7 +230,7 @@ public interface BiometricsInterface extends JposBaseInterface {
      * @param timeout                Timeout for successful verification.
      * @throws JposException If an error occurs.
      */
-    void verify(int maxFARRequested, int maxFRRRequested, boolean fARPrecedence, byte[] referenceBIR, byte[][] adaptedBIR, boolean[] result, int[] fARAchieved, int[] fRRAchieved, byte[][] payload, int timeout) throws JposException;
+    public void verify(int maxFARRequested, int maxFRRRequested, boolean fARPrecedence, byte[] referenceBIR, byte[][] adaptedBIR, boolean[] result, int[] fARAchieved, int[] fRRAchieved, byte[][] payload, int timeout) throws JposException;
 
     /**
      * Final part of VerifyMatch method. Can be overwritten in derived class, if necessary.
@@ -261,7 +261,7 @@ public interface BiometricsInterface extends JposBaseInterface {
      * @param payload                Reference to optional payload.
      * @throws JposException If an error occurs.
      */
-    void verifyMatch(int maxFARRequested, int maxFRRRequested, boolean fARPrecedence, byte[] sampleBIR, byte[] referenceBIR, byte[][] adaptedBIR, boolean[] result, int[] fARAchieved, int[] fRRAchieved, byte[][] payload) throws JposException;
+    public void verifyMatch(int maxFARRequested, int maxFRRRequested, boolean fARPrecedence, byte[] sampleBIR, byte[] referenceBIR, byte[][] adaptedBIR, boolean[] result, int[] fARAchieved, int[] fRRAchieved, byte[][] payload) throws JposException;
 
     /**
      * Checks whether a FAR or FRR limit is valid. Negative FAR or FRR limits are invalid. Depending on the interpretation
@@ -273,7 +273,7 @@ public interface BiometricsInterface extends JposBaseInterface {
      * @param name  limit name (maxFARRequested or maxFRRRequested).
      * @throws JposException If limit is out of range, at least if negative.
      */
-    void checkFARorFRRLimit(int limit, String name) throws JposException;
+    public void checkFARorFRRLimit(int limit, String name) throws JposException;
 
     /**
      * Checks if a BIR is valid for a given purpose.
@@ -282,7 +282,7 @@ public interface BiometricsInterface extends JposBaseInterface {
      *               identification or to null for validity check for use as reference BIR.
      * @return true if the BIR is valid for the specified purpose, false otherwise.
      */
-    boolean checkBIRPurpose(byte[] bir, Boolean verify);
+    public boolean checkBIRPurpose(byte[] bir, Boolean verify);
 
     /**
      * Checks whether a given BIR or payload is empty. In the default implementation, empty means the given data is null
@@ -292,5 +292,5 @@ public interface BiometricsInterface extends JposBaseInterface {
      * @param isBIR True in case of a BIR, false for payload value.
      * @return true if data is empty, false otherwise.
      */
-    boolean isDataEmpty(byte[] data, boolean isBIR);
+    public boolean isDataEmpty(byte[] data, boolean isBIR);
 }
