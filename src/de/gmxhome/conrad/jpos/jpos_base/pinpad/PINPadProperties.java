@@ -19,6 +19,7 @@ package de.gmxhome.conrad.jpos.jpos_base.pinpad;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.events.JposEvent;
 
 import java.util.*;
 
@@ -244,5 +245,13 @@ public class PINPadProperties extends JposCommonProperties implements PINPadInte
 
     @Override
     public void verifyMAC(String message) throws JposException {
+    }
+
+    /**
+     * Getter for DataEventList for clean synchronization between firing data or error events and setting property
+     * PINEntryEnabled to the correct value.
+     */
+    protected List<JposEvent> getDataEventList() {
+        return DataEventList;
     }
 }

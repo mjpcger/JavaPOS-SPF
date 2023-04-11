@@ -21,7 +21,7 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * PINPad service implementation. For more details about getter, setter and method implementations,
@@ -38,6 +38,28 @@ public class PINPadService extends JposBase implements PINPadService115 {
     private boolean EFTTransactionStarted = false;
 
     /**
+     * Reset EFT transaction, to be called whenever the PINPad needs to be reset, for example after claim or timeout.
+     * The default implementation resets PINEntryEnabled and the service property EFTTransactionStarted and clears the
+     * data event queue.
+     * <br>This method returns true if a pending transaction has been reset, false if no transaction was pending.
+     *
+     * @return True if EFT transaction has been reset, false if PINpad was still idle.
+     * @throws JposException If an error occurred
+     */
+    public boolean resetEFTTransaction() throws JposException{
+        boolean res = EFTTransactionStarted;
+        synchronized (Data.getDataEventList()) {
+            if (Data.PINEntryEnabled) {
+                Data.PINEntryEnabled = false;
+                logSet("PINEntryEnabled");
+            }
+            Data.getDataEventList().clear();
+        }
+        EFTTransactionStarted = false;
+        return res;
+    }
+
+    /**
      * Constructor. Stores given property set and device implementation object.
      *
      * @param props  Property set.
@@ -46,22 +68,6 @@ public class PINPadService extends JposBase implements PINPadService115 {
     public PINPadService(PINPadProperties props, JposDevice device) {
         super(props, device);
         Data = props;
-    }
-
-    /**
-     * Sets or resets the DeviceEnabled property.
-     * Disabling of Pin Pad devices must be blocked as long as an EFT transaction has not been finished.
-     * @param enabled   New value of property DeviceEnabled.
-     * @throws JposException    If an EFT transaction is in progress or in case of other errors as described within
-     *                          the UPOS specification.
-     */
-    @Override
-    public void setDeviceEnabled(boolean enabled) throws JposException {
-        if (!enabled && EFTTransactionStarted) {
-            logPreSet("DeviceEnabled");
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Disable Device Invalid in EFT Transaction");
-        }
-        super.setDeviceEnabled(enabled);
     }
 
     @Override
@@ -228,8 +234,11 @@ public class PINPadService extends JposBase implements PINPadService115 {
     @Override
     public void setAccountNumber(String accountNumber) throws JposException {
         logPreSet("AccountNumber");
+        if (accountNumber == null)
+            accountNumber = "";
         checkOpened();
         JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        checkNoChangedOrClaimed(Data.AccountNumber, accountNumber);
         PINPad.setAccountNumber(accountNumber);
         logSet("AccountNumber");
     }
@@ -240,6 +249,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
         checkOpened();
         JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
         JposDevice.check(amount < 0, JposConst.JPOS_E_ILLEGAL, "Negative Amount invalid");
+        checkNoChangedOrClaimed(Data.Amount, amount);
         PINPad.setAmount(amount);
         logSet("AccountNumber");
     }
@@ -250,6 +260,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
         checkOpened();
         JposDevice.check(Data.PINEntryEnabled, JposConst.JPOS_E_ILLEGAL, "MaximumPINLength cannot be changed while PIN entry enabled");
         JposDevice.check(maximumPINLength <= 0, JposConst.JPOS_E_ILLEGAL, "MaximumPINLength must be greater than zero");
+        checkNoChangedOrClaimed(Data.MaximumPINLength, maximumPINLength);
         PINPad.setMaximumPINLength(maximumPINLength);
         logSet("MaximumPINLength");
     }
@@ -257,8 +268,11 @@ public class PINPadService extends JposBase implements PINPadService115 {
     @Override
     public void setMerchantID(String merchantID) throws JposException {
         logPreSet("MerchantID");
+        if(merchantID == null)
+            merchantID = "";
         checkOpened();
         JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        checkNoChangedOrClaimed(Data.MerchantID, merchantID);
         PINPad.setMerchantID(merchantID);
         logSet("MerchantID");
     }
@@ -269,6 +283,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
         checkOpened();
         JposDevice.check(Data.PINEntryEnabled, JposConst.JPOS_E_ILLEGAL, "MinimumPINLength cannot be changed while PIN entry enabled");
         JposDevice.check(minimumPINLength < 0, JposConst.JPOS_E_ILLEGAL, "MinimumPINLength must be a positive value");
+        checkNoChangedOrClaimed(Data.MinimumPINLength, minimumPINLength);
         PINPad.setMinimumPINLength(minimumPINLength);
         logSet("MinimumPINLength");
     }
@@ -288,6 +303,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
         String[] supported = Data.AvailablePromptsList.split(",");
         for (String s : supported) {
             if (prompt == Integer.parseInt(s)) {
+                checkNoChangedOrClaimed(Data.Prompt, prompt);
                 PINPad.setPrompt(prompt);
                 logSet("Prompt");
                 return;
@@ -299,6 +315,8 @@ public class PINPadService extends JposBase implements PINPadService115 {
     @Override
     public void setPromptLanguage(String promptLanguage) throws JposException {
         logPreSet("PromptLanguage");
+        if (promptLanguage == null)
+            promptLanguage = "";
         checkOpened();
         JposDevice.check(Data.CapLanguage == PINPadConst.PPAD_LANG_NONE, JposConst.JPOS_E_ILLEGAL, "No language support");
         JposDevice.check(Data.CapLanguage == PINPadConst.PPAD_LANG_ONE && !Data.PromptLanguage.equals(promptLanguage),
@@ -309,6 +327,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
         for (String promptstr : prompts) {
             String[] language = promptstr.split(",");
             if (promptstr.equals(promptLanguage) || (language.length > 0 && language[0].equals(promptLanguage))) {
+                checkNoChangedOrClaimed(Data.PromptLanguage, promptLanguage);
                 PINPad.setPromptLanguage(promptLanguage);
                 logSet("PromptLanguage");
                 return;
@@ -320,8 +339,11 @@ public class PINPadService extends JposBase implements PINPadService115 {
     @Override
     public void setTerminalID(String terminalID) throws JposException {
         logPreSet("TerminalID");
+        if (terminalID == null)
+            terminalID = "";
         checkOpened();
         JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        checkNoChangedOrClaimed(Data.TerminalID, terminalID);
         PINPad.setTerminalID(terminalID);
         logSet("TerminalID");
     }
@@ -329,8 +351,11 @@ public class PINPadService extends JposBase implements PINPadService115 {
     @Override
     public void setTrack1Data(byte[] track1Data) throws JposException {
         logPreSet("Track1Data");
+        if (track1Data == null)
+            track1Data = new byte[0];
         checkOpened();
         JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        checkNoChangedOrClaimed(Data.Track1Data, track1Data);
         PINPad.setTrack1Data(track1Data);
         logSet("Track1Data");
     }
@@ -338,8 +363,11 @@ public class PINPadService extends JposBase implements PINPadService115 {
     @Override
     public void setTrack2Data(byte[] track2Data) throws JposException {
         logPreSet("Track2Data");
+        if (track2Data == null)
+            track2Data = new byte[0];
         checkOpened();
         JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        checkNoChangedOrClaimed(Data.Track2Data, track2Data);
         PINPad.setTrack2Data(track2Data);
         logSet("Track2Data");
     }
@@ -347,8 +375,11 @@ public class PINPadService extends JposBase implements PINPadService115 {
     @Override
     public void setTrack3Data(byte[] track3Data) throws JposException {
         logPreSet("Track3Data");
+        if (track3Data == null)
+            track3Data = new byte[0];
         checkOpened();
         JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        checkNoChangedOrClaimed(Data.Track3Data, track3Data);
         PINPad.setTrack3Data(track3Data);
         logSet("Track3Data");
     }
@@ -356,8 +387,11 @@ public class PINPadService extends JposBase implements PINPadService115 {
     @Override
     public void setTrack4Data(byte[] track4Data) throws JposException {
         logPreSet("Track4Data");
+        if (track4Data == null)
+            track4Data = new byte[0];
         checkOpened();
         JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        checkNoChangedOrClaimed(Data.Track4Data, track4Data);
         PINPad.setTrack4Data(track4Data);
         logSet("Track4Data");
     }
@@ -375,6 +409,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
         checkOpened();
         JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
         JposDevice.checkMember(transactionType, valid, JposConst.JPOS_E_ILLEGAL, "Invalid transaction type: " + transactionType);
+        checkNoChangedOrClaimed(Data.TransactionType, transactionType);
         PINPad.setTransactionType(transactionType);
         logSet("TransactionType");
     }
