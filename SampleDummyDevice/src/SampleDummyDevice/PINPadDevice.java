@@ -23,6 +23,7 @@ import jpos.*;
 import jpos.config.*;
 
 import javax.swing.*;
+import java.awt.image.SampleModel;
 import java.util.*;
 
 /**
@@ -38,8 +39,6 @@ import java.util.*;
  *     <li>MaximumPINLength: Can be set to one of "1", "2", "3", "4", "5", "6", "7", "8" or "9". Default is "4".</li>
  *     <li>MinimumPINLength: Can be set to the same values as MaximumPINLength or to "0". Default is "4".
  *     MaximumPINLength must be greater or equal to MinimumPINLength.</li>
- *     <li>AllowAlwaysSetProperties: Can be TRUE or FALSE. Default is FALSE. If TRUE, the service will throw an exception
- *     if the application tries to change a writable property while the device has not been claimed.</li>
  * </ul>
  * If CapDisplay will be set to PPAD_DISP_UNRESTRICTED, CapLanguage will be set to PPAD_LANG_NONE and any configuration
  * option for CapLanguage will be ignored.
@@ -78,7 +77,7 @@ public class PINPadDevice extends JposDevice implements Runnable {
             "",
             "Enter PIN",            // PPAD_MSG_ENTERPIN
             "Please Wait",          // PPAD_MSG_PLEASEWAIT
-            "",
+            "Enter Valid PIN",      // PPAD_MSG_ENTERVALIDPIN
             "Retries Exceeded",     // PPAD_MSG_RETRIESEXCEEDED
             "Approved",             // PPAD_MSG_APPROVED
             "Declined",             // PPAD_MSG_DECLINED
@@ -95,7 +94,6 @@ public class PINPadDevice extends JposDevice implements Runnable {
     private SynchronizedMessageBox TheBox = new SynchronizedMessageBox();
     private Thread TheThread = null;
     private Boolean ToBeFinished;
-    private Map<PINPadProperties, Boolean> UsePrompt = new HashMap<>();
 
     private Map<String, String[]> LastEntries = new HashMap<>();
 
@@ -124,7 +122,8 @@ public class PINPadDevice extends JposDevice implements Runnable {
     }
 
     @Override
-    public void changeDefaults(PINPadProperties props) {
+    public void changeDefaults(PINPadProperties p) {
+        SampleProperties props = (SampleProperties) p;
         props.MinimumPINLength = props.MaximumPINLength = 4;
         for (String capa : LastEntries.keySet()) {
             try {
@@ -140,14 +139,19 @@ public class PINPadDevice extends JposDevice implements Runnable {
             } catch (Exception ignored) {}
         }
         if (props.CapDisplay == PINPadConst.PPAD_DISP_NONE || props.CapDisplay == PINPadConst.PPAD_DISP_UNRESTRICTED) {
-            UsePrompt.put(props, false);
+            props.UsePrompt = false;
             props.CapLanguage = PINPadConst.PPAD_LANG_NONE;
         } else {
-            UsePrompt.put(props, true);
-            props.Prompt = PINPadConst.PPAD_MSG_NOTREADY;
+            props.UsePrompt =  true;
             props.AvailableLanguagesList = props.CapLanguage == PINPadConst.PPAD_LANG_ONE ? "EN,US" : "EN,US;EN,UK";
             props.PromptLanguage = "EN,US";
-            props.AvailablePromptsList = props.CapDisplay == PINPadConst.PPAD_DISP_PINRESTRICTED ? "2,4,5,6,7,9,10,11,12" : "1,2,4,5,6,7,9,10,11,12";
+            if (props.CapDisplay == PINPadConst.PPAD_DISP_PINRESTRICTED) {
+                props.Prompt = PINPadConst.PPAD_MSG_ENTERPIN;
+                props.AvailablePromptsList = "1,3,7";
+            } else {
+                props.Prompt = PINPadConst.PPAD_MSG_NOTREADY;
+                props.AvailablePromptsList = "1,2,3,4,5,6,7,9,10,11,12";
+            }
         }
         props.SupportedPINPadSystems = "SAMPLE";
     }
@@ -201,37 +205,25 @@ public class PINPadDevice extends JposDevice implements Runnable {
     }
 
     private void pinReadyWithErrorSendDataOrErrorEvent(String[] options, SampleProperties props, boolean noprompt, int result) {
-        try {
+        if (noprompt)
+            Message = Prompts[PINPadConst.PPAD_MSG_DECLINED];
+        if (options[result].equals("Error")) {
+            props.checkResult(null, new PINPadErrorEvent(props.EventSource, JposConst.JPOS_E_FAILURE, 0, "An error occurred"));
+        } else if (options[result].equals("OK")) {
+            props.checkResult(null, new PINPadErrorEvent(props.EventSource, JposConst.JPOS_E_ILLEGAL, 0, "Invalid PIN"));
+        } else {
             if (noprompt)
-                Message = Prompts[PINPadConst.PPAD_MSG_DECLINED];
-            if (options[result].equals("Error")) {
-                handleEvent(new JposErrorEvent(props.EventSource, JposConst.JPOS_E_FAILURE, 0, JposConst.JPOS_EL_INPUT, "An error occurred"));
-            } else if (options[result].equals("OK")) {
-                handleEvent(new JposErrorEvent(props.EventSource, JposConst.JPOS_E_ILLEGAL, 0, JposConst.JPOS_EL_INPUT, "Invalid PIN"));
-            } else {
-                if (noprompt)
-                    Message = Prompts[PINPadConst.PPAD_MSG_CANCELED];
-                handleEvent(new PINPadDataEvent(props.EventSource, options[result].equals("Cancel") ?
-                        PINPadConst.PPAD_CANCEL : PINPadDataEvent.PPAD_TIMEOUT, "", ""));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+                Message = Prompts[PINPadConst.PPAD_MSG_CANCELED];
+            props.checkResult(new PINPadDataEvent(props.EventSource, options[result].equals("Cancel") ?
+                    PINPadConst.PPAD_CANCEL : PINPadDataEvent.PPAD_TIMEOUT, "", ""), null);
         }
-        props.PINEntryEnabled = false;
-        props.EventSource.logSet("PINEntryEnabled");
     }
 
     private void pinReadySendDataEvent(SampleProperties props, String pin, int shift, boolean noprompt) {
         String encryptedpin = encryptPin(pin, shift);
-        try {
-            if (noprompt)
-                Message = Prompts[PINPadConst.PPAD_MSG_APPROVED];
-            handleEvent(new PINPadDataEvent(props.EventSource, PINPadConst.PPAD_SUCCESS, encryptedpin.substring(0, 2), encryptedpin.substring(2)));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        props.PINEntryEnabled = false;
-        props.EventSource.logSet("PINEntryEnabled");
+        if (noprompt)
+            Message = Prompts[PINPadConst.PPAD_MSG_APPROVED];
+        props.checkResult(new PINPadDataEvent(props.EventSource, PINPadConst.PPAD_SUCCESS, encryptedpin.substring(0, 2), encryptedpin.substring(2)), null);
     }
 
     private String encryptPin(String pin, int key) {
@@ -248,6 +240,25 @@ public class PINPadDevice extends JposDevice implements Runnable {
     }
 
     private class SampleProperties extends PINPadProperties {
+        void checkResult(PINPadDataEvent dev, PINPadErrorEvent eev) {
+            synchronized (getDataEventList()) {
+                if (PINEntryEnabled) {
+                    try {
+                        if (dev == null) {
+                            handleEvent(eev);
+                        } else
+                            handleEvent(dev);
+                    } catch (JposException e) {
+                        e.printStackTrace();
+                    }
+                    PINEntryEnabled = false;
+                    EventSource.logSet("PINEntryEnabled");
+                }
+            }
+        }
+
+        boolean UsePrompt;
+
         protected SampleProperties() {
             super(0);
         }
@@ -268,7 +279,7 @@ public class PINPadDevice extends JposDevice implements Runnable {
                 if (TheThread == null) {
                     TheThread = new Thread(PINPadDevice.this);
                     TheThread.setName("PINPadSampleThread");
-                    Message = UsePrompt.get(this) ? Prompts[Prompt] : Prompts[PINPadConst.PPAD_MSG_NOTREADY];
+                    Message = UsePrompt ? Prompts[Prompt] : Prompts[PINPadConst.PPAD_MSG_NOTREADY];
                     ToBeFinished = false;
                     TheThread.start();
                 }
@@ -296,16 +307,19 @@ public class PINPadDevice extends JposDevice implements Runnable {
         @Override
         public void claim(int timeout) throws JposException {
             super.claim(timeout);
-            int prompt = UsePrompt.get(this) ? Prompt : PINPadConst.PPAD_MSG_IDLE;
+            ((PINPadService)EventSource).resetEFTTransaction();
+            int prompt = UsePrompt ? Prompt : PINPadConst.PPAD_MSG_IDLE;
             if (!Message.equals(Prompts[prompt])) {
-                setPrompt(prompt);
+                super.setPrompt(prompt);
+                Message = Prompts[prompt];
             }
+            TheBox.abortDialog();
         }
 
         @Override
         public void release() throws JposException {
             super.release();
-            if (!UsePrompt.get(this)) {
+            if (!UsePrompt) {
                 setPrompt(PINPadConst.PPAD_MSG_NOTREADY);
             }
         }
@@ -314,7 +328,7 @@ public class PINPadDevice extends JposDevice implements Runnable {
         public void beginEFTTransaction(String system, int host) throws JposException {
             super.beginEFTTransaction(system, host);
             synchronized(PINPadDevice.this) {
-                if (!UsePrompt.get(this)) {
+                if (!UsePrompt) {
                     Message = Prompts[PINPadConst.PPAD_MSG_PLEASEWAIT];
                     TheBox.abortDialog();
                 }
@@ -324,10 +338,17 @@ public class PINPadDevice extends JposDevice implements Runnable {
         @Override
         public void endEFTTransaction(int code) throws JposException {
             synchronized(PINPadDevice.this) {
-                if (!UsePrompt.get(this)) {
-                    Message = Prompts[PINPadConst.PPAD_MSG_IDLE];
-                    TheBox.abortDialog();
+                boolean abortDialog = false;
+                if (PINEntryEnabled) {
+                    check(code == PINPadConst.PPAD_EFT_NORMAL, JposConst.JPOS_E_ILLEGAL, "Normal transaction end invalid during PIN entry");
+                    abortDialog = true;
                 }
+                if (!UsePrompt) {
+                    Message = Prompts[PINPadConst.PPAD_MSG_IDLE];
+                    abortDialog = true;
+                }
+                if (abortDialog)
+                    TheBox.abortDialog();
             }
             super.endEFTTransaction(code);
         }
@@ -335,8 +356,13 @@ public class PINPadDevice extends JposDevice implements Runnable {
         @Override
         public void enablePINEntry() throws JposException {
             synchronized(PINPadDevice.this) {
-                if (!UsePrompt.get(this) || CapDisplay == PINPadConst.PPAD_DISP_PINRESTRICTED)
-                    Message = Prompts[PINPadConst.PPAD_MSG_ENTERPIN];
+                if (UsePrompt) {
+                    if (Prompt != PINPadConst.PPAD_MSG_ENTERPIN) {
+                        Prompt = PINPadConst.PPAD_MSG_ENTERPIN;
+                        EventSource.logSet("Prompt");
+                    }
+                }
+                Message = Prompts[PINPadConst.PPAD_MSG_ENTERPIN];
                 TheBox.abortDialog();
             }
             super.enablePINEntry();
