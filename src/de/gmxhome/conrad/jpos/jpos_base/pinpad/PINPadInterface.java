@@ -131,7 +131,7 @@ public interface PINPadInterface extends JposBaseInterface {
      * However, if the service supports multiple English variants, e.eg "EN,US" and "EN,UK", it is up to the service which
      * variant will be used if only "EN" will be specified.
      *
-     * @param promptLanguage Holds the “language definition” for the message to be displayed.
+     * @param promptLanguage Holds the "language definition" for the message to be displayed.
      * @throws JposException If an error occurs.
      */
     public void setPromptLanguage(String promptLanguage) throws JposException;

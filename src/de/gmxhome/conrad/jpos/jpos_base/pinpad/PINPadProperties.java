@@ -250,6 +250,7 @@ public class PINPadProperties extends JposCommonProperties implements PINPadInte
     /**
      * Getter for DataEventList for clean synchronization between firing data or error events and setting property
      * PINEntryEnabled to the correct value.
+     * @return The DataEventList instance used by the service.
      */
     protected List<JposEvent> getDataEventList() {
         return DataEventList;
