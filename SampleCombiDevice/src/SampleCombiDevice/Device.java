@@ -360,8 +360,9 @@ public class Device extends JposDevice implements Runnable{
 
     @Override
     public void changeDefaults(LineDisplayProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Display service for combined device simulator";
-        props.DeviceServiceVersion = 1014001;
         props.CapMapCharacterSet = true;
         props.CapCharacterSet = LineDisplayConst.DISP_CCS_UNICODE;
         props.CharacterSetDef = LineDisplayConst.DISP_CS_UNICODE;
@@ -373,20 +374,23 @@ public class Device extends JposDevice implements Runnable{
 
     @Override
     public void changeDefaults(CashDrawerProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Drawer service for combined device simulator";
-        props.DeviceServiceVersion = 1014001;
     }
 
     @Override
     public void changeDefaults(POSKeyboardProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Keyboard service for combined device simulator";
-        props.DeviceServiceVersion = 1014001;
     }
 
     @Override
     public void changeDefaults(KeylockProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Keylock service for combined device simulator";
-        props.DeviceServiceVersion = 1014001;
         if (props.Index == EKeyIndex) {
             props.CapKeylockType = KeylockConst.LOCK_KT_ELECTRONIC;
         }
@@ -397,20 +401,23 @@ public class Device extends JposDevice implements Runnable{
 
     @Override
     public void changeDefaults(MSRProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "MSR service for combined device simulator";
-        props.DeviceServiceVersion = 1014001;
     }
 
     @Override
     public void changeDefaults(ScannerProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Scanner service for combined device simulator";
-        props.DeviceServiceVersion = 1014001;
     }
 
     @Override
     public void changeDefaults(ToneIndicatorProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Tone indicator service for combined device simulator";
-        props.DeviceServiceVersion = 1014001;
     }
 
     /**

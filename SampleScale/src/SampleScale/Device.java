@@ -154,6 +154,8 @@ public class Device extends JposDevice implements Runnable {
 
     @Override
     public void changeDefaults(ScaleProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.CapPriceCalculating = true;
         props.CapDisplayText = true;
         props.CapDisplay = true;
@@ -163,7 +165,6 @@ public class Device extends JposDevice implements Runnable {
         props.TareWeightDef = DefaultTara;
         props.WeightUnit = WeightUnit;
         props.DeviceServiceDescription = "Scales service for Scales Dialog 02/04 simulator";
-        props.DeviceServiceVersion = 1014001;
     }
 
     private Thread CommandProcessor;

@@ -173,6 +173,8 @@ public class Device extends JposDevice implements Runnable {
 
     @Override
     public void changeDefaults(RemoteOrderDisplayProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "RemoteOrderDisplay service for subsystem device simulator";
         props.CapTone = false;
         props.CharacterSetDef = RemoteOrderDisplayConst.ROD_CS_UNICODE;
@@ -182,15 +184,15 @@ public class Device extends JposDevice implements Runnable {
         props.VideoModesListDef = "1:20x25x16C";
         props.EventTypeDef = RemoteOrderDisplayConst.ROD_DE_TOUCH_UP|RemoteOrderDisplayConst.ROD_DE_TOUCH_DOWN;
         props.TimeoutDef = RequestTimeout;
-        props.DeviceServiceVersion = 1014001;
     }
 
     @Override
     public void changeDefaults(BumpBarProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "BumpBar service for subsystem device simulator";
         props.CapTone = false;
         props.TimeoutDef = RequestTimeout;
-        props.DeviceServiceVersion = 1014001;
     }
 
     /**

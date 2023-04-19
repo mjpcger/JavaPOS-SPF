@@ -285,11 +285,12 @@ public class Device extends JposDevice implements Runnable{
 
     @Override
     public void changeDefaults(CoinDispenserProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "CoinDispenser service for coin dispenser simulator";
         props.CapEmptySensor = true;
         props.CapJamSensor = true;
         props.CapNearEmptySensor = true;
-        props.DeviceServiceVersion = 1014001;
     }
 
     /**

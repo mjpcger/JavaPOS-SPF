@@ -342,9 +342,6 @@ public class Device extends JposDevice implements Runnable {
      */
     static final int MAXPERIOD = 100;       // Maximum period of simulator (real fiscal printers have higher values)
 
-    private final static int Version = 1014001;
-    private final static int FiscalPrinterVersion = 1015001;    // FiscalPrinter conforms to UPOS version 1.15
-
     /**
      * Maximum time between acknowledge and response frame. Default: 2000. Can be set via jpos.xml.
      */
@@ -709,8 +706,9 @@ public class Device extends JposDevice implements Runnable {
 
     @Override
     public void changeDefaults(FiscalPrinterProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Fiscal printer service for sample fiscal printer";
-        props.DeviceServiceVersion = FiscalPrinterVersion;
         props.ActualCurrencyDef = FiscalPrinterConst.FPTR_AC_EUR;
         props.CapAdditionalHeader = true;
         props.CapAdditionalLines = true;
@@ -752,8 +750,9 @@ public class Device extends JposDevice implements Runnable {
 
     @Override
     public void changeDefaults(ElectronicJournalProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Electronic journal service for sample fiscal printer";
-        props.DeviceServiceVersion = Version;
         props.CapPrintContent = true;
         props.CapRetrieveCurrentMarker = true;
         props.CapRetrieveMarker = true;
@@ -765,8 +764,9 @@ public class Device extends JposDevice implements Runnable {
 
     @Override
     public void changeDefaults(LineDisplayProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Line display service for sample fiscal printer";
-        props.DeviceServiceVersion = Version;
         // Defaults are good for plain 2x20 character display. Changes of defaults only for Unicode support:
         props.CapCharacterSet = LineDisplayConst.DISP_CCS_UNICODE;
         props.CharacterSetDef = LineDisplayConst.DISP_CS_UNICODE;
@@ -778,8 +778,9 @@ public class Device extends JposDevice implements Runnable {
 
     @Override
     public void changeDefaults(CashDrawerProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Drawer service for sample fiscal printer";
-        props.DeviceServiceVersion = Version;
         // All other defaults match the abilities of this service.
     }
 

@@ -129,10 +129,11 @@ public class Device extends JposDevice implements Runnable {
 
     @Override
     public void changeDefaults(MICRProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.CapValidationDevice = false;
         props.DeviceServiceDescription = "MICR service for smple MICR simulator";
         CapPowerReporting = JposConst.JPOS_PR_STANDARD;
-        props.DeviceServiceVersion = 1014001;
     }
 
     /**

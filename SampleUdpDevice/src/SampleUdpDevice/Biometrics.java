@@ -128,8 +128,9 @@ public class Biometrics extends Device {
 
     @Override
     public void changeDefaults(BiometricsProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Biometrics service for sample UDP device simulator";
-        props.DeviceServiceVersion = 1014001;
         props.AlgorithmList = "PasswordMatch";
         props.SensorBPP = 0;
         props.SensorHeight = 0;

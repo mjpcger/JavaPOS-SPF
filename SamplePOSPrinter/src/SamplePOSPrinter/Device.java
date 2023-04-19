@@ -337,8 +337,9 @@ public class Device extends JposDevice{
 
     @Override
     public void changeDefaults(POSPrinterProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "POSPrinter service for printer simulator";
-        props.DeviceServiceVersion = 1014001;
         props.CapCharacterSet = POSPrinterConst.PTR_CCS_UNICODE;
         props.CapCoverSensor = true;
         props.CapRec2Color = true;
@@ -360,8 +361,9 @@ public class Device extends JposDevice{
 
     @Override
     public void changeDefaults(CashDrawerProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "CashDrawer service for combined device simulator";
-        props.DeviceServiceVersion = 1014001;
     }
 
     /**

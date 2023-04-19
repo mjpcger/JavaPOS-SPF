@@ -125,8 +125,9 @@ public class BeltCashboxDrawer extends Device {
 
     @Override
     public void changeDefaults(CashDrawerProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "CashDrawer service for sample UDP device simulator";
-        props.DeviceServiceVersion = 1014001;
     }
 
     private class DrawerSubDeviceToolset extends CommonSubDeviceToolset {
@@ -327,8 +328,9 @@ public class BeltCashboxDrawer extends Device {
 
     @Override
     public void changeDefaults(BeltProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Belt service for sample UDP device simulator";
-        props.DeviceServiceVersion = 1014001;
         props.CapSpeedStepsForward = 2;
     }
 
@@ -751,8 +753,9 @@ public class BeltCashboxDrawer extends Device {
 
     @Override
     public void changeDefaults(BillAcceptorProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "BillAcceptor service for sample UDP device simulator";
-        props.DeviceServiceVersion = 1014001;
         props.CapRealTimeData = true;
         props.CapNearFullSensor = true;
         props.CapFullSensor = true;
@@ -765,8 +768,9 @@ public class BeltCashboxDrawer extends Device {
 
     @Override
     public void changeDefaults(BillDispenserProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "BillDispenser service for sample UDP device simulator";
-        props.DeviceServiceVersion = 1014001;
         props.CapEmptySensor = true;
         props.CapNearEmptySensor = true;
         props.CapJamSensor = true;
@@ -778,8 +782,9 @@ public class BeltCashboxDrawer extends Device {
 
     @Override
     public void changeDefaults(CashChangerProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "CashChanger service for sample UDP device simulator";
-        props.DeviceServiceVersion = 1014001;
         props.CapDeposit = true;
         props.CapRealTimeData = true;
         props.CapDepositDataEvent = true;
@@ -802,8 +807,9 @@ public class BeltCashboxDrawer extends Device {
 
     @Override
     public void changeDefaults(CoinAcceptorProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "CoinAcceptor service for sample UDP device simulator";
-        props.DeviceServiceVersion = 1014001;
         props.CapRealTimeData = true;
         props.CapFullSensor = true;
         props.CapNearFullSensor = true;
@@ -817,8 +823,9 @@ public class BeltCashboxDrawer extends Device {
 
     @Override
     public void changeDefaults(CoinDispenserProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "CoinDispenser service for sample UDP device simulator";
-        props.DeviceServiceVersion = 1014001;
         props.CapEmptySensor = true;
         props.CapJamSensor = true;
         props.CapNearEmptySensor = true;

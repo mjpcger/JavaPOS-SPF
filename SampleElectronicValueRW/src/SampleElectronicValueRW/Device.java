@@ -259,8 +259,9 @@ public class Device extends JposDevice implements Runnable {
 
     @Override
     public void changeDefaults(ElectronicValueRWProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "ElectronicValueRW service for sample EFT";
-        props.DeviceServiceVersion = 1015001;
         props.CapAuthorizeRefund = true;
         props.CapAuthorizeVoid = true;
         props.CapCenterResultCode = true;

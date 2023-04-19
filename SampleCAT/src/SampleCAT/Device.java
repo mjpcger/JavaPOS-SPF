@@ -830,8 +830,9 @@ public class Device extends JposDevice implements Runnable{
 
     @Override
     public void changeDefaults(CATProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "CAT service for sample CAT";
-        props.DeviceServiceVersion = 1014001;
         props.CapAuthorizeRefund = true;
         props.CapAuthorizeVoid = true;
         props.CapCenterResultCode = true;
@@ -840,8 +841,9 @@ public class Device extends JposDevice implements Runnable{
 
     @Override
     public void changeDefaults(ElectronicJournalProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "ElectronicJournal service for sample CAT";
-        props.DeviceServiceVersion = 1014001;
         props.CapErasableMedium = true;
         props.CapRetrieveCurrentMarker = true;
         props.CapRetrieveMarkerByDateTime = true;

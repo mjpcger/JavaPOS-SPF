@@ -398,8 +398,9 @@ public class Device extends JposDevice implements Runnable {
 
     @Override
     public void changeDefaults(LightsProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Lights service for combined special device simulator";
-        props.DeviceServiceVersion = 1014001;
         props.CapColor = LightsConst.LGT_COLOR_PRIMARY|LightsConst.LGT_COLOR_CUSTOM1|LightsConst.LGT_COLOR_CUSTOM2|
                 LightsConst.LGT_COLOR_CUSTOM3|LightsConst.LGT_COLOR_CUSTOM4|LightsConst.LGT_COLOR_CUSTOM5;
         props.MaxLights = 5;
@@ -407,21 +408,24 @@ public class Device extends JposDevice implements Runnable {
 
     @Override
     public void changeDefaults(GateProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Gate service for combined special device simulator";
-        props.DeviceServiceVersion = 1014001;
         props.CapGateStatus = true;
     }
 
     @Override
     public void changeDefaults(MotionSensorProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "MotionSensor service for combined special device simulator";
-        props.DeviceServiceVersion = 1014001;
     }
 
     @Override
     public void changeDefaults(SignatureCaptureProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "SignatureCapture service for combined special device simulator";
-        props.DeviceServiceVersion = 1014001;
         props.CapUserTerminated = true;
         props.MaximumX = 500;
         props.MaximumY = 200;
@@ -429,8 +433,9 @@ public class Device extends JposDevice implements Runnable {
 
     @Override
     public void changeDefaults(ItemDispenserProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "ItemDispenser service for combined special device simulator";
-        props.DeviceServiceVersion = 1014001;
         props.CapIndividualSlotStatus = true;
         props.CapEmptySensor = true;
         props.MaxSlots = 10;
