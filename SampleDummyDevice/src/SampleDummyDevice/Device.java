@@ -193,6 +193,9 @@ public class Device extends JposDevice {
 
     @Override
     public void changeDefaults(CheckScannerProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
+        props.DeviceServiceDescription = "Check scanner service for sample dummy device";
         props.DocumentHeightDef = MaxHeightCheck;
         props.DocumentWidthDef = MaxWidthCheck;
         props.CapColor = CheckScannerConst.CHK_CCL_MONO;
@@ -413,6 +416,9 @@ public class Device extends JposDevice {
 
     @Override
     public void changeDefaults(ImageScannerProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
+        props.DeviceServiceDescription = "Image scanner service for sample dummy device";
         props.AimMode = AimModeImage;
         props.CapHostTriggered = SessionTimeoutImage != 0;
         props.CapIlluminate = true;     // Simulation: No change in processing

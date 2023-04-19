@@ -124,6 +124,9 @@ public class PINPadDevice extends JposDevice implements Runnable {
     @Override
     public void changeDefaults(PINPadProperties p) {
         SampleProperties props = (SampleProperties) p;
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
+        props.DeviceServiceDescription = "PIN pad service for sample dummy device";
         props.MinimumPINLength = props.MaximumPINLength = 4;
         for (String capa : LastEntries.keySet()) {
             try {

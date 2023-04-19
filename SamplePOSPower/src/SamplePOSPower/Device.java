@@ -239,6 +239,9 @@ public class Device extends JposDevice implements Runnable {
 
     @Override
     public void changeDefaults(POSPowerProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
+        props.DeviceServiceDescription = "POS Power service for sample Windows PC";
         props.CapBatteryCapacityRemaining = true;
         props.CapRestartPOS = true;
         props.CapSuspendPOS = true;

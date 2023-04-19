@@ -97,6 +97,9 @@ public class SCRWDevice extends JposDevice implements Runnable {
 
     @Override
     public void changeDefaults(SmartCardRWProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
+        props.DeviceServiceDescription = "Smart card reader / writer service for sample dummy device";
         props.AsyncMode = true;
         props.CapTransmissionProtocol = SmartCardRWConst.SC_CTRANS_PROTOCOL_T0;
         props.TransmissionProtocol = SmartCardRWConst.SC_TRANS_PROTOCOL_T0;

@@ -256,6 +256,9 @@ public class Device extends JposDevice {
 
     @Override
     public void changeDefaults(HardTotalsProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
+        props.DeviceServiceDescription = "Hard totals service for sample device";
         props.CapSingleFile = SingleFileOnlys[props.Index];
     }
 

@@ -163,6 +163,9 @@ public class RFIDDevice extends JposDevice implements Runnable {
 
     @Override
     public void changeDefaults(RFIDScannerProperties props) {
+        super.changeDefaults(props);
+        props.DeviceServiceVersion += 1;
+        props.DeviceServiceDescription = "RFID scanner service for sample dummy device";
         for (String capa : LastEntries.keySet()) {
             try {
                 String[] attr = LastEntries.get(capa);
