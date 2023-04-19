@@ -131,12 +131,4 @@ public class MICR extends MICRProperties {
         } while (System.currentTimeMillis() - starttime < timeout);
         Dev.check(true, JposConst.JPOS_E_FAILURE, "No connection to MICR device");
     }
-
-    @Override
-    public DirectIO directIO(int command, int[] data, Object obj) throws JposException {
-        if (command == 1) {
-            EventSource.setDataEventEnabled(true);
-        }
-        return null;
-    }
 }
