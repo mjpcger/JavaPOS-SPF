@@ -25,7 +25,7 @@ import jpos.services.*;
  * POSPower service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class POSPowerService extends JposBase implements POSPowerService115 {
+public class POSPowerService extends JposBase implements POSPowerService116 {
     /**
      * Instance of a class implementing the POSPowerInterface for POS power device specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
@@ -252,5 +252,81 @@ public class POSPowerService extends JposBase implements POSPowerService115 {
         Device.check(!Data.CapSuspendPOS && reason == allowed[0], JposConst.JPOS_E_ILLEGAL, "Request suspend not supported");
         POSPowerInterface.suspendPOS(reason);
         logCall("SuspendPOS");
+    }
+
+    @Override
+    public int getBatteryCapacityRemainingInSeconds() throws JposException {
+        checkOpened();
+        logGet("BatteryCapacityRemainingInSeconds");
+        return Data.BatteryCapacityRemainingInSeconds;
+    }
+
+    @Override
+    public int getBatteryCriticallyLowThresholdInSeconds() throws JposException {
+        checkOpened();
+        logGet("BatteryCriticallyLowThresholdInSeconds");
+        return Data.BatteryCriticallyLowThresholdInSeconds;
+    }
+
+    @Override
+    public int getBatteryLowThresholdInSeconds() throws JposException {
+        checkOpened();
+        logGet("BatteryLowThresholdInSeconds");
+        return Data.BatteryLowThresholdInSeconds;
+    }
+
+    @Override
+    public boolean getCapBatteryCapacityRemainingInSeconds() throws JposException {
+        checkOpened();
+        logGet("CapBatteryCapacityRemaining");
+        return Data.CapBatteryCapacityRemainingInSeconds;
+    }
+
+    @Override
+    public boolean getCapChargeTime() throws JposException {
+        checkOpened();
+        logGet("CapChargeTime");
+        return Data.CapChargeTime;
+    }
+
+    @Override
+    public boolean getCapVariableBatteryCriticallyLowThresholdInSeconds() throws JposException {
+        checkOpened();
+        logGet("CapVariableBatteryCriticallyLowThresholdInSeconds");
+        return Data.CapVariableBatteryCriticallyLowThresholdInSeconds;
+    }
+
+    @Override
+    public boolean getCapVariableBatteryLowThresholdInSeconds() throws JposException {
+        checkOpened();
+        logGet("CapVariableBatteryLowThresholdInSeconds");
+        return Data.CapVariableBatteryLowThresholdInSeconds;
+    }
+
+    @Override
+    public int getChargeTime() throws JposException {
+        checkOpened();
+        logGet("ChargeTime");
+        return Data.ChargeTime;
+    }
+
+    @Override
+    public void setBatteryCriticallyLowThresholdInSeconds(int seconds) throws JposException {
+        logPreSet("BatteryCriticallyLowThresholdInSeconds");
+        checkEnabled();
+        JposDevice.check(!Data.CapVariableBatteryCriticallyLowThresholdInSeconds, JposConst.JPOS_E_ILLEGAL, "No support for critical low threshold in seconds");
+        JposDevice.check(seconds < 0, JposConst.JPOS_E_ILLEGAL, "Critical low threshold in seconds must be >= 0: " + seconds);
+        POSPowerInterface.setBatteryCriticallyLowThresholdInSeconds(seconds);
+        logSet("BatteryCriticallyLowThresholdInSeconds");
+    }
+
+    @Override
+    public void setBatteryLowThresholdInSeconds(int seconds) throws JposException {
+        logPreSet("BatteryLowThresholdInSeconds");
+        checkEnabled();
+        JposDevice.check(!Data.CapVariableBatteryLowThresholdInSeconds, JposConst.JPOS_E_ILLEGAL, "No support for low threshold in seconds");
+        JposDevice.check(seconds < 0, JposConst.JPOS_E_ILLEGAL, "Low threshold in seconds must be >= 0: " + seconds);
+        POSPowerInterface.setBatteryLowThresholdInSeconds(seconds);
+        logSet("BatteryLowThresholdInSeconds");
     }
 }

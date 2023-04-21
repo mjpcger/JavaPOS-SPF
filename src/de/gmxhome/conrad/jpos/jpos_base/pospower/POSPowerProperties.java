@@ -17,9 +17,12 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.pospower;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import jpos.JposException;
-import jpos.POSPowerConst;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
+
+import javax.swing.*;
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 
 /**
  * Class containing the POS Power specific properties, their default values and default implementations of
@@ -27,6 +30,7 @@ import jpos.POSPowerConst;
  * For details about properties, methods and method parameters, see UPOS specification, chapter POS Power.
  */
 public class POSPowerProperties extends JposCommonProperties implements POSPowerInterface {
+    public int NewSueValue = POSPowerConst.PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS;
     /**
      * UPOS property CapBatteryCapacityRemaining. Default: false. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
@@ -148,12 +152,61 @@ public class POSPowerProperties extends JposCommonProperties implements POSPower
     public int UPSChargeState = 0;
 
     /**
+     * UPOS property BatteryCapacityRemainingInSeconds. Default: 0. Should be overwritten by objects derived from JposDevice within the
+     * open method if CapBatteryCapacityRemainingInSeconds is true.
+     */
+    public int BatteryCapacityRemainingInSeconds = 0;
+
+    /**
+     * UPOS property BatteryCriticallyLowThresholdInSeconds. Default: 0. Should be overwritten by objects derived from JposDevice within the
+     * open method if CapVariableBatteryCriticallyLowThresholdInSeconds is true.
+     */
+    public int BatteryCriticallyLowThresholdInSeconds = 0;
+
+    /**
+     * UPOS property BatteryLowThresholdInSeconds. Default: 0. Should be overwritten by objects derived from JposDevice within the
+     * open method if CapVariableBatteryLowThresholdInSeconds is true.
+     */
+    public int BatteryLowThresholdInSeconds = 0;
+
+    /**
+     * UPOS property CapBatteryCapacityRemainingInSeconds. Default: false. Should be overwritten by objects derived from JposDevice within the
+     * changeDefaults method.
+     */
+    public boolean CapBatteryCapacityRemainingInSeconds = false;
+
+    /**
+     * UPOS property CapChargeTime. Default: false. Should be overwritten by objects derived from JposDevice within the
+     * changeDefaults method.
+     */
+    public boolean CapChargeTime = false;
+
+    /**
+     * UPOS property CapVariableBatteryCriticallyLowThresholdInSeconds. Default: false. Should be overwritten by objects derived from JposDevice within the
+     * changeDefaults method.
+     */
+    public boolean CapVariableBatteryCriticallyLowThresholdInSeconds = false;
+
+    /**
+     * UPOS property CapVariableBatteryLowThresholdInSeconds. Default: false. Should be overwritten by objects derived from JposDevice within the
+     * changeDefaults method.
+     */
+    public boolean CapVariableBatteryLowThresholdInSeconds = false;
+
+    /**
+     * UPOS property ChargeTime. Default: 0. Should be overwritten by objects derived from JposDevice within the
+     * open method if CapChargeTime is true.
+     */
+    public int ChargeTime = 0;
+
+    /**
      * Constructor. Sets ExclusiveUse to ExclusiveAllowed to match the POSPower device model.
      *
      * @param dev Device index
      */
     protected POSPowerProperties(int dev) {
         super(dev);
+        DeviceServiceVersion = 1016000;
         ExclusiveUse = ExclusiveAllowed;
         FlagWhenIdleStatusValue = -1;   // To avoid FlagWhenIdle handling for CASH_SUE_DRAWERCLOSED
     }
@@ -166,6 +219,16 @@ public class POSPowerProperties extends JposCommonProperties implements POSPower
     @Override
     public void batteryLowThreshold(int threshold) throws JposException {
         BatteryLowThreshold = threshold;
+    }
+
+    @Override
+    public void setBatteryCriticallyLowThresholdInSeconds(int seconds) throws JposException {
+        BatteryCriticallyLowThresholdInSeconds = seconds;
+    }
+
+    @Override
+    public void setBatteryLowThresholdInSeconds(int seconds) throws JposException {
+        BatteryLowThresholdInSeconds = seconds;
     }
 
     @Override

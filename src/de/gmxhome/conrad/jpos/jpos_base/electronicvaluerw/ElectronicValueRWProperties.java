@@ -447,6 +447,7 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
      */
     protected ElectronicValueRWProperties(int dev) {
         super(dev);
+        DeviceServiceVersion = 1015000;
         ExclusiveUse = ExclusiveYes;
     }
 

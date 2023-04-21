@@ -19,7 +19,7 @@ package de.gmxhome.conrad.jpos.jpos_base.pospower;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposBase;
 import de.gmxhome.conrad.jpos.jpos_base.JposStatusUpdateEvent;
-import jpos.POSPowerConst;
+import jpos.*;
 
 /**
  * Status update event implementation for POSPower devices.
@@ -90,6 +90,9 @@ public class POSPowerStatusUpdateEvent extends JposStatusUpdateEvent {
             case POSPowerConst.PWR_SUE_PWR_SOURCE:
                 props.PowerSource = AdditionalData;
                 return true;
+            case POSPowerConst.PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS:
+                props.BatteryCapacityRemainingInSeconds = AdditionalData;
+                return true;
             case POSPowerConst.PWR_SUE_FAN_STOPPED:
             case POSPowerConst.PWR_SUE_FAN_RUNNING:
             case POSPowerConst.PWR_SUE_TEMPERATURE_HIGH:
@@ -125,6 +128,8 @@ public class POSPowerStatusUpdateEvent extends JposStatusUpdateEvent {
                 return props.BatteryCapacityRemaining == AdditionalData;
             case POSPowerConst.PWR_SUE_PWR_SOURCE:
                 return props.PowerSource == AdditionalData;
+            case POSPowerConst.PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS:
+                return props.BatteryCapacityRemainingInSeconds == AdditionalData;
         }
         return false;
     }
@@ -208,6 +213,8 @@ public class POSPowerStatusUpdateEvent extends JposStatusUpdateEvent {
                 return "System suspend";
             case POSPowerConst.PWR_SUE_USER_SUSPEND:
                 return "User-initiated system suspend";
+            case POSPowerConst.PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS:
+                return "Battery empty in " + AdditionalData + " seconds";
         }
         return "Unknown Status Change: " + getStatus();
     }

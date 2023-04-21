@@ -56,4 +56,54 @@ public interface LightsInterface extends JposBaseInterface {
      * @throws JposException If an error occurs.
      */
     public void switchOn(int lightNumber, int blinkOnCycle, int blinkOffCycle, int color, int alarm) throws JposException;
+
+
+    /**
+     * Final part of SwitchOn method. Can be overwritten in derived class, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>lightNumbers consists of a comma separated list of numbers between 1 and MaxLights,</li>
+     *     <li>CapColor is COLOR_PRIMARY or color is one of the colors specified by CapColor,</li>
+     *     <li>CapAlarm is ALARM_NOALARM or alarm is one of the alarms specified by CapAlarm.</li>
+     * </ul>
+     *
+     * @param lightNumbers  light numbers between 1 and MaxLights, separated by comma.
+     * @param blinkOnCycle  If blinking, light-on time in milliseconds.
+     * @param blinkOffCycle If blinking, light-off time in milliseconds.
+     * @param color         Light color as specified by CapColor.
+     * @param alarm         Alarm value as specified by CapAlarm.
+     * @throws JposException If an error occurs.
+     */
+    public void switchOnMultiple(String lightNumbers, int blinkOnCycle, int blinkOffCycle, int color, int alarm) throws JposException;
+
+
+    /**
+     * Final part of SwitchOn method. Can be overwritten in derived class, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>pattern is one of PATTERN_CUSTOM1, PATTERN_CUSTOM2, ..., PATTERN_CUSTOM32.</li>
+     *     <li>Only pattern set in CapPattern are specified in pattern,</li>
+     *     <li>CapAlarm is ALARM_NOALARM or alarm is one of the alarms specified by CapAlarm.</li>
+     * </ul>
+     *
+     * @param pattern       Lightning pattern to be switched on.
+     * @param alarm         Alarm value as specified by CapAlarm.
+     * @throws JposException If an error occurs.
+     */
+    public void switchOnPattern(int pattern, int alarm) throws JposException;
+
+
+    /**
+     * Final part of SwitchOn method. Can be overwritten in derived class, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>CapPattern is not equal to LGT_PATTERN_NOPATTERN.</li>
+     * </ul>
+     *
+     * @throws JposException If an error occurs.
+     */
+    public void switchOffPattern() throws JposException;
 }

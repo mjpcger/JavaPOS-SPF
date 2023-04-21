@@ -690,6 +690,7 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
      */
     public FiscalPrinterProperties(int dev) {
         super(dev);
+        DeviceServiceVersion = 1015000;
         FlagWhenIdleStatusValue = FiscalPrinterConst.FPTR_SUE_IDLE;
     }
 

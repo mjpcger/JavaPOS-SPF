@@ -33,7 +33,7 @@ public interface POSPowerInterface extends JposBaseInterface {
      *     <li>Device is enabled,</li>
      *     <li>threshold is between 0 and 99.</li>
      * </ul>
-     * @param threshold Time delay for motion
+     * @param threshold Critical battery low power level in percent.
      * @throws JposException If an error occurs.
      */
     public void batteryCriticallyLowThreshold(int threshold) throws JposException;
@@ -45,10 +45,38 @@ public interface POSPowerInterface extends JposBaseInterface {
      *     <li>Device has been opened,</li>
      *     <li>threshold is between 0 and 99.</li>
      * </ul>
-     * @param threshold Time delay for motion
+     * @param threshold Battery low power level in percent.
      * @throws JposException If an error occurs.
      */
     public void batteryLowThreshold(int threshold) throws JposException;
+
+    /**
+     * Final part of setBatteryCriticallyLowThresholdInSeconds method. Can be overwritten in derived class, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device has been opened,</li>
+     *     <li>CapVariableBatteryCriticallyLowThresholdInSeconds is true,</li>
+     *     <li>seconds is a positive value.</li>
+     * </ul>
+     * @param seconds Critical battery low power level in seconds.
+     * @throws JposException If an error occurs.
+     */
+
+    public void setBatteryCriticallyLowThresholdInSeconds(int seconds) throws JposException;
+
+    /**
+     * Final part of setBatteryLowThresholdInSeconds method. Can be overwritten in derived class, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device has been opened,</li>
+     *     <li>CapVariableBatteryLowThresholdInSeconds is true,</li>
+     *     <li>seconds is a positive value.</li>
+     * </ul>
+     * @param seconds Battery low power level in seconds.
+     * @throws JposException If an error occurs.
+     */
+
+    public void setBatteryLowThresholdInSeconds(int seconds) throws JposException;
 
     /**
      * Final part of setEnforcedShutdownDelayTime method. Can be overwritten in derived class, if necessary.
@@ -57,7 +85,7 @@ public interface POSPowerInterface extends JposBaseInterface {
      *     <li>Device has been opened,</li>
      *     <li>delay is &ge; 0.</li>
      * </ul>
-     * @param delay Time delay for motion
+     * @param delay Time delay for shutdown.
      * @throws JposException If an error occurs.
      */
     public void enforcedShutdownDelayTime(int delay) throws JposException;
