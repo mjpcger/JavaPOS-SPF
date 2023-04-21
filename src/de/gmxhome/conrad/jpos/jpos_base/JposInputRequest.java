@@ -54,11 +54,8 @@ public class JposInputRequest extends JposOutputRequest {
             }
             else {
                 Device.PendingCommands.add(this);
-                if (!Device.AsyncProcessorRunning[0]) {
-                    Device.AsyncProcessorRunning[0] = true;
-                    Thread handler = new Thread(new JposOutputRequest(Device));
-                    handler.setName("AsyncRequestExecutor");
-                    handler.start();
+                if (Device.AsyncProcessorRunning[0] == null) {
+                    (Device.AsyncProcessorRunning[0] = new JposRequestThread(Device)).start();
                 }
             }
         }
@@ -135,9 +132,8 @@ public class JposInputRequest extends JposOutputRequest {
                 else
                     i++;
             }
-            if (Device.PendingCommands.size() > 0 && !Device.AsyncProcessorRunning[0]) {
-                Device.AsyncProcessorRunning[0] = true;
-                new Thread(this).start();
+            if (Device.PendingCommands.size() > 0 && Device.AsyncProcessorRunning[0] == null) {
+                (Device.AsyncProcessorRunning[0] = new JposRequestThread(this)).start();
             }
         }
     }

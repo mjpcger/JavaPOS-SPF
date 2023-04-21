@@ -181,7 +181,7 @@ public class JposBaseDevice {
     /**
      * Flag that signals whether the processor for asynchronous commands is running. Used for synchronization purposes.
      */
-    public Boolean[] AsyncProcessorRunning = new Boolean[]{false};
+    public JposOutputRequest.JposRequestThread[] AsyncProcessorRunning = new JposOutputRequest.JposRequestThread[]{null};
 
     /**
      * Currently executed output request.

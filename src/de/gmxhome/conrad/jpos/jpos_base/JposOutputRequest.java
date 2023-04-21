@@ -146,6 +146,28 @@ public class JposOutputRequest implements Runnable {
     public void invoke() throws JposException {
     }
 
+    static public class JposRequestThread extends Thread {
+        /**
+         * Not null as long as a message box is active in a JposOutputRequest.
+         */
+        public SynchronizedMessageBox TheActiveBox = null;
+
+        public JposRequestThread(JposDevice req) {
+            super(new JposOutputRequest(req));
+            setName(req.ID + " AsyncRequestExecutor");
+        }
+
+        public JposRequestThread(JposOutputRequest req) {
+            super(req);
+            setName(req.Device.ID + " AsyncRequestExecutor");
+        }
+
+        synchronized void abortPendingBox() {
+            if (TheActiveBox != null)
+                TheActiveBox.abortDialog();
+        }
+    }
+
     /**
      * Puts output request into queue of pending commands. If not active,
      * a new request processor will be activated.
@@ -164,11 +186,8 @@ public class JposOutputRequest implements Runnable {
             }
             else {
                 Device.PendingCommands.add(this);
-                if (!Device.AsyncProcessorRunning[0]) {
-                    Device.AsyncProcessorRunning[0] = true;
-                    Thread handler = new Thread(new JposOutputRequest(Device));
-                    handler.setName(Device.ID + " OutputRequestExecutor");
-                    handler.start();
+                if (Device.AsyncProcessorRunning[0] == null) {
+                    (Device.AsyncProcessorRunning[0] = new JposRequestThread(Device)).start();
                 }
             }
         }
@@ -208,7 +227,7 @@ public class JposOutputRequest implements Runnable {
                 result = Device.PendingCommands.get(0);
                 Device.PendingCommands.remove(0);
             } else
-                Device.AsyncProcessorRunning[0] = false;
+                Device.AsyncProcessorRunning[0] = null;
             Device.CurrentCommand = result;
         }
         return result;
@@ -337,9 +356,8 @@ public class JposOutputRequest implements Runnable {
                 Device.PendingCommands.add(current);
                 Props.SuspendedCommands.remove(0);
             }
-            if (Device.PendingCommands.size() > 0 && !Device.AsyncProcessorRunning[0]) {
-                Device.AsyncProcessorRunning[0] = true;
-                new Thread(this).start();
+            if (Device.PendingCommands.size() > 0 && Device.AsyncProcessorRunning[0] == null) {
+                (Device.AsyncProcessorRunning[0] = new JposRequestThread(this)).start();
             }
         }
     }
