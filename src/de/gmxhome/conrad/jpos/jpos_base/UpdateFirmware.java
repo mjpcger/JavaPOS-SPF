@@ -64,7 +64,7 @@ public class UpdateFirmware extends JposOutputRequest {
      * @param firmwareFileName Name of a firmware file or a container file, see UPOS specification.
      */
     public UpdateFirmware(JposCommonProperties props, String firmwareFileName) {
-        super(props.Device);
+        super(props);
         FirmwareFileName = firmwareFileName;
     }
 
