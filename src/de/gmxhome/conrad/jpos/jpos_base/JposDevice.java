@@ -836,6 +836,7 @@ public class JposDevice extends JposBaseDevice {
     public void changeDefaults(ElectronicValueRWProperties props) {
         props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
         AllowAlwaysSetProperties = true;
+        props.DeviceServiceVersion = 1015000;
     }
 
     /**
@@ -894,6 +895,7 @@ public class JposDevice extends JposBaseDevice {
     public void changeDefaults(FiscalPrinterProperties props) {
         props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
         AllowAlwaysSetProperties = true;
+        props.DeviceServiceVersion = 1015000;
     }
 
     /**
@@ -1230,6 +1232,7 @@ public class JposDevice extends JposBaseDevice {
      */
     public void changeDefaults(LightsProperties props) {
         AllowAlwaysSetProperties = true;
+        props.DeviceServiceVersion = 1016000;
     }
 
     /**
@@ -1698,6 +1701,7 @@ public class JposDevice extends JposBaseDevice {
      */
     public void changeDefaults(POSPowerProperties props) {
         AllowAlwaysSetProperties = true;
+        props.DeviceServiceVersion = 1016000;
     }
 
     /**
