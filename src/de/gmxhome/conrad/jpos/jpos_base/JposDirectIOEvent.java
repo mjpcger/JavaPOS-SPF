@@ -44,7 +44,8 @@ public class JposDirectIOEvent extends DirectIOEvent {
      * @return Describing string.
      */
     public String toLogString() {
-        return Integer.toString(getEventNumber()) + "/" + getData();
+        JposBase srv = (JposBase) getSource();
+        return Integer.toString(getEventNumber()) + "/" + getData() + "/" + srv.deepToString(getObject(),Integer.MAX_VALUE);
     }
 
     /**
@@ -61,7 +62,6 @@ public class JposDirectIOEvent extends DirectIOEvent {
      * defined within derived classes.
      */
     public void setDirectIOProperties() {
-        this.setData(1);
     }
 
     boolean WriteProtected = false;
