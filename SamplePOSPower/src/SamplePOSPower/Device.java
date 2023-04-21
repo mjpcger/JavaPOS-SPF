@@ -29,6 +29,8 @@ import jpos.config.JposEntry;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.Arrays;
 
 /**
  * JposDevice based implementation of JavaPOS POSPower device service implementation for the battery power devices in
@@ -78,9 +80,11 @@ public class Device extends JposDevice implements Runnable {
 
     private static final byte BatteryLifePercentUnknown = ~0;
 
+    private static final byte BatteryLifeSecondsUnknown = ~0;
+
     private static final byte SystemStatusFlagBatterySaverOn = 1;
 
-    static Kernel32Ext  Kernel32Lib;
+    static Kernel32Ext Kernel32Lib;
     static PowrProf PowrProfLib;
 
     static {
@@ -99,18 +103,23 @@ public class Device extends JposDevice implements Runnable {
     private static boolean ToBeFinished = false;
     private boolean Operational = true;
     private static Integer PollDelay = null;
+
     private static int getPollDelay() {
         return PollDelay == null ? 1000 : PollDelay;
     }
+
     private static Integer SecondsToFinish = null;
+
     private static int getSecondsToFinish() {
         return SecondsToFinish == null ? 1 : SecondsToFinish;
     }
+
     private static SyncObject PollWaiter = new SyncObject();
     private static SyncObject StartWaiter = null;
     private Thread Poller = null;
 
     private static int RemainingBatteryCapacity = BatteryLifePercentUnknown;
+    private static int RemainingBatteryCapacityInSeconds = BatteryLifeSecondsUnknown;
     private static int POSPowerSource = POSPowerConst.PWR_SOURCE_NA;
     private static byte BatteryFlags = ~0;
     private static int ShutdownDelay;
@@ -118,8 +127,8 @@ public class Device extends JposDevice implements Runnable {
 
     private static int OpenCount = 0;
 
-    private long[] AllowedLow = { 0, 33 };      // Low threshold 33%, see Win32 documentation.
-    private long[] AllowedCritical = { 0, 5 };  // Critical low threshold 5%, see Win32 documentation.
+    private long[] AllowedLow = {0, 33};      // Low threshold 33%, see Win32 documentation.
+    private long[] AllowedCritical = {0, 5};  // Critical low threshold 5%, see Win32 documentation.
 
     public Device(String id) {
         super(id);
@@ -149,13 +158,14 @@ public class Device extends JposDevice implements Runnable {
         while (!ToBeFinished) {
             try {
                 int oldcapacity = RemainingBatteryCapacity;
+                int oldseconds = RemainingBatteryCapacityInSeconds;
                 int oldsource = POSPowerSource;
                 byte oldflags = BatteryFlags;
                 Kernel32Ext.SYSTEM_POWER_STATUS powerstate = new Kernel32Ext.SYSTEM_POWER_STATUS();
                 updateBatteryCapacityAndPowerSource(powerstate);
                 Operational = true;
                 checkShutDown();
-                handleStates(oldcapacity, oldsource, oldflags);
+                handleStates(oldcapacity, oldseconds, oldsource, oldflags);
             } catch (Exception e) {
                 e.printStackTrace();
                 Operational = false;
@@ -199,11 +209,12 @@ public class Device extends JposDevice implements Runnable {
             throw new IOException("GetSystemPowerStatus error " + Kernel32Lib.GetLastError());
         synchronized (Poller) {
             if (powerstate.BatteryFlag == BatteryFlagUnknownState || (powerstate.BatteryFlag & BatteryFlagNoBattery) != 0) {
-                RemainingBatteryCapacity = 0;
+                RemainingBatteryCapacityInSeconds = RemainingBatteryCapacity = 0;
                 POSPowerSource = POSPowerConst.PWR_SOURCE_NA;
                 BatteryFlags = BatteryFlagCritical;
             } else {
                 RemainingBatteryCapacity = powerstate.BatteryLifePercent;
+                RemainingBatteryCapacityInSeconds = powerstate.BatteryLifeTime;
                 POSPowerSource = POSPowerConst.PWR_SOURCE_NA;
                 switch (powerstate.ACLineStatus) {
                     case ACLineStatusOffline:
@@ -221,13 +232,15 @@ public class Device extends JposDevice implements Runnable {
         }
     }
 
-    private void handleStates(int oldcapacity, int oldsource, byte oldflags) throws JposException {
+    private void handleStates(int oldcapacity, int oldseconds, int oldsource, byte oldflags) throws JposException {
         JposCommonProperties props = getPropertySetInstance(POSPowers, 0, 0);
         if (props != null) {
             if (oldsource != POSPowerSource)
                 handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, POSPowerConst.PWR_SUE_PWR_SOURCE, POSPowerSource));
             if (oldcapacity != RemainingBatteryCapacity)
                 handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, POSPowerConst.PWR_SUE_BAT_CAPACITY_REMAINING, RemainingBatteryCapacity));
+            if (oldseconds != RemainingBatteryCapacityInSeconds)
+                handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, POSPowerConst.PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS, RemainingBatteryCapacityInSeconds));
             if (oldflags != BatteryFlags) {
                 if (((BatteryFlags & ~oldflags) & BatteryFlagCritical) != 0)
                     handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, POSPowerConst.PWR_SUE_BAT_CRITICAL, 0));
@@ -243,6 +256,7 @@ public class Device extends JposDevice implements Runnable {
         props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "POS Power service for sample Windows PC";
         props.CapBatteryCapacityRemaining = true;
+        props.CapBatteryCapacityRemainingInSeconds = true;
         props.CapRestartPOS = true;
         props.CapSuspendPOS = true;
         props.CapStandbyPOS = true;
@@ -267,11 +281,13 @@ public class Device extends JposDevice implements Runnable {
         public void initOnOpen() {
             super.initOnOpen();
             synchronized (Poller) {
-                BatteryCapacityRemaining = RemainingBatteryCapacity;
+                BatteryCapacityRemaining = Math.max(0, RemainingBatteryCapacity);
+                BatteryCapacityRemainingInSeconds = Math.max(0, RemainingBatteryCapacityInSeconds);
                 PowerSource = POSPowerSource;
             }
-            BatteryLowThreshold = (byte)AllowedLow[1];
-            BatteryCriticallyLowThreshold = (byte)AllowedCritical[1];
+            BatteryLowThreshold = (byte) AllowedLow[1];
+            BatteryCriticallyLowThreshold = (byte) AllowedCritical[1];
+            BatteryLowThresholdInSeconds = BatteryCriticallyLowThresholdInSeconds = 0;
             EnforcedShutdownDelayTime = 0;
         }
 
@@ -282,7 +298,7 @@ public class Device extends JposDevice implements Runnable {
                 if ((count = getModifiedOpenCount(true)) == 1) {
                     SyncObject waiter = StartWaiter = new SyncObject();
                     ToBeFinished = false;
-                    Poller = new Thread((Device)Device);
+                    Poller = new Thread((Device) Device);
                     Poller.setName("POSPower");
                     Poller.start();
                     waiter.suspend(SyncObject.INFINITE);
@@ -335,6 +351,16 @@ public class Device extends JposDevice implements Runnable {
         }
 
         @Override
+        public void setBatteryLowThresholdInSeconds(int seconds) throws JposException {
+            check(seconds != 0, JposConst.JPOS_E_ILLEGAL, "BatteryLowThresholdInSeconds not supported, must be 0");
+        }
+
+        @Override
+        public void setBatteryCriticallyLowThresholdInSeconds(int seconds) throws JposException {
+            check(seconds != 0, JposConst.JPOS_E_ILLEGAL, "BatteryCriticallyLowThresholdInSeconds not supported, must be 0");
+        }
+
+        @Override
         public void enforcedShutdownDelayTime(int delay) throws JposException {
             synchronized (Device) {
                 super.enforcedShutdownDelayTime(delay);
@@ -368,14 +394,35 @@ public class Device extends JposDevice implements Runnable {
                 PowrProfLib.SetSuspendState(false, true, false);
             else
                 throw new JposException(JposConst.JPOS_E_ILLEGAL, "Not in current context (no suspend status update event)");
-                        }
+        }
 
-@Override
-public void suspendPOS(int reason) throws JposException {
-        if (reason == POSPowerConst.PWR_REASON_REQUEST)
-        PowrProfLib.SetSuspendState(true, true, true);
-        else
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Not in current context (no suspend status update event)");
+        @Override
+        public void suspendPOS(int reason) throws JposException {
+            if (reason == POSPowerConst.PWR_REASON_REQUEST)
+                PowrProfLib.SetSuspendState(true, true, true);
+            else
+                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Not in current context (no suspend status update event)");
         }
+
+        @Override
+        public DirectIO directIO(int cmd, int[] data, Object obj) throws JposException {
+            switch (cmd) {
+                case JOptionPane.ERROR_MESSAGE:
+                case JOptionPane.INFORMATION_MESSAGE:
+                case JOptionPane.WARNING_MESSAGE:
+                case JOptionPane.QUESTION_MESSAGE:
+                case JOptionPane.PLAIN_MESSAGE:
+                    return super.directIO(cmd, data, obj);
+            }
+            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid command: " + cmd);
         }
+
+        @Override
+        public void directIO(DirectIO r) throws JposException {
+            String message = (r.Object.getClass().isArray() ? Array.get(r.Object, 0) : r.Object).toString();
+            int result = new SynchronizedMessageBox().synchronizedConfirmationBox(message, "DirectIO",
+                    new String[]{"OK", "No"}, "No", r.getCommand(), r.Datum);
+            handleEvent(new JposDirectIOEvent(EventSource, 1, result, r.Object));
         }
+    }
+}

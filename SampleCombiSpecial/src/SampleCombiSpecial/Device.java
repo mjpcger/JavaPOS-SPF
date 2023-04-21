@@ -969,12 +969,13 @@ public class Device extends JposDevice implements Runnable {
             check(!request.equals(resp), JposConst.JPOS_E_FAILURE, "Communication error");
         }
 
+        private int[] colors = {
+                LightsConst.LGT_COLOR_CUSTOM1, LightsConst.LGT_COLOR_PRIMARY, LightsConst.LGT_ALARM_CUSTOM2,
+                LightsConst.LGT_COLOR_CUSTOM3, LightsConst.LGT_COLOR_CUSTOM5, LightsConst.LGT_COLOR_CUSTOM4
+        };
+
         @Override
         public void switchOn(int lightNumber, int blinkOnCycle, int blinkOffCycle, int color, int alarm) throws JposException {
-            int[] colors = {
-                    LightsConst.LGT_COLOR_CUSTOM1, LightsConst.LGT_COLOR_PRIMARY, LightsConst.LGT_ALARM_CUSTOM2,
-                    LightsConst.LGT_COLOR_CUSTOM3, LightsConst.LGT_COLOR_CUSTOM5, LightsConst.LGT_COLOR_CUSTOM4
-            };
             for (int i = 0; i < colors.length; i++) {
                 if (color == colors[i]) {
                     String request = "lS" + lightNumber + (i + 1);
@@ -984,6 +985,29 @@ public class Device extends JposDevice implements Runnable {
                 }
             }
             throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid color: " + color);
+        }
+
+        @Override
+        public void switchOnMultiple(String lightNumbers, int blinkOnCycle, int blinkOffCycle, int color, int alarm) throws JposException {
+            String colorstr = "";
+            for (int l = 0; l < colors.length; l++) {
+                if (color == colors[l]) {
+                    colorstr = Integer.toString(l + 1);
+                    break;
+                }
+            }
+            boolean[] lights = new boolean[MaxLights];
+            String[] numbers = lightNumbers.split(",");
+            Arrays.fill(lights, false);
+            for (int i = 0; i < numbers.length; i++)
+                lights[Integer.parseInt(numbers[i]) - 1] = true;
+            for (int i = 1; i <= lights.length; i++) {
+                if (lights[i - 1]) {
+                    String request = "lS" + i + colorstr;
+                    String resp = sendrecv(request);
+                    check(!request.equals(resp), JposConst.JPOS_E_FAILURE, "Communication error");
+                }
+            }
         }
     }
 
