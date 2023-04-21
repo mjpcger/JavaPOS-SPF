@@ -21,10 +21,7 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.JposConst;
 
 /**
- * Error event implementation for PINPad devices. Special handlings:<ul>
- *     <li>Constructor supports only error locus EL_INPUT,</li>
- *     <li>Changing ErrorResponse will be blocked (Only valid value for PINPadErrorEvent is ER_CLEAR).</li>
- * </ul>
+ * Error event implementation for PINPad devices. For compatibility to previous version only.
  */
 public class PINPadErrorEvent extends JposErrorEvent {
     /**
@@ -48,10 +45,5 @@ public class PINPadErrorEvent extends JposErrorEvent {
      */
     public PINPadErrorEvent(JposBase source, int errorcode, int extended, String message) {
         super(source, errorcode, extended, JposConst.JPOS_EL_INPUT, message);
-    }
-
-    @Override
-    public void setErrorResponse(int resp) {
-        super.setErrorResponse(JposConst.JPOS_ER_CLEAR);    // No other value allowed.
     }
 }
