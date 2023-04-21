@@ -118,27 +118,32 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
      */
     @Override
     public void directIO(int command, int[] data, Object object) throws JposException {
-        logPreCall("DirectIO", "" + command + ", " + data[0] + ", " + object);
+        logPreCall("DirectIO", removeOuterArraySpecifier(new Object[]{command, data, object}, Device.MaxArrayStringElements));
+        JposDevice.check(data != null && data.length != 1, JposConst.JPOS_E_ILLEGAL, "Data invalid, must be int[1]: " + deepToString(data, 5));
         switch (command) {
             case REMOTE_ORDER_DISPLAY_SET_FLAG_WHEN_IDLE:
-                setFlagWhenIdle(data);
+                setFlagWhenIdle(data[0]);
                 break;
             case REMOTE_ORDER_DISPLAY_FLAG_WHEN_IDLE_STATUS_VALUE:
-                setFlagWhenIdleStatusValue(data);
+                setFlagWhenIdleStatusValue(data[0]);
                 break;
             default:
-                DeviceInterface.directIO(command, data, object);
+                DirectIO request = DeviceInterface.directIO(command, data, object);
+                if (request != null) {
+                    request.enqueue();
+                    logAsyncCall("DirectIO");
+                    return;
+                }
         }
-        logCall("DirectIO", "" + command + ", " + data[0] + ", " + object);
+        logCall("DirectIO", removeOuterArraySpecifier(new Object[]{command, data, object}, Device.MaxArrayStringElements));
     }
 
-    private void setFlagWhenIdle(int[] data) throws JposException {
+    private void setFlagWhenIdle(int data) throws JposException {
         check(!Data.DeviceEnabled, 0, JposConst.JPOS_E_DISABLED, 0, "Device not enabled");
-        check(data == null || data.length != 1, Data.UnitsOnline, JposConst.JPOS_E_ILLEGAL, 0, "Data invalid");
-        RemoteOrderDisplayInterface.flagWhenIdle(data[0] != 0 ? true : false);
+        RemoteOrderDisplayInterface.flagWhenIdle(data != 0 ? true : false);
     }
 
-    private void setFlagWhenIdleStatusValue(int[] data) throws JposException {
+    private void setFlagWhenIdleStatusValue(int data) throws JposException {
         long[] powerstates = new long[]{
                 JposConst.JPOS_SUE_POWER_ONLINE,
                 JposConst.JPOS_SUE_POWER_OFF,
@@ -154,11 +159,10 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
                 JposConst.JPOS_SUE_UF_COMPLETE_DEV_NOT_RESTORED
         };
         check(!Data.DeviceEnabled, 0, JposConst.JPOS_E_DISABLED, 0, "Device not enabled");
-        check(data == null || data.length != 1, 0, JposConst.JPOS_E_ILLEGAL, 0, "Data invalid");
-        check(Device.member(data[0], powerstates), Data.UnitsOnline, JposConst.JPOS_E_ILLEGAL, 0, "Power state value not allowed as FlagWhenIdle status value: " + data[0]);
-        check(Device.member(data[0], firmwarestates), Data.UnitsOnline, JposConst.JPOS_E_ILLEGAL, 0, "Firmware update state value not allowed as FlagWhenIdle status value: " + data[0]);
-        check(data[0] > JposConst.JPOS_SUE_UF_PROGRESS && data[0] < JposConst.JPOS_SUE_UF_COMPLETE, Data.UnitsOnline, JposConst.JPOS_E_ILLEGAL, 0, "Firmware update progress state not allowed as FlagWhenIdle status value: " + data[0]);
-        Props.FlagWhenIdleStatusValue = data[0];
+        check(Device.member(data, powerstates), Data.UnitsOnline, JposConst.JPOS_E_ILLEGAL, 0, "Power state value not allowed as FlagWhenIdle status value: " + data);
+        check(Device.member(data, firmwarestates), Data.UnitsOnline, JposConst.JPOS_E_ILLEGAL, 0, "Firmware update state value not allowed as FlagWhenIdle status value: " + data);
+        check(data > JposConst.JPOS_SUE_UF_PROGRESS && data < JposConst.JPOS_SUE_UF_COMPLETE, Data.UnitsOnline, JposConst.JPOS_E_ILLEGAL, 0, "Firmware update progress state not allowed as FlagWhenIdle status value: " + data);
+        Props.FlagWhenIdleStatusValue = data;
     }
 
     @Override

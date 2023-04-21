@@ -23,6 +23,7 @@ import jpos.events.JposEvent;
 import jpos.services.EventCallbacks;
 import net.bplaced.conrad.log4jpos.Level;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -584,7 +585,18 @@ public abstract class JposCommonProperties implements JposBaseInterface {
 
     @Override
     public DirectIO directIO(int command, int[] data, Object object) throws JposException {
-        return new DirectIO(this, command, data[0], object);
+        Method asyncdio = null;
+        DirectIO retval = null;
+        try {
+            asyncdio = EventSource.DeviceInterface.getClass().getMethod("directIO", DirectIO.class);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+        retval = new DirectIO(this, command, data, object);
+
+        if (asyncdio == null || asyncdio.getDeclaringClass() == JposCommonProperties.class)
+            return null;
+        return retval;
     }
 
     @Override

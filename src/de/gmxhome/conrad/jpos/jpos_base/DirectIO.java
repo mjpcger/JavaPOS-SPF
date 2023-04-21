@@ -32,6 +32,7 @@ public class DirectIO extends JposOutputRequest {
         return Command;
     }
     private int Command;
+    private int[] Data;
 
     /**
      * Common method DirectIO parameter data, see UPOS specification.
@@ -50,13 +51,33 @@ public class DirectIO extends JposOutputRequest {
      * @param datum     Integer value contained in data array, see UPOS specification.
      * @param object    Additional data, see UPOS specification.
      */
-    public DirectIO(JposCommonProperties props, int command, int datum, Object object) {
-        super(props.Device);
+    public DirectIO(JposCommonProperties props, int command, int[] datum, Object object) {
+        super(props);
         Command = command;
-        Datum = datum;
+        Datum = (Data = datum)[0];
         Object = object;
     }
 
+    /**
+     * Constructor. Stores given parameters for later use. Since this version does not store the original parameter
+     * <i>data</i> as passed by the application (this would be an int[1]), any change of that value will not be passed
+     * back to the application at the end of the invoke method. Therefore, this constructor is deprecated now. You
+     * should use the other constructor instead or (better) use the default implementation of method directIO in
+     * JposCommonProperties for creation within an implementation of the validation or final part for a specific device
+     * service.
+     * @param props     Property set of device service.
+     * @param command   Command number, see UPOS specification.
+     * @param datum     Integer value contained in data array, see UPOS specification.
+     * @param object    Additional data, see UPOS specification.
+     */
+    @Deprecated
+    public DirectIO(JposCommonProperties props, int command, int datum, Object object) {
+        super(props);
+        Command = command;
+        Datum = datum;
+        Object = object;
+        Data = null;
+    }
     @Override
     public JposOutputCompleteEvent createOutputEvent() {
         return null;
@@ -65,5 +86,7 @@ public class DirectIO extends JposOutputRequest {
     @Override
     public void invoke() throws JposException {
         Props.EventSource.DeviceInterface.directIO(this);
+        if (Data != null)
+            Data[0] = Datum;
     }
 }

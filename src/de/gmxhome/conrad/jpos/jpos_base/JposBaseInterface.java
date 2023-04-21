@@ -166,8 +166,11 @@ public interface JposBaseInterface {
 
     /**
      * Final or validation part of DirectIO method. Can be overwritten in derived class, if necessary.
-     * This method will be called whenever the service's directIO method will be called.
-     * All checks, if necessary, must be implemented within the derived service implementation.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>data is an integer array with length 1 or null, if data will not be used in case of the given command.</li>
+     * </ul>
+     * All other checks, if necessary, must be implemented within the derived service implementation.
      * <br>In case of validation only (asynchronous mode), a DirectIO object created with
      * command, data[0] and object as parameters must be returned.
      *

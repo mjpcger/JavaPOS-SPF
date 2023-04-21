@@ -110,11 +110,10 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
         switch (command) {
             case SAMPLEFISCALPRINTERDIO_EXECCOMMAND:
                 EventSource.checkClaimed();
-                Dev.check(data == null || data.length != 1, JposConst.JPOS_E_ILLEGAL, "Data must be int[1]");
                 data[0] = Dev.executeCommands(data[0], obj);
                 break;
             case SAMPLEFISCALPRINTERDIO_NONFISCALRECEIPTTRAILER:
-                Dev.check(data == null || data.length != 1 || (data[0] & ~1) != 0, JposConst.JPOS_E_ILLEGAL, "Invalid data, must be 0 or 1");
+                Dev.check((data[0] & ~1) != 0, JposConst.JPOS_E_ILLEGAL, "Invalid data, must be 0 or 1");
                 Dev.NonFiscalReceiptWithTrailer = data[0] == 0 ? "0" : "1";
                 break;
             case SAMPLEFISCALPRINTERDIO_FISCALIZE:
