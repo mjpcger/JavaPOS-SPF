@@ -84,6 +84,11 @@ public class JposBase implements BaseService {
         if (Props.State != JposConst.JPOS_S_CLOSED)
             close();
         Device.removePropertySet(Props);
+        synchronized(Device.AsyncProcessorRunning) {
+            Device.PendingCommands.clear();
+            if (Device.AsyncProcessorRunning[0] != null && Device.AsyncProcessorRunning[0].TheActiveBox != null)
+                Device.AsyncProcessorRunning[0].TheActiveBox.abortDialog();
+        }
         Props.EventSource = null;
     }
 
@@ -127,23 +132,53 @@ public class JposBase implements BaseService {
         } catch (Exception e) {
             (property = obj.getClass().getDeclaredField(propertyName)).setAccessible(true);
         }
-        Object value = property.get(obj);
-        String valueString = value == null ? "[null]" : value.toString();
-        if (value.getClass().isArray()) {
-            int max = Array.getLength(value);
-            int limit = max < Device.MaxArrayStringElements ? max : Device.MaxArrayStringElements;
-            for (int i = 0; i < limit; i++) {
-                Object component = Array.get(value, i);
-                String componentString = null == component ? "[null]" : component.toString();
-                if (0 == i)
-                    valueString = componentString;
-                else
-                    valueString += "," + componentString;
-            }
-            if (limit < max)
-                valueString += ",...";
+        return removeOuterArraySpecifier(property.get(obj), Device.MaxArrayStringElements);
+    }
+
+    /**
+     * Removes outer array specifiers '{' and '}' from string representation of an object created via deepToString. This
+     * means, if a String returned by deepToString starts with '{' end ends with '}', both, the first and the last
+     * character will be removed from the string.
+     * @param object The object for which the String representation shall be returned.
+     * @param maxlen Maximum array length, if object or a component of object is an array.
+     * @return  String representation of object, in case of an array without the starting and final '{' and '}'.
+     */
+    public String removeOuterArraySpecifier(Object object, int maxlen) {
+        String arraystring = deepToString(object, maxlen);
+        if (arraystring.length() > 1 && arraystring.charAt(0) == '{' && arraystring.charAt(arraystring.length() - 1) == '}')
+            return arraystring.substring(1, arraystring.length() - 1);
+        return arraystring;
+    }
+
+    /**
+     * Converts object to String. Uses method toString to convert the object to a String, but in case of Array objects,
+     * a comma separated list of the toString results of the first <i>maxlen</i> elements of the array will be returned
+     * instead.
+     * @param value  The object to be converted to a string.
+     * @param maxlen Maximum number of array elements converted to String. If an array consists of more than maxlen
+     *               elements, the remaining elements will be represented by "...".
+     * @return The String representation of value.
+     */
+    public String deepToString(Object value, int maxlen) {
+        if (value == null)
+            return "[null]";
+        else if (!value.getClass().isArray())
+            return value.toString();
+        StringBuilder valueString = new StringBuilder("{");
+        int max = Array.getLength(value);
+        int limit = Math.min(max, maxlen);
+        for (int i = 0; i < limit; i++) {
+            Object component = Array.get(value, i);
+            String componentString = deepToString(component, maxlen);
+            if (0 != i)
+                valueString.append(",");
+            valueString.append(componentString);
         }
-        return valueString;
+        if (limit < max)
+            valueString.append(",...}");
+        else
+            valueString.append("}");
+        return valueString.toString();
     }
 
     /**
@@ -856,14 +891,15 @@ public class JposBase implements BaseService {
 
     @Override
     public void directIO(int command, int[] data, Object object) throws JposException {
-        logPreCall("DirectIO", "" + command + ", " + (data == null ? "" : data[0]) + ", " + (object == null ? "" : object.toString()));
+        logPreCall("DirectIO", removeOuterArraySpecifier(new Object[]{command, data, object}, Device.MaxArrayStringElements));
+        JposDevice.check(data != null && data.length != 1, JposConst.JPOS_E_ILLEGAL, "Data invalid, must be int[1]: " + deepToString(data, 5));
         DirectIO request = DeviceInterface.directIO(command, data, object);
         if (request != null) {
             request.enqueue();
             logAsyncCall("DirectIO");
+            return;
         }
-        else
-            logCall("DirectIO", "" + command + ", " + (data == null ? "" : data[0]) + ", " + (object == null ? "" : object.toString()));
+        logCall("DirectIO", removeOuterArraySpecifier(new Object[]{command, data, object}, Device.MaxArrayStringElements));
     }
 
     @Override

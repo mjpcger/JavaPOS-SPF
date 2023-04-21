@@ -50,9 +50,8 @@ public class PrintImmediate extends PrintNormal {
                     break;
             }
             Device.PendingCommands.add(index, this);
-            if (!Device.AsyncProcessorRunning[0]) {
-                Device.AsyncProcessorRunning[0] = true;
-                new Thread(new JposOutputRequest(Device)).start();
+            if (Device.AsyncProcessorRunning[0] == null) {
+                (Device.AsyncProcessorRunning[0] = new JposRequestThread(Device)).start();
             }
         }
         if (state != Props.State)
