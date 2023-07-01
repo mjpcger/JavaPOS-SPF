@@ -181,7 +181,6 @@ proc setResult {res} {
 	global result appresult transno ident line2 line1 tip CardState
 
 	if {$CardState == 1} {
-		setLine 2 "Waiting..."
 		incr CardState
 		if {$tip == ""} {
 			set tip "0.00"
@@ -202,6 +201,7 @@ proc setResult {res} {
 				}
 			} {
 				setResults 0 1111
+        		setLine 2 "Waiting..."
 			}
 			incr transno
 		} Cancelled {
