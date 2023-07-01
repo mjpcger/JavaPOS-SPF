@@ -23,12 +23,23 @@ import jpos.services.*;
 import java.math.BigDecimal;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * FiscalPrinter service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
+ * <br>This service supports the following properties in jpos.xml in addition to the properties listed in JposBaseDevice:
+ * <ul>
+ *     <li>UseEnumeratedValues: If true, string representations contain a decimal point, where trailing zeroes up to and inclusive
+ *     the decimal point can be stripped. Examples for a currency value of 123.4: "123.4", "123.4000". If false, string
+ *     representations contain the 64-bit integer value used internally to store a currency value. This value does not
+ *     contain a decimal point. Example for a currency value of 123.4: "1234000", for 0.19: "1900". The default is true.
+ *     </li>
+ * </ul>
+ * This property will only be used if the service factory passes the jpos entries to the addDevice method.
+ * If the deprecated addDevice method is used, the service will not consider this property.
  */
 public class FiscalPrinterService extends JposBase implements FiscalPrinterService115 {
     /**
@@ -38,6 +49,8 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public FiscalPrinterInterface FiscalPrinterInterface;
 
     private FiscalPrinterProperties Data;
+
+    private boolean CurrencyStringWithDecimalPoint;
 
     private void checkBusySync() throws JposException {
         Device.check(Data.State == JposConst.JPOS_S_BUSY && !Data.AsyncMode, JposConst.JPOS_E_BUSY, "Output in progress");
@@ -80,33 +93,52 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     }
 
     /**
-     * Convert a string containing a numerical value into a currency value (a long with 4 implicit decimals).
-     * Integer values will be returned unchanged (4 decimals will be assumed), other values will be converted using
-     * BigDecimal
+     * Convert a string containing a currency value into a currency value (a long with 4 implicit decimals).
+     * Class BigDecimal will be used for conversion
      * @param value Value to be converted.
      * @param name  Name of the value, used if value is invalid.
      * @return Currency value if value could be converted.
      * @throws JposException with error code E_ILLEGAL if value cannot be converted or if value is out of range.
      */
     public long stringToCurrency(String value, String name) throws JposException {
-        long retval;
+        return stringToCurrency(value, name, false).longValue();
+    }
+
+    /**
+     * Convert a string containing a currency or percentage value into a Number value (a long or int with 4 implicit decimals).
+     * Class BigDecimal will be used for conversion
+     * @param value Value to be converted.
+     * @param name  Name of the value, used if value is invalid.
+     * @param percent If true, return value is percent value, otherwise fixed amount.
+     * @return Number value if value could be converted.
+     * @throws JposException with error code E_ILLEGAL if value cannot be converted or if value is out of range.
+     */
+    public Number stringToCurrency(String value, String name, boolean percent) throws JposException {
+        Number retval;
         if (value.equals("")) {
-            retval = 0;
+            retval = percent ? 0 : 0l;
         }
-        else {
+        else if (percent) {
             try {
                 retval = Integer.parseInt(value);
-            } catch (NumberFormatException e) {
+                if (retval.intValue() <= 99) {  // We assume there is no vat rate or discount of 0.0099 % or less.
+                    retval = retval.intValue() * 10000;
+                }
+            } catch (NumberFormatException | ArithmeticException ignore) {
                 try {
-                    BigDecimal dvat = new BigDecimal(value);
-                    Device.check(dvat.scale() < 0 || dvat.scale() > 4, JposConst.JPOS_E_ILLEGAL, "Invalid decimals for " + name + ": " + value);
-                    dvat = dvat.multiply(new BigDecimal(10000));
-                    Device.check(dvat.compareTo(new BigDecimal(Long.MIN_VALUE)) < 0, JposConst.JPOS_E_ILLEGAL, name + " too low: " + value);
-                    Device.check(dvat.compareTo(new BigDecimal(Long.MAX_VALUE)) > 0, JposConst.JPOS_E_ILLEGAL, name + " too big: " + value);
-                    retval = dvat.longValue();
-                } catch (NumberFormatException ee) {
+                    retval = new BigDecimal(value).scaleByPowerOfTen(4).intValueExact();
+                } catch(NumberFormatException | ArithmeticException e) {
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, 0, "Invalid " + name + ": " + value);
                 }
+            }
+        } else {
+            try {
+                if (CurrencyStringWithDecimalPoint) {
+                    retval = new BigDecimal(value).scaleByPowerOfTen(4).longValueExact();
+                } else
+                    retval = Long.parseLong(value);
+            } catch (NumberFormatException | ArithmeticException e) {
+                throw new JposException(JposConst.JPOS_E_ILLEGAL, 0, "Invalid " + name + ": " + value);
             }
         }
         return retval;
@@ -157,7 +189,20 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
      */
     public FiscalPrinterService(FiscalPrinterProperties props, JposDevice device) {
         super(props, device);
+        CurrencyStringWithDecimalPoint = true;
+        Data = props;
+    }
 
+    /**
+     * Constructor. Stores given property set and device implementation object.
+     *
+     * @param props  Property set.
+     * @param currencyStringWithDecimalPoint Specifies how currenty to string conversion works.
+     * @param device Device implementation object.
+     */
+    public FiscalPrinterService(FiscalPrinterProperties props, JposDevice device, boolean currencyStringWithDecimalPoint) {
+        super(props, device);
+        CurrencyStringWithDecimalPoint = currencyStringWithDecimalPoint;
         Data = props;
     }
 
@@ -1302,17 +1347,14 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void getData(int dataItem, int[] optArgs, String[] data) throws JposException {
-        long[] allowed = new long[]{
+        long[] allowedstr = {
                 FiscalPrinterConst.FPTR_GD_FIRMWARE,
                 FiscalPrinterConst.FPTR_GD_PRINTER_ID,
-                FiscalPrinterConst.FPTR_GD_CURRENT_TOTAL,
-                FiscalPrinterConst.FPTR_GD_DAILY_TOTAL,
-                FiscalPrinterConst.FPTR_GD_GRAND_TOTAL,
+                FiscalPrinterConst.FPTR_GD_TENDER,
+        };
+        long[] allowedint = {
                 FiscalPrinterConst.FPTR_GD_MID_VOID,
-                FiscalPrinterConst.FPTR_GD_NOT_PAID,
                 FiscalPrinterConst.FPTR_GD_RECEIPT_NUMBER,
-                FiscalPrinterConst.FPTR_GD_REFUND,
-                FiscalPrinterConst.FPTR_GD_REFUND_VOID,
                 FiscalPrinterConst.FPTR_GD_NUMB_CONFIG_BLOCK,
                 FiscalPrinterConst.FPTR_GD_NUMB_CURRENCY_BLOCK,
                 FiscalPrinterConst.FPTR_GD_NUMB_HDR_BLOCK,
@@ -1328,17 +1370,36 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
                 FiscalPrinterConst.FPTR_GD_RESTART,
                 FiscalPrinterConst.FPTR_GD_SIMP_INVOICE,
                 FiscalPrinterConst.FPTR_GD_Z_REPORT,
-                FiscalPrinterConst.FPTR_GD_TENDER,
                 FiscalPrinterConst.FPTR_GD_LINECOUNT,
                 FiscalPrinterConst.FPTR_GD_DESCRIPTION_LENGTH
+        };
+        long[] allowedlong = {
+                FiscalPrinterConst.FPTR_GD_CURRENT_TOTAL,
+                FiscalPrinterConst.FPTR_GD_DAILY_TOTAL,
+                FiscalPrinterConst.FPTR_GD_GRAND_TOTAL,
+                FiscalPrinterConst.FPTR_GD_NOT_PAID,
+                FiscalPrinterConst.FPTR_GD_REFUND,
+                FiscalPrinterConst.FPTR_GD_REFUND_VOID
         };
         Device.check(optArgs == null || data == null, JposConst.JPOS_E_ILLEGAL, "Unexpected null pointer argument");
         Device.check(optArgs.length * data.length != 1, JposConst.JPOS_E_ILLEGAL, "Bad dimension of argument pointer");
         logPreCall("GetData", "" + dataItem + ", " + optArgs[0]);
         checkEnabled();
         checkBusySync();
-        Device.checkMember(dataItem, allowed, JposConst.JPOS_E_ILLEGAL, "Data item invalid: " + dataItem);
-        FiscalPrinterInterface.getData(dataItem, optArgs, data);
+        if (JposDevice.member(dataItem, allowedstr))
+            FiscalPrinterInterface.getData(dataItem, optArgs, data);
+        else if (JposDevice.member(dataItem, allowedint)) {
+            int[] intdata = {1};
+            FiscalPrinterInterface.getData(dataItem, optArgs, intdata);
+            data[0] = Integer.toString(intdata[0]);
+        } else if (JposDevice.member(dataItem, allowedlong)) {
+            long[] longdata = {1};
+            FiscalPrinterInterface.getData(dataItem, optArgs, longdata);
+            data[0] = CurrencyStringWithDecimalPoint
+                    ? new BigDecimal(longdata[0]).scaleByPowerOfTen(-4).stripTrailingZeros().toPlainString()
+                    : Long.toString(longdata[0]);
+        } else
+            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Data item invalid: " + dataItem);
         logCall("GetData", "" + dataItem + ", " + optArgs[0] + ", " + data[0]);
     }
 
@@ -1378,7 +1439,11 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         Device.check(data == null, JposConst.JPOS_E_ILLEGAL, "Unexpected null pointer argument");
         Device.check(data.length != 1, JposConst.JPOS_E_ILLEGAL, "Bad dimension of argument pointer");
         Device.checkMember(optArgs, allowed, JposConst.JPOS_E_ILLEGAL, "Totalizer invalid: " + optArgs);
-        FiscalPrinterInterface.getTotalizer(vatID, optArgs, data);
+        long[] longdata = {1};
+        FiscalPrinterInterface.getTotalizer(vatID, optArgs, longdata);
+        data[0] = CurrencyStringWithDecimalPoint
+                ? new BigDecimal(longdata[0]).scaleByPowerOfTen(-4).stripTrailingZeros().toPlainString()
+                : Long.toString(longdata[0]);
         logCall("GetTotalizer", "" + vatID + ", " + optArgs + ", " + data[0]);
     }
 
@@ -1619,6 +1684,19 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         logCall("SetVatTable");
     }
 
+    /**
+     * Sets the value of a specific VAT class in the VAT table. See UPOS specification, chapter Fiscal Printer -
+     * Methods - setVatValue. In this implementation, vatValue must be either a percentage value (0 or a value between 0.01
+     * and 99.9999, either specified with decimal point or with 4 implicit digits) or an integer and a percent value,
+     * separated by comma. Examples for vatValue are "0", "0,0", "1,0", "19", "55000", "1,5.5".
+     * <br>If vatValue is an integer and a percentage value separated by comma, the integer specifies the <i>optArgs</i>
+     * argument that must be passed to <i>getVatEntry</i> together with vatID to retrieve the vat rate after the vat table
+     * has been set.
+     *
+     * @param vatID    Index of the vat table entry to be set.
+     * @param vatValue Tax value specifier, percentage value or integer and percentage value, separated by comma.
+     * @throws JposException If an error occurs
+     */
     @Override
     public void setVatValue(int vatID, String vatValue) throws JposException {
         Device.check(vatValue == null, JposConst.JPOS_E_ILLEGAL, "vatValue must not be null");
@@ -1627,9 +1705,24 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         Device.check(!Data.CapHasVatTable, JposConst.JPOS_E_ILLEGAL, "VAT tables not supported");
         Device.check(!Data.CapSetVatTable, JposConst.JPOS_E_ILLEGAL, "Setting trailer line not supported");
         Device.check(Data.DayOpened, JposConst.JPOS_E_ILLEGAL, "Day open");
-        long vat = stringToCurrency(vatValue, "vatValue");
-        Device.check(vat > 999999, JposConst.JPOS_E_ILLEGAL, "VAT value too big: " + vatValue);
-        FiscalPrinterInterface.setVatValue(vatID, vat < 100 ? vat * 10000 : vat);
+        if (vatValue.length() > 0 && vatValue.charAt(vatValue.length() - 1) == '%')
+            vatValue = vatValue.substring(0, vatValue.length() - 1);
+        String[] vatEntry = vatValue.split(",");
+        JposDevice.check(vatEntry.length > 2, JposConst.JPOS_E_ILLEGAL, "Invalid vatValue: " + vatValue);
+        int[] values = new int[vatEntry.length];
+        values[0] = stringToCurrency(vatEntry[vatEntry.length - 1], "Percentage Value", true).intValue();
+        Device.check(values[0] > 999999, JposConst.JPOS_E_ILLEGAL, "Percentage value too big: " + vatEntry[vatEntry.length - 1]);
+        if (values.length == 2) {
+            try {
+                values[1] = Integer.parseInt(vatEntry[0]);
+            } catch (NumberFormatException e) {
+                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid integer part of vatValue: " + vatEntry[0]);
+            }
+            FiscalPrinterInterface.setVatValue(vatID, values[1], values[0]);
+
+        } else {
+            FiscalPrinterInterface.setVatValue(vatID, values[0]);
+        }
         logCall("SetVatValue");
     }
 
@@ -2025,18 +2118,9 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         checkReserved(description, "description");
         String[] adjustments = vatAdjustment.split(";");
         Device.check(adjustments.length > Data.NumVatRates, JposConst.JPOS_E_ILLEGAL, "Bad number of pairs of VAT ID and amount");
-        for (String adjustment : adjustments) {
-            String[] value = adjustment.split(",");
-            Device.check(value.length != 2, JposConst.JPOS_E_ILLEGAL, "Mal-formatted vatAdjustment parameter");
-            try {
-                Integer.parseInt(value[0]);
-                stringToCurrency(value[1], "Amount");
-            } catch (NumberFormatException e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid vatID or invalid amount: " + e.getMessage(), e);
-            }
-        }
-        checkReserved(description, "description");
-        callIt(FiscalPrinterInterface.printRecPackageAdjustment(adjustmentType, description, vatAdjustment), "PrintRecPackageAdjustment");
+        Map<Integer, Number> vatAdjustments = new HashMap<>();
+        vatAdjustment = getAndModifyVatAdjustments(adjustmentType, vatAdjustment, vatAdjustments);
+        callIt(FiscalPrinterInterface.printRecPackageAdjustment(adjustmentType, description, vatAdjustment, vatAdjustments), "PrintRecPackageAdjustment");
     }
 
     @Override
@@ -2063,19 +2147,37 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
         Device.checkMember(adjustmentType, allowedType, JposConst.JPOS_E_ILLEGAL, "Adjustment not supported: " + adjustmentType);
         ifSyncCheckBusyCoverPaper(getFiscalStation());
+        Map<Integer, Number> vatAdjustments = new HashMap<>();
+        vatAdjustment = getAndModifyVatAdjustments(adjustmentType, vatAdjustment, vatAdjustments);
+        callIt(FiscalPrinterInterface.printRecPackageAdjustVoid(adjustmentType, vatAdjustment, vatAdjustments), "PrintRecPackageAdjustVoid");
+    }
+
+    private String getAndModifyVatAdjustments(int adjustmentType, String vatAdjustment, Map<Integer, Number> vatAdjustments) throws JposException {
+        long[] percentTypes = { FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT, FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE, FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT };
         String[] adjustments = vatAdjustment.split(";");
         Device.check(adjustments.length > Data.NumVatRates, JposConst.JPOS_E_ILLEGAL, "Bad number of pairs of VAT ID and amount");
+        boolean percent = JposDevice.member(adjustmentType, percentTypes);
+        vatAdjustment = "";
         for (String adjustment : adjustments) {
             String[] value = adjustment.split(",");
-            Device.check(value.length != 2, JposConst.JPOS_E_ILLEGAL, "Mal-formatted vatAdjustment parameter");
+            JposDevice.check(value.length != 2, JposConst.JPOS_E_ILLEGAL, "Mal-formatted vatAdjustment parameter");
             try {
-                Integer.parseInt(value[0]);
-                stringToCurrency(value[1], "Amount");
-            } catch (NumberFormatException e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid vatID or invalid amount: " + e.getMessage(), e);
+                int vatid = Integer.parseInt(value[0]);
+                boolean percentvalue = value[1].charAt(value[1].length() - 1) == '%';
+                if (percentvalue)
+                    value[1] = value[1].substring(0, value[1].length() - 1);
+                Number amount = percent || percentvalue ? stringToCurrency(value[1], "percentage for VAT ID " + value[0], true)
+                        : (CurrencyStringWithDecimalPoint ? new BigDecimal(value[1]).scaleByPowerOfTen(4).longValueExact() : Long.parseLong(value[1]));
+                JposDevice.check(vatAdjustments.containsKey(vatid), JposConst.JPOS_E_ILLEGAL, "VatID specified twice: " + value[0]);
+                vatAdjustments.put(vatid, amount);
+                vatAdjustment += ";" + vatid + "," + new BigDecimal(amount.longValue()).scaleByPowerOfTen(-4).stripTrailingZeros().toPlainString();
+                if (percentvalue)
+                    vatAdjustment += "%";
+            } catch (NumberFormatException | ArithmeticException e) {
+                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid adjustment " + adjustment + ": " + e.getMessage(), e);
             }
         }
-        callIt(FiscalPrinterInterface.printRecPackageAdjustVoid(adjustmentType, vatAdjustment), "PrintRecPackageAdjustVoid");
+        return vatAdjustment.length() > 0 ? vatAdjustment.substring(1) : vatAdjustment;
     }
 
     @Override

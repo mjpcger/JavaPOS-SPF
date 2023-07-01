@@ -19,6 +19,10 @@ package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.Map;
+
 /**
  * Class containing the FiscalPrinter specific properties, their default values and default implementations of
  * FiscalPrinterInterface.
@@ -945,12 +949,67 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
     public void getData(int dataItem, int[] optArgs, String[] data) throws JposException {
     }
 
+    /**
+     * Default implementation for backward compatibility. Must not be called from real implementation in derived class.
+     * @param dataItem         The specific data item to retrieve.
+     * @param optArgs          For some dataItem this additional argument is used for further targeting.
+     * @param data             Integer to hold the data retrieved.
+     * @throws JposException
+     */
+    @Override
+    public void getData(int dataItem, int[] optArgs, int[] data) throws JposException {
+        String[] datastr = {""};
+        getData(dataItem, optArgs, datastr);
+        try {
+            data[0] = Integer.parseInt(datastr[0]);
+        } catch (NumberFormatException | NullPointerException e) {
+            throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid totalizer for " + datastr[0] + ": " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Default implementation for backward compatibility. Must not be called from real implementation in derived class.
+     *
+     * @param dataItem         The specific data item to retrieve.
+     * @param optArgs          For some dataItem this additional argument is used for further targeting.
+     * @param data             Currency (long variable) to hold the data retrieved.
+     * @throws JposException
+     */
+    @Override
+    public void getData(int dataItem, int[] optArgs, long[] data) throws JposException {
+        String[] datastr = {""};
+        getData(dataItem, optArgs, datastr);
+        try {
+            data[0] = new BigDecimal(datastr[0]).scaleByPowerOfTen(4).longValueExact();
+        } catch (NumberFormatException | NullPointerException e) {
+            throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid totalizer for " + datastr[0] + ": " + e.getMessage(), e);
+        }
+    }
+
     @Override
     public void getDate(String[] date) throws JposException {
     }
 
     @Override
     public void getTotalizer(int vatID, int optArgs, String[] data) throws JposException {
+    }
+
+    /**
+     * This is a dummy implementation that calls the deprecated version this method.
+     * @param vatID            VAT identifier of the required totalizer.
+     * @param optArgs          Specifies the required totalizer.
+     * @param data             Totalizer returned as a string.
+     * @throws JposException If an error occurs
+     */
+    @Override
+    public void getTotalizer(int vatID, int optArgs, long[] data) throws JposException {
+        String[] datastr = {""};
+        getTotalizer(vatID, optArgs, datastr);
+        try {
+            data[0] = new BigDecimal(datastr[0]).scaleByPowerOfTen(4).longValueExact();
+        } catch (NumberFormatException | NullPointerException e) {
+            throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid totalizer for " + datastr[0] + ": " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -1049,6 +1108,10 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
 
     @Override
     public void setVatValue(int vatID, long vatValue) throws JposException {
+    }
+
+    @Override
+    public void setVatValue(int vatID, int optArgs, int vatValue) throws JposException {
     }
 
     @Override
@@ -1203,12 +1266,26 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
     }
 
     @Override
+    public PrintRecPackageAdjustment printRecPackageAdjustment(int adjustmentType, String description, String vatAdjustment, Map<Integer, Number> parsedAdjustments) throws JposException {
+        PrintRecPackageAdjustment request = new PrintRecPackageAdjustment(this, adjustmentType, description, vatAdjustment, parsedAdjustments);
+        PreLine = "";
+        return request;
+    }
+
+    @Override
     public void printRecPackageAdjustment(PrintRecPackageAdjustment request) throws JposException {
     }
 
     @Override
     public PrintRecPackageAdjustVoid printRecPackageAdjustVoid(int adjustmentType, String vatAdjustment) throws JposException {
         PrintRecPackageAdjustVoid request = new PrintRecPackageAdjustVoid(this, adjustmentType, vatAdjustment);
+        PreLine = "";
+        return request;
+    }
+
+    @Override
+    public PrintRecPackageAdjustVoid printRecPackageAdjustVoid(int adjustmentType, String vatAdjustment, Map<Integer, Number> parsedAdjustments) throws JposException {
+        PrintRecPackageAdjustVoid request = new PrintRecPackageAdjustVoid(this, adjustmentType, vatAdjustment, parsedAdjustments);
         PreLine = "";
         return request;
     }

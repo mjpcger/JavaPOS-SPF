@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import java.util.Map;
+
 /**
  * Interface for methods that implement property setter and method calls for the FiscalPrinter device category.
  * For details about properties, methods and method parameters, see UPOS specification, chapter Fiscal Printer.
@@ -495,7 +497,16 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>AsyncMode is true or State is not S_BUSY,</li>
      *     <li>optArgs and data are not null and are of length 1,</li>
      *     <li>dataItem is one of the GD_ values as described for method GetData.</li>
+     *     <li>dataItem is <b>not</b> one of GD_MID_VOID, GD_RECEIPT_NUMBER, one of the GD_ numbers for fiscal memory counts,
+     *     one of the GD_ values for counter, GD_LINECOUNT or GD_DESCRIPTION_LENGTH, if final part for counters,
+     *     numbers and lengths has been implementer in derived class.</li>
+     *     <li>dataItem is <b>not</b> one of GD_CURRENT_TOTAL, GD_DAILY_TOTAL, GD_GRAND_TOTAL, GD_NOT_PAID, GD_REFUND or
+     *     GD_REFUND_VOID, if final part for totalizers has been implementer in derived class.</li>
      * </ul>
+     * Requested totalizer values returned in data[0] must be returned as decimal string with decimal dot, where
+     * trailing zeros up to and inclusive the decimal dot may be truncated. For example, a value of 123.45 can be
+     * returned as "123.45" or "123.4500", 100.00 can be returned as "100", "100.00" or "100.0000". Even if a value of
+     * 123.45 will be stored as 1234500 within a variable of type long, it must not be returned as "1234500".
      *
      * @param  dataItem         The specific data item to retrieve.
      * @param  optArgs          For some dataItem this additional argument is used for further targeting.
@@ -503,6 +514,43 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * @throws JposException    If an error occurs.
      */
     public void getData(int dataItem, int[] optArgs, String[] data) throws JposException;
+
+    /**
+     * Final part of GetData method for counters, numbers and lengths. Can be overwritten within derived classes, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>AsyncMode is true or State is not S_BUSY,</li>
+     *     <li>optArgs and data are not null and are of length 1,</li>
+     *     <li>dataItem is one of GD_MID_VOID, GD_RECEIPT_NUMBER, one of the GD_ numbers for fiscal memory counts,
+     *     one of the GD_ values for counter, GD_LINECOUNT or GD_DESCRIPTION_LENGTH.</li>
+     * </ul>
+     *
+     * @param  dataItem         The specific data item to retrieve.
+     * @param  optArgs          For some dataItem this additional argument is used for further targeting.
+     * @param  data             Integer to hold the data retrieved.
+     * @throws JposException    If an error occurs.
+     */
+    public void getData(int dataItem, int[] optArgs, int[] data) throws JposException;
+
+    /**
+     * Final part of GetData method for totalizers. Can be overwritten within derived classes, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>AsyncMode is true or State is not S_BUSY,</li>
+     *     <li>optArgs and data are not null and are of length 1,</li>
+     *     <li>dataItem is one of GD_CURRENT_TOTAL, GD_DAILY_TOTAL, GD_GRAND_TOTAL, GD_NOT_PAID, GD_REFUND or GD_REFUND_VOID.</li>
+     * </ul>
+     * In this version of GetData, the requested totalizer must be returned in a currency value, implemented as
+     * long in JavaPOS with 4 implicit decimals. A value of 123.45 will be stored as 1234500.
+     *
+     * @param  dataItem         The specific data item to retrieve.
+     * @param  optArgs          For some dataItem this additional argument is used for further targeting.
+     * @param  data             Currency (long variable) to hold the data retrieved.
+     * @throws JposException    If an error occurs.
+     */
+    public void getData(int dataItem, int[] optArgs, long[] data) throws JposException;
 
     /**
      * Final part of GetDate method. Can be overwritten within derived classes, if necessary.
@@ -525,13 +573,38 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>data is not null and is of length 1,</li>
      *     <li>optArgs is one of the GT_ values as described for method GetTotalizer.</li>
      * </ul>
+     * The requested totalizer returned in data[0] must be returned as decimal string with decimal dot, where
+     * trailing zeros up to and inclusive the decimal dot may be truncated. For example, a value of 123.45 can be
+     * returned as "123.45" or "123.4500", 100.00 can be returned as "100", "100.00" or "100.0000". Even if a value of
+     * 123.45 will be stored as 1234500 within a variable of type long, it must not be returned as "1234500".
+     * <br><b>This method has been marked as deprecated. Please use GetTotalizer with long[1] instead of String[1] as
+     * data argument.</b>
      *
      * @param  vatID            VAT identifier of the required totalizer.
      * @param  optArgs          Specifies the required totalizer.
      * @param  data             Totalizer returned as a string.
      * @throws JposException    If an error occurs.
      */
+    @Deprecated
     public void getTotalizer(int vatID, int optArgs, String[] data) throws JposException;
+
+    /**
+     * Final part of GetTotalizer method. Can be overwritten within derived classes, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>data is not null and is of length 1,</li>
+     *     <li>optArgs is one of the GT_ values as described for method GetTotalizer.</li>
+     * </ul>
+     * In this version of GetTotalizer, the requested totalizer must be returned in a currency value, implemented as
+     * long in JavaPOS with 4 implicit decimals. A value of 123.45 will be stored as 1234500.
+     *
+     * @param  vatID            VAT identifier of the required totalizer.
+     * @param  optArgs          Specifies the required totalizer.
+     * @param  data             Totalizer returned as currency value.
+     * @throws JposException    If an error occurs.
+     */
+    public void getTotalizer(int vatID, int optArgs, long[] data) throws JposException;
 
     /**
      * Final part of GetVatEntry method. Can be overwritten within derived classes, if necessary.
@@ -785,18 +858,20 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>CapHasVatTable is true,</li>
      *     <li>CapSetVatTable is true,</li>
      *     <li>DayOpened is false,</li>
-     *     <li>vatValue is an value &le; 999999, representing a percent value &le; 99.9999.</li>
+     *     <li>vatValue is a value &le; 999999, representing a percent value &le; 99.9999.</li>
      * </ul>
      * <b>Attention:</b> Each service implementation that supports setting VAT values must perform additional
      * checks for vatID and vatValue:
      * <ul>
      *     <li>vatID must be one of NumVatRate values. However, UPOS does not specify the upper or lower border of
-     * vatID. For example, if NumVatRate is 4, valid values for vatID might be 0 - 3, 1 - 4, '1' - '4', 'A' - 'D',
-     * the ASCII code of any character in "ABZN" ...</li>
-     *     <li>Since UPOS does not define the format of a percentage string, vatValue will be computed from the original
-     * string parameter as follows: If it is an integer value, it will be used unchanged if the value is &ge; 100 and
-     * the value will be multiplied by 10000 if the value is &lt; 100. Otherwise, it will be converted into a BigDecimal,
-     * multiplied by 10000, checked to fit into a long and passed as vatValue.</li>
+     *     vatID. For example, if NumVatRate is 4, valid values for vatID might be 0 - 3, 1 - 4, '1' - '4', 'A' - 'D',
+     *     the ASCII code of any character in "ABZN" ...</li>
+     *     <li>Since UPOS does not define the format of vatValue, JavaPOS-SPF specifies vatValue as either a percentage
+     *     value (either an integer between 100 and 999999, representing a percentage between 0.01 % and 99.9999 % with
+     *     4 implicit decimals, an integer value between 0 and 99, representing a percentage between 0 % and 99 % or a
+     *     percentage between 0 % and 99.9999 %, specified as fixed-point number with a maximum of 4 decimals) or an
+     *     integer and a percentage value, separated by comma, this method will only be called if only a percentage value
+     *     has been specified.</li>
      * </ul>
      *
      * @param vatID             Index of the VAT table entry to set.
@@ -804,6 +879,37 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * @throws JposException    If an error occurs.
      */
     public void setVatValue(int vatID, long vatValue) throws JposException;
+
+    /**
+     * Final part of SetVatValue method. Can be overwritten within derived classes, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>CapHasVatTable is true,</li>
+     *     <li>CapSetVatTable is true,</li>
+     *     <li>DayOpened is false,</li>
+     *     <li>vatValue is a value &le; 999999, representing a percent value &le; 99.9999.</li>
+     * </ul>
+     * <b>Attention:</b> Each service implementation that supports setting VAT values must perform additional
+     * checks for vatID and vatValue:
+     * <ul>
+     *     <li>vatID must be one of NumVatRate values. However, UPOS does not specify the upper or lower border of
+     *     vatID. For example, if NumVatRate is 4, valid values for vatID might be 0 - 3, 1 - 4, '1' - '4', 'A' - 'D',
+     *     the ASCII code of any character in "ABZN" ...</li>
+     *     <li>Since UPOS does not define the format of vatValue, JavaPOS-SPF specifies vatValue as either a percentage
+     *     value (either an integer between 100 and 999999, representing a percentage between 0.01 % and 99.9999 % with
+     *     4 implicit decimals, an integer value between 0 and 99, representing a percentage between 0 % and 99 % or a
+     *     percentage between 0 % and 99.9999 %, specified as fixed-point number with a maximum of 4 decimals) or an
+     *     integer and a percentage value, separated by comma, this method will only be called if an integer and a
+     *     percentage value have been specified.</li>
+     * </ul>
+     *
+     * @param vatID             Index of the VAT table entry to set.
+     * @param optArgs           Integer value, to be specified in getVatEntry method to retrieve this vat rate.
+     * @param vatValue          Tax value as a percentage.
+     * @throws JposException    If an error occurs.
+     */
+    public void setVatValue(int vatID, int optArgs, int vatValue) throws JposException;
 
     /**
      * Final part of VerifyItem method. Can be overwritten within derived classes, if necessary.
@@ -1586,7 +1692,8 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     AT_AMOUNT_DISCOUNT, AT_AMOUNT_SURCHARGE and AT_COUPON_AMOUNT_DISCOUNT,</li>
      *     <li>description is not null and does not contain the reserved word, if any,</li>
      *     <li>vatAdjustment is not null and consists of no more than NumVatRates value pairs, each consisting of two values:
-     * A long and a long or a decimal number with maximum 4 decimals.</li>
+     *     An integer (the vat id) and a currency value (decimal number with maximum 4 decimals,</li>
+     *     <li>Each vat id occurs only once within vatAdjustment.</li>
      * </ul>
      * In addition, If AsyncMode is false:
      * <ul>
@@ -1599,9 +1706,60 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * are not defined in some jpos framework implementations. In these cases, JavaPOS-SPF works with self-defined values.
      * The defaults are AT_AMOUNT_DISCOUNT for FPTR_AT_DISCOUNT and AT_AMOUNT_SURCHARGE for FPTR_AT_SURCHARGE. Any
      * device specific implementation should allow to change the defaults via jpos.xml.
-     * <br>The implementation should sets property PreLine to an empty string. Even if the UPOS specification
+     * <br>The implementation should set property PreLine to an empty string. Even if the UPOS specification
      * tells that this shall be done after the command has been executed, this should be done here because the contents
-     * of this properties is buffered in the PrePostOutputRequest and the application should have
+     * of this property is buffered in the PrePostOutputRequest and the application should have
+     * the opportunity to set this property for further print requests after a print request has been enqueued
+     * for asynchronous processing.
+     * <br>For synchronous processing, this difference should not be relevant. However, keep in mind that PreLine
+     * must be reset to an empty string at least at the end of the final part of PrintRecPackageAdjustment.
+     * <br><b>This method has been replaced by the method of the same name with additional parameter
+     * <i>parsedAdjustments</i> and has been marked as deprecated.</b>
+     *
+     * @param adjustmentType    Type of adjustment.
+     * @param description       Text describing the adjustment.
+     * @param vatAdjustment     String containing a list of adjustment(s) to be voided for different VAT(s). See
+     *                          UPOS method PrintRecPackageAdjustment.
+     * @return PrintRecPackageAdjustment object for use in final part.
+     * @throws JposException    If an error occurs.
+     */
+    @Deprecated
+    public PrintRecPackageAdjustment printRecPackageAdjustment(int adjustmentType, String description, String vatAdjustment) throws JposException;
+
+    /**
+     * Validation part of PrintRecPackageAdjustment method. Can be overwritten within derived
+     * classes, if necessary.
+     * This method shall only perform additional validation. It will be called before the service buffers the
+     * method call for synchronous or asynchronous execution.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>CapPackageAdjustment is true,</li>
+     *     <li>PrinterState is PS_FISCAL_RECEIPT,</li>
+     *     <li>CapFiscalReceiptType is false or FiscalReceiptType is RT_SALES, RT_SERVICE, RT_SIMPLE_INVOICE or RT_REFUND,</li>
+     *     <li>depending on the value of AllowItemAdjustmentTypesInPackageAdjustment of the FiscalPrinterService object
+     *     bound to the device implementation, adjustmentType is one of FPTR_AT_DISCOUNT and FPTR_AT_SURCHARGE, or
+     *     one of AT_PERCENTAGE_DISCOUNT, AT_PERCENTAGE_SURCHARGE, AT_COUPON_PERCENTAGE_DISCOUNT,
+     *     AT_AMOUNT_DISCOUNT, AT_AMOUNT_SURCHARGE and AT_COUPON_AMOUNT_DISCOUNT,</li>
+     *     <li>description is not null and does not contain the reserved word, if any,</li>
+     *     <li>vatAdjustment is not null and consists of no more than NumVatRates value pairs, each consisting of two values:
+     *     An integer (the vat id) and a currency value (decimal number with maximum 4 decimals,</li>
+     *     <li>Each vat id occurs only once within vatAdjustment.</li>
+     * </ul>
+     * In addition, If AsyncMode is false:
+     * <ul>
+     *     <li>State is not S_BUSY,</li>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
+     * <b>Keep in mind:</b>The adjustmentType values AT_DISCOUNT and AT_SURCHARGE, described in the UPOS specification,
+     * are not defined in some jpos framework implementations. In these cases, JavaPOS-SPF works with self-defined values.
+     * The defaults are AT_AMOUNT_DISCOUNT for FPTR_AT_DISCOUNT and AT_AMOUNT_SURCHARGE for FPTR_AT_SURCHARGE. Any
+     * device specific implementation should allow to change the defaults via jpos.xml.
+     * <br>The implementation should set property PreLine to an empty string. Even if the UPOS specification
+     * tells that this shall be done after the command has been executed, this should be done here because the contents
+     * of this property is buffered in the PrePostOutputRequest and the application should have
      * the opportunity to set this property for further print requests after a print request has been enqueued
      * for asynchronous processing.
      * <br>For synchronous processing, this difference should not be relevant. However, keep in mind that PreLine
@@ -1611,10 +1769,14 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * @param description       Text describing the adjustment.
      * @param vatAdjustment     String containing a list of adjustment(s) to be voided for different VAT(s). See
      *                          UPOS method PrintRecPackageAdjustment.
+     * @param parsedAdjustments Map containing the parsed vat ids and adjustments. For each pair of vat id and adjustment
+     *                          amount, it contains the adjustment amount with the corresponding vat id as the key.
+     *                          A percentage amount will be stored in a Number instance of type Integer, a fixed amount
+     *                          in a Number instance of type Long.
      * @return PrintRecPackageAdjustment object for use in final part.
      * @throws JposException    If an error occurs.
      */
-    public PrintRecPackageAdjustment printRecPackageAdjustment(int adjustmentType, String description, String vatAdjustment) throws JposException;
+    public PrintRecPackageAdjustment printRecPackageAdjustment(int adjustmentType, String description, String vatAdjustment, Map<Integer, Number> parsedAdjustments) throws JposException;
 
     /**
      * Final part of PrintRecPackageAdjustment method. Can be overwritten within derived classes, if necessary.
@@ -1650,7 +1812,57 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     one of AT_PERCENTAGE_DISCOUNT, AT_PERCENTAGE_SURCHARGE, AT_COUPON_PERCENTAGE_DISCOUNT,
      *     AT_AMOUNT_DISCOUNT, AT_AMOUNT_SURCHARGE and AT_COUPON_AMOUNT_DISCOUNT,</li>
      *     <li>vatAdjustment is not null and consists of no more than NumVatRates value pairs, each consisting of two values:
-     * A long and a long or a decimal number with maximum 4 decimals.</li>
+     *     An integer (the vat id) and a currency value (decimal number with maximum 4 decimals,</li>
+     *     <li>Each vat id occurs only once within vatAdjustment.</li>
+     * </ul>
+     * In addition, If AsyncMode is false:
+     * <ul>
+     *     <li>State is not S_BUSY,</li>
+     *     <li>CapCoverSensor is false or CoverOpen is false,</li>
+     *     <li>the empty paper sensors of the journal and the station specified by FiscalReceiptStation are not present
+     * or signal paper present.</li>
+     * </ul>
+     * <b>Keep in mind:</b>The adjustmentType values AT_DISCOUNT and AT_SURCHARGE, described in the UPOS specification,
+     * are not defined in some jpos framework implementations. In these cases, JavaPOS-SPF works with self-defined values.
+     * The defaults are AT_AMOUNT_DISCOUNT for FPTR_AT_DISCOUNT and AT_AMOUNT_SURCHARGE for FPTR_AT_SURCHARGE. Any
+     * device specific implementation should allow to change the defaults via jpos.xml.
+     * <br>The implementation should sets property PreLine to an empty string. Even if the UPOS specification
+     * tells that this shall be done after the command has been executed, this should be done here because the contents
+     * of this properties is buffered in the PrePostOutputRequest and the application should have
+     * the opportunity to set this property for further print requests after a print request has been enqueued
+     * for asynchronous processing.
+     * <br>For synchronous processing, this difference should not be relevant. However, keep in mind that PreLine
+     * must be reset to an empty string at least at the end of the final part of PrintRecPackageAdjustVoid.
+     * <br><b>This method has been replaced by the method of the same name with additional parameter
+     * <i>parsedAdjustments</i> and has been marked as deprecated.</b>
+     *
+     * @param adjustmentType    Type of adjustment.
+     * @param vatAdjustment     String containing a list of adjustment(s) to be voided for different VAT(s). See
+     *                          UPOS method PrintRecPackageAdjustVoid.
+     * @return PrintRecPackageAdjustVoid object for use in final part.
+     * @throws JposException    If an error occurs.
+     */
+    @Deprecated
+    public PrintRecPackageAdjustVoid printRecPackageAdjustVoid(int adjustmentType, String vatAdjustment) throws JposException;
+
+    /**
+     * Validation part of PrintRecPackageAdjustVoid method. Can be overwritten within derived
+     * classes, if necessary.
+     * This method shall only perform additional validation. It will be called before the service buffers the
+     * method call for synchronous or asynchronous execution.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>CapPackageAdjustment is true,</li>
+     *     <li>PrinterState is PS_FISCAL_RECEIPT,</li>
+     *     <li>CapFiscalReceiptType is false or FiscalReceiptType is RT_SALES, RT_SERVICE, RT_SIMPLE_INVOICE or RT_REFUND,</li>
+     *     <li>depending on the value of AllowItemAdjustmentTypesInPackageAdjustment of the FiscalPrinterService object
+     *     bound to the device implementation, adjustmentType is one of FPTR_AT_DISCOUNT and FPTR_AT_SURCHARGE, or
+     *     one of AT_PERCENTAGE_DISCOUNT, AT_PERCENTAGE_SURCHARGE, AT_COUPON_PERCENTAGE_DISCOUNT,
+     *     AT_AMOUNT_DISCOUNT, AT_AMOUNT_SURCHARGE and AT_COUPON_AMOUNT_DISCOUNT,</li>
+     *     <li>vatAdjustment is not null and consists of no more than NumVatRates value pairs, each consisting of two values:
+     *     An integer (the vat id) and a currency value (decimal number with maximum 4 decimals,</li>
+     *     <li>Each vat id occurs only once within vatAdjustment.</li>
      * </ul>
      * In addition, If AsyncMode is false:
      * <ul>
@@ -1674,10 +1886,12 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * @param adjustmentType    Type of adjustment.
      * @param vatAdjustment     String containing a list of adjustment(s) to be voided for different VAT(s). See
      *                          UPOS method PrintRecPackageAdjustVoid.
+     * @param parsedAdjustments Map containing the parsed vat ids and adjustments. For each pair of vat id and adjustment
+     *                          amount, it contains the adjustment amount with the corresponding vat id as the key.
      * @return PrintRecPackageAdjustVoid object for use in final part.
      * @throws JposException    If an error occurs.
      */
-    public PrintRecPackageAdjustVoid printRecPackageAdjustVoid(int adjustmentType, String vatAdjustment) throws JposException;
+    public PrintRecPackageAdjustVoid printRecPackageAdjustVoid(int adjustmentType, String vatAdjustment, Map<Integer, Number> parsedAdjustments) throws JposException;
 
     /**
      * Final part of PrintRecPackageAdjustVoid method. Can be overwritten within derived classes, if necessary.
