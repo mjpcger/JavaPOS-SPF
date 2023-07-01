@@ -49,9 +49,17 @@ import java.util.Map;
  * in the <i>serviceClass</i> attribute of the same <i>creation</i> tag.
  * <br>The name of the class factory of the service class must be specified in the <i>value</i> attribute of a <i>prop</i>
  * tag with <b>JavaPOS_SPF_WrappedClassFactory</b> in the corresponding <i>name</i> attribute.
- * Furthermore, to specify the position of an optional percent character in the amount of a package adjustment, use
- * &lt;prop name="JavaPOS_SPF_TrailingPercent" value="false"/&gt; to allow a leading percent character. Default is to
- * allow a trailing percent character.
+ * Furthermore, to specify the position of an optional percent character in the amount of a package adjustment, a boolean
+ * property <b>JavaPOS_SPF_TrailingPercent</b> can be used. The default value is true. To allow a leading percent character,
+ * the value must be false.
+ * <br>Here a sample to configure this wrapper for a service named sample.FiscalPrinterService with a factory class
+ * sample.FiscalPrinterFactory that expects a leading percent character to specify a percent value in package adjustments:
+ * <blockquote>
+ *     <p>&lt;creation factoryClass="de.gmxhome.conrad.jpos.jpos_base.fiscalprinter.FiscalPrinterToDecimalWrapper"
+ *     serviceClass="sample.FiscalPrinterService"/&gt;</p>
+ *     <p>&lt;prop name="JavaPOS_SPF_WrappedClassFactory" value="sample.FiscalPrinterFactory"/&gt;</p>
+ *     <p>&lt;prop name="JavaPOS_SPF_TrailingPercent" value="false"/&gt;</p>
+ * </blockquote>
  */
 public class FiscalPrinterToDecimalWrapper implements JposServiceInstanceFactory {
     private static class Wrapper {

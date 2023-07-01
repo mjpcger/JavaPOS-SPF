@@ -954,7 +954,7 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
      * @param dataItem         The specific data item to retrieve.
      * @param optArgs          For some dataItem this additional argument is used for further targeting.
      * @param data             Integer to hold the data retrieved.
-     * @throws JposException
+     * @throws JposException   If the specified data item does not specify an integer value.
      */
     @Override
     public void getData(int dataItem, int[] optArgs, int[] data) throws JposException {
@@ -973,7 +973,7 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
      * @param dataItem         The specific data item to retrieve.
      * @param optArgs          For some dataItem this additional argument is used for further targeting.
      * @param data             Currency (long variable) to hold the data retrieved.
-     * @throws JposException
+     * @throws JposException   If the specified data item does not specify a currency value.
      */
     @Override
     public void getData(int dataItem, int[] optArgs, long[] data) throws JposException {
