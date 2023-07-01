@@ -18,6 +18,8 @@ package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
 
 import jpos.*;
 
+import java.util.Map;
+
 /**
  * Output request executor for FiscalPrinter method PrintRecPackageAdjustment.
  */
@@ -42,6 +44,21 @@ public class PrintRecPackageAdjustment extends PrintRecPackageAdjustVoid {
      */
     public PrintRecPackageAdjustment(FiscalPrinterProperties props, int adjustmentType, String description, String vatAdjustment) {
         super(props, adjustmentType, vatAdjustment);
+        Description = description;
+    }
+
+    /**
+     * Constructor. Stores given parameters for later use.
+     *
+     * @param props          Property set of device service.
+     * @param adjustmentType Type of adjustment.
+     * @param description    Text describing the adjustment.
+     * @param vatAdjustment  String containing a list of adjustment(s) to be voided for different VAT(s).
+     * @param parsedAdjustments parsed vatAdjustment, contains the adjustment amounts with the corresponding vat id as key
+     *                          specified in vatAdjustment.
+     */
+    public PrintRecPackageAdjustment(FiscalPrinterProperties props, int adjustmentType, String description, String vatAdjustment, Map<Integer, Number> parsedAdjustments) {
+        super(props, adjustmentType, vatAdjustment, parsedAdjustments);
         Description = description;
     }
 
