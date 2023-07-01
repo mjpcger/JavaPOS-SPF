@@ -26,7 +26,7 @@ import java.util.Arrays;
  * Unique implementation for IO processing. Derived classes should add
  * support for serial (RS232), TCP and other IO operations
  */
-public class UniqueIOProcessor {
+public class UniqueIOProcessor implements AutoCloseable {
     /**
      * Communication source, used for reading data. For RS232, Source, Target
      * and Port are the same. In case of network connections, they can be

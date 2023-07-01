@@ -24,7 +24,7 @@ import java.io.IOException;
  * Each SerialIOAdapter is a very simple class that holds the absolute minimum of functionality to support serial IO.
  * It contains at least a default constructor.
  */
-public interface SerialIOAdapter {
+public interface SerialIOAdapter extends AutoCloseable {
     /**
      * Baudrate constant for 1200 baud.
      */
