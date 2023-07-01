@@ -18,6 +18,7 @@ package de.gmxhome.conrad.jpos.jpos_base.cashdrawer;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
 
 /**
  * General part of CashDrawer factory for JPOS devices using this framework.
@@ -31,6 +32,7 @@ public class Factory extends JposDeviceFactory {
      * @return CashDrawerService object.
      * @throws JposException If property set could not be retrieved.
      */
+    @Deprecated
     public CashDrawerService addDevice(int index, JposDevice dev) throws JposException {
         CashDrawerProperties drw = dev.getCashDrawerProperties(index);
         CashDrawerService service;
@@ -42,5 +44,19 @@ public class Factory extends JposDeviceFactory {
         drw.addProperties(dev.CashDrawers);
         service.DeviceInterface = service.CashDrawerInterface = drw;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults. Returns CashDrawerService object.
+     * @param index CashDrawer property set index.
+     * @param dev   CashDrawer implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
+     * @return CashDrawerService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    public CashDrawerService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
+        // As long as DrawerBeepVolume has not been removed, entry will not be used (works via dev.DrawerBeepVolume).
+        return addDevice(index, dev);
     }
 }

@@ -23,6 +23,10 @@ import jpos.services.*;
 /**
  * CashDrawer service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
+ * <br>This service supports the following properties in jpos.xml in addition to the properties listed in JposBaseDevice:
+ * <ul>
+ *     <li>DrawerBeepVolume: Volume of drawer beep. Valid values are from 0 to 127. Default: 100.</li>
+ * </ul>
  */
 public class CashDrawerService extends JposBase implements CashDrawerService115, Runnable {
     /**
@@ -33,6 +37,7 @@ public class CashDrawerService extends JposBase implements CashDrawerService115,
 
     private CashDrawerProperties Data;
     private MySoundPlayer Sound;
+    private int DrawerBeepVolume;
 
     /**
      * Constructor. Stores property set and device implementation object.
@@ -42,6 +47,8 @@ public class CashDrawerService extends JposBase implements CashDrawerService115,
      */
     public CashDrawerService(CashDrawerProperties props, JposDevice device) {
         super(props, device);
+        DrawerBeepVolume = device.DrawerBeepVolume;
+        device.DrawerBeepVolume = 100;
         Data = props;
     }
 
@@ -126,7 +133,7 @@ public class CashDrawerService extends JposBase implements CashDrawerService115,
             if (Sound.BeepTimeout != JposConst.JPOS_FOREVER) {
                 Thread.sleep(Sound.BeepTimeout > 10 ? Sound.BeepTimeout : 10);
                 while (true) {
-                    Sound.startSound(Sound.BeepFrequency, Sound.BeepDuration, Device.DrawerBeepVolume);
+                    Sound.startSound(Sound.BeepFrequency, Sound.BeepDuration, DrawerBeepVolume);
                     Sound.waitFinished();
                     Thread.sleep(Sound.BeepDelay);
                 }
