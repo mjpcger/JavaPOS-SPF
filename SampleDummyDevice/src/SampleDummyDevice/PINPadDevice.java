@@ -47,7 +47,7 @@ import java.util.*;
  * code of every digit of the entered PIN.
  * <br>UpdateKey excepts any key of any length, as long as the key number is between 1 and 3.
  * <br><b>SPECIAL REMARKS:</b> This sample does not implement any really existing PINPad system and shall not be used in any
- * really existing cash register application. Therefore, is supports only one sample PINPad system to be specified in
+ * really existing cash register application. Therefore, it supports only one sample PINPad system to be specified in
  * the BeginEFTTransaction method: "SAMPLE".
  */
 public class PINPadDevice extends JposDevice implements Runnable {
