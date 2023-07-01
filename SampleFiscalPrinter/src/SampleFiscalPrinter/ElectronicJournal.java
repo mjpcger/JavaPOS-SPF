@@ -164,11 +164,10 @@ class ElectronicJournal extends ElectronicJournalProperties implements StatusUpd
 
     @Override
     public void queryContent(QueryContent request) throws JposException {
-        try {
+        try (RandomAccessFile target = new RandomAccessFile(request.getFileName(), "rw")) {
             String from = "".equals(request.getFromMarker()) ? "0-1" : request.getFromMarker();
             int tosession = Dev.CurrentPeriod + 1;
             int toticket = 0;
-            RandomAccessFile target = new RandomAccessFile(request.getFileName(), "rw");
             if (!"".equals(request.getToMarker())) {
                 String[] toparts = checkMarker(request.getToMarker());
                 tosession = Integer.parseInt(toparts[0]);
@@ -203,7 +202,6 @@ class ElectronicJournal extends ElectronicJournalProperties implements StatusUpd
                     addData[1] = 1;
                 }
             }
-            target.close();
             Dev.handleEvent(new JposDataEvent(EventSource, 0));
         } catch (Exception e) {
             throw new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e);

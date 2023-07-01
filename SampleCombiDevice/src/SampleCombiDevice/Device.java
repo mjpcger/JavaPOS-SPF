@@ -363,7 +363,6 @@ public class Device extends JposDevice implements Runnable{
         super.changeDefaults(props);
         props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Display service for combined device simulator";
-        props.CapMapCharacterSet = true;
         props.CapCharacterSet = LineDisplayConst.DISP_CCS_UNICODE;
         props.CharacterSetDef = LineDisplayConst.DISP_CS_UNICODE;
         props.CharacterSetList = "437,997,998,1252";
@@ -428,8 +427,7 @@ public class Device extends JposDevice implements Runnable{
         PropertySet = new Properties();
         File propertyFile = new File(getClass().getName() + ".properties");
         if (propertyFile.exists()) {
-            try {
-                BufferedInputStream istream = new BufferedInputStream(new FileInputStream(propertyFile));
+            try (BufferedInputStream istream = new BufferedInputStream(new FileInputStream(propertyFile))) {
                 PropertySet.load(istream);
             } catch (Exception e) {
                 throw new JposException(JposConst.JPOS_E_ILLEGAL, "Property file missing", e);
