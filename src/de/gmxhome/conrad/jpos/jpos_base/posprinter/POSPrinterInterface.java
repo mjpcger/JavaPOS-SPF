@@ -540,17 +540,19 @@ public interface POSPrinterInterface extends JposBaseInterface {
     public void validateData(int station, String data) throws JposException;
 
     /**
-     * Validate character or escape sequence. Usually, this method simply checks which derived class data is and calls
-     * the corresponding validation method.
+     * Validate character or escape sequence. Usually, this method simply calls the validation method of the given
+     * PrintDataPart object.<br>
+     * This method is deprecaded now. It is recommended to use the validateData method of data instead.
      * @param station   POSPrinter station, one of S_JOURNAL, S_RECEIPT or S_SLIP.
-     * @param data      Aly object derived from PrintDataPart.
+     * @param data      Any object derived from PrintDataPart.
      * @throws JposException    For details, see UPOS method ValidateData.
      */
+    @Deprecated
     public void validateData(int station, POSPrinterService.PrintDataPart data) throws JposException;
 
     /**
      * Validate printable character sequence. ESC sequences, CR and LF have been filtered out. Default behavior is that
-     * all other characters with character code &le; 0x20 are valid. If a service should support less characters,
+     * all other characters with character code &le; 0x20 are invalid. If a service should support more characters,
      * this method must be overwritten.<br>
      * Keep in mind that data may contain an empty string. In that case, it marks the end of printable data in
      * cases where the last character was a CR to support post-validation of CR.
@@ -603,6 +605,8 @@ public interface POSPrinterInterface extends JposBaseInterface {
      *     <li>The PositionList attribute conforms to the UPOS specification, method DrawRuledLine. Values have been checked
      *         against 0 and XxxLineWidth.</li>
      * </ul>
+     * The default implementation is that ruled lines are not supported. If a service supports more values, this method
+     * must be overwritten.
      *
      * @param station       A valid printer station, S_RECEIPT, S_JOURNAL or S_SLIP.
      * @param esc           EscRuledLine object containing the sequence attributes.
@@ -774,7 +778,8 @@ public interface POSPrinterInterface extends JposBaseInterface {
     /**
      * Validate attribute setting sequences. For details, see UPOS specification for ESC|[!]bC, ESC|[!]iC, ESC|[!]rvC,
      * ESC|[!]tbC and ESC|[!]tpC. The default behavior is that reverse video, superscript and subscript printing is
-     * not supported. If a printer supports these attributes, this method must be overwritten.
+     * not supported and resetting an attribute is not supported, too. If a printer supports these attributes, this
+     * method must be overwritten.<br>
      * The following plausibility checks will be made before this method will be called:
      * <ul>
      *     <li>The printer station is valid,</li>
@@ -836,6 +841,20 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * @throws JposException    For details, see UPOS method ValidateData.
      */
     public void validateData(int station, POSPrinterService.EscShade esc) throws JposException;
+
+    /**
+     * Validate unknown sequence. Default is no support. If a device supports further sequences, this
+     * method must be overwritten.
+     * The following plausibility checks will be made before this method will be called:
+     * <ul>
+     *     <li>The printer station is valid.</li>
+     * </ul>
+     *
+     * @param station       POSPrinter station.
+     * @param esc           EscUnknown object containing the sequence attributes.
+     * @throws JposException    For details, see UPOS method ValidateData.
+     */
+    public void validateData(int station, POSPrinterService.EscUnknown esc) throws JposException;
 
     /**
      * This method will be called whenever print data contain a logo print sequence ESC|tL or ESC|bL. Since it is

@@ -871,15 +871,15 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
         super.initOnOpen();
         CartridgeNotify = POSPrinterConst.PTR_CN_DISABLED;
         ErrorLevel = POSPrinterConst.PTR_EL_NONE;
-        JrnCartridgeState = POSPrinterConst.PTR_CART_UNKNOWN;;
+        JrnCartridgeState = POSPrinterConst.PTR_CART_UNKNOWN;
         PageModeStation = 0;
         RecCartridgeState = POSPrinterConst.PTR_CART_UNKNOWN;
         RotateSpecial = POSPrinterConst.PTR_RP_NORMAL;
         SlpCartridgeState = POSPrinterConst.PTR_CART_UNKNOWN;
-        if (Device.JposVersion != null && Device.JposVersion < 1007000)
+        if (DeviceServiceVersion < 1007000)
             MapCharacterSet = false;
         else if (MapCharacterSet == null)
-            MapCharacterSet = CapMapCharacterSet && Device.JposVersion != null ? true : false;
+            MapCharacterSet = CapMapCharacterSet;
     }
 
     @Override
@@ -1115,53 +1115,11 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     }
 
     @Override
+    @Deprecated
     public void validateData(int station, POSPrinterService.PrintDataPart data) throws JposException {
-        if (data instanceof POSPrinterService.PrintData)
-            validateData(station, (POSPrinterService.PrintData)data);
-        else if (data instanceof POSPrinterService.ControlChar)
-            validateData(station, (POSPrinterService.ControlChar)data);
-        else if (data instanceof POSPrinterService.EscCut)
-        validateData(station, (POSPrinterService.EscCut)data);
-        else if (data instanceof POSPrinterService.EscRuledLine)
-        validateData(station, (POSPrinterService.EscRuledLine)data);
-        else if (data instanceof POSPrinterService.EscNormalize)
-        validateData(station, (POSPrinterService.EscNormalize)data);
-        else if (data instanceof POSPrinterService.EscLogo)
-        validateData(station, (POSPrinterService.EscLogo)data);
-        else if (data instanceof POSPrinterService.EscStamp)
-        validateData(station, (POSPrinterService.EscStamp)data);
-        else if (data instanceof POSPrinterService.EscBitmap)
-        validateData(station, (POSPrinterService.EscBitmap)data);
-        else if (data instanceof POSPrinterService.EscFeed)
-        validateData(station, (POSPrinterService.EscFeed)data);
-        else if (data instanceof POSPrinterService.EscEmbedded)
-        validateData(station, (POSPrinterService.EscEmbedded)data);
-        else if (data instanceof POSPrinterService.EscBarcode)
-        validateData(station, (POSPrinterService.EscBarcode)data);
-        else if (data instanceof POSPrinterService.EscFontTypeface)
-        validateData(station, (POSPrinterService.EscFontTypeface)data);
-        else if (data instanceof POSPrinterService.EscAlignment)
-            validateData(station, (POSPrinterService.EscAlignment)data);
-        else if (data instanceof POSPrinterService.EscScale)
-            validateData(station, (POSPrinterService.EscScale)data);
-        else if (data instanceof POSPrinterService.EscSimple)
-            validateData(station, (POSPrinterService.EscSimple)data);
-        else if (data instanceof POSPrinterService.EscLine)
-            validateData(station, (POSPrinterService.EscLine)data);
-        else if (data instanceof POSPrinterService.EscColor)
-            validateData(station, (POSPrinterService.EscColor)data);
-        else if (data instanceof POSPrinterService.EscShade)
-            validateData(station, (POSPrinterService.EscShade)data);
-        else
-            throw new POSPrinterException(JposConst.JPOS_E_FAILURE, 0, "No valid print data part", null, station, POSPrinterConst.PTR_EL_FATAL);
+        data.validateData((POSPrinterService)EventSource, station);
     }
 
-    /**
-     * Default implementation for printable text.
-     * @param station   POSPrinter station, one of S_JOURNAL, S_RECEIPT or S_SLIP.
-     * @param data      Data to be printed.
-     * @throws JposException If text contains unexpected control characters.
-     */
     @Override
     public void validateData(int station, POSPrinterService.PrintData data) throws JposException {
         for (int i = 0; i < data.getPrintData().length(); i++) {
@@ -1174,24 +1132,11 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     public void validateData(int station, POSPrinterService.ControlChar ctrl) throws JposException {
     }
 
-    /**
-     * Default implementation for paper cut.
-     * @param station   S_RECEIPT.
-     * @param esc       EscCut object containing sequence attributes.
-     *
-     * @throws JposException E_ILLEGAL if percent is neither 0 nor 100.
-     */
     @Override
     public void validateData(int station, POSPrinterService.EscCut esc) throws JposException {
         Device.check(esc.getPercent() != 0 && esc.getPercent() != 100, JposConst.JPOS_E_ILLEGAL, "Percentage not supported: " + esc.getPercent());
     }
 
-    /**
-     * Default implementation for drawing ruled lines.
-     * @param station       A valid printer station, S_RECEIPT, S_JOURNAL or S_SLIP.
-     * @param esc           EscRuledLine object containing the sequence attributes.
-     * @throws JposException Always (Ruled lines not supported)
-     */
     @Override
     public void validateData(int station, POSPrinterService.EscRuledLine esc) throws JposException {
         Device.check(true, JposConst.JPOS_E_FAILURE, "Ruled line not supported");
@@ -1205,11 +1150,6 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     public void validateData(int station, POSPrinterService.EscLogo esc) throws JposException {
     }
 
-    /**
-     * Default implementation. Must be overwritten by implementation.
-     * @param top   Specifies which logo data shall be filled, true for top logo, false for bottom logo.
-     * @return Empty array.
-     */
     @Override
     public POSPrinterService.PrintDataPart[] getLogoData(boolean top) {
         return new POSPrinterService.PrintDataPart[0];
@@ -1247,24 +1187,14 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     public void validateData(int station, POSPrinterService.EscScale esc) throws JposException {
     }
 
-    /**
-     * Default implementation for attribute setting.
-     * @param station       Print station, in case of bold ant italic validated.
-     * @param esc           Object holding data of simple esc sequence
-     * @throws JposException If attribute shall be activated (default no support for any attribute).
-     */
     @Override
     public void validateData(int station, POSPrinterService.EscSimple esc) throws JposException {
-        Device.check(!esc.getActivate(), JposConst.JPOS_E_FAILURE, "Setting attribute not supported");
+        JposDevice.check(!esc.getActivate(), JposConst.JPOS_E_ILLEGAL, "Resetting attribute not supported");
+        JposDevice.check(esc.getReverse(), JposConst.JPOS_E_ILLEGAL, "Reverse video printing not supported");
+        JposDevice.check(esc.getSubscript(), JposConst.JPOS_E_ILLEGAL, "Subscript printing not supported");
+        JposDevice.check(esc.getSuperscript(), JposConst.JPOS_E_ILLEGAL, "Superscript printing not supported");
     }
 
-    /**
-     * Default implementation for underline and strike-through printing.
-     * @param station       Valid print station
-     * @param esc           EscLine object containing the sequence attributes.
-     * @throws JposException If thickness != 0 in strike-through mode (default no support for strike-through),
-     *                       if thickness &gt; 1 in underline mode (default no support for underline with thicker lines).
-     */
     @Override
     public void validateData(int station, POSPrinterService.EscLine esc) throws JposException {
         Device.check(esc.getThickness() != 0 && !esc.getUnderline(), JposConst.JPOS_E_FAILURE, "Strike-through not supported");
@@ -1278,6 +1208,11 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     @Override
     public void validateData(int station, POSPrinterService.EscShade esc) throws JposException {
         Device.check(esc.getPercentage() > 0, JposConst.JPOS_E_ILLEGAL, "Shading value not supported for: " + esc.getPercentage());
+    }
+
+    @Override
+    public void validateData(int station, POSPrinterService.EscUnknown esc) throws JposException {
+        throw new JposException(JposConst.JPOS_E_FAILURE, "Unknown escape sequence not supported");
     }
 
     @Override

@@ -1377,7 +1377,6 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void validateData(int station, String text) throws JposException {
         logPreCall("ValidateData", "" + station + ", \"" + text + "\"");
         checkEnabled();
-        List<PrintDataPart> data = text == null ? new ArrayList<PrintDataPart>() : outputDataParts(text);
         try {
             POSPrinterInterface.validateData(station, text);
         } catch (JposException e) {
@@ -1385,6 +1384,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
                 throw e;
             return;
         }
+        List<PrintDataPart> data = text == null ? new ArrayList<PrintDataPart>() : outputDataParts(text);
         switch (station) {
             case POSPrinterConst.PTR_S_JOURNAL:
                 plausibilityCheckJournalData(data);
@@ -1417,7 +1417,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         logPreCall("DrawRuledLine", "" + station + ", " + (positionList == null ? "<null>" : "\"" + positionList + "\"") + ", " + lineDirection + ", " + lineWidth + ", " + lineStyle + ", " + lineColor);
         String esc = "p" + (positionList == null ? "" : positionList) + "d" + lineDirection + "w" + lineWidth + "s" + lineStyle + "c" + lineColor;
         try {
-            validateData(station, "\33|*" + esc.length() + "dL" + esc);
+            plausibilityCheckData(station, outputDataParts("\33|*" + esc.length() + "dL" + esc));
         } catch (JposException e) {
             Device.check(e.getErrorCode() == JposConst.JPOS_E_FAILURE, JposConst.JPOS_E_ILLEGAL, e.getMessage());
             if (e.getErrorCode() != JposConst.JPOS_E_ILLEGAL)
@@ -1425,9 +1425,9 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
         int stationIndex = getStationIndex(station);
         extendedSynchronousErrorCheck(station);
-        Device.check(SidewaysCommand[station] != null, JposConst.JPOS_E_ILLEGAL, "No support for drawing ruled line when station is in sideways print mode");
-        Device.check(PagemodeCommand[station] != null, JposConst.JPOS_E_ILLEGAL, "No support for drawing ruled line when station is in page mode");
-        Device.check(TransactionCommand[station] != null, JposConst.JPOS_E_ILLEGAL, "No support for drawing ruled line when station is in transaction print mode");
+        Device.check(SidewaysCommand[stationIndex] != null, JposConst.JPOS_E_ILLEGAL, "No support for drawing ruled line when station is in sideways print mode");
+        Device.check(PagemodeCommand[stationIndex] != null, JposConst.JPOS_E_ILLEGAL, "No support for drawing ruled line when station is in page mode");
+        Device.check(TransactionCommand[stationIndex] != null, JposConst.JPOS_E_ILLEGAL, "No support for drawing ruled line when station is in transaction print mode");
         doIt(POSPrinterInterface.drawRuledLine(station, positionList == null ? "" : positionList, lineDirection, lineWidth, lineStyle, lineColor), "DrawRuledLine");
     }
 
@@ -1448,7 +1448,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         logPreCall("PrintBarCode", "" + station + ", " + (data == null ? "<null>" : "\"" + data + "\"") + ", " + symbology + ", " + height + ", " + width + ", " + alignment + ", " + textPosition);
         String esc = "s" + symbology + "h" + height + "w" + width + "a" + alignment + "t" + textPosition + "d" + (data == null ? "" : data) + "e";
         try {
-            validateData(station, "\33|*" + esc.length() + "R" + esc);
+            plausibilityCheckData(station, outputDataParts("\33|*" + esc.length() + "R" + esc));
         } catch (JposException e) {
             Device.check(e.getErrorCode() == JposConst.JPOS_E_FAILURE, JposConst.JPOS_E_ILLEGAL, e.getMessage());
             if (e.getErrorCode() != JposConst.JPOS_E_ILLEGAL)
@@ -1601,7 +1601,30 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         logAsyncCall("TransactionPrint");
     }
 
-    public abstract static class PrintDataPart {}
+    /**
+     * Helper class used to control parsed output data.
+     */
+    public abstract static class PrintDataPart {
+        /**
+         * Used to perform full validation of the print data. To do this, relevant capabilities will be checked and
+         * the corresponding method of the POSPrinterInterface used by the given POSPrinterService will be called.
+         * @param srv     POSPrinterService to be used for additional validation.
+         * @param station Printer station for which the validation shall be checked.
+         * @throws JposException If not precisely supported with ErrorCode E_ILLEGAL, if not supported and no workaround
+         *                       is possible, with ErrorCode E_FAILURE.
+         */
+        abstract public void validate(POSPrinterService srv, int station) throws JposException;
+
+        /**
+         * Used to perform additional validation of the print data, if output to the given station occurs. To do this,
+         * simply the corresponding method of the POSPrinterInterface used by the given POSPrinterService will be called.
+         * @param srv     POSPrinterService to be used for validation.
+         * @param station Printer station used for validation.
+         * @throws JposException If not precisely supported with ErrorCode E_ILLEGAL, if not supported and no workaround
+         *                       is possible, with ErrorCode E_FAILURE.
+         */
+        abstract public void validateData(POSPrinterService srv, int station) throws JposException;
+    }
 
     /**
      * Class describing control characters in print data.
@@ -1622,6 +1645,18 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
          */
         public ControlChar(char control) {
             ControlCharacter = control;
+        }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
         }
     }
 
@@ -1669,6 +1704,18 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
             PrintData = data;
             ServiceIsMapping = mapping;
             CharacterSet = charset;
+        }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
         }
     }
 
@@ -1750,6 +1797,18 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
             Negated = negated;
             ValuePresent = present;
         }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
+        }
     }
 
     /**
@@ -1808,6 +1867,19 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
             }
             return obj;
         }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanCut] == 0, JposConst.JPOS_E_FAILURE, "Cut paper not supported");
+            JposDevice.check(Stamp && allowedFeatures[CanStamp] == 0, JposConst.JPOS_E_FAILURE, "Stamp paper not supported");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
+        }
     }
 
     /**
@@ -1833,6 +1905,18 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
                 return new EscStamp();
             }
             return obj;
+        }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStamp] == 0, JposConst.JPOS_E_FAILURE, "Stamp paper not supported");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
         }
     }
 
@@ -1876,6 +1960,18 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
             }
             return obj;
         }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
+        }
     }
 
     /**
@@ -1912,6 +2008,20 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
                 return esc;
             }
             return obj;
+        }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanBitmap] == 0, JposConst.JPOS_E_FAILURE, "Print bitmap not supported");
+            JposDevice.check(Number < 1 || Number > 20, JposConst.JPOS_E_FAILURE, "Bitmap number invalid: " + Number);
+            validateData(srv, station);
+
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
         }
     }
 
@@ -1983,6 +2093,18 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
             }
             return obj;
         }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
+        }
     }
 
     /**
@@ -2021,6 +2143,18 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
             }
             return obj;
         }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
+        }
     }
 
     /**
@@ -2058,6 +2192,18 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
                 return esc;
             }
             return obj;
+        }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
         }
     }
 
@@ -2104,6 +2250,18 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
             }
             return obj;
         }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
+        }
     }
 
     /**
@@ -2129,6 +2287,18 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
             if (type == 'N' && subtype == 0 && escdata == null && !negated && !valueispresent)
                 return new EscNormalize();
             return obj;
+        }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
         }
     }
 
@@ -2220,6 +2390,20 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
             }
             return obj;
         }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            JposDevice.check(Italic && Activate && allowedFeatures[CanItalic] == 0, JposConst.JPOS_E_FAILURE, "Italic printing not supported");
+            JposDevice.check(Bold && Activate && allowedFeatures[CanBold] == 0, JposConst.JPOS_E_FAILURE, "Bold printing not supported");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
+        }
     }
 
     /**
@@ -2267,6 +2451,19 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
                 return esc;
             }
             return obj;
+        }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            JposDevice.check(Underline && allowedFeatures[CanUnderline] == 0 && getThickness() != 0, JposConst.JPOS_E_FAILURE, "Underline not supported");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
         }
     }
 
@@ -2318,6 +2515,22 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
                     return esc;
             }
             return obj;
+        }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            JposDevice.check(Rgb && (allowedFeatures[Can2Color] & POSPrinterConst.PTR_COLOR_FULL) == 0, JposConst.JPOS_E_FAILURE, "RGB color not supported");
+            JposDevice.check(Rgb && Color > 0 && (Color / 1000000 > 255 || (Color / 1000) % 1000 > 255 || Color % 1000 > 255), JposConst.JPOS_E_FAILURE, "Bad RGB color: " + Color);
+            JposDevice.check(!Rgb && Color > 0 && !JposDevice.member(Color, Cartridges), JposConst.JPOS_E_FAILURE, "Invalid color value: " + Color);
+            JposDevice.check(!Rgb && (allowedFeatures[Can2Color] & Color) == 0, JposConst.JPOS_E_FAILURE, "Invalid color value: " + Color);
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
         }
     }
 
@@ -2414,6 +2627,21 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
             }
             return esc;
         }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            JposDevice.check(ScaleValue >= 2 && ScaleVertical && ScaleHorizontal && allowedFeatures[CanDWideHigh] == 0, JposConst.JPOS_E_FAILURE, "Double size printing not supported");
+            JposDevice.check(ScaleValue >= 2 && ScaleVertical && allowedFeatures[CanDHigh] == 0, JposConst.JPOS_E_FAILURE, "Double high printing not supported");
+            JposDevice.check(ScaleValue >= 2 && ScaleHorizontal && allowedFeatures[CanDWide] == 0, JposConst.JPOS_E_FAILURE, "Double wide printing not supported");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
+        }
     }
 
     /**
@@ -2451,6 +2679,18 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
                 return esc;
             }
             return obj;
+        }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
         }
     }
 
@@ -2530,6 +2770,43 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
                 } catch (NumberFormatException e) {}
             }
             return obj;
+        }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            JposDevice.check(allowedFeatures[CanLine] == 0, JposConst.JPOS_E_FAILURE, "Ruled lines not supported");
+            JposDevice.check((LineDirection != POSPrinterConst.PTR_RL_VERTICAL && LineDirection != POSPrinterConst.PTR_RL_HORIZONTAL) || (LineDirection & allowedFeatures[CanLine]) == 0, JposConst.JPOS_E_FAILURE, "Ruled line not supported for direction " + LineDirection);
+            JposDevice.check(LineWidth <= 0, JposConst.JPOS_E_FAILURE, "Ruled line width must be > 0: " + LineWidth);
+            JposDevice.checkMember(LineStyle, RuledLineStyles, JposConst.JPOS_E_FAILURE, "Invalid ruled line style: " + LineStyle);
+            JposDevice.checkMember(LineColor, Cartridges, JposConst.JPOS_E_FAILURE, "Invalid color value: " + LineColor);
+            JposDevice.check((LineColor & allowedFeatures[CanColor]) == 0, JposConst.JPOS_E_FAILURE, "Unsupported ruled line color value: " + LineColor);
+            try {
+                if (LineDirection == POSPrinterConst.PTR_RL_VERTICAL) {
+                    long[] values = JposDevice.stringArrayToLongArray(PositionList.split(","));
+                    if (values.length == 0)
+                        throw new JposException(JposConst.JPOS_E_FAILURE, "Empty ruled line position list");
+                    for (long i : values) {
+                        JposDevice.check(i < 0 || i > allowedFeatures[LineWidth], JposConst.JPOS_E_FAILURE, "Invalid ruled line position list: " + PositionList);
+                    }
+                } else {
+                    String[] valuepairs = PositionList.split(";");
+                    JposDevice.check(valuepairs.length == 0, JposConst.JPOS_E_FAILURE, "Empty ruled line position list");
+                    for (String s : valuepairs) {
+                        long[] values = JposDevice.stringArrayToLongArray(s.split(","));
+                        JposDevice.check(values.length != 2 || values[0] < 0 || values[0] + values[1] > allowedFeatures[LineWidth], JposConst.JPOS_E_FAILURE, "Invalid ruled line position list: " + PositionList);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                throw new JposException(JposConst.JPOS_E_FAILURE, "Non-integer rule position");
+            }
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
         }
     }
 
@@ -2631,6 +2908,24 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
                 } catch (NumberFormatException e) {}
             }
             return obj;
+        }
+
+        @Override
+        public void validate(POSPrinterService srv, int station) throws JposException {
+            int[] allowedFeatures = srv.getAllowed(station);
+            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            JposDevice.check(allowedFeatures[CanBarcode] == 0, JposConst.JPOS_E_FAILURE, "Print barcode not supported");
+            JposDevice.check(Symbology < POSPrinterConst.PTR_BCS_UPCA, JposConst.JPOS_E_FAILURE, "Invalid symbology: " + Symbology);
+            JposDevice.check(Height <= 0, JposConst.JPOS_E_FAILURE, "Invalid height: " + Height);
+            JposDevice.check(Width <= 0 || Width > allowedFeatures[LineWidth], JposConst.JPOS_E_FAILURE, "Invalid width: " + Width);
+            JposDevice.check(Alignment < 0 && !JposDevice.member(Alignment, Alignments), JposConst.JPOS_E_FAILURE, "Invalid alignment: " + Alignment);
+            JposDevice.checkMember(TextPosition, HRITextPositions, JposConst.JPOS_E_FAILURE, "Invalid HRI position: " + TextPosition);
+            validateData(srv, station);
+        }
+
+        @Override
+        public void validateData(POSPrinterService srv, int station) throws JposException {
+            srv.POSPrinterInterface.validateData(station, this);
         }
     }
 
@@ -2799,7 +3094,81 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     private static final int CanColor = 13;
     private static final int LineWidth = 14;
     private static final int Station = 15;
+    private static final int CanStation = 16;
 
+    private int[] getAllowed(int station) {
+        switch (station) {
+            case POSPrinterConst.PTR_S_JOURNAL:
+                return new int[] {
+                        Data.CapJrn2Color ? 1 : 0,
+                        Data.CapJrnBold ? 1 : 0,
+                        Data.CapJrnDhigh ? 1 : 0,
+                        Data.CapJrnDwide ? 1 : 0,
+                        Data.CapJrnDwideDhigh ? 1 : 0,
+                        Data.CapJrnItalic ? 1 : 0,
+                        Data.CapJrnUnderline ? 1 : 0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        Data.FontTypefaceList.length() > 0 ?Data.FontTypefaceList.split(",").length : 0,
+                        Data.CapJrnColor,
+                        Data.JrnLineWidth,
+                        POSPrinterConst.PTR_S_JOURNAL,
+                        Data.CapJrnPresent ? 1 : 0
+                };
+            case POSPrinterConst.PTR_S_RECEIPT:
+                return new int[] {
+                        Data.CapRec2Color ? 1 : 0,
+                        Data.CapRecBold ? 1 : 0,
+                        Data.CapRecDhigh ? 1 : 0,
+                        Data.CapRecDwide ? 1 : 0,
+                        Data.CapRecDwideDhigh ? 1 : 0,
+                        Data.CapRecItalic ? 1 : 0,
+                        Data.CapRecUnderline ? 1 : 0,
+                        Data.CapRecBarCode ? 1 : 0,
+                        Data.CapRecBitmap ? 1 : 0,
+                        Data.CapRecPapercut ? 1 : 0,
+                        Data.CapRecRuledLine,
+                        Data.CapRecStamp ? 1 : 0,
+                        Data.FontTypefaceList.length() > 0 ?Data.FontTypefaceList.split(",").length : 0,
+                        Data.CapRecColor,
+                        Data.RecLineWidth,
+                        POSPrinterConst.PTR_S_RECEIPT,
+                        Data.CapRecPresent ? 1 : 0
+                };
+            case POSPrinterConst.PTR_S_SLIP:
+                return new int[] {
+                        Data.CapSlp2Color ? 1 : 0,
+                        Data.CapSlpBold ? 1 : 0,
+                        Data.CapSlpDhigh ? 1 : 0,
+                        Data.CapSlpDwide ? 1 : 0,
+                        Data.CapSlpDwideDhigh ? 1 : 0,
+                        Data.CapSlpItalic ? 1 : 0,
+                        Data.CapSlpUnderline ? 1 : 0,
+                        Data.CapSlpBarCode ? 1 : 0,
+                        Data.CapSlpBitmap ? 1 : 0,
+                        0,
+                        Data.CapSlpRuledLine,
+                        0,
+                        Data.FontTypefaceList.length() > 0 ?Data.FontTypefaceList.split(",").length : 0,
+                        Data.CapSlpColor,
+                        Data.SlpLineWidth,
+                        POSPrinterConst.PTR_S_SLIP,
+                        Data.CapSlpPresent ? 1 : 0
+                };
+        }
+        return null;
+    }
+
+    private void plausibilityCheckData(int station, List<PrintDataPart> data) throws JposException {
+        String[] stationnames = {"Journal", "Receipt", "Slip"};
+        int[] allowedFeatures = getAllowed(station);
+        JposDevice.check (allowedFeatures == null, JposConst.JPOS_E_FAILURE, "Invalid station: " + station);
+        JposDevice.check(+allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, stationnames[getStationIndex(station)] + " station not present");
+        plausibilityCheckPrintData(allowedFeatures, data);
+    }
 
     /**
      * Checks whether the given string holds data that cannot be printed precisely on slip as expected. See UPOS
@@ -2812,24 +3181,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
      */
     public void plausibilityCheckSlipData(List<PrintDataPart> data) throws JposException {
         Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_FAILURE, "Slip station not present");
-        plausibilityCheckPrintData(new int[]{
-                Data.CapSlp2Color ? 1 : 0,
-                Data.CapSlpBold ? 1 : 0,
-                Data.CapSlpDhigh ? 1 : 0,
-                Data.CapSlpDwide ? 1 : 0,
-                Data.CapSlpDwideDhigh ? 1 : 0,
-                Data.CapSlpItalic ? 1 : 0,
-                Data.CapSlpUnderline ? 1 : 0,
-                Data.CapSlpBarCode ? 1 : 0,
-                Data.CapSlpBitmap ? 1 : 0,
-                0,
-                Data.CapSlpRuledLine,
-                0,
-                Data.FontTypefaceList.length() > 0 ?Data.FontTypefaceList.split(",").length : 0,
-                Data.CapSlpColor,
-                Data.SlpLineWidth,
-                POSPrinterConst.PTR_S_SLIP
-        }, data);
+        plausibilityCheckPrintData(getAllowed(POSPrinterConst.PTR_S_SLIP), data);
     }
 
     /**
@@ -2843,24 +3195,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
      */
     public void plausibilityCheckReceiptData(List<PrintDataPart> data) throws JposException {
         Device.check(!Data.CapRecPresent, JposConst.JPOS_E_FAILURE, "Receipt station not present");
-        plausibilityCheckPrintData(new int[]{
-                Data.CapRec2Color ? 1 : 0,
-                Data.CapRecBold ? 1 : 0,
-                Data.CapRecDhigh ? 1 : 0,
-                Data.CapRecDwide ? 1 : 0,
-                Data.CapRecDwideDhigh ? 1 : 0,
-                Data.CapRecItalic ? 1 : 0,
-                Data.CapRecUnderline ? 1 : 0,
-                Data.CapRecBarCode ? 1 : 0,
-                Data.CapRecBitmap ? 1 : 0,
-                Data.CapRecPapercut ? 1 : 0,
-                Data.CapRecRuledLine,
-                Data.CapRecStamp ? 1 : 0,
-                Data.FontTypefaceList.length() > 0 ?Data.FontTypefaceList.split(",").length : 0,
-                Data.CapRecColor,
-                Data.RecLineWidth,
-                POSPrinterConst.PTR_S_RECEIPT
-        }, data);
+        plausibilityCheckPrintData(getAllowed(POSPrinterConst.PTR_S_RECEIPT), data);
     }
 
     /**
@@ -2874,249 +3209,13 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
      */
     public void plausibilityCheckJournalData(List<PrintDataPart> data) throws JposException {
         Device.check(!Data.CapJrnPresent, JposConst.JPOS_E_FAILURE, "Journal station not present");
-        plausibilityCheckPrintData(new int[]{
-                Data.CapJrn2Color ? 1 : 0,
-                Data.CapJrnBold ? 1 : 0,
-                Data.CapJrnDhigh ? 1 : 0,
-                Data.CapJrnDwide ? 1 : 0,
-                Data.CapJrnDwideDhigh ? 1 : 0,
-                Data.CapJrnItalic ? 1 : 0,
-                Data.CapJrnUnderline ? 1 : 0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                Data.FontTypefaceList.length() > 0 ?Data.FontTypefaceList.split(",").length : 0,
-                Data.CapJrnColor,
-                Data.JrnLineWidth,
-                POSPrinterConst.PTR_S_JOURNAL
-        }, data);
+        plausibilityCheckPrintData(getAllowed(POSPrinterConst.PTR_S_JOURNAL), data);
     }
+
     private void plausibilityCheckPrintData(int[] allowedFeatures, List<PrintDataPart> out) throws JposException {
         for (PrintDataPart obj : out) {
-            if (obj instanceof EscUnknown)
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Unknown or invalid escape sequence");
-            boolean dummy = validateString(allowedFeatures, obj) ||
-                    validateControl(allowedFeatures, obj) ||
-                    validateCut(allowedFeatures, obj) ||
-                    validateRuledLine(allowedFeatures, obj) ||
-                    validateStamp(allowedFeatures, obj) ||
-                    validateLogo(allowedFeatures, obj) ||
-                    validateBitmap(allowedFeatures, obj) ||
-                    validateFeed(allowedFeatures, obj) ||
-                    validateEmbedded(allowedFeatures, obj) ||
-                    validateBarcode(allowedFeatures, obj) ||
-                    validateFontTypeface(allowedFeatures, obj) ||
-                    validateAlignment(allowedFeatures, obj) ||
-                    validateNormalize(allowedFeatures, obj) ||
-                    validateSimple(allowedFeatures, obj) ||
-                    validateLine(allowedFeatures, obj) ||
-                    validateColor(allowedFeatures, obj) ||
-                    validateScale(allowedFeatures, obj) ||
-                    validateShade(allowedFeatures, obj);
+            obj.validate(this, allowedFeatures[Station]);
         }
-    }
-
-    private boolean validateString(int[] allowedFeatures, PrintDataPart obj) throws JposException {
-        if (obj instanceof PrintData) {
-            POSPrinterInterface.validateData(allowedFeatures[Station], (PrintData) obj);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateControl(int[] allowedFeatures, PrintDataPart obj) throws JposException {
-        if (obj instanceof ControlChar) {
-            POSPrinterInterface.validateData(allowedFeatures[Station], (ControlChar) obj);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateCut(int[] allowedFeatures, PrintDataPart obj) throws JposException {
-        if (obj instanceof EscCut) {
-            EscCut esc = (EscCut) obj;
-            Device.check(allowedFeatures[CanCut] == 0, JposConst.JPOS_E_FAILURE, "Cut paper not supported");
-            Device.check(esc.Stamp && allowedFeatures[CanStamp] == 0, JposConst.JPOS_E_FAILURE, "Stamp paper not supported");
-            POSPrinterInterface.validateData(allowedFeatures[Station], esc);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateRuledLine(int[] allowedFeatures, PrintDataPart obj) throws JposException {
-        if (obj instanceof EscRuledLine) {
-            EscRuledLine esc = (EscRuledLine) obj;
-            Device.check(allowedFeatures[CanLine] == 0, JposConst.JPOS_E_FAILURE, "Ruled lines not supported");
-            Device.check((esc.LineDirection != POSPrinterConst.PTR_RL_VERTICAL && esc.LineDirection != POSPrinterConst.PTR_RL_HORIZONTAL) || (esc.LineDirection & allowedFeatures[CanLine]) == 0, JposConst.JPOS_E_FAILURE, "Ruled line not supported for direction " + esc.LineDirection);
-            Device.check(esc.LineWidth <= 0, JposConst.JPOS_E_FAILURE, "Ruled line width must be > 0: " + esc.LineWidth);
-            Device.checkMember(esc.LineStyle, RuledLineStyles, JposConst.JPOS_E_FAILURE, "Invalid ruled line style: " + esc.LineStyle);
-            Device.checkMember(esc.LineColor, Cartridges, JposConst.JPOS_E_FAILURE, "Invalid color value: " + esc.LineColor);
-            Device.check((esc.LineColor & allowedFeatures[CanColor]) == 0, JposConst.JPOS_E_FAILURE, "Unsupported ruled line color value: " + esc.LineColor);
-            try {
-                if (esc.LineDirection == POSPrinterConst.PTR_RL_VERTICAL) {
-                    long[] values = Device.stringArrayToLongArray(esc.PositionList.split(","));
-                    if (values.length == 0)
-                        throw new JposException(JposConst.JPOS_E_FAILURE, "Empty ruled line position list");
-                    for (long i : values) {
-                        Device.check(i < 0 || i > allowedFeatures[LineWidth], JposConst.JPOS_E_FAILURE, "Invalid ruled line position list: " + esc.PositionList);
-                    }
-                } else {
-                    String[] valuepairs = esc.PositionList.split(";");
-                    Device.check(valuepairs.length == 0, JposConst.JPOS_E_FAILURE, "Empty ruled line position list");
-                    for (String s : valuepairs) {
-                        long[] values = Device.stringArrayToLongArray(s.split(","));
-                        Device.check(values.length != 2 || values[0] < 0 || values[0] + values[1] > allowedFeatures[LineWidth], JposConst.JPOS_E_FAILURE, "Invalid ruled line position list: " + esc.PositionList);
-                    }
-                }
-            } catch (NumberFormatException e) {
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Non-integer rule position");
-            }
-            POSPrinterInterface.validateData(allowedFeatures[Station], esc);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateNormalize(int[] allowedFeatures, PrintDataPart obj) throws JposException {
-        if (obj instanceof EscNormalize) {
-            POSPrinterInterface.validateData(allowedFeatures[Station], (EscNormalize)obj);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateLogo(int[] allowedFeatures, PrintDataPart obj) throws JposException {
-        if (obj instanceof EscLogo) {
-            POSPrinterInterface.validateData(allowedFeatures[Station], (EscLogo) obj);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateStamp(int[] allowedFeatures, PrintDataPart obj) throws JposException {
-        if (obj instanceof EscStamp) {
-            EscStamp esc = (EscStamp) obj;
-            Device.check(allowedFeatures[CanStamp] == 0, JposConst.JPOS_E_FAILURE, "Stamp paper not supported");
-            POSPrinterInterface.validateData(allowedFeatures[Station], esc);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateBitmap(int[] allowedFeatures, PrintDataPart obj) throws JposException {
-        if (obj instanceof EscBitmap) {
-            EscBitmap esc = (EscBitmap) obj;
-            Device.check(allowedFeatures[CanBitmap] == 0, JposConst.JPOS_E_FAILURE, "Print bitmap not supported");
-            Device.check(esc.Number < 1 || esc.Number > 20, JposConst.JPOS_E_FAILURE, "Bitmap number invalid: " + esc.Number);
-            POSPrinterInterface.validateData(allowedFeatures[Station], esc);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateFeed(int[] allowedFeatures, PrintDataPart obj) throws JposException {
-        if (obj instanceof EscFeed) {
-            POSPrinterInterface.validateData(allowedFeatures[Station], (EscFeed) obj);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateEmbedded(int[] allowedFeatures, PrintDataPart obj) throws JposException {
-        if (obj instanceof EscEmbedded) {
-            POSPrinterInterface.validateData(allowedFeatures[Station], (EscEmbedded) obj);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateBarcode(int[] allowedFeatures, PrintDataPart obj) throws JposException {
-        if (obj instanceof EscBarcode) {
-            EscBarcode esc = (EscBarcode) obj;
-            Device.check(allowedFeatures[CanBarcode] == 0, JposConst.JPOS_E_FAILURE, "Print barcode not supported");
-            Device.check(esc.Symbology < POSPrinterConst.PTR_BCS_UPCA, JposConst.JPOS_E_FAILURE, "Invalid symbology: " + esc.Symbology);
-            Device.check(esc.Height <= 0, JposConst.JPOS_E_FAILURE, "Invalid height: " + esc.Height);
-            Device.check(esc.Width <= 0 || esc.Width > allowedFeatures[LineWidth], JposConst.JPOS_E_FAILURE, "Invalid width: " + esc.Width);
-            Device.check(esc.Alignment < 0 && !Device.member(esc.Alignment, Alignments), JposConst.JPOS_E_FAILURE, "Invalid alignment: " + esc.Alignment);
-            Device.checkMember(esc.TextPosition, HRITextPositions, JposConst.JPOS_E_FAILURE, "Invalid HRI position: " + esc.TextPosition);
-            POSPrinterInterface.validateData(allowedFeatures[Station], esc);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateFontTypeface(int[] allowedFeatures, PrintDataPart obj) throws JposException {
-        if (obj instanceof EscFontTypeface) {
-            EscFontTypeface esc = (EscFontTypeface) obj;
-            Device.check (esc.TypefaceIndex > allowedFeatures[FontCount], JposConst.JPOS_E_FAILURE, "Invalid font type face: " + esc.TypefaceIndex);
-            POSPrinterInterface.validateData(allowedFeatures[Station], esc);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateAlignment(int[] allowedFeatures, PrintDataPart obj) throws JposException {
-        if (obj instanceof EscAlignment) {
-            POSPrinterInterface.validateData(allowedFeatures[Station], (EscAlignment) obj);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateScale(int[] allowedFeatures, PrintDataPart obj)  throws JposException {
-        if (obj instanceof EscScale) {
-            EscScale esc = (EscScale) obj;
-            Device.check(esc.ScaleValue >= 2 && esc.ScaleVertical && esc.ScaleHorizontal && allowedFeatures[CanDWideHigh] == 0, JposConst.JPOS_E_FAILURE, "Double size printing not supported");
-            Device.check(esc.ScaleValue >= 2 && esc.ScaleVertical && allowedFeatures[CanDHigh] == 0, JposConst.JPOS_E_FAILURE, "Double high printing not supported");
-            Device.check(esc.ScaleValue >= 2 && esc.ScaleHorizontal && allowedFeatures[CanDWide] == 0, JposConst.JPOS_E_FAILURE, "Double wide printing not supported");
-            POSPrinterInterface.validateData(allowedFeatures[Station], esc);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateSimple(int[] allowedFeatures, PrintDataPart obj) throws JposException {
-        if (obj instanceof EscSimple) {
-            EscSimple esc = (EscSimple) obj;
-            Device.check(esc.Italic && esc.Activate && allowedFeatures[CanItalic] == 0, JposConst.JPOS_E_FAILURE, "Italic printing not supported");
-            Device.check(esc.Bold && esc.Activate && allowedFeatures[CanBold] == 0, JposConst.JPOS_E_FAILURE, "Bold printing not supported");
-            POSPrinterInterface.validateData(allowedFeatures[Station], esc);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateLine(int[] allowedFeatures, PrintDataPart obj)  throws JposException {
-        if (obj instanceof EscLine) {
-            EscLine esc = (EscLine) obj;
-            Device.check(esc.Underline && allowedFeatures[CanUnderline] == 0 && esc.getThickness() != 0, JposConst.JPOS_E_FAILURE, "Underline not supported");
-            POSPrinterInterface.validateData(allowedFeatures[Station], esc);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateColor(int[] allowedFeatures, PrintDataPart obj)  throws JposException {
-        if (obj instanceof EscColor) {
-            EscColor esc = (EscColor) obj;
-            Device.check(esc.Rgb && (allowedFeatures[Can2Color] & POSPrinterConst.PTR_COLOR_FULL) == 0, JposConst.JPOS_E_FAILURE, "RGB color not supported");
-            Device.check(esc.Rgb && esc.Color > 0 && (esc.Color / 1000000 > 255 || (esc.Color / 1000) % 1000 > 255 || esc.Color % 1000 > 255), JposConst.JPOS_E_FAILURE, "Bad RGB color: " + esc.Color);
-            Device.check(!esc.Rgb && esc.Color > 0 && !Device.member(esc.Color, Cartridges), JposConst.JPOS_E_FAILURE, "Invalid color value: " + esc.Color);
-            Device.check(!esc.Rgb && (allowedFeatures[Can2Color] & esc.Color) == 0, JposConst.JPOS_E_FAILURE, "Invalid color value: " + esc.Color);
-            POSPrinterInterface.validateData(allowedFeatures[Station], esc);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean validateShade(int[] allowedFeatures, PrintDataPart obj)  throws JposException {
-        if (obj instanceof EscShade) {
-            POSPrinterInterface.validateData(allowedFeatures[Station], (EscShade) obj);
-            return true;
-        }
-        return false;
     }
 
     /*
