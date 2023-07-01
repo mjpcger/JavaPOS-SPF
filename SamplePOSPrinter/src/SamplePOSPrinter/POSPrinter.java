@@ -300,11 +300,11 @@ public class POSPrinter extends POSPrinterProperties {
         POSPrinterService.PrintDataPart[] logo = esc.getLogoData();
         int i;
         for (i = 0; i < logo.length - i; i++) {
-            validateData(station, logo[i]);
+            logo[i].validateData((POSPrinterService)EventSource, station);
         }
         POSPrinterService.PrintDataPart o;
         if (i < logo.length && (!((o = logo[i]) instanceof POSPrinterService.PrintData) || ((POSPrinterService.PrintData) o).getPrintData().length() > 0)) {
-            validateData(station, o);
+            o.validateData((POSPrinterService)EventSource, station);
         }
     }
 
