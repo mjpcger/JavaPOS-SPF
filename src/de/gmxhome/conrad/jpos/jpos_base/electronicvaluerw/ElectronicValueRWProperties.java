@@ -26,7 +26,6 @@ import jpos.JposException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -427,9 +426,16 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
 
     /**
      * Tag names and values set by setParameterInformation. Will be initialized to an empty Map during claim and by
+     * invocation of method clearParameterInformation. Deprecated because replaced by TypedParameters.
+     */
+    @Deprecated
+    public Map<String, String> Parameters;
+
+    /**
+     * Tag names and values set by setParameterInformation. Will be initialized to an empty Map during claim and by
      * invocation of method clearParameterInformation.
      */
-    public Map<String, String> Parameters;
+    public TypeSafeStringMap TypedParameters;
 
     /**
      * Tag names and values hold for method retrieveResultInformation. Must be initialized to an empty Map whenever
@@ -438,7 +444,17 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
      * the first card reading after claim and whenever the card detection process has been controlled by methods
      * beginDetection and endDetection.
      */
+    @Deprecated
     public Map<String, String> Results;
+
+    /**
+     * Tag names and values hold for method retrieveResultInformation. Must be initialized to an empty Map whenever
+     * the service has read a new card. Automatic initialized to an empty Map by this framework will occur during
+     * successful claim and endDetection. This implies that initialization by the service is not necessary during
+     * the first card reading after claim and whenever the card detection process has been controlled by methods
+     * beginDetection and endDetection.
+     */
+    public TypeSafeStringMap TypedResults;
 
     /**
      * Constructor.
@@ -490,8 +506,12 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
     @Override
     public void initOnClaim() {
         super.initOnClaim();
-        Parameters = new HashMap<String, String>();
-        Results = new HashMap<String, String>();
+        synchronized (TypedParameters) {
+            TypedParameters.clear();
+        }
+        synchronized (TypedResults) {
+            TypedResults.clear();
+        }
     }
 
     /**
@@ -725,8 +745,8 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
 
     @Override
     public void clearParameterInformation() throws JposException {
-        synchronized (Parameters) {
-            Parameters.clear();
+        synchronized (TypedParameters) {
+            TypedParameters.clear();
         }
     }
 
@@ -747,154 +767,131 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
 
     @Override
     public void retrieveResultInformation(String name, String[] value) throws JposException {
-        synchronized (Results) {
-            if (Results.containsKey(name))
-                value[0] = Results.get(name);
-            else
-                value[0] = "";
+        synchronized (TypedResults) {
+            String o = TypedResults.get(name);
+            value[0] = (o == null) ? "" : o;
         }
     }
 
     @Override
     public void setParameterInformation(String name, String value) throws JposException {
-        synchronized (Parameters) {
-            Parameters.put(name, value);
+        synchronized (TypedResults) {
+            try {
+                TypedResults.put(name, value);
+            } catch (Exception e) {
+                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Parameter error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+            }
         }
     }
 
-    /**
-     * Convert parameter tag value into corresponding property value.
-     * @param name      Name of the parameter tag, e.g. "PaymentCondition"
-     * @param valstr    String representing the corresponding Enumerated number.
-     * @return The corresponding property value, null if no corresponding property value exists or if tag is invalid.
-     */
-    public Integer getPropertyValueFromEnumTag(String name, String valstr) {
-        int value = Integer.parseInt(valstr);
-        Object[][] tagValueList = {
-                {"PaymentCondition"},
-                {
-                        ElectronicValueRWConst.EVRW_TAG_PC_INSTALLMENT_1,
-                        ElectronicValueRWConst.EVRW_TAG_PC_INSTALLMENT_2,
-                        ElectronicValueRWConst.EVRW_TAG_PC_INSTALLMENT_3,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_1,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_2,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_3,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_4,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_5,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_1,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_2,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_3,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_4,
-                        ElectronicValueRWConst.EVRW_TAG_PC_LUMP,
-                        ElectronicValueRWConst.EVRW_TAG_PC_REVOLVING
-                }, {
-                        ElectronicValueRWConst.EVRW_PAYMENT_INSTALLMENT_1,
-                        ElectronicValueRWConst.EVRW_PAYMENT_INSTALLMENT_2,
-                        ElectronicValueRWConst.EVRW_PAYMENT_INSTALLMENT_3,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_1,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_2,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_3,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_4,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_5,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_1,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_2,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_3,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_4,
-                        ElectronicValueRWConst.EVRW_PAYMENT_LUMP,
-                        ElectronicValueRWConst.EVRW_PAYMENT_REVOLVING
-                }, {"TransactionType"},
-                {
-                        ElectronicValueRWConst.EVRW_TAG_TT_RETURN,
-                        ElectronicValueRWConst.EVRW_TAG_TT_SUBTRACT,
-                        ElectronicValueRWConst.EVRW_TAG_TT_ADD/*,
-                        ElectronicValueRWConst.EVRW_TAG_TT_COMPLETION,
-                        ElectronicValueRWConst.EVRW_TAG_TT_PRE_SALES
-*/                }, {
-                        ElectronicValueRWConst.EVRW_TRANSACTION_REFUND,
-                        ElectronicValueRWConst.EVRW_TRANSACTION_SALES,
-                        ElectronicValueRWConst.EVRW_TRANSACTION_CASHDEPOSIT,
-                        ElectronicValueRWConst.EVRW_TRANSACTION_COMPLETION,
-                        ElectronicValueRWConst.EVRW_TRANSACTION_PRESALES
-                }
-        };
-        for (int i = 0; i < tagValueList.length; i += 3) {
-            if (name.equals(tagValueList[i][0].toString())) {
-                for (int j = 0; j < tagValueList[i + 1].length; j++) {
-                    if (tagValueList[i + 2].length < j && tagValueList[i + 1][j].equals(value)) {
-                        return (Integer)(tagValueList[i + 2][j]);
-                    }
-                }
-                return null;
+    private Object[][] TagValueList = {
+            {"PaymentCondition"},
+            {
+                    ElectronicValueRWConst.EVRW_TAG_PC_INSTALLMENT_1,
+                    ElectronicValueRWConst.EVRW_TAG_PC_INSTALLMENT_2,
+                    ElectronicValueRWConst.EVRW_TAG_PC_INSTALLMENT_3,
+                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_1,
+                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_2,
+                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_3,
+                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_4,
+                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_5,
+                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_1,
+                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_2,
+                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_3,
+                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_4,
+                    ElectronicValueRWConst.EVRW_TAG_PC_LUMP,
+                    ElectronicValueRWConst.EVRW_TAG_PC_REVOLVING
+            }, {
+                    ElectronicValueRWConst.EVRW_PAYMENT_INSTALLMENT_1,
+                    ElectronicValueRWConst.EVRW_PAYMENT_INSTALLMENT_2,
+                    ElectronicValueRWConst.EVRW_PAYMENT_INSTALLMENT_3,
+                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_1,
+                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_2,
+                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_3,
+                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_4,
+                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_5,
+                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_1,
+                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_2,
+                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_3,
+                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_4,
+                    ElectronicValueRWConst.EVRW_PAYMENT_LUMP,
+                    ElectronicValueRWConst.EVRW_PAYMENT_REVOLVING
+            }, {"TransactionType"},
+            {
+                    ElectronicValueRWConst.EVRW_TAG_TT_RETURN,
+                    ElectronicValueRWConst.EVRW_TAG_TT_SUBTRACT,
+                    ElectronicValueRWConst.EVRW_TAG_TT_CANCEL_SALES,
+                    ElectronicValueRWConst.EVRW_TAG_TT_ADD,
+                    ElectronicValueRWConst.EVRW_TAG_TT_COMPLETION,
+                    ElectronicValueRWConst.EVRW_TAG_TT_PRE_SALES
+          }, {
+                    ElectronicValueRWConst.EVRW_TRANSACTION_REFUND,
+                    ElectronicValueRWConst.EVRW_TRANSACTION_SALES,
+                    ElectronicValueRWConst.EVRW_TRANSACTION_VOID,
+                    ElectronicValueRWConst.EVRW_TRANSACTION_CASHDEPOSIT,
+                    ElectronicValueRWConst.EVRW_TRANSACTION_COMPLETION,
+                    ElectronicValueRWConst.EVRW_TRANSACTION_PRESALES
             }
-        }
-        return value;
-    }
+    };
 
     /**
      * Convert property value into tag value.
      * @param name      Name of the parameter tag, e.g. "PaymentCondition"
      * @param value     Property value.
-     * @return The string representation of the corresponding tag value, null if no corresponding tag value exists or value is invalid.
+     * @return The corresponding tag value, null if no corresponding tag value exists or value is invalid.
      */
-    public String getEnumTagFromPropertyValue(String name, int value) {
-        Object[][] tagValueList = {
-                {"PaymentCondition"},
-                {
-                        ElectronicValueRWConst.EVRW_TAG_PC_INSTALLMENT_1,
-                        ElectronicValueRWConst.EVRW_TAG_PC_INSTALLMENT_2,
-                        ElectronicValueRWConst.EVRW_TAG_PC_INSTALLMENT_3,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_1,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_2,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_3,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_4,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_5,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_1,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_2,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_3,
-                        ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_4,
-                        ElectronicValueRWConst.EVRW_TAG_PC_LUMP,
-                        ElectronicValueRWConst.EVRW_TAG_PC_REVOLVING
-                }, {
-                        ElectronicValueRWConst.EVRW_PAYMENT_INSTALLMENT_1,
-                        ElectronicValueRWConst.EVRW_PAYMENT_INSTALLMENT_2,
-                        ElectronicValueRWConst.EVRW_PAYMENT_INSTALLMENT_3,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_1,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_2,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_3,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_4,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_5,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_1,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_2,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_3,
-                        ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_4,
-                        ElectronicValueRWConst.EVRW_PAYMENT_LUMP,
-                        ElectronicValueRWConst.EVRW_PAYMENT_REVOLVING
-                }, {"TransactionType"},
-                {
-                        ElectronicValueRWConst.EVRW_TAG_TT_RETURN,
-                        ElectronicValueRWConst.EVRW_TAG_TT_SUBTRACT,
-                        ElectronicValueRWConst.EVRW_TAG_TT_ADD/*,
-                        ElectronicValueRWConst.EVRW_TAG_TT_COMPLETION,
-                        ElectronicValueRWConst.EVRW_TAG_TT_PRE_SALES
-*/                }, {
-                        ElectronicValueRWConst.EVRW_TRANSACTION_REFUND,
-                        ElectronicValueRWConst.EVRW_TRANSACTION_SALES,
-                        ElectronicValueRWConst.EVRW_TRANSACTION_CASHDEPOSIT,
-                        ElectronicValueRWConst.EVRW_TRANSACTION_COMPLETION,
-                        ElectronicValueRWConst.EVRW_TRANSACTION_PRESALES
-                }
-        };
-        for (int i = 0; i < tagValueList.length; i += 3) {
-            if (name.equals(tagValueList[i][0].toString())) {
-                for (int j = 0; j < tagValueList[i + 2].length; j++) {
-                    if (tagValueList[i + 1].length < j && tagValueList[i + 2][j].equals(value)) {
-                        return Integer.toString((Integer)(tagValueList[i + 2][j]));
+    public Integer getEnumTagFromPropertyValue(String name, int value) {
+        for (int i = 0; i < TagValueList.length; i += 3) {
+            if (name.equals(TagValueList[i][0].toString())) {
+                for (int j = 0; j < TagValueList[i + 2].length && j < TagValueList[i + 1].length; j++) {
+                    if (TagValueList[i + 2][j].equals(value)) {
+                        return (Integer)(TagValueList[i + 1][j]);
                     }
                 }
                 return null;
             }
         }
-        return Integer.toString(value);
+        return null;
+    }
+
+    /**
+     * Convert parameter tag value into corresponding property value.
+     * @param name     Name of the parameter tag, e.g. "PaymentCondition"
+     * @param value    Enumerated number.
+     * @return The corresponding property value, null if no corresponding property value exists or if tag or value is invalid.
+     */
+    @Deprecated
+    public Integer getPropertyValueFromEnumTag(String name, int value) {
+        for (int i = 0; i < TagValueList.length; i += 3) {
+            if (name.equals(TagValueList[i][0].toString())) {
+                for (int j = 0; j < TagValueList[i + 1].length && j < TagValueList[i + 2].length; j++) {
+                    if (TagValueList[i + 1][j].equals(value)) {
+                        return (Integer)(TagValueList[i + 2][j]);
+                    }
+                }
+                return null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Convert parameter tag value into corresponding property value. Deprecated.
+     * @param name      Name of the parameter tag, e.g. "PaymentCondition"
+     * @param valstr    String representing the corresponding Enumerated number.
+     * @return The corresponding property value, null if no corresponding property value exists or if tag or valstr is invalid.
+     */
+    @Deprecated
+    public Integer getPropertyValueFromEnumTag(String name, String valstr) {
+        TypeSafeStringMap converter = TypedResults.emptyClone();
+        Integer value;
+        try {
+            converter.put(name, valstr);
+            value = converter.getEnumerated(name);
+        } catch (Exception e) {
+            return null;
+        }
+        return getPropertyValueFromEnumTag(name, value);
     }
 
     @Override

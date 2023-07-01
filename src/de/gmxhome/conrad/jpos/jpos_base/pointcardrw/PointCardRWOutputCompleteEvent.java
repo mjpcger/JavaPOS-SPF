@@ -31,8 +31,9 @@ public class PointCardRWOutputCompleteEvent extends JposOutputCompleteEvent {
     /**
      * Constructor. Parameters passed to base class unchanged.
      *
-     * @param source Source, for services implemented with this framework, the (<i>deviceclass</i>.)<i>DeviceClass</i>Service object.
-     * @param id     OutputID, see UPOS specification, chapter Common Properties, Methods,and Events - Events - OutputCompleteEvent.
+     * @param source     Source, for services implemented with this framework, the (<i>deviceclass</i>.)<i>DeviceClass</i>Service object.
+     * @param id         OutputID, see UPOS specification, chapter Common Properties, Methods,and Events - Events - OutputCompleteEvent.
+     * @param writestate New values for the corresponding WriteState properties WriteState1 and WriteState2, one state value per track.
      */
     public PointCardRWOutputCompleteEvent(JposBase source, int id, Integer[] writestate) {
         super(source, id);

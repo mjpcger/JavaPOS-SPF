@@ -302,6 +302,10 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
      *     <li>Device is claimed,</li>
      *     <li>name is not null and value is an array with dimension 1.</li>
      * </ul>
+     * Currency values will be returned as decimal string with decimal dot, where
+     * trailing zeros up to and inclusive the decimal dot may be truncated. For example, a value of 123.45 can be
+     * returned as "123.45" or "123.4500", 100.00 can be returned as "100", "100.00" or "100.0000". Even if a value of
+     * 123.45 will be stored as 1234500 within a variable of type long, it will not be returned as "1234500".
      *
      * @param name  Tag name
      * @param value Array to be filled with tag value on return.
@@ -312,19 +316,23 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
     /**
      * final part of SetParameterInformation method. Can be overwritten within derived
      * classes, if necessary.
-     * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is claimed,</li>
      *     <li>name and value are not null,</li>
-     *     <li>value matches the type specified in the UPOS specification for the given tag name. In case of an
-     *     unknown tag name, value will not be checked.</li>
      * </ul>
      * Remarks:<ul>
-     *     <li>Since the UPOS specification for tag VoidTransactionType and VOIDorRETURN is unclear, these tags won't be checked.</li>
+     *     <li>Since the UPOS specification for tag VoidTransactionType and VOIDorRETURN is unclear, only numerical
+     *     values "1" and "2" are supported for these tags.</li>
      *     <li>Tag SettledVoucherID will be handled the same way as tag SetttledVoucherID.</li>
-     *     <li>Tags SetttledVoucherID and VoucherID will be checked to match the same format as property VoucherID.</li>
-     *     <li>Tag VoucherIDList will be checked to match the same format as property VoucherIDList.</li>
+     *     <li>In case of a Date tag, parsing value is successful.</li>
+     *     <li>Currency values passed in value must be passed as decimal string with decimal dot, where trailing zeros
+     *     up to and inclusive the decimal dot may be truncated. For example, a value of 123.45 can be returned as
+     *     "123.45" or "123.4500", 100.00 can be returned as "100", "100.00" or "100.0000". Even if a value of 123.45
+     *     will be stored as 1234500 within a variable of type long, it must not be passed as "1234500".</li>
+     *     <li>In case of Enumerated tag values, only the values specified in the UPOS specification must be passed in
+     *     value.</li>
      * </ul>
+     * If value is an empty string, the parameter information will be deleted.
      * @param name  Tag name
      * @param value Array to be filled with tag value on return.
      * @throws JposException    If an error occurs.

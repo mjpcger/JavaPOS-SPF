@@ -17,10 +17,6 @@
 package de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
-import de.gmxhome.conrad.jpos.jpos_base.cat.CATProperties;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Base output request class for ElectronicValueRW devices. Holds a copy of all properties and parameters from the time where
@@ -93,12 +89,24 @@ public class OutputRequest extends JposOutputRequest {
     /**
      * Get parameter set by setParameterInformation before request has been created.
      * @param key Key of parameter to be queried, e.g. "Amount".
-     * @return parameter value, null if parameter has not been set.
+     * @return parameter value as String, null if parameter has not been set.
      */
     public String getParameter(String key) {
         return Parameters.get(key);
     }
-    private Map<String, String> Parameters = new HashMap<String, String>();
+
+    /**
+     * Get parameter set by setParameterInformation before request has been created. The Object returned belongs to
+     * class String for String and Datetime tags, Boolean for Boolean tags, Long for Currency tags and Integer for
+     * Enumerated and Number tags.
+     * @param key Key of parameter to be queried, e.g. "Amount".
+     * @return parameter value as described.
+     */
+    public Object getParameterObject(String key) {
+        return Parameters.getObject(key);
+    }
+
+    private TypeSafeStringMap Parameters;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -114,18 +122,14 @@ public class OutputRequest extends JposOutputRequest {
         PINEntry = props.PINEntry;
         ServiceType = props.ServiceType;
         TrainingMode = props.TrainingModeState;
-        synchronized ((props.Parameters)) {
-            Parameters.putAll(props.Parameters);
+        synchronized ((props.TypedParameters)) {
+            Parameters = props.TypedParameters.clone();
         }
         if (!Parameters.containsKey("Amount") && props.Amount != 0)
-            Parameters.put("Amount", String.valueOf(props.Amount));
-        if (!Parameters.containsKey("MediumID") && props.MediumID.length() > 0)
-            Parameters.put("MediumID", props.MediumID);
-        if (!Parameters.containsKey("Point") && props.Point != 0)
-            Parameters.put("Point", String.valueOf(props.Point));
+            Parameters.putCurrency("Amount", props.Amount);
         if (!Parameters.containsKey("VoucherID") && props.VoucherID.length() > 0)
-            Parameters.put("VoucherID", props.VoucherID);
+            Parameters.putString("VoucherID", props.VoucherID);
         if (!Parameters.containsKey("VoucherIDList") && props.VoucherIDList.length() > 0)
-            Parameters.put("VoucherIDList", props.VoucherIDList);
+            Parameters.putString("VoucherIDList", props.VoucherIDList);
     }
 }
