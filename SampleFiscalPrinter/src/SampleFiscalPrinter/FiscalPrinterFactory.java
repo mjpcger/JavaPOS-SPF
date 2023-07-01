@@ -47,7 +47,7 @@ public class FiscalPrinterFactory extends Factory implements JposServiceInstance
                         dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
-                    JposServiceInstance obj = addDevice(0, dev);
+                    JposServiceInstance obj = addDevice(0, dev, jposEntry);
                     if (!created)
                         putDevice(port, dev);
                     return obj;

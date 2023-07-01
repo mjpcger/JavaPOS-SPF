@@ -47,7 +47,7 @@ public class CashDrawerFactory extends Factory implements JposServiceInstanceFac
                         dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
-                    JposServiceInstance drw = addDevice(0, dev);
+                    JposServiceInstance drw = addDevice(0, dev, jposEntry);
                     if (create) {
                         putDevice(port, dev);
                     }

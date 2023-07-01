@@ -48,7 +48,7 @@ public class ElectronicValueRWFactory extends Factory implements JposServiceInst
                         dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
-                    JposServiceInstance srv = addDevice(0, dev);
+                    JposServiceInstance srv = addDevice(0, dev, jposEntry);
                     if (!created)
                         JposDeviceFactory.putDevice(port, dev);
                     return srv;

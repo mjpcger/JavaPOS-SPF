@@ -46,7 +46,7 @@ public class CashDrawerFactory extends Factory implements JposServiceInstanceFac
                         dev = (BeltCashboxDrawer) any;
                     }
                     dev.checkProperties(jposEntry);
-                    JposServiceInstance service = addDevice(0, dev);
+                    JposServiceInstance service = addDevice(0, dev, jposEntry);
                     if (!created)
                         putDevice(port, dev);
                     return service;
