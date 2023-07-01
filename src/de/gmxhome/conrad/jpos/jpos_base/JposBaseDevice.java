@@ -26,9 +26,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import net.bplaced.conrad.log4jpos.*;
 
-import javax.swing.*;
+import jpos.services.EventCallbacks;
+import jpos.services.EventCallbacks2;
+import net.bplaced.conrad.log4jpos.*;
 
 /**
  * Base class for device driver implementation based on JPOS framework.<br>
@@ -64,7 +65,7 @@ import javax.swing.*;
  * JposOutputRequest). The real final part must be implemented
  * in a method with the same name but with the object returned by the validation part as only parameter.
  * Keep in mind that the time this method is called is always the time
- * where the processing shall start. This is typically within the output request worker
+ * at the processing shall start. This is typically within the output request worker
  * thread.
  * <p>Here a full list of all properties, common for all device classes, that can be changed via jpos.xml:
  * <ul>
@@ -86,6 +87,10 @@ import javax.swing.*;
  *     or <b>off</b>. Specifies the logging level. See Log4j specification for more details.</li>
  *     <li>MaxArrayStringElements: Specifies the maximum number of elements of an object to be logged that are fully logged.
  *     If an object to be logged has more elements, the remaining elements will be logged as "...".</li>
+ *     <li>MaximumConfirmationEventWaitingTime: Specifies the maximum time an event callback may block event handling.
+ *     Default: FOREVER. <b>KEEP IN MIND:</b> Setting this property to a different value leads to a service that does
+ *     not fully fulfill the requirements of the UPOS specification: Running more than one event handler callback
+ *     becomes possible.</li>
  *     <li>SerialIOAdapterClass: Name of the SerialIOAdapter class. No default, must be set if serial communication shall
  *     be used. The following adapter classes have been implemented:
  *     <ul>
@@ -95,6 +100,9 @@ import javax.swing.*;
  *         <li>de.gmxhome.conrad.jSSC.JSSCSerial: Serial IO implementation using jSSC framework.</li>
  *     </ul>
  *     </li>
+ *     <li>StrictFIFOEventHandling: If true, all events will be delivered in the same sequence as they have been fired.
+ *     If false, data end input error events can be bypassed by other events as long as DataEventEnabled and
+ *     FreezeEvents are false. Default is false.</li>
  * </ul>
  */
 public class JposBaseDevice {
@@ -196,7 +204,6 @@ public class JposBaseDevice {
      */
     protected JposBaseDevice(String id) {
         ID = id;
-        (EventSerializer = new SyncObject()).signal();
     }
 
     /**
@@ -435,7 +442,9 @@ public class JposBaseDevice {
     /**
      * Volume for drawer beep. Valid values are from 0 to 127. Will be initialized with an Integer object only for
      * devices that support at least one CashDrawer device.
+     * Deprecated, the corresponding service property will be set from the factory via addDevice method.
      */
+    @Deprecated
     public Integer DrawerBeepVolume = null;
 
     /**
@@ -453,9 +462,10 @@ public class JposBaseDevice {
     public boolean AllowAlwaysSetProperties = true;
 
     /**
-     * Holds the JavaPOS control version. Must be unique for all JavaPOS devices supported by a device implementation.
-     * For example, if an implementation for a device supports logical devices for a POSPrinter and two CashDrawers,
-     * the version must be the same for all logical devices (and it must be specified for all devices).
+     * Holds the JavaPOS control version as specified in jpos-xml. Can be used in changeDefaults method of the corresponding
+     * logical device. Default: null (not set). Will be reset to null within method changeDefaults of JposDevice. Every
+     * service implementation that like to use that value must save it within its own changeDefaults method before calling
+     * super.changeDefaults.
      */
     public Integer JposVersion = null;
 
@@ -464,6 +474,18 @@ public class JposBaseDevice {
      * communication shall be supported.
      */
     public static String SerialIOAdapterClass = null;
+
+    /**
+     * Maximun number of milliseconds the event handle is delayed after delivery of events that need confirmation.
+     * Default is 100 milliseconds
+     */
+    public int MaximumConfirmationEventWaitingTime = JposConst.JPOS_FOREVER;
+
+    /**
+     * Specifies whether event handling strictly confirms the UPOS specification or if data and input error events can
+     * be delivered delayed while DataEventEnabled is false.
+     */
+    public boolean StrictFIFOEventHandling = false;
 
     /**
      * Checks whether a JposEntry belongs to a predefined property value an if so,
@@ -486,11 +508,7 @@ public class JposBaseDevice {
                         version += Integer.parseInt(versionparts[i]);
                     }
                 }
-                if (JposVersion == null) {
-                    JposVersion = version;
-                }
-                else if (JposVersion != version)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "JposVersions not unique");
+                JposVersion = version;
             }
             if ((o = entry.getPropertyValue("LoggerName")) != null)
                 LoggerName = o.toString();
@@ -521,8 +539,12 @@ public class JposBaseDevice {
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid warning level");
             }
             int val;
-            if ((o = entry.getPropertyValue("MaxArrayStringElements")) != null && (val = MaxArrayStringElements = Integer.parseInt(o.toString())) > 0)
+            if ((o = entry.getPropertyValue("MaxArrayStringElements")) != null && (val = Integer.parseInt(o.toString())) > 0)
                 MaxArrayStringElements = val;
+            if ((o = entry.getPropertyValue("MaximumConfirmationEventWaitingTime")) != null && (val = Integer.parseInt(o.toString())) > 0)
+                MaximumConfirmationEventWaitingTime = val;
+            if ((o = entry.getPropertyValue("StrictFIFOEventHandling")) != null)
+                StrictFIFOEventHandling = Boolean.parseBoolean(o.toString());
             if ((o = entry.getPropertyValue("SerialIOAdapterClass")) != null) {
                 if (SerialIOAdapterClass == null) {
                     try {
@@ -553,7 +575,7 @@ public class JposBaseDevice {
 
 
     /**
-     * Enqueues or fires data event. If FreezeEvent is false, the event will be fired immediately. Otherwise it will
+     * Enqueues or fires data event. If FreezeEvent is false, the event will be fired immediately. Otherwise, it will
      * be enqueued and fired after FreezeEvents will be reset. In addition, properties DeviceEnabled, DataEventEnabled
      * and DataCount will be adjusted as described in the UPOS specification
      *
@@ -562,22 +584,22 @@ public class JposBaseDevice {
      */
     public void handleEvent(JposDataEvent event) throws JposException {
         JposCommonProperties props = event.getPropertySet();
-        synchronized (props.DataEventList) {
+        synchronized (props.EventList) {
             if (props.DeviceEnabled) {
                 if (props.AutoDisable) {
                     props.EventSource.setDeviceEnabled(false);
                 }
                 log(Level.DEBUG, props.LogicalName + ": Buffer Data Event: [" + event.toLogString() + "]");
-                props.DataEventList.add(event);
+                props.EventList.add(event);
                 props.DataCount++;
                 props.EventSource.logSet("DataCount");
-                processDataEventList(props);
+                processEventList(props);
             }
         }
     }
 
     /**
-     * Enqueues or fires error event. If FreezeEvent is false, the event will be fired immediately. Otherwise it will
+     * Enqueues or fires error event. If FreezeEvent is false, the event will be fired immediately. Otherwise, it will
      * be enqueued and fired after FreezeEvents will be reset.
      *
      * @param event Event to be fired
@@ -585,31 +607,31 @@ public class JposBaseDevice {
      */
     public void handleEvent(JposErrorEvent event) throws JposException {
         JposCommonProperties props = event.getPropertySet();
-        if (event.getErrorLocus() != JposConst.JPOS_EL_OUTPUT)
-            synchronized (props.DataEventList) {
-                if (props.DeviceEnabled) {
-                    props.State = JposConst.JPOS_S_ERROR;
-                    if (event.getErrorLocus() == JposConst.JPOS_EL_INPUT && props.DataEventList.size() > 0 && props.DataEventList.get(0) instanceof JposDataEvent) {
+        synchronized (props.EventList) {
+            if (props.DeviceEnabled) {
+                props.State = JposConst.JPOS_S_ERROR;
+                if (event.getErrorLocus() == JposConst.JPOS_EL_INPUT && props.DataCount > 0) {
+                    JposEvent ev = null;
+                    for (int i = 0; i < props.EventList.size(); ++i) {
+                        ev = props.EventList.get(i);
+                        if (ev instanceof JposDataEvent) {
+                            props.EventList.add(i, event.getInputDataErrorEvent());
+                            break;
+                        }
+                    }
+                    if (!(ev instanceof JposDataEvent) && props.DataEventList.get(0) instanceof JposDataEvent) {
                         props.DataEventList.add(0, event.getInputDataErrorEvent());
                     }
-                    props.DataEventList.add(event);
-                    log(Level.DEBUG, props.LogicalName + ": Buffer Error Event: [" + event.toLogString() + "]");
-                    processDataEventList(props);
                 }
+                props.EventList.add(event);
+                log(Level.DEBUG, props.LogicalName + ": Buffer Error Event: [" + event.toLogString() + "]");
+                processEventList(props);
             }
-        else
-            synchronized (props.ErrorEventList) {
-                if (props.DeviceEnabled) {
-                    props.State = JposConst.JPOS_S_ERROR;
-                    props.ErrorEventList.add(event);
-                    log(Level.DEBUG, props.LogicalName + ": Buffer Error Event: [" + event.toLogString() + "]");
-                    processErrorEventList(props);
-                }
-            }
+        }
     }
 
     /**
-     * Enqueues or fires status update event. If FreezeEvent is false, the event will be fired immediately. Otherwise it will
+     * Enqueues or fires status update event. If FreezeEvent is false, the event will be fired immediately. Otherwise, it will
      * be enqueued and fired after FreezeEvents will be reset. In case of sharable devices, the event will be fired to all
      * devices controls that enabled the same physical device.
      *
@@ -638,7 +660,7 @@ public class JposBaseDevice {
     }
 
     /**
-     * Enqueues or fires output complete event. If FreezeEvent is false, the event will be fired immediately. Otherwise it will
+     * Enqueues or fires output complete event. If FreezeEvent is false, the event will be fired immediately. Otherwise, it will
      * be enqueued and fired after FreezeEvents will be reset.
      *
      * @param event Event to be fired
@@ -646,15 +668,15 @@ public class JposBaseDevice {
      */
     public void handleEvent(JposOutputCompleteEvent event) throws JposException {
         JposCommonProperties props = event.getPropertySet();
-        synchronized (props.ErrorEventList) {
-            props.ErrorEventList.add(event);
+        synchronized (props.EventList) {
+            props.EventList.add(event);
             log(Level.DEBUG, props.LogicalName + ": Buffer OutputCompleteEvent: [" + event.toLogString() + "]");
-            processErrorEventList(props);
+            processEventList(props);
         }
     }
 
     /**
-     * Enqueues or fires transition event. If FreezeEvent is false, the event will be fired immediately. Otherwise it will
+     * Enqueues or fires transition event. If FreezeEvent is false, the event will be fired immediately. Otherwise, it will
      * be enqueued and fired after FreezeEvents will be reset.
      *
      * @param event Event to be fired
@@ -662,15 +684,15 @@ public class JposBaseDevice {
      */
     public void handleEvent(JposTransitionEvent event) throws JposException {
         JposCommonProperties props = event.getPropertySet();
-        synchronized (props.TransitionEventList) {
-            props.TransitionEventList.add(event);
+        synchronized (props.EventList) {
+            props.EventList.add(event);
             log(Level.DEBUG, props.LogicalName + ": Buffer TransitionEvent: [" + event.toLogString() + "]");
-            processTransitionEventList(props);
+            processEventList(props);
         }
     }
 
     /**
-     * Enqueues or fires direct IO event. If FreezeEvent is false, the event will be fired immediately. Otherwise it will
+     * Enqueues or fires direct IO event. If FreezeEvent is false, the event will be fired immediately. Otherwise, it will
      * be enqueued and fired after FreezeEvents will be reset.
      *
      * @param event Event to be fired
@@ -678,11 +700,12 @@ public class JposBaseDevice {
      */
     public void handleEvent(JposDirectIOEvent event) throws JposException {
         JposCommonProperties props = event.getPropertySet();
-        synchronized (props.DirectIOEventList) {
-            props.DirectIOEventList.add(event);
+        synchronized (props.EventList) {
+            props.EventList.add(event);
             log(Level.DEBUG, props.LogicalName + ": Buffer DirectIOEvent: [" + event.toLogString() + "]");
-            processDirectIOEventList(props);
+            processEventList(props);
         }
+
     }
 
     private Map<List<JposCommonProperties>, List<SyncObject>> StatusWaitingObjects = new HashMap();
@@ -766,11 +789,9 @@ public class JposBaseDevice {
         }
     }
 
-    private SyncObject EventSerializer;
-
     /**
-     * Process the event queue. Fires StatusUpdateEvent events while
-     * FreezeEvents = false
+     * Process the event queue. Fires notification events (except data events) and buffers confirmation events in
+     * confirmation event queue while FreezeEvents = false
      */
     class EventFirer extends Thread {
         private JposCommonProperties Props;
@@ -792,300 +813,168 @@ public class JposBaseDevice {
             while(true) {
                 JposStatusUpdateEvent stevent = null;
                 JposDirectIOEvent dioevent = null;
-                EventSerializer.suspend(SyncObject.INFINITE);
+                JposTransitionEvent trevent = null;
+                JposErrorEvent errevent = null;
+                JposOutputCompleteEvent ocevent = null;
+                JposDataEvent devent = null;
                 synchronized (Props.EventList) {
                     Props.EventProcessor = null;
-                    if (Props.FreezeEvents || Props.EventList.size() == 0)
+                    if (Props.FreezeEvents || (Props.EventList.size() == 0 && (!Props.DataEventEnabled || Props.DataEventList.size() == 0)))
                         break;
                     Props.EventProcessor = this;
-                    JposEvent event = Props.EventList.get(0);
-                    Props.EventList.remove(0);
-                    if (event instanceof JposDirectIOEvent)
-                        (dioevent = (JposDirectIOEvent)event).setDirectIOProperties();
-                    else if (event instanceof JposStatusUpdateEvent) {
+                    JposEvent event;
+                    if (Props.DataEventEnabled && Props.DataEventList.size() > 0) {
+                        event = Props.DataEventList.get(0);
+                        Props.DataEventList.remove(0);
+                    } else {
+                        event = Props.EventList.get(0);
+                        Props.EventList.remove(0);
+                    }
+                    if (event instanceof JposTransitionEvent) {
+                        (trevent = (JposTransitionEvent) event).setTransitionProperties();
+                    } else if (event instanceof JposDirectIOEvent) {
+                        (dioevent = (JposDirectIOEvent) event).setDirectIOProperties();
+                    } else if (event instanceof JposStatusUpdateEvent) {
                         (stevent = (JposStatusUpdateEvent)event).setLateProperties();
+                    } else if (event instanceof JposOutputCompleteEvent) {
+                        (ocevent = (JposOutputCompleteEvent) event).setOutputCompleteProperties();
+                    } else if (event instanceof JposErrorEvent) {
+                        if (((JposErrorEvent) event).getErrorLocus() == JposConst.JPOS_EL_OUTPUT || Props.DataEventEnabled)
+                            (errevent = (JposErrorEvent) event).setErrorProperties();
+                        else if (Props.EventSource.StrictFIFOEventHandling) {
+                            Props.EventList.add(0, event);
+                            Props.EventProcessor = null;
+                            break;
+                        } else
+                            Props.DataEventList.add(event);
+                    } else if (event instanceof JposDataEvent) {
+                        if (Props.DataEventEnabled)
+                            (devent = (JposDataEvent) event).setDataProperties();
+                        else if (Props.EventSource.StrictFIFOEventHandling) {
+                            Props.EventList.add(0, event);
+                            Props.EventProcessor = null;
+                            break;
+                        } else
+                            Props.DataEventList.add(event);
                     }
                 }
                 if (dioevent != null) {
-                    Props.EventCB.fireDirectIOEvent(dioevent);
-                    log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toLogString() + "]");
-                    postDirectIOProcessing(dioevent);
+                    final SyncObject waiter = new SyncObject();
+                    final JposDirectIOEvent dioev = dioevent;
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Props.EventCB.fireDirectIOEvent(dioev);
+                            log(Level.DEBUG, Props.LogicalName + ": Fire Transition Event: [" + dioev.toLogString() + "]");
+                            postDirectIOProcessing(dioev);
+                            waiter.signal();
+                        }
+                    }, "DirectIOEventRunner") {
+                    }.start();
+                    waiter.suspend(Props.EventSource.MaximumConfirmationEventWaitingTime);
                 }
-                else if (stevent != null) {
+                else if (trevent != null) {
+                    final SyncObject waiter = new SyncObject();
+                    final JposTransitionEvent tev = trevent;
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (Props.EventCB instanceof EventCallbacks2) {
+                                ((EventCallbacks2) Props.EventCB).fireTransitionEvent(tev);
+                                log(Level.DEBUG, Props.LogicalName + ": Fire Transition Event: [" + tev.toLogString() + "]");
+                            } else {
+                                log(Level.DEBUG, Props.LogicalName + ": Transition Event: [" + tev.toLogString() + "]: Unsupported");
+                            }
+                            postTransitionProcessing(tev);
+                            waiter.signal();
+                        }
+                    }, "TransitionEventRunner") {
+                    }.start();
+                    waiter.suspend(Props.EventSource.MaximumConfirmationEventWaitingTime);
+                } else if (errevent != null) {
+                    final SyncObject waiter = new SyncObject();
+                    final JposErrorEvent errev = errevent;
+                    if (errevent.getErrorLocus() == JposConst.JPOS_EL_OUTPUT) {
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                synchronized (AsyncProcessorRunning) {
+                                    Props.EventCB.fireErrorEvent(errev);
+                                    log(Level.DEBUG, Props.LogicalName + ": Fire Error Event: [" + errev.toLogString() + "]");
+                                    if (errev.getErrorResponse() == JposConst.JPOS_ER_CLEAR) {
+                                        errev.clear();
+                                    }
+                                }
+                                if (errev.getErrorResponse() == JposConst.JPOS_ER_RETRY) {
+                                    try {   // retryInput should never throw an exception!
+                                        Props.EventSource.DeviceInterface.retryOutput();
+                                    } catch (JposException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                waiter.signal();
+                            }
+                        }, "OutputErrorEventRunner") {
+                        }.start();
+                        waiter.suspend(Props.EventSource.MaximumConfirmationEventWaitingTime);
+                    } else {
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                synchronized (AsyncProcessorRunning) {
+                                    Props.EventCB.fireErrorEvent(errev);
+                                    log(Level.DEBUG, Props.LogicalName + ": Fire Error Event: [" + errev.toLogString() + "]");
+                                    if (errev.getErrorResponse() == JposConst.JPOS_ER_CLEAR) {
+                                        errev.clear();
+                                    }
+                                }
+                                if (errev.getErrorResponse() == JposConst.JPOS_ER_RETRY) {
+                                    try {   // retryInput should never throw an exception!
+                                        Props.EventSource.DeviceInterface.retryInput();
+                                    } catch (JposException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                waiter.signal();
+                            }
+                        }, "InputErrorEventRunner") {
+                        }.start();
+                        waiter.suspend(Props.EventSource.MaximumConfirmationEventWaitingTime);
+                    }
+                } else if (ocevent != null) {
+                    Props.EventCB.fireOutputCompleteEvent(ocevent);
+                    log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Output Complete Event: [" + ocevent.toLogString() + "]");
+                } else if (stevent != null) {
                     Props.EventCB.fireStatusUpdateEvent(stevent);
                     log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Status Update Event: [" + stevent.toLogString() + "]");
+                } else if (devent != null) {
+                    try {
+                        Props.EventSource.setDataEventEnabled(false);
+                    } catch (JposException e) {
+                        e.printStackTrace();
+                    }
+                    Props.DataCount--;
+                    Props.EventSource.logSet("DataCount");
+                    Props.EventCB.fireDataEvent(devent);
+                    log(Level.DEBUG, Props.LogicalName + ": Fire Data Event: [" + devent.toLogString() + "]");
                 }
-                EventSerializer.signal();
             }
-            EventSerializer.signal();
         }
     }
 
     /**
-     * Process the event queue. Fires StatusUpdateEvent events while
+     * Process the event queue. Fires all notification events except data events while
      * FreezeEvents = false.
      *
      * @param dev Property set to be used for event processing
      * @throws JposException If <i>EventFirer</i> object cannot be created.
      */
     protected void processEventList(JposCommonProperties dev) throws JposException {
-        if (dev.EventProcessor == null && !dev.FreezeEvents && dev.EventList.size() > 0) {
-            new EventFirer(dev);
-        }
-    }
-
-    /**
-     * Process the data event queue. Fires DataEvent and ErrorEvent events while
-     * FreezeEvents = false and DataEventEnabled = true
-     */
-    class DataEventFirer extends Thread {
-        private JposCommonProperties Props;
-        DataEventFirer(JposCommonProperties dev) throws JposException {
-            Props = dev;
-            setName("DataEventFirer");
-            dev.DataEventProcessor = this;
-            try {
-                start();
-            }
-            catch (Exception e) {
-                throw new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e);
+        synchronized (dev.EventList) {
+            if (dev.EventProcessor == null && !dev.FreezeEvents && (dev.EventList.size() > 0 || (dev.DataEventEnabled && dev.DataEventList.size() > 0))) {
+                new EventFirer(dev);
             }
         }
-
-        @Override
-        public void run() {
-            while (true) {
-                JposErrorEvent errevent = null;
-                JposDataEvent dataevent = null;
-                JposDirectIOEvent dioevent = null;
-                EventSerializer.suspend(SyncObject.INFINITE);
-                synchronized (Props.DataEventList) {
-                    Props.DataEventProcessor = null;
-                    if (Props.FreezeEvents || Props.DataEventList.size() == 0)
-                        break;
-                    JposEvent event = Props.DataEventList.get(0);
-                    if (event instanceof JposDataEvent) {
-                        if (!Props.DataEventEnabled)
-                            break;
-                        (dataevent = (JposDataEvent) event).setDataProperties();
-                    }
-                    if (event instanceof JposErrorEvent)
-                        (errevent = (JposErrorEvent) event).setErrorProperties();
-                    else if (event instanceof JposDirectIOEvent)
-                        (dioevent = (JposDirectIOEvent) event).setDirectIOProperties();
-                    Props.DataEventList.remove(0);
-                    Props.DataEventProcessor = this;
-                }
-                if (dataevent != null) {
-                    try {
-                        Props.EventSource.setDataEventEnabled(false);
-                        Props.DataCount--;
-                        Props.EventSource.logSet("DataCount");
-                        Props.EventCB.fireDataEvent(dataevent);
-                        log(Level.DEBUG, Props.LogicalName + ": Fire Data Event: [" + dataevent.toLogString() + "]");
-                    } catch (JposException e) {
-                        e.printStackTrace();
-                    }
-                } else if (errevent != null) {
-                    synchronized (AsyncProcessorRunning) {
-                        Props.EventCB.fireErrorEvent(errevent);
-                        log(Level.DEBUG, Props.LogicalName + ": Fire Error Event: [" + errevent.toLogString() + "]");
-                        if (errevent.getErrorResponse() == JposConst.JPOS_ER_CLEAR) {
-                            errevent.clear();
-                        }
-                    }
-                    if (errevent.getErrorResponse() == JposConst.JPOS_ER_RETRY) {
-                        try {   // retryInput should never throw an exception!
-                            Props.EventSource.DeviceInterface.retryInput();
-                        } catch (JposException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } else if (dioevent != null) {
-                    Props.EventCB.fireDirectIOEvent(dioevent);
-                    log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toLogString() + "]");
-                    postDirectIOProcessing(dioevent);
-                }
-                EventSerializer.signal();
-            }
-            EventSerializer.signal();
-        }
-    }
-
-    /**
-     * Starts processing the data event queue. If the DataEventList is not empty, creates DataEventFirer that fires
-     * events until the DataEventList becomes empty. Runs always in synchronized context.
-     *
-     * @param dev Property set for data event processing.
-     * @throws JposException If <i>DataEventFirer</i> object cannot be created.
-     */
-    protected void processDataEventList(JposCommonProperties dev) throws JposException {
-        if (dev.DataEventProcessor == null && !dev.FreezeEvents && dev.DataEventEnabled && dev.DataEventList.size() > 0) {
-            new DataEventFirer(dev);
-        }
-    }
-
-    /**
-     * Process the error event queue. Fires OutputCompleteEvent and ErrorEvent events while
-     * FreezeEvents = false
-     */
-    class ErrorEventFirer extends Thread {
-        private JposCommonProperties Props;
-        ErrorEventFirer(JposCommonProperties dev) throws JposException {
-            Props = dev;
-            setName("ErrorEventFirer");
-            dev.ErrorEventProcessor = this;
-            try {
-                start();
-            }
-            catch (Exception e) {
-                throw new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e);
-            }
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                JposErrorEvent errevent = null;
-                JposOutputCompleteEvent ocevent = null;
-                JposDirectIOEvent dioevent = null;
-                EventSerializer.suspend(SyncObject.INFINITE);
-                synchronized (Props.ErrorEventList) {
-                    Props.ErrorEventProcessor = null;
-                    if (Props.FreezeEvents || Props.ErrorEventList.size() == 0)
-                        break;
-                    Props.ErrorEventProcessor = this;
-                    JposEvent event = Props.ErrorEventList.get(0);
-                    Props.ErrorEventList.remove(0);
-                    if (event instanceof JposOutputCompleteEvent)
-                        (ocevent = (JposOutputCompleteEvent) event).setOutputCompleteProperties();
-                    else if (event instanceof JposErrorEvent)
-                        (errevent = (JposErrorEvent) event).setErrorProperties();
-                    else if (event instanceof JposDirectIOEvent)
-                        (dioevent = (JposDirectIOEvent) event).setDirectIOProperties();
-                }
-                if (ocevent != null) {
-                    Props.EventCB.fireOutputCompleteEvent(ocevent);
-                    log(Level.DEBUG, Props.LogicalName + ": Fire Output Complete Event: [" + ocevent.toLogString() + "]");
-                } else if (errevent != null) {
-                    synchronized (AsyncProcessorRunning) {
-                        Props.EventCB.fireErrorEvent(errevent);
-                        log(Level.DEBUG, Props.LogicalName + ": Fire Error Event: [" + errevent.toLogString() + "]");
-                        if (errevent.getErrorResponse() == JposConst.JPOS_ER_CLEAR) {
-                            errevent.clear();
-                        }
-                    }
-                    if (errevent.getErrorResponse() == JposConst.JPOS_ER_RETRY) {
-                        try {   // retryInput should never throw an exception!
-                            Props.EventSource.DeviceInterface.retryOutput();
-                        } catch (JposException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } else if (dioevent != null) {
-                    Props.EventCB.fireDirectIOEvent(dioevent);
-                    log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toLogString() + "]");
-                    postDirectIOProcessing(dioevent);
-                }
-                EventSerializer.signal();
-            }
-            EventSerializer.signal();
-        }
-    }
-
-    /**
-     * Process the output complete and error event queue. Fires OutputCompleteEvent or ErrorEvent events while
-     * FreezeEvents = false. This kind of processing will be performed directly by the JposOutputRequest handler
-     * because asynchronous processing must be synchronized with the corresponding event handling.
-     *
-     * @param dev Property set to be used for output error event processing
-     * @throws JposException If <i>ErrorEventFirer</i> object cannot be created.
-     */
-    protected void processErrorEventList(JposCommonProperties dev) throws JposException {
-        if (dev.ErrorEventProcessor == null && !dev.FreezeEvents && dev.ErrorEventList.size() > 0) {
-            new ErrorEventFirer(dev);
-        }
-    }
-
-    /**
-     * Process the transition event queue. Fires TransitionEvent events while
-     * FreezeEvents = false
-     */
-    class TransitionEventFirer extends Thread {
-        private JposCommonProperties Props;
-        TransitionEventFirer(JposCommonProperties dev) throws JposException {
-            Props = dev;
-            setName("TransitionEventFirer");
-            dev.TransitionEventProcessor = this;
-            try {
-                start();
-            }
-            catch (Exception e) {
-                throw new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e);
-            }
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                JposTransitionEvent trevent = null;
-                JposDirectIOEvent dioevent = null;
-                EventSerializer.suspend(SyncObject.INFINITE);
-                synchronized (Props.TransitionEventList) {
-                    Props.TransitionEventProcessor = null;
-                    if (Props.FreezeEvents || Props.TransitionEventList.size() == 0)
-                        break;
-                    Props.TransitionEventProcessor = this;
-                    JposEvent event = Props.TransitionEventList.get(0);
-                    Props.TransitionEventList.remove(0);
-                    if (event instanceof JposTransitionEvent)
-                        (trevent = (JposTransitionEvent) event).setTransitionProperties();
-                    else if (event instanceof JposDirectIOEvent)
-                        (dioevent = (JposDirectIOEvent) event).setDirectIOProperties();
-                }
-                if (trevent != null) {
-                    try {   // fireTransitionEvent is only available in UPOS version >= 1.14.0
-                        Method fireTransitionEvent = Class.forName(Props.EventCB.getClass().getName()).getMethod("fireTransitionEvent", TransitionEvent.class);
-                        fireTransitionEvent.invoke(Props.EventCB, trevent);
-                        log(Level.DEBUG, Props.LogicalName + ": Fire Transition Event: [" + trevent.toLogString() + "]");
-                    } catch (Exception e) {
-                        log(Level.DEBUG, Props.LogicalName + ": Transition Event: [" + trevent.toLogString() + "]: Unsupported");
-                        trevent = null;
-                    }
-                    postTransitionProcessing(trevent);
-                } else if (dioevent != null) {
-                    Props.EventCB.fireDirectIOEvent(dioevent);
-                    log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Direct IO Event: [" + dioevent.toLogString() + "]");
-                    postDirectIOProcessing(dioevent);
-                }
-                EventSerializer.signal();
-            }
-            EventSerializer.signal();
-        }
-    }
-
-    /**
-     * Process the transition event queue. Fires TransitionEvent events while
-     * FreezeEvents = false.
-     *
-     * @param dev Property set to be used for transition event processing
-     * @throws JposException If <i>TransitionEventFirer</i> object cannot be created.
-     */
-    protected void processTransitionEventList(JposCommonProperties dev) throws JposException {
-        if (dev.TransitionEventProcessor == null && !dev.FreezeEvents && dev.TransitionEventList.size() > 0) {
-            new TransitionEventFirer(dev);
-        }
-    }
-
-    private void processDirectIOEventList(JposCommonProperties props) throws JposException {
-        if (props.DirectIOEventList == props.EventList)
-            processEventList(props);
-        else if (props.DirectIOEventList == props.ErrorEventList)
-            processErrorEventList(props);
-        else if (props.DirectIOEventList == props.DataEventList)
-            processDataEventList(props);
-        else if (props.DirectIOEventList == props.TransitionEventList)
-            processTransitionEventList(props);
     }
 
     /**
@@ -1095,7 +984,11 @@ public class JposBaseDevice {
      *                support transition events.
      */
     public void postTransitionProcessing(JposTransitionEvent trevent) {
-        trevent.WriteProtected = true;
+        if (trevent != null) {
+            trevent.WriteProtected = true;
+            if (trevent instanceof JposTransitionWaitingEvent)
+                ((JposTransitionWaitingEvent)trevent).getWaiter().signal();
+        }
     }
 
     /**
@@ -1104,7 +997,11 @@ public class JposBaseDevice {
      * @param dioevent JposDirectIOEvent after return from application callback.
      */
     public void postDirectIOProcessing(JposDirectIOEvent dioevent) {
-        dioevent.WriteProtected = true;
+        if (dioevent != null) {
+            dioevent.WriteProtected = true;
+            if (dioevent instanceof JposDirectIOWaitingEvent)
+                ((JposDirectIOWaitingEvent)dioevent).getWaiter().signal();
+        }
     }
 
     /**

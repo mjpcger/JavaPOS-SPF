@@ -25,7 +25,6 @@ import net.bplaced.conrad.log4jpos.Level;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -201,9 +200,8 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     final public List<SyncObject> ClaimWaiters = new LinkedList<SyncObject>();
 
     /**
-     * Event list, holds at least JposStatusUpdateEvent events until they can be fired. Keep in mind:
-     * By default, DirectIOEvent events will hold in this list as well.
-     * data events and (input) error events will be passed via DataEventList instead.
+     * Event list, holds at least events until they can be fired. As long as DataEventEnabled = false,
+     * data events and (input) error events will be put into DataEventList instead.
      */
     final public List<JposEvent> EventList = new LinkedList<JposEvent>();
 
@@ -211,22 +209,6 @@ public abstract class JposCommonProperties implements JposBaseInterface {
      * Event list, holds all data and input error events until they can be fired.
      */
     protected final List<JposEvent> DataEventList = new LinkedList<JposEvent>();
-
-    /**
-     * Event list, holds all output error events until they can be fired.
-     */
-    final public List<JposEvent> ErrorEventList = new LinkedList<JposEvent>();
-
-    /**
-     * Event list, holds all transition events until they can be fired.
-     */
-    final public List<JposEvent> TransitionEventList = new LinkedList<JposEvent>();
-
-    /**
-     * Event list, holds all direct IO events until they can be fired. Will be set to one of EventList, TransitionEventList,
-     * DataEventList or OutputEventList, depending on preferences of the service implementation. The default is TransitionEventList.
-     */
-    public List<JposEvent> DirectIOEventList = TransitionEventList;
 
     /**
      * List of all property sets sharing the same UPOS device.
@@ -307,24 +289,11 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     private SyncObject StatusWaiter = null;
 
     /**
-     * Event processor. Thread that fires status update events and optionally direct IO events.
+     * Event processor. Thread that fires status update events, ouitput complete events and direct IO and transition
+     * events that are used for notification only.
      */
     JposBaseDevice.EventFirer EventProcessor = null;
 
-    /**
-     * Data event processor. Thread that fires data events, input error events and optionally direct IO events.
-     */
-    JposBaseDevice.DataEventFirer DataEventProcessor = null;
-
-    /**
-     * Error event processor. Thread that fires output complete events, output error events and optionally direct IO events.
-     */
-    JposBaseDevice.ErrorEventFirer ErrorEventProcessor = null;
-
-    /**
-     * Transition event processor. Thread that fires transition events and optionally direct IO events.
-     */
-    JposBaseDevice.TransitionEventFirer TransitionEventProcessor = null;
 
     /**
      * Constructor.
@@ -376,7 +345,6 @@ public abstract class JposCommonProperties implements JposBaseInterface {
         if (!res) {
             EventList.clear();
             DataEventList.clear();
-            ErrorEventList.clear();
             FirstEnableHappened = true;
             UnitsOnline = 0;
         }
@@ -511,12 +479,6 @@ public abstract class JposCommonProperties implements JposBaseInterface {
             synchronized (EventList) {
                 Device.processEventList(this);
             }
-            synchronized (ErrorEventList) {
-                Device.processErrorEventList(this);
-            }
-            synchronized (DataEventList) {
-                Device.processDataEventList(this);
-            }
         }
     }
 
@@ -538,8 +500,8 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     @Override
     public void dataEventEnabled(boolean b) throws JposException {
         if (DataEventEnabled = b) {
-            synchronized (DataEventList) {
-                Device.processDataEventList(this);
+            synchronized (EventList) {
+                Device.processEventList(this);
             }
         }
     }
@@ -613,54 +575,57 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     public void release() throws JposException {
         Claimed = false;
         if (ExclusiveUse == JposCommonProperties.ExclusiveYes) {
-                synchronized (DataEventList) {
-                    DataEventList.clear();
-                    DataCount = 0;
-                    clearDataProperties();
-                }
-            synchronized (ErrorEventList) {
-                ErrorEventList.clear();
-                clearErrorProperties();
-            }
             synchronized (EventList) {
                 EventList.clear();
+                DataEventList.clear();
+                DataCount = 0;
             }
-            newJposOutputRequest().clearAll();
-            clearOutputErrorProperties();
-            if (State != JposConst.JPOS_S_IDLE) {
-                State = JposConst.JPOS_S_IDLE;
-                EventSource.logSet("State");
-            }
-            if (FlagWhenIdle) {
-                FlagWhenIdle = false;
-                EventSource.logSet("FlagWhenIdle");
-            }
+        }
+        newJposOutputRequest().clearAll();
+        if (State != JposConst.JPOS_S_IDLE) {
+            State = JposConst.JPOS_S_IDLE;
+            EventSource.logSet("State");
+        }
+        if (FlagWhenIdle) {
+            FlagWhenIdle = false;
+            EventSource.logSet("FlagWhenIdle");
         }
     }
 
     @Override
     public void clearInput() throws JposException {
-        synchronized (DataEventList) {
+        synchronized (EventList) {
             if (UsesSubsystemUnits) {
-                for (int i = 0; i < DataEventList.size(); ) {
-                    JposEvent ev = DataEventList.get(i);
-                    i = conditionalDataEventRemoval(CurrentUnitID, i, ev);
-                    i = conditionalInputErrorEventRemoval(CurrentUnitID, i, ev);
+                for (List<JposEvent> list : new List[]{EventList, DataEventList}) {
+                    for (int i = 0; i < list.size(); ) {
+                        JposEvent ev = list.get(i);
+                        i = conditionalDataEventRemoval(list, CurrentUnitID, i, ev);
+                        i = conditionalInputErrorEventRemoval(list, CurrentUnitID, i, ev);
+                    }
                 }
             } else {
                 DataEventList.clear();
+                for (int i = 0; i < EventList.size();) {
+                    JposEvent ev = EventList.get(i);
+                    if (ev instanceof JposDataEvent)
+                        EventList.remove(ev);
+                    else if (ev instanceof JposErrorEvent && ((JposErrorEvent) ev).getErrorLocus() != JposConst.JPOS_EL_OUTPUT)
+                        EventList.remove(ev);
+                    else
+                        i++;
+                }
                 DataCount = 0;
             }
         }
+        Device.processEventList(this);
         State = JposConst.JPOS_S_IDLE;
-        clearErrorProperties();
     }
 
-    private int conditionalInputErrorEventRemoval(int bit, int i, JposEvent ev) {
+    private int conditionalInputErrorEventRemoval(List<JposEvent> list, int bit, int i, JposEvent ev) {
         if (ev instanceof UnitInputErrorEvent) {
             UnitInputErrorEvent event = (UnitInputErrorEvent) ev;
             if ((event.Units & bit) != 0) {
-                DataEventList.remove(i);
+                list.remove(i);
             }
             else {
                 i++;
@@ -669,11 +634,11 @@ public abstract class JposCommonProperties implements JposBaseInterface {
         return i;
     }
 
-    private int conditionalDataEventRemoval(int bit, int i, JposEvent ev) {
+    private int conditionalDataEventRemoval(List<JposEvent> list, int bit, int i, JposEvent ev) {
         if (ev instanceof UnitDataEvent) {
             UnitDataEvent event = (UnitDataEvent) ev;
             if ((event.Unit & bit) != 0) {
-                DataEventList.remove(i);
+                list.remove(i);
                 DataCount--;
             }
             else {
@@ -701,12 +666,8 @@ public abstract class JposCommonProperties implements JposBaseInterface {
         if (UsesSubsystemUnits) {
             synchronized(EventList) {
                 for (int i = 0; i < EventList.size();) {
-                    i = conditionalOutputCompleteEventRemoval(CurrentUnitID, i);
-                }
-            }
-            synchronized(ErrorEventList) {
-                for (int i = 0; i < ErrorEventList.size();) {
                     i = conditionalOutputErrorEventRemoval(CurrentUnitID, i);
+                    i = conditionalOutputCompleteEventRemoval(CurrentUnitID, i);
                 }
             }
             UnitOutputRequest checker = new UnitOutputRequest(this, CurrentUnitID);
@@ -720,7 +681,6 @@ public abstract class JposCommonProperties implements JposBaseInterface {
                 State = JposConst.JPOS_S_BUSY;
                 Device.log(Level.DEBUG, LogicalName + ": State <- " + JposConst.JPOS_S_BUSY);
             }
-            clearOutputErrorProperties();
             if (FlagWhenIdle && remainingCommands != 0) {
                 FlagWhenIdle = false;
                 Device.log(Level.DEBUG, LogicalName + ": FlagWhenIdle <- " + FlagWhenIdleStatusValue);
@@ -728,45 +688,45 @@ public abstract class JposCommonProperties implements JposBaseInterface {
             }
         }
         else {
-            synchronized (ErrorEventList) {
-                ErrorEventList.clear();
+            synchronized (EventList) {
+                for (int i = 0; i < EventList.size();) {
+                    JposEvent ev = EventList.get(i);
+                    if (ev instanceof JposErrorEvent && ((JposErrorEvent) ev).getErrorLocus() == JposConst.JPOS_EL_OUTPUT)
+                        EventList.remove(i);
+                    else
+                        ++i;
+                }
             }
             newJposOutputRequest().clearOutput();
             if (State != JposConst.JPOS_S_IDLE) {
                 State = JposConst.JPOS_S_IDLE;
                 EventSource.logSet("State");
             }
-            clearOutputErrorProperties();
             if (FlagWhenIdle) {
                 FlagWhenIdle = false;
                 EventSource.logSet("FlagWhenIdle");
                 Device.handleEvent(new JposStatusUpdateEvent(EventSource, FlagWhenIdleStatusValue));
             }
+            else
+                Device.processEventList(this);
         }
     }
 
     private int conditionalOutputErrorEventRemoval(int bit, int i) {
-        UnitOutputErrorEvent event = (UnitOutputErrorEvent)ErrorEventList.get(i);
-        if ((event.Units & bit) != 0) {
-            ErrorEventList.remove(i);
-        }
-        else {
+        JposEvent event = EventList.get(i);
+        if (event instanceof UnitOutputErrorEvent && (((UnitOutputErrorEvent) event).Units & bit) != 0)
+            EventList.remove(i);
+        else
             i++;
-        }
         return i;
     }
 
     private int conditionalOutputCompleteEventRemoval(int bit, int i) {
-        JposEvent ev = (JposEvent)EventList.get(i);
-        if (ev instanceof UnitOutputCompleteEvent) {
-            UnitOutputCompleteEvent event = (UnitOutputCompleteEvent) ev;
-            if ((event.Units & bit) != 0) {
-                EventList.remove(i);
-            }
-            else {
-                i++;
-            }
-        }
+        JposEvent event = EventList.get(i);
+        if (event instanceof UnitOutputCompleteEvent && (((UnitOutputCompleteEvent) event).Units & bit) != 0)
+            EventList.remove(i);
+        else
+            i++;
         return i;
     }
 

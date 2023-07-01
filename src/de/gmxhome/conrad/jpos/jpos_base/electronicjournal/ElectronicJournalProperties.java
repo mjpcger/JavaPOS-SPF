@@ -225,7 +225,7 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
 
     @Override
     public void clearInput() throws JposException {
-        synchronized (DataEventList) {
+        synchronized (EventList) {
             DataEventList.clear();
             DataCount = 0;
         }
@@ -242,8 +242,8 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
 
     @Override
     public void clearOutput() throws JposException {
-        synchronized (ErrorEventList) {
-            ErrorEventList.clear();
+        synchronized (EventList) {
+            EventList.clear();
         }
         newJposOutputRequest().clearOutput();
         if (State != JposConst.JPOS_S_IDLE) {

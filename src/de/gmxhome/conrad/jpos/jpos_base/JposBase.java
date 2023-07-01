@@ -73,7 +73,24 @@ public class JposBase implements BaseService {
     public JposBase(JposCommonProperties props, JposDevice device) {
         Props = props;
         Device = device;
+        MaximumConfirmationEventWaitingTime = device.MaximumConfirmationEventWaitingTime;
+        StrictFIFOEventHandling = device.StrictFIFOEventHandling;
+        device.StrictFIFOEventHandling = false;
+        device.MaximumConfirmationEventWaitingTime = JposConst.JPOS_FOREVER;
     }
+
+    /**
+     * Maximum time in milliseconds an event callback may block event processing (default: FOREVER). Only conforms to
+     * UPOS specification if FOREVER. lower values can lead to concurrent processing of event coroutines.
+     */
+    int MaximumConfirmationEventWaitingTime;
+
+    /**
+     * Specifies whether event handling conforms strictly to UPOS specification (all events handled in a first-in-first-out
+     * mammer) or not (data and input error can be bypassed by other events as long as DataEventEnabled is false). Since
+     * strict UPOS conformance is impractical, the default is false.
+     */
+    boolean StrictFIFOEventHandling;
 
     /**
      * Deletes the service instance. Called to perform cleanup operations.
@@ -90,6 +107,10 @@ public class JposBase implements BaseService {
                 Device.AsyncProcessorRunning[0].TheActiveBox.abortDialog();
         }
         Props.EventSource = null;
+        Props.Device = null;
+        Props = null;
+        Device = null;
+        DeviceInterface = null;
     }
 
     /**
