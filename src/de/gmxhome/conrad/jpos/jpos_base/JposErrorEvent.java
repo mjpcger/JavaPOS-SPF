@@ -16,9 +16,19 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.events.ErrorEvent;
+import de.gmxhome.conrad.jpos.jpos_base.bumpbar.BumpBarService;
+import de.gmxhome.conrad.jpos.jpos_base.checkscanner.CheckScannerService;
+import de.gmxhome.conrad.jpos.jpos_base.imagescanner.ImageScannerService;
+import de.gmxhome.conrad.jpos.jpos_base.micr.MICRService;
+import de.gmxhome.conrad.jpos.jpos_base.msr.MSRService;
+import de.gmxhome.conrad.jpos.jpos_base.pinpad.PINPadService;
+import de.gmxhome.conrad.jpos.jpos_base.poskeyboard.POSKeyboardService;
+import de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay.RemoteOrderDisplayService;
+import de.gmxhome.conrad.jpos.jpos_base.scanner.ScannerService;
+import de.gmxhome.conrad.jpos.jpos_base.signaturecapture.SignatureCaptureService;
+import jpos.*;
+import jpos.events.*;
+import net.bplaced.conrad.log4jpos.Level;
 
 /**
  * Error event.
@@ -104,5 +114,73 @@ public class JposErrorEvent extends ErrorEvent {
         } catch (JposException e) {
             e.printStackTrace();
         }
+    }
+
+    private long[] validErrorResponses = {JposConst.JPOS_ER_CLEAR, JposConst.JPOS_ER_RETRY, JposConst.JPOS_ER_CONTINUEINPUT};
+
+    private Class[] invalidContinueClasses = {
+            BumpBarService.class, CheckScannerService.class, ImageScannerService.class, MICRService.class,
+            MSRService.class, PINPadService.class, POSKeyboardService.class, RemoteOrderDisplayService.class,
+            ScannerService.class, SignatureCaptureService.class
+    };
+
+    /**
+     * Set ErrorResponse property of the ErrorEvent instance. Trying to set an invalid value is not allowed and the
+     * previous value remains unchanged.
+     * <br>The following values are valid:
+     * <ul>
+     *     <li><b>ER_CLEAR</b> is always allowed.</li>
+     *     <li><b>ER_RETRY</b> is normally allowed if <i>ErrorLocus</i> is <b>EL_OUTPUT</b>.</li>
+     *     <li>In addition, <b>ER_RETRY</b> is normally allowed if <i>ErrorLocus</i> is <b>EL_INPUT</b> and the delivering
+     *     control is <b>not</b> one of <i>BumpBar, CheckScanner, ImageScanner, MICR, MSR, PINPad, POSKeyboard,
+     *     RemoteOrderDisplay, Scanner or SignatureCapture.</i>
+     *     <i><b>ER_CONTINUEINPUT</b></i> is only allowed if <i>ErrorLocus</i> is <b>EL_INPUT_DATA</b>.</li>
+     * </ul>
+     * All other values are not allowed.
+     * <br>Some device services can decide to generate ErrorEvent objects derived from <i>JposErrorEvent</i> where
+     * <b>ER_RETRY</b> is not allowed, for example because the device does not allow retries.
+     * <br>UPOS does not specify what happens
+     *
+     * @param resp New value for ErrorResponse.
+     */
+    @Override
+    public void setErrorResponse(int resp) {
+        JposBase srv = ((JposBase)getSource());
+        boolean valid = true;
+        if (!JposDevice.member(resp, validErrorResponses)) {
+            srv.Device.log(Level.INFO, srv.Props.LogicalName + ": setErrorResponse: Value must be one of"
+                    + " ER_CLEAR, ER_RETRY or ER_CONTINUEINPUT. " + resp + " has been ignored");
+            valid = false;
+        } else if (resp == JposConst.JPOS_ER_CONTINUEINPUT && getErrorLocus() != JposConst.JPOS_EL_INPUT_DATA) {
+            srv.Device.log(Level.INFO, srv.Props.LogicalName + ": setErrorResponse: CONTINUEINPUT in"
+                    + " ErrorEvent where error locus is not INPUT_DATA has been ignored.");
+            valid = false;
+        } else if (resp == JposConst.JPOS_ER_RETRY && getErrorLocus() == JposConst.JPOS_EL_INPUT) {
+            for (Class service : invalidContinueClasses) {
+                if (service.isInstance(srv)) {
+                    srv.Device.log(Level.INFO, srv.Props.LogicalName + ": setErrorResponse: Retry in"
+                            + " ErrorEvent with error locus INPUT in device class "
+                            + service.getSimpleName().substring(0, service.getSimpleName().indexOf("Service"))
+                            + " has been ignored.");
+                    valid = false;
+                    break;
+                }
+            }
+        }
+        if (!valid) {
+            // Invalid response: recommended handling is default handling:
+            switch (getErrorLocus()) {
+                case JposConst.JPOS_EL_INPUT:
+                    resp = JposConst.JPOS_ER_CLEAR;
+                    break;
+                case JposConst.JPOS_EL_INPUT_DATA:
+                    resp = JposConst.JPOS_ER_CONTINUEINPUT;
+                    break;
+                case JposConst.JPOS_EL_OUTPUT:
+                    resp = JposConst.JPOS_ER_RETRY;
+                    break;
+            }
+        }
+        super.setErrorResponse(resp);
     }
 }
