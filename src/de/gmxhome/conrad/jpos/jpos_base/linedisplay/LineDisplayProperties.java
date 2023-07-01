@@ -38,10 +38,10 @@ public class    LineDisplayProperties extends JposCommonProperties implements Li
     public boolean CapScreenMode = false;
 
     /**
-     * UPOS property CapMapCharacterSet. Default: false. Can be overwritten
+     * UPOS property CapMapCharacterSet. Default: true. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public boolean CapMapCharacterSet = false;
+    public boolean CapMapCharacterSet = true;
 
     /**
      * UPOS property CapBlinkRate. Default: false. Can be overwritten
@@ -302,10 +302,10 @@ public class    LineDisplayProperties extends JposCommonProperties implements Li
         MarqueeUnitWait = 0;
         Columns = DeviceColumns;
         Rows = DeviceRows;
-        if (Device.JposVersion != null && Device.JposVersion < 1007000)
+        if (DeviceServiceVersion < 1007000)
             MapCharacterSet = false;
         else if (MapCharacterSet == null)
-            MapCharacterSet = CapMapCharacterSet && Device.JposVersion != null ? true : false;
+            MapCharacterSet = CapMapCharacterSet;
     }
 
     @Override
