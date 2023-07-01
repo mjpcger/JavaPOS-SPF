@@ -21,12 +21,11 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw.*;
 import jpos.*;
 import jpos.config.*;
-import jpos.events.TransitionEvent;
 import net.bplaced.conrad.log4jpos.*;
 
+import java.math.*;
+import java.text.*;
 import java.util.*;
-
-import static jpos.ElectronicValueRWConst.EVRW_TE_CONFIRM_DEVICE_DATA;
 
 /**
  * Base of a JposDevice based implementation of JavaPOS ElectronicValueRW device service implementations for the
@@ -45,25 +44,27 @@ import static jpos.ElectronicValueRWConst.EVRW_TE_CONFIRM_DEVICE_DATA;
  *     <li>In synchronous mode, passing display data to the application and operator confirmation in case of signature
  *     based authorizations will not be possible. The service will expect a positive confirmation whenever needed.</li>
  * </ul>
- * Display data will be provided via TransitionEvent with EventNumber TE_CONFIRM_DEVICE_DATA. pData will be set to the
- * line number and pString to the corresponding display line. AdditionalSecurityInformation remains unchanged.In
- * synchronous mode, display data will not be provided.<br>
- * Ticket data will be passed directly via property AdditionalSecurityInformation, set directly before a TransitionEvent
- * with EventNumber TE_CONFIRM_DEVICE_DATA with pData = 0 and empty pString will be fired.<br>
- * AdditionalSecurityInformation is of the form<blockquote>
+ * Display data will be provided via TransitionEvent with EventNumber TE_NOTIFY_BUSY. pData will be set to the
+ * line number and pString to the corresponding display line. In synchronous mode, display data will not be provided.<br>
+ * Transition events with EventNumber TE_CONFIRM_DEVICE_DATA will be used to request the ticket printer state. The
+ * application must set AdditionalSecurityInformation to "0" if ticket printing is possible, to "1" if ticket printing
+ * is currently not available and to "2" if ticket printing is not supported. If not an empty string, Ticket data will
+ * be passed directly via property pString. If pString is an empty string, only the ticket printing state is requested.
+ * In synchronous mode, ticket data will be written to property AdditionalSecurityInformation.
+ * <br>Even if passed via TransitionEvent or via AdditionalSecurityInformation, the format of ticket data is of the
+ * form<blockquote>
  *     <i>sequenceNo</i> STX <i>count</i> STX <i>ticket data</i><br>
  * </blockquote>
  * where  <i>sequenceNo</i> is the sequence number of the current operation, <i>count</i> specifies the number of
  * tickets to be printed (if two, one ticket must be signed by the customer and verified by the user) and <i>ticket
  * data</i>specifies the ticket data to be printed, with LF (0Ah) as line separator. STX (02h) will be used as delimiter
  * between <i>count</i>, <i>sequenceNo</i> and <i>ticket data</i>.<br>
- * In case of a signature based operation, a TransitionEvent with EventNumber EVRW_TE_CONFIRM_CANCEL will be fired. The
+ * In case of a signature based operation, a TransitionEvent with EventNumber TE_CONFIRM_CANCEL will be fired. The
  * application must change the event property pData to 1 to cancel the operation or to 0 to finish the operation
  * successfully.<br>
- * In case of synchronous operation, no TransitionEvent event will be fired, but AdditionalSecurityInformation will be
- * used to pass TicketData as described above before the authorization method returns. In case of <i>count</i> = 2,
- * validation based on the ticket data must be performed afterwards. If validation fails, the transaction must be
- * voided.<br>
+ * In case of synchronous operation, no TransitionEvent event with EventNumber TE_CONFIRM_CANCEL can be fired. In this
+ * case, ticket data part <i>count</i> = 2 implies that validation must be performed afterwards. If validation fails,
+ * the transaction must be voided.<br>
  * Here a full list of all device specific properties that can be changed via jpos.xml:
  * <ul>
  *     <li>CharacterTimeout: Positive integer value, specifying the maximum delay between bytes that belong to the same
@@ -73,6 +74,7 @@ import static jpos.ElectronicValueRWConst.EVRW_TE_CONFIRM_DEVICE_DATA;
  *     <li>MinClaimTimeout: Minimum timeout in milliseconds used by method Claim to ensure correct working. Must be a
  *     positive value. If this value is too small, Claim might throw a JposException even if everything is OK if the
  *     specified timeout is less than or equal to MinClaimTimeout. Default: 100.</li>
+ *     <li>PollDelay: The interval for printer status polling if response is "1" (currently not available), default: 200.</li>
  *     <li>Port: The IPv4 address of the device. Must always be specified and not empty. Notation: address:port, where
  *     address is a IPv4 address and port the TCP port of the device.</li>
  *     <li>RequestTimeout: Maximum time the service object waits for the reception of a response frame after sending a
@@ -116,26 +118,15 @@ public class Device extends JposDevice implements Runnable {
      *     <li>D%d\2%s\3					Display line. Parameters: line no (0-3), contents (UTF-8).</li>
      *     <li>P%d\2%s\3					Print ticket. Parameters: count (1-2), ticket data (UTF-8), may contain line feeds.</li>
      * </ul>
-     * The contents of the following display lines will be passed via property pString of TransitionEvent events with
-     * EventNumber = TE_NOTIFY_BUSY:
+     * The contents of all display lines sent from the simulator will be passed via property pString of TransitionEvent
+     * events with EventNumber = TE_NOTIFY_BUSY, the line number (1 - 4) will be passed in pData.
+     * <br>In addition, the contents of line 2 will be analysed to detect the following transitions:
      * <ul>
-     *     <li>Line 2, Verified</li>
-     *     <li>Line 2, Verification failed</li>
-     *     <li>Line 2, Remove Card</li>
-     *     <li>Line 2, Enter PIN</li>
-     *     <li>Line 2, Abort By User</li>
-     *     <li>Line 2, Card locked</li>
-     *     <li>Line 2, Retain Card</li>
-     *     <li>Line 2, Card Error</li>
-     *     <li>Line 2, Approval Error</li>
-     *     <li>Line 2, With <i>Issuer</i></li>
-     *     <li>Line 2, Invalid Expiration Date</li>
-     *     <li>Line 2, Card Expired</li>
-     *     <li>Line 2, Card Unknown</li>
-     *     <li>Line 2, No Or Unknown Card</li>
-     *     <li>Line 2, Swipe Card</li>
-     *     <li>Line 2, Invalid transaction</li>
-     *     <li>Line 2, Abort by Cashier</li>
+     *     <li>Line 2, Swipe Card: Triggers transition event with EventNumber TE_NOTIFY_TOUCH. Next change of line 2
+     *     triggers transition event with EventNumber TE_NOTIFY_CAPTURE_CARD</li>
+     *     <li>Line 2, Enter PIN: Triggers transition event with EventNumber TE_NOTIFY_PIN.</li>
+     *     <li>Line 2, Waiting...: Triggers transition event with EventNumber TE_NOTIFY_CENTER_CHECK. Next change of
+     *     line 2 triggers transition event with EventNumber TE_NOTIFY_CENTER_CHECK_COMPLETE</li>
      * </ul>
      * The contents of the following display lines will be passed via property pString of TransitionEvent events with
      * EventNumber TE_NOTIFY_INVALID_OPERATION or TE_NOTIFY_COMPLETE:
@@ -144,7 +135,11 @@ public class Device extends JposDevice implements Runnable {
      *     <li>Line 3, *** READY ***</li>
      *     <li>Line 3, *** LOCKED ***</li>
      * </ul>
-     * The device will be connected via TCP.
+     * Ticket data will be passed via transition event with EventNumber = TE_CONFIRM_DEVICE_DATA via property pString,
+     * the ticket count (1 or 2) via pData. To confirm error free processing of ticket data, the application sets
+     * AdditionalSecurityInformation to "0", in case of an error to "1". Currently, this feedback will not be checked.
+     * <br>If AsyncMode is false, TransitionEvent events will not be used. In this case, ticket data
+     * <br>The device will be connected via TCP.
      */
 
     /**
@@ -189,18 +184,11 @@ public class Device extends JposDevice implements Runnable {
     private int ClientPort = 0;                         // Default: OS generated random port
     private int CharacterTimeout = 50;                  // Default: Service specific value for maximum delay between bytes belonging
                                                         // to the same frame
+    private int PollDelay = 200;                        // Interval for printer state polling
     private TcpClientIOProcessor OutStream = null;
 
     private String TicketData = null;
     private boolean Synchronous = false;
-
-    private class TransitionWithConfirm extends  ElectronicValueRWTransitionEvent {
-        SyncObject Waiter;
-        TransitionWithConfirm(JposBase obj, int evn, int pd, String ps) {
-            super(obj, evn, pd, ps);
-            Waiter = new SyncObject();
-        }
-    }
 
     private int  Result = 0;
     private int  SequenceNumber = 0;
@@ -215,12 +203,29 @@ public class Device extends JposDevice implements Runnable {
 
     static private final String UTF8 = "UTF-8";         // Used for string conversion
 
+    /**
+     * Transitions detected by analysis of line 3
+     */
     static private Object[][] Line3Params = {
             {ElectronicValueRWConst.EVRW_TE_NOTIFY_INVALID_OPERATION, "\\** ABORTED \\**"},
             {ElectronicValueRWConst.EVRW_TE_NOTIFY_COMPLETE, "\\** SUCCESS \\**"},
             {ElectronicValueRWConst.EVRW_TE_NOTIFY_COMPLETE, "\\** READY \\**"},
             {ElectronicValueRWConst.EVRW_TE_NOTIFY_COMPLETE, "\\** LOCKED \\**"}
     };
+
+    /**
+     * Transitions detected by analysis of line 2
+     */
+    static private Object[][] Line2Params = {
+            {ElectronicValueRWConst.EVRW_TE_NOTIFY_TOUCH, "Swipe Card", ElectronicValueRWConst.EVRW_TE_NOTIFY_CAPTURE_CARD},
+            {ElectronicValueRWConst.EVRW_TE_NOTIFY_CENTER_CHECK, "Waiting...", ElectronicValueRWConst.EVRW_TE_NOTIFY_CENTER_CHECK_COMPLETE},
+            {ElectronicValueRWConst.EVRW_TE_NOTIFY_PIN, "Enter PIN", null}
+    };
+
+    /**
+     * Transition that will take place due to next line 2 change, If null, no transition change.
+     */
+    private Integer NextTransition = null;
 
     static private final int ErrCardAuthentication = 2;     // Value for pData in case of invalid operation
 
@@ -250,6 +255,8 @@ public class Device extends JposDevice implements Runnable {
                 MinClaimTimeout = value;
             if ((o = entry.getPropertyValue("RequestTimeout")) != null && (value = Integer.parseInt(o.toString())) > 0)
                 RequestTimeout = value;
+            if ((o = entry.getPropertyValue("PollDelay")) != null && (value = Integer.parseInt(o.toString())) > 0)
+                PollDelay = value;
             if ((o = entry.getPropertyValue("TicketWidth")) != null && (value = Integer.parseInt(o.toString())) >= 0 && MinTicketWidth <= value && value <= MaxTicketWidth)
                 TicketWidth = value;
         } catch (Exception e) {
@@ -343,7 +350,23 @@ public class Device extends JposDevice implements Runnable {
                     if (props != null && props.State == JposConst.JPOS_S_BUSY) {
                         if (!Synchronous) {
                             try {
-                                handleEvent(new JposTransitionEvent(props.EventSource, EVRW_TE_CONFIRM_DEVICE_DATA, line + 1, data));
+                                handleEvent(new JposTransitionEvent(props.EventSource, ElectronicValueRWConst.EVRW_TE_NOTIFY_BUSY, line + 1, data));
+                            } catch (JposException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        if (line == 2 && !Synchronous) {
+                            try {
+                                if (NextTransition != null) {
+                                    handleEvent(new JposTransitionEvent(props.EventSource, NextTransition, 0, ""));
+                                    NextTransition = null;
+                                }
+                                for (Object[] params : Line2Params) {
+                                    if (data.matches(params[1].toString())) {
+                                            handleEvent(new JposTransitionEvent(props.EventSource, (Integer) (params[0]), 0, ""));
+                                            NextTransition = (Integer) (params[2]);
+                                    }
+                                }
                             } catch (JposException e) {
                                 e.printStackTrace();
                             }
@@ -371,7 +394,7 @@ public class Device extends JposDevice implements Runnable {
                 }
                 case 'P':   // Ticket data
                 {
-                    ElectronicValueRWProperties props = (ElectronicValueRWProperties) getClaimingInstance(ClaimedElectronicValueRW, 0);
+                    ElectronicValueRW props = (ElectronicValueRW) getClaimingInstance(ClaimedElectronicValueRW, 0);
                     if(props != null && props.State == JposConst.JPOS_S_BUSY) {
                         String[] parts = frame.split("\2");
                         String ticket = parts.length >= 2 ? parts[1] : "";
@@ -379,8 +402,9 @@ public class Device extends JposDevice implements Runnable {
                         TicketData = "" + SequenceNumber + "\2" + count + "\2" + ticket;
                         if (!Synchronous) {
                             try {
-                                handleEvent(new ElectronicValueRWTransitionEvent(props.EventSource,
-                                        EVRW_TE_CONFIRM_DEVICE_DATA, 0, "", TicketData));
+                                props.PrintDataEvent = new JposTransitionWaitingEvent(props.EventSource,
+                                        ElectronicValueRWConst.EVRW_TE_CONFIRM_DEVICE_DATA, 0, TicketData);
+                                handleEvent(props.PrintDataEvent);
                             } catch (JposException e) {
                                 e.printStackTrace();
                             }
@@ -543,11 +567,11 @@ public class Device extends JposDevice implements Runnable {
      * Begin transaction. Should be called after starting receipt to allow card swipe for fast payment. Amount and
      * transaction type (sale, refund or void) will be sent when authorization will be required. Alternatively, the
      * terminal can be unlocked or transaction can be cancelled.
-     * @param request   AuthorizeCompletion request to be handled..
-     * @throws JposException    Communication error or terminal in wrong state.
+     * @param request   AuthorizeCompletion request to be handled.
+     * @throws JposException    Communication error, terminal in wrong state, printing not available or printing check timeout.
      */
     private void beginAuthorization (AuthorizeCompletion request) throws JposException {
-        Synchronous = request.EndSync != null;
+        Synchronous = checkPrinting(request);
         TicketData = null;
         Object o = sendRecv("b", 'B', request.getTimeout());
         if (o instanceof JposException)
@@ -566,41 +590,60 @@ public class Device extends JposDevice implements Runnable {
         SequenceNumber = request.getSequenceNumber();
     }
 
+    /**
+     * Checks whether printing is available and waits until printing is operational if started asynchronously. If
+     * AsyncMode is false, available printing opportunities will not be checked.
+     * @param request   Authorization request.
+     * @return true in synchronous mode, false in asynchronous mode.
+     * @throws JposException In case of timeout and if printing is not available.
+     */
+    private boolean checkPrinting(JposOutputRequest request) throws JposException {
+        ElectronicValueRW props = (ElectronicValueRW)request.Props;
+        if (request.EndSync != null)
+            return true;
+        long time = System.currentTimeMillis();
+        SyncObject poll = new SyncObject();
+        while (time - props.MethodStartTime < props.MethodTimeout) {
+            JposTransitionWaitingEvent ev = new JposTransitionWaitingEvent(props.EventSource, ElectronicValueRWConst.EVRW_TE_CONFIRM_DEVICE_DATA, 0, "");
+            handleEvent(ev);
+            long starttime = time;
+            if (!(ev.getWaiter().suspend(props.MethodTimeout - (time - props.MethodStartTime)))
+                    || (time = System.currentTimeMillis()) - props.MethodStartTime >= props.MethodTimeout)
+                throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "Timeout printer state request");
+            if ("2".equals(((ElectronicValueRWProperties) request.Props).AdditionalSecurityInformation))
+                throw new JposException(JposConst.JPOS_E_FAILURE, "Ticket printing not supported");
+            if ("0".equals(((ElectronicValueRWProperties)request.Props).AdditionalSecurityInformation))
+                break;
+            if (time - starttime < PollDelay)
+                poll.suspend(PollDelay - (time - starttime));
+        }
+        return false;
+    }
+
     private void abort() throws JposException {     // Abort a transaction.
         Object o = sendAbort();
         if (o instanceof JposException)
             throw (JposException) o;
     }
 
-    @Override
-    public void postTransitionProcessing(JposTransitionEvent trevent) {
-        if (trevent instanceof TransitionWithConfirm)
-            ((TransitionWithConfirm)trevent).Waiter.signal();
-        super.postTransitionProcessing(trevent);
-    }
-
     /**
      * Transaction confirmation. Will be requested after signature-based sale authorization.
      * @param transno   Transaction number of corresponding sale transaction.
-     * @param timeout   Timeout for answer-back.
+     * @param commit true committed, false if operation must be cancelled, null if answer-back necessary.
      * @throws JposException    Communication error or terminal in wrong state.
      */
-    private void confirm(int transno, int timeout) throws JposException {
-        ElectronicValueRWProperties props = (ElectronicValueRWProperties) getClaimingInstance(ClaimedElectronicValueRW, 0);
+    private void confirm(int transno, Boolean commit) throws JposException {
+        ElectronicValueRW props = (ElectronicValueRW) getClaimingInstance(ClaimedElectronicValueRW, 0);
         check(props == null, JposConst.JPOS_E_NOTCLAIMED, "Terminal not caimed");
-        boolean committed = true;
-        long acttime = System.currentTimeMillis();
-        if (!Synchronous) {
-            TransitionWithConfirm ev = new TransitionWithConfirm(props.EventSource, ElectronicValueRWConst.EVRW_TE_CONFIRM_CANCEL, 0, "Verify Signature");
+        if (commit == null) {
+            JposTransitionWaitingEvent ev = new JposTransitionWaitingEvent(props.EventSource, ElectronicValueRWConst.EVRW_TE_CONFIRM_CANCEL, 0, "Verify Signature");
             handleEvent(ev);
-            committed = ev.Waiter.suspend(timeout) || ev.getData() == 0;
+            long timeout = props.MethodTimeout - (System.currentTimeMillis() - props.MethodStartTime);
+            commit = ev.getWaiter().suspend(timeout > 0 ? timeout : 0) || ev.getData() == 0;
         }
-        if (timeout > 0) {
-            timeout -= System.currentTimeMillis() - acttime;
-            if (timeout < RequestTimeout)
-                timeout = RequestTimeout;
-        }
-        Object o = sendRecv(String.format("c%d\2%d", transno, committed ? 1 : 0), 'E', timeout);
+        long timeout = props.MethodTimeout - (System.currentTimeMillis() - props.MethodStartTime);
+        timeout = timeout < RequestTimeout ? RequestTimeout : (timeout < Integer.MAX_VALUE ? timeout : Integer.MAX_VALUE);
+        Object o = sendRecv(String.format("c%d\2%d", transno, commit ? 1 : 0), 'E', (int) timeout);
         if (o instanceof JposException)
             throw (JposException) o;
         String resp = (String) o;
@@ -706,12 +749,12 @@ public class Device extends JposDevice implements Runnable {
         String[] params = resp.substring(resp.indexOf('\2') + 1).split("\2");
         if (params.length >= 9) {
             ElectronicValueRWProperties props = (ElectronicValueRWProperties)getClaimingInstance(ClaimedElectronicValueRW, 0);
-            synchronized (props.Results) {
+            synchronized (props.TypedResults) {
                 props.CenterResultCode = params[1];
                 String name = "", value = "";
                 try {
-                    props.Results.put(name = "TaxOthers", String.valueOf((long) (Double.parseDouble(value = params[3]) * 10000)));
-                    props.Results.put(name = "Balance", String.valueOf((long) (props.Balance = (long) (Double.parseDouble(value = params[2]) * 10000))));
+                    props.TypedResults.putCurrency(name = "TaxOthers", new BigDecimal(value = params[3]).scaleByPowerOfTen(4).longValueExact());
+                    props.TypedResults.putCurrency(name = "Balance", new BigDecimal(value = params[2]).scaleByPowerOfTen(4).longValueExact());
                 } catch (Exception e) {
                     throw new JposException(JposConst.JPOS_E_ILLEGAL, JposConst.JPOS_E_ILLEGAL, "Illegal " + name + ": " + value);
                 }
@@ -719,17 +762,17 @@ public class Device extends JposDevice implements Runnable {
                 props.ApprovalCode = params[7];
                 handleTransactionDateTimeExpDateCardNo(params, props);
                 props.PaymentMedia = ElectronicValueRWConst.EVRW_MEDIA_CREDIT;
-                props.PaymentCondition = ElectronicValueRWConst.EVRW_PAYMENT_DEBIT;
-                props.Results.put("PaymentCondition", props.getEnumTagFromPropertyValue("PaymentCondition", props.PaymentCondition));
+                Integer tag = props.getEnumTagFromPropertyValue("PaymentCondition", props.PaymentCondition = ElectronicValueRWConst.EVRW_PAYMENT_DEBIT);
+                if (tag != null)
+                    props.TypedResults.putEnumerated("PaymentCondition", tag);
                 if (request instanceof AuthorizeSales)
                     props.TransactionType = ElectronicValueRWConst.EVRW_TRANSACTION_SALES;
                 else if (request instanceof AuthorizeRefund)
                     props.TransactionType = ElectronicValueRWConst.EVRW_TRANSACTION_REFUND;
                 else if (request instanceof AuthorizeVoid)
                     props.TransactionType = ElectronicValueRWConst.EVRW_TRANSACTION_VOID;
-                String tag = props.getEnumTagFromPropertyValue("TransactionType", props.TransactionType);
-                props.Results.put("TransactionType", tag != null ? tag :
-                        Integer.toString(ElectronicValueRWConst.EVRW_TAG_TT_CANCEL_SALES));
+                tag = props.getEnumTagFromPropertyValue("TransactionType", props.TransactionType);
+                props.TypedResults.putEnumerated("TransactionType", tag != null ? tag : ElectronicValueRWConst.EVRW_TAG_TT_CANCEL_SALES);
             }
             checkErrorCondition(params);
         }
@@ -738,16 +781,27 @@ public class Device extends JposDevice implements Runnable {
     }
 
     private void handleTransactionDateTimeExpDateCardNo(String[] params, ElectronicValueRWProperties props) {
-        String[] LastDayOfMonth = { "31", "", "31", "30", "31", "30", "31", "31", "30", "31", "30", "31"};
-        String LastDay = LastDayOfMonth[Integer.valueOf(params[6].substring(0, 2)) - 1];
-        // This routine works only until year 2099 (Only optimists believe UPOS 1.15 survives until 2099)
-        if (LastDay.length() == 0)
-            LastDay = Integer.valueOf(params[6].substring(2,4)) % 4 == 0 ? "29" : "28";
-        props.Results.put("AccountNumber", props.AccountNumber = "XXXXXXXXXXXX" + params[5]);
-        props.Results.put("ExpirationDate", "20" + params[6].substring(2, 4) + "-" + params[6].substring(0, 2) + "-" + LastDay + "T23:59:59.999");
-        props.ExpirationDate = "20" + params[6].substring(2,4) + params[6].substring(0,2) + LastDay;
-        props.Results.put("EVRWDateTime", params[8].substring(0,4) + "-" + params[8].substring(4,6) + "-" +
-                params[8].substring(6,11) + ":" + params[8].substring(11, 13) + ":" + params[8].substring(13) + ".000");
+        String[] LastDayOfMonth = {"31", "", "31", "30", "31", "30", "31", "31", "30", "31", "30", "31"};
+        try {
+            int expmonth = Integer.valueOf(params[6].substring(0, 2));
+            Date temp;
+            if (expmonth > 0 && expmonth <= 12) {
+                props.Results.put("AccountNumber", props.AccountNumber = "XXXXXXXXXXXX" + params[5]);
+                String LastDay = LastDayOfMonth[expmonth - 1];
+                // This routine works only until year 2099 (Only optimists believe UPOS 1.15 survives until 2099)
+                if (LastDay.length() == 0)
+                    LastDay = Integer.valueOf(params[6].substring(2, 4)) % 4 == 0 ? "29" : "28";
+
+                temp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").parse("20" + params[6].substring(2, 4)
+                        + "-" + params[6].substring(0, 2) + "-" + LastDay + "T23:59:59.999");
+                props.Results.put("ExpirationDate", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").format(temp));
+                props.ExpirationDate = "20" + params[6].substring(2, 4) + params[6].substring(0, 2) + LastDay;
+            }
+            temp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").parse(params[8].substring(0, 4) + "-"
+                    + params[8].substring(4, 6) + "-" + params[8].substring(6, 11) + ":" + params[8].substring(11, 13)
+                    + ":" + params[8].substring(13) + ".000");
+            props.Results.put("EVRWDateTime", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").format(temp));
+        } catch (ParseException e) { /* Should not happen */}
         props.SlipNumber = params[8].substring(0, 8) + params[8].substring(9);
     }
 
@@ -876,6 +930,10 @@ public class Device extends JposDevice implements Runnable {
             super.handlePowerStateOnEnable();
         }
 
+        private long MethodTimeout;
+        private long MethodStartTime;
+        private JposTransitionWaitingEvent PrintDataEvent;
+
         @Override
         public AuthorizeSales authorizeSales(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
             // AdditionalSecurityInformation must be an integer value, containing the transaction number generated by
@@ -886,16 +944,25 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void authorizeSales(AuthorizeSales request) throws JposException {
-            int timeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
-            long starttime = System.currentTimeMillis();
+            MethodTimeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
+            MethodStartTime = System.currentTimeMillis();
+            PrintDataEvent = null;
             beginAuthorization(request);
-            long deltatime = System.currentTimeMillis() - starttime;
-            if (deltatime < timeout) {
+            long deltatime = System.currentTimeMillis() - MethodStartTime;
+            if (deltatime < MethodTimeout) {
                 sale(request);
-                deltatime = System.currentTimeMillis() - starttime;
-                if (Result == 1 && deltatime < timeout) {
+                deltatime = System.currentTimeMillis() - MethodStartTime;
+                if (Result == 1 && deltatime < MethodTimeout) {
                     try {
-                        confirm(Integer.parseInt(ApprovalCode), (int) (timeout - deltatime));
+                        int transno = Integer.parseInt(ApprovalCode);
+                        if (PrintDataEvent != null) {
+                            if (PrintDataEvent.getWaiter().suspend(MethodTimeout - deltatime) && "0".equals(AdditionalSecurityInformation))
+                                confirm(transno, null);
+                            else
+                                confirm(transno, false);
+                        }
+                        else
+                            confirm(transno, true);
                     } catch (NumberFormatException e) {
                         throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid ApprovalCode: " + ApprovalCode, e);
                     }
@@ -913,11 +980,11 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void authorizeVoid(AuthorizeVoid request) throws JposException {
-            int timeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
-            long starttime = System.currentTimeMillis();
+            MethodTimeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
+            MethodStartTime = System.currentTimeMillis();
             beginAuthorization(request);
-            long deltatime = System.currentTimeMillis() - starttime;
-            if (deltatime < timeout) {
+            long deltatime = System.currentTimeMillis() - MethodStartTime;
+            if (deltatime < MethodTimeout) {
                 rollback(request);
             }
         }
@@ -932,11 +999,11 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void authorizeRefund(AuthorizeRefund request) throws JposException {
-            int timeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
-            long starttime = System.currentTimeMillis();
+            MethodTimeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
+            MethodStartTime = System.currentTimeMillis();
             beginAuthorization(request);
-            long deltatime = System.currentTimeMillis() - starttime;
-            if (deltatime < timeout) {
+            long deltatime = System.currentTimeMillis() - MethodStartTime;
+            if (deltatime < MethodTimeout) {
                 sale(request);
             }
         }
