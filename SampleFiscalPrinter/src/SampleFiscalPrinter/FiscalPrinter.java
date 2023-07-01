@@ -391,38 +391,18 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
             case FiscalPrinterConst.FPTR_GD_PRINTER_ID:
                 data[0] = Dev.SerialNumber;
                 return;
-            case FiscalPrinterConst.FPTR_GD_CURRENT_TOTAL:
-                String[][]cmd = new String[][]{new String[]{"getCurrentTotal", "0"}, null};
-                if (Dev.executeCommands(0, cmd) != 1 || !returnValuePresent(cmd)) {
-                    commandErrorException(cmd, new long[]{ITEMIZING, PAYING, FINALIZING});
-                    throw new JposException(JposConst.JPOS_E_FAILURE, "Total not available");
-                }
-                if (Dev.CurrencyStringAsLong)
-                    data[0] = Long.toString(new BigDecimal(cmd[1][1]).multiply(new BigDecimal(CURRENCYFACTOR)).longValue());
-                else
-                    data[0] = cmd[1][1];
-                return;
-            case FiscalPrinterConst.FPTR_GD_DAILY_TOTAL:
-                getTotalOrCount(new String[]{"get", "Total", "All"}, data, "daily total", true);
-                return;
-            case FiscalPrinterConst.FPTR_GD_GRAND_TOTAL:
-                getTotalOrCount(new String[]{"get", "GrandTotal"}, data, "grand total", true);
-                return;
-            case FiscalPrinterConst.FPTR_GD_NOT_PAID:
-                getTotalOrCount(new String[]{"get", "Total", "Aborts"}, data, "aborted receipt total", true);
-                return;
+        }
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Unsupported dataItem: " + dataItem);
+    }
+
+    @Override
+    public void getData(int dataItem, int[] optArgs, int[] data) throws JposException {
+        switch (dataItem) {
             case FiscalPrinterConst.FPTR_GD_RECEIPT_NUMBER:
-            case FiscalPrinterConst.FPTR_GD_FISCAL_REC:
-                getTotalOrCount(new String[]{"get", "Total", "Fiscal"}, data, "fiscal receipt number", false);
-                return;
-            case FiscalPrinterConst.FPTR_GD_REFUND:
-                getTotalOrCount(new String[]{"get", "Total", "Refunds"}, data, "refund total", true);
-                return;
-            case FiscalPrinterConst.FPTR_GD_NONFISCAL_REC:
-                getTotalOrCount(new String[]{"get", "Total", "Normal"}, data, "non-fiscal receipt number", false);
+                getCount(new String[]{"get", "Total", "Fiscal"}, data, "fiscal receipt number", false);
                 return;
             case FiscalPrinterConst.FPTR_GD_Z_REPORT:
-                data[0] = Long.toString(Dev.CurrentPeriod);
+                data[0] = Dev.CurrentPeriod;
                 return;
             case FiscalPrinterConst.FPTR_GD_DESCRIPTION_LENGTH:
                 getDescriptionLength(optArgs[0], data);
@@ -431,24 +411,60 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
         throw new JposException(JposConst.JPOS_E_ILLEGAL, "Unsupported dataItem: " + dataItem);
     }
 
-    private void getTotalOrCount(String[] cmd, String[] data, String what, boolean currency) throws JposException {
+    @Override
+    public void getData(int dataItem, int[] optArgs, long[] data) throws JposException {
+        switch (dataItem) {
+            case FiscalPrinterConst.FPTR_GD_CURRENT_TOTAL:
+                String[][]cmd = new String[][]{new String[]{"getCurrentTotal", "0"}, null};
+                if (Dev.executeCommands(0, cmd) != 1 || !returnValuePresent(cmd)) {
+                    commandErrorException(cmd, new long[]{ITEMIZING, PAYING, FINALIZING});
+                    throw new JposException(JposConst.JPOS_E_FAILURE, "Total not available");
+                }
+                data[0] = new BigDecimal(cmd[1][1]).multiply(new BigDecimal(CURRENCYFACTOR)).longValueExact();
+                return;
+            case FiscalPrinterConst.FPTR_GD_DAILY_TOTAL:
+                getTotal(new String[]{"get", "Total", "All"}, data, "daily total", true);
+                return;
+            case FiscalPrinterConst.FPTR_GD_GRAND_TOTAL:
+                getTotal(new String[]{"get", "GrandTotal"}, data, "grand total", true);
+                return;
+            case FiscalPrinterConst.FPTR_GD_NOT_PAID:
+                getTotal(new String[]{"get", "Total", "Aborts"}, data, "aborted receipt total", true);
+                return;
+            case FiscalPrinterConst.FPTR_GD_REFUND:
+                getTotal(new String[]{"get", "Total", "Refunds"}, data, "refund total", true);
+                return;
+        }
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Unsupported dataItem: " + dataItem);
+    }
+
+    private void getCount(String[] cmd, int[] data, String what, boolean currency) throws JposException {
         String[][] command = new String[][]{cmd, null};
         if (Dev.executeCommands(0, command) == 1 && returnValuePresent(command)) {
-            data[0] = command[1][1];
-            if (Dev.CurrencyStringAsLong) {
-                try {
-                    data[0] = Long.toString(new BigDecimal(data[0]).multiply(new BigDecimal(CURRENCYFACTOR)).longValue());
-                    return;
-                } catch (NumberFormatException e) {
-                    throw new JposException(JposConst.JPOS_E_FAILURE, "Could not retrieve valid " + what + ": " + e.getMessage(), e);
-                }
+            try {
+                data[0] = Integer.parseInt(command[1][1]);
+                return;
+            } catch (NumberFormatException e) {
+                throw new JposException(JposConst.JPOS_E_FAILURE, "Could not retrieve valid " + what + ": " + e.getMessage(), e);
+            }
+        }
+        throw new JposException(JposConst.JPOS_E_FAILURE, "Could not retrieve " + what);
+    }
+
+    private void getTotal(String[] cmd, long[] data, String what, boolean currency) throws JposException {
+        String[][] command = new String[][]{cmd, null};
+        if (Dev.executeCommands(0, command) == 1 && returnValuePresent(command)) {
+            try {
+                data[0] = new BigDecimal(command[1][1]).multiply(new BigDecimal(CURRENCYFACTOR)).longValueExact();
+            } catch (NumberFormatException | ArithmeticException e) {
+                throw new JposException(JposConst.JPOS_E_FAILURE, "Could not retrieve valid " + what + ": " + e.getMessage(), e);
             }
             return;
         }
         throw new JposException(JposConst.JPOS_E_FAILURE, "Could not retrieve " + what);
     }
 
-    private void getDescriptionLength(int optArg, String[] data) throws JposException {
+    private void getDescriptionLength(int optArg, int[] data) throws JposException {
         switch(optArg) {
             case FiscalPrinterConst.FPTR_DL_ITEM:
             case FiscalPrinterConst.FPTR_DL_ITEM_ADJUSTMENT:
@@ -457,10 +473,10 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
             case FiscalPrinterConst.FPTR_DL_SUBTOTAL_ADJUSTMENT:
             case FiscalPrinterConst.FPTR_DL_TOTAL:
             case FiscalPrinterConst.FPTR_DL_VOID_ITEM:
-                data[0] = Integer.toString(MAXDESCRIPTIONLENGTH);
+                data[0] = MAXDESCRIPTIONLENGTH;
                 return;
             case FiscalPrinterConst.FPTR_DL_VOID:
-                data[0] = Long.toString(MAXFISCALPRINTLINE);
+                data[0] = MAXFISCALPRINTLINE;
                 return;
         }
         throw new JposException(JposConst.JPOS_E_ILLEGAL, "Unsupported optArgs for description length: " + optArg);
@@ -529,7 +545,7 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
         try {
             String[] resp = (String[]) e;
             if (resp[0].charAt(0) == SUCCESS && resp.length == 2) {
-                int rate = new BigDecimal(resp[1]).multiply(new BigDecimal(CURRENCYFACTOR)).intValue();
+                int rate = new BigDecimal(resp[1]).multiply(new BigDecimal(CURRENCYFACTOR)).intValueExact();
                 vatRate[0] = rate < 0 ? -1 : rate;
                 return;
             }
@@ -1033,7 +1049,7 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
                 commandErrorException(cmds[0], new long[]{ITEMIZING});
                 throw new JposException(JposConst.JPOS_E_FAILURE, "Cannot retrieve VAT rate and amount of current position");
             }
-            long amount = new BigDecimal(cmds[0][1][2]).multiply(new BigDecimal(CURRENCYFACTOR)).longValue();
+            long amount = new BigDecimal(cmds[0][1][2]).multiply(new BigDecimal(CURRENCYFACTOR)).longValueExact();
             int vatidx = Integer.parseInt(cmds[0][1][1]);
             Dev.checkext(vatidx != request.getVatInfo(), FiscalPrinterConst.JPOS_EFPTR_BAD_VAT, "vatInfo does not match VAT rate of current position");
             cmds = new String[0][][];
@@ -1101,7 +1117,7 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
                 commandErrorException(cmds[0], new long[]{ITEMIZING});
                 throw new JposException(JposConst.JPOS_E_FAILURE, "Cannot retrieve VAT rate and amount of current position");
             }
-            long amount = new BigDecimal(cmds[0][1][2]).multiply(new BigDecimal(CURRENCYFACTOR)).longValue();
+            long amount = new BigDecimal(cmds[0][1][2]).multiply(new BigDecimal(CURRENCYFACTOR)).longValueExact();
             int vatidx = Integer.parseInt(cmds[0][1][1]);
             Dev.checkext(vatidx != request.getVatInfo(), FiscalPrinterConst.JPOS_EFPTR_BAD_VAT, "vatInfo does not match VAT rate of current position");
             cmds = new String[0][][];
@@ -1160,7 +1176,7 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
                     commandErrorException(cmd, new long[]{ITEMIZING});
                 throw new JposException(JposConst.JPOS_E_FAILURE, "Cannot retrieve current total for VAT " + cmds[0][0][2]);
             }
-            long amount = new BigDecimal(cmds[1][1][1]).multiply(new BigDecimal(CURRENCYFACTOR)).longValue();
+            long amount = new BigDecimal(cmds[1][1][1]).multiply(new BigDecimal(CURRENCYFACTOR)).longValueExact();
             Dev.checkext(amount < request.getAmount(), FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "Amount on VAT rate " + request.getVatInfo() + " negative");
             cmds = new String[0][][];
             if (!request.getPreLine().equals(""))
@@ -1216,7 +1232,7 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
                     commandErrorException(cmd, new long[]{ITEMIZING});
                 throw new JposException(JposConst.JPOS_E_FAILURE, "Cannot retrieve current total for VAT " + cmds[0][0][2]);
             }
-            long amount = new BigDecimal(cmds[1][1][1]).multiply(new BigDecimal(CURRENCYFACTOR)).longValue();
+            long amount = new BigDecimal(cmds[1][1][1]).multiply(new BigDecimal(CURRENCYFACTOR)).longValueExact();
             Dev.checkext(amount < request.getAmount(), FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "Amount on VAT rate " + request.getVatInfo() + " negative");
             cmds = new String[0][][];
             if (!request.getPreLine().equals(""))

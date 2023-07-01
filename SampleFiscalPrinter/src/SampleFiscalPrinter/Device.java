@@ -41,12 +41,14 @@ import static de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties.ExclusiveAll
  *     <li>Item and subtotal adjustments (amount, percent, surcharge),</li>
  *     <li>Status handling for receipt (neither journal nor slip station),</li>
  *     <li>Subtotal,</li>
+ *     <li>MessageType MT_CASHIER to change cashier on-the-fly (alternative to signon / signoff),</li>
  *     <li>Training Mode,</li>
  *     <li>X report,</li>
  *     <li>Totalizers (only GD_PRINTER_ID, GD_CURRENT_TOTAL, GD_DAILY_TOTAL, GD_GRAND_TOTAL, GD_NOT_PAID, GD_RECEIPT_NUMBER,
  * GD_FISCAL_REC, GD_REFUND, GD_NONFISCAL_REC, GD_Z_REPORT, GD_DESCRIPTION_LENGTH),</li>
  *     <li>Report from counter to counter,</li>
- *     <li>non-fiscal reports.</li>
+ *     <li>non-fiscal reports,</li>
+ *     <li>fixed-output documents for signon and signoff.</li>
  * </ul>
  * ElectronicJournal (markers constructed from sessionNo and documentNo using format mask "%d-%d"). Session-No.
  * corresponds to Z count of fiscal printer and document no. to receipt number of the fiscal printer. Supported
@@ -75,8 +77,6 @@ import static de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties.ExclusiveAll
  *     <li>CashierName: Cashier name prefix for signon or signoff receipt. Default: "Cashier Name".</li>
  *     <li>CharacterTimeout: Positive integer value, specifying the maximum delay between bytes that belong to the same
  *     frame. Default value: 50 milliseconds.</li>
- *     <li>CurrencyStringAsLong: Specifies how currency values shall be stored in strings. If true, a value of 1.50 will
- *     be stored as "15000" (four implicit decimals). Otherwise, 1.50 will be stored as "1.50". Default false.</li>
  *     <li>Databits: Number of data bits per data unit. Must be 7 or 8. Default: 8. It is strictly recommended to let
  *     this value unchanged.
  *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
@@ -189,8 +189,6 @@ public class Device extends JposDevice implements Runnable {
             }
             if ((o = entry.getPropertyValue("PrinterResetText")) != null)
                 PrinterResetText = o.toString();
-            if ((o = entry.getPropertyValue("CurrencyStringAsLong")) != null)
-                CurrencyStringAsLong = Boolean.parseBoolean(o.toString());
             if ((o = entry.getPropertyValue("SignOnHeader")) != null)
                 SignOnHeader = o.toString();
             if ((o = entry.getPropertyValue("SignOffHeader")) != null)
@@ -205,9 +203,8 @@ public class Device extends JposDevice implements Runnable {
                 AdjustmentVoidText = o.toString();
             if ((o = entry.getPropertyValue("RefundVoidText")) != null)
                 RefundVoidText = o.toString();
-            FiscalPrinterService srv = (FiscalPrinterService) getPropertySetInstance(FiscalPrinters, 0, 0).EventSource;
             if ((o = entry.getPropertyValue("AllowItemAdjustmentTypesInPackageAdjustment")) != null)
-                srv.AllowItemAdjustmentTypesInPackageAdjustment = Boolean.parseBoolean(o.toString());
+                AllowItemAdjustmentTypesInPackageAdjustment = Boolean.parseBoolean(o.toString());
             check(SignOffHeader.length() > MAXPRINTLINELENGTH, JposConst.JPOS_E_ILLEGAL, "Signoff header too long");
             check(SignOnHeader.length() > MAXPRINTLINELENGTH, JposConst.JPOS_E_ILLEGAL, "Signon header too long");
             check(CashierName.length() > MAXFIXEDTEXTLENGTH, JposConst.JPOS_E_ILLEGAL, "Cashier prefix too long");
@@ -400,12 +397,6 @@ public class Device extends JposDevice implements Runnable {
      * via Jpos.xml.
      */
     String SerialNumber = "";
-
-    /**
-     * Specifies how currency values shall be stored in strings. If true, a value of 1.50 will be stored as "15000" (four
-     * implicit decimals). Otherwise, 1.50 will be stored as "1.50". Default false. Can be set via Jpos.xml.
-     */
-    boolean CurrencyStringAsLong = false;
 
     /**
      * Flag specifying whether non-fiscal receipts shall be printed with ("1") or without ("0") trailer lines.
@@ -704,6 +695,8 @@ public class Device extends JposDevice implements Runnable {
      */
     PrintRecSubtotalAdjustment SubtotalAdjustment = null;
 
+    private boolean AllowItemAdjustmentTypesInPackageAdjustment = false;
+
     @Override
     public void changeDefaults(FiscalPrinterProperties props) {
         super.changeDefaults(props);
@@ -742,6 +735,8 @@ public class Device extends JposDevice implements Runnable {
         props.NumVatRates = MAXVATINDEX;
         props.QuantityDecimalPlacesDef = 3;
         props.QuantityLengthDef = 9;
+        ((FiscalPrinterService) props.EventSource).AllowItemAdjustmentTypesInPackageAdjustment = AllowItemAdjustmentTypesInPackageAdjustment;
+        AllowItemAdjustmentTypesInPackageAdjustment = false;
         // props.CoverOpenDef, props.DayOpenedDef, props.PrinterStateDef, props.RecEmptyDef, props.RecNearEndDef,
         // props.RemainingFiscalMemoryDef and props.TrainingModeActiveDef must be set before enabling the device.
         // They can only be set to meaningful values after the device has been claimed and some successful communication
