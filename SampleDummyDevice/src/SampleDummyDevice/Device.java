@@ -68,6 +68,10 @@ import java.util.Map;
  */
 public class Device extends JposDevice {
     private JposCommonProperties[] ClaimedDevices;
+    /**
+     * The device implementation. See parent for further details.
+     * @param id  Device ID, not used by implementation.
+     */
     protected Device(String id) {
         super(id);
         checkScannerInit(1);
@@ -104,7 +108,7 @@ public class Device extends JposDevice {
         void finish(String what, int result);
     }
 
-    class ConfirmationWaiter extends Thread {
+    private class ConfirmationWaiter extends Thread {
         private SyncObject Sync;
         private String OperationName;
         private Map<String, Integer> Defaults = new HashMap<String, Integer>();
@@ -369,13 +373,13 @@ public class Device extends JposDevice {
 
     private final static int ClaimedImageScannerIndex = 1;
 
-    int HeightImage = 500;
-    int WidthImage = 500;
-    int BitsPerPixelImage = 8;
-    boolean IlluminateModeImage = true;
-    boolean AimModeImage = true;
-    int SessionTimeoutImage = JposConst.JPOS_FOREVER;
-    int TypeImage = ImageScannerConst.IMG_TYP_JPEG;
+    private int HeightImage = 500;
+    private int WidthImage = 500;
+    private int BitsPerPixelImage = 8;
+    private boolean IlluminateModeImage = true;
+    private boolean AimModeImage = true;
+    private int SessionTimeoutImage = JposConst.JPOS_FOREVER;
+    private int TypeImage = ImageScannerConst.IMG_TYP_JPEG;
     static private final String[] ImageScannerOptions = {"Yes", "No"};
     static private final int ImageScannerYes = 0;
     static private final int ImageScannerNo = 1;

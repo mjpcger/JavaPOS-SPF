@@ -795,6 +795,12 @@ public class JposBaseDevice {
      */
     class EventFirer extends Thread {
         private JposCommonProperties Props;
+
+        /**
+         * Constructor for service thread that fires events when for the device instance that holds the given property set.
+         * @param dev   Property set of the device instance.
+         * @throws JposException If thread creation fails.
+         */
         EventFirer(JposCommonProperties dev) throws JposException {
             super();
             Props = dev;
@@ -1028,8 +1034,11 @@ public class JposBaseDevice {
         return false;
     }
 
-    /*
-     * Common implementation that must be modified for each device type added.
+    /**
+     * Method that returns the number of property sets hold by this device. It is the sum of all property sets, created
+     * for each open of any device class handled by this device.<br>
+     * This method is only a dummy, overwritten in class JposDevice.
+     * @return Number of property sets bound to this device.
      */
     public int noOfPropertySets() {
         return 0;

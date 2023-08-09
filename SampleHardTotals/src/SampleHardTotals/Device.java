@@ -98,6 +98,12 @@ public class Device extends JposDevice {
     static private final int HANDLELIMIT = 0x4000;                  // Handle limit
 
 
+    /**
+     * The device implementation. See parent for further details.
+     * @param id  Device ID, interface to HardTotals device. Name of file representing the hard totals hardware in
+     *            this implementation.
+     * @throws JposException if id cannot be opened or has bad format.
+     */
     protected Device(String id) throws JposException {
         super(id);
         PhysicalDeviceDescription = "HardTotals device simulator";

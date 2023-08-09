@@ -228,14 +228,14 @@ public class BiometricsService extends JposBase implements BiometricsService115 
         return Data.SensorWidth;
     }
 
-    String bytes2String(byte[] data) {
+    private String bytes2String(byte[] data) {
         String ret = "";
         for (byte date : data)
             ret += ", " + (int) date;
         return ret.length() == 0 ? "{}" : "{" + ret.substring(2) + "}";
     }
 
-    String ints2String(int[] data) {
+    private String ints2String(int[] data) {
         String ret = "";
         if (data == null)
             return "null";
@@ -244,7 +244,7 @@ public class BiometricsService extends JposBase implements BiometricsService115 
         return ret.length() == 0 ? "{}" : "{" + ret.substring(2) + "}";
     }
 
-    Object[] bytes2String(byte[][] datas) {
+    private Object[] bytes2String(byte[][] datas) {
         String ret = "";
         Boolean validBIR = true;
         for (byte[] data : datas) {

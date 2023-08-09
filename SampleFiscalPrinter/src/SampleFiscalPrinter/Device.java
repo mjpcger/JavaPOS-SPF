@@ -117,6 +117,10 @@ import static de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties.ExclusiveAll
  * </ul>
  */
 public class Device extends JposDevice implements Runnable {
+    /**
+     * The device implementation. See parent for further details.
+     * @param id  COM port or TCP address for simulator communication.
+     */
     protected Device(String id) {
         super(id);
         fiscalPrinterInit(1);

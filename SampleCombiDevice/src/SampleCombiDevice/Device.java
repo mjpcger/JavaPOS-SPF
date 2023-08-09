@@ -213,7 +213,7 @@ public class Device extends JposDevice implements Runnable{
     private long LastPollTick;
     private SyncObject StartWaiter = new SyncObject();
 
-    class CommandHelper {
+    private class CommandHelper {
         byte[] Command;
         byte Response;
         SyncObject Signalizer;
@@ -824,6 +824,9 @@ public class Device extends JposDevice implements Runnable{
         return null;
     }
 
+    /**
+     * Flag to check whether the code üage has been modified.
+     */
     boolean CpChanged = false;
 
     private Object respFromDisplay(byte[] next, int offset, byte[] head) throws JposException {
@@ -1072,7 +1075,7 @@ public class Device extends JposDevice implements Runnable{
             JposCommonProperties props = getPropertySetInstance(Keylocks, LockIndex, 0);
             if (props != null) {
                 try {
-                    handleEvent(new KeylockStatusUpdateEvent(props.EventSource, LockMapping.get(new Integer(LockPosition)), new byte[0]));
+                    handleEvent(new KeylockStatusUpdateEvent(props.EventSource, LockMapping.get((int)LockPosition), new byte[0]));
                 } catch (JposException e) {
                     return e;
                 } finally {
@@ -1191,7 +1194,7 @@ public class Device extends JposDevice implements Runnable{
         return null;
     }
 
-    synchronized int changeOpenCount(int value) {
+    private synchronized int changeOpenCount(int value) {
         OpenCount += value;
         return OpenCount;
     }
@@ -1213,7 +1216,7 @@ public class Device extends JposDevice implements Runnable{
                 props.KeyPosition = 0;
             }
             else {
-                Integer i = LockMapping.get(new Integer(LockPosition));
+                Integer i = LockMapping.get((int)LockPosition);
                 if(i != null)
                     props.KeyPosition = i;
                 else

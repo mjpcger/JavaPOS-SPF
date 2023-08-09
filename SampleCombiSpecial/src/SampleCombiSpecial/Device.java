@@ -588,7 +588,7 @@ public class Device extends JposDevice implements Runnable {
     }
 
     // Retrieve a frame from device (data up to NL), on timeout null
-    String getLine() throws JposException {
+    private String getLine() throws JposException {
         Stream.setTimeout(RequestTimeout);
         byte[] resp = new byte[500];
         int count = 0;
@@ -721,7 +721,7 @@ public class Device extends JposDevice implements Runnable {
         return new SampleGateProperties();
     }
 
-    class SampleGateProperties extends GateProperties {
+    private class SampleGateProperties extends GateProperties {
         public SampleGateProperties() {
             super(0);
         }
@@ -831,7 +831,7 @@ public class Device extends JposDevice implements Runnable {
         return new SampleItemDispenserProperties();
     }
 
-    class SampleItemDispenserProperties extends ItemDispenserProperties {
+    private class SampleItemDispenserProperties extends ItemDispenserProperties {
         public SampleItemDispenserProperties() {
             super(0);
         }
@@ -925,7 +925,7 @@ public class Device extends JposDevice implements Runnable {
         return new SampleLightsProperties();
     }
 
-    class SampleLightsProperties extends LightsProperties {
+    private class SampleLightsProperties extends LightsProperties {
         protected SampleLightsProperties() {
             super(0);
         }
@@ -1019,7 +1019,7 @@ public class Device extends JposDevice implements Runnable {
         return new SampleMotionSensorProperties();
     }
 
-    class SampleMotionSensorProperties extends MotionSensorProperties {
+    private class SampleMotionSensorProperties extends MotionSensorProperties {
         public SampleMotionSensorProperties() {
             super(0);
         }
@@ -1091,7 +1091,7 @@ public class Device extends JposDevice implements Runnable {
         return new SampleSignatureCaptureProperties();
     }
 
-    class SampleSignatureCaptureProperties extends SignatureCaptureProperties {
+    private class SampleSignatureCaptureProperties extends SignatureCaptureProperties {
         public SampleSignatureCaptureProperties() {
             super(0);
         }

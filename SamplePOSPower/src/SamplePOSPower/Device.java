@@ -84,7 +84,14 @@ public class Device extends JposDevice implements Runnable {
 
     private static final byte SystemStatusFlagBatterySaverOn = 1;
 
+    /**
+     * Helper object to support Windows dll Kernel32 via JNA.
+     */
     static Kernel32Ext Kernel32Lib;
+
+    /**
+     * Helper object to support Windows dll PowrProf via JNA.
+     */
     static PowrProf PowrProfLib;
 
     static {
@@ -130,6 +137,10 @@ public class Device extends JposDevice implements Runnable {
     private long[] AllowedLow = {0, 33};      // Low threshold 33%, see Win32 documentation.
     private long[] AllowedCritical = {0, 5};  // Critical low threshold 5%, see Win32 documentation.
 
+    /**
+     * The device implementation. See parent for further details.
+     * @param id  Device ID, not used by POSPower implementation. Can be any value.
+     */
     public Device(String id) {
         super(id);
         pOSPowerInit(1);

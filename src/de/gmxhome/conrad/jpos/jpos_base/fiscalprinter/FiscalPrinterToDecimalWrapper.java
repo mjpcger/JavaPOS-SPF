@@ -67,7 +67,7 @@ public class FiscalPrinterToDecimalWrapper implements JposServiceInstanceFactory
         JposEntry Entries = new SimpleEntry();
         boolean TrailingPercent = true;
     }
-    static final Map<String, Wrapper> Wrappers = new HashMap<>();
+    private static final Map<String, Wrapper> Wrappers = new HashMap<>();
     @Override
     public JposServiceInstance createInstance(String name, JposEntry jposEntry) throws JposException {
         Exception errorException;

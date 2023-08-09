@@ -61,6 +61,11 @@ public class AreaBase extends PositionBase {
         Width = width;
     }
 
+    /**
+     * Checks whether a region specification is valid
+     * @throws JposException if the region specified by Row, Column, Height and Width is invalid for one of the units
+     * specified by Units.
+     */
     protected void checkAreaValid() throws JposException {
         RemoteOrderDisplayProperties data = (RemoteOrderDisplayProperties) (Props);
         RemoteOrderDisplayService svc = (RemoteOrderDisplayService) data.EventSource;

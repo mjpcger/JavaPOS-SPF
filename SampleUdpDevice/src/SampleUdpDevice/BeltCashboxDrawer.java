@@ -201,7 +201,7 @@ public class BeltCashboxDrawer extends Device {
         }
     }
 
-    class SampleUdpDeviceCashDrawerAccessor extends CashDrawerProperties {
+    private class SampleUdpDeviceCashDrawerAccessor extends CashDrawerProperties {
         /**
          * Constructor. Uses device index 0 implicitly because sample implementation supports only one cash drawer.
          */
@@ -1294,7 +1294,7 @@ public class BeltCashboxDrawer extends Device {
         return new Object[]{ amount, (from == 0 ? "" : ";") + counts.substring(1) };
     }
 
-    class SampleUdpDeviceBillAcceptorStatusUpdateEvent extends BillAcceptorStatusUpdateEvent {
+    private class SampleUdpDeviceBillAcceptorStatusUpdateEvent extends BillAcceptorStatusUpdateEvent {
         public SampleUdpDeviceBillAcceptorStatusUpdateEvent(JposBase source, int state) {
             super(source, state);
         }
@@ -1307,7 +1307,7 @@ public class BeltCashboxDrawer extends Device {
         }
     }
 
-    class SampleUdpDeviceBillAcceptorProcessor extends BillAcceptorProperties {
+    private class SampleUdpDeviceBillAcceptorProcessor extends BillAcceptorProperties {
         protected SampleUdpDeviceBillAcceptorProcessor() {
             super(0);
         }
@@ -1518,7 +1518,7 @@ public class BeltCashboxDrawer extends Device {
         return new SampleUdpDeviceBillAcceptorProcessor();
     }
 
-    class SampleUdpDeviceCoinAcceptorStatusUpdateEvent extends CoinAcceptorStatusUpdateEvent {
+    private class SampleUdpDeviceCoinAcceptorStatusUpdateEvent extends CoinAcceptorStatusUpdateEvent {
         public SampleUdpDeviceCoinAcceptorStatusUpdateEvent(JposBase source, int state) {
             super(source, state);
         }
@@ -1531,7 +1531,7 @@ public class BeltCashboxDrawer extends Device {
         }
     }
 
-    class SampleUdpDeviceCoinAcceptorProcessor extends CoinAcceptorProperties {
+    private class SampleUdpDeviceCoinAcceptorProcessor extends CoinAcceptorProperties {
         protected SampleUdpDeviceCoinAcceptorProcessor() {
             super(0);
         }
@@ -1743,7 +1743,7 @@ public class BeltCashboxDrawer extends Device {
         return new SampleUdpDeviceCoinAcceptorProcessor();
     }
 
-    class SampleUdpDeviceCashChangerStatusUpdateEvent extends CashChangerStatusUpdateEvent {
+    private class SampleUdpDeviceCashChangerStatusUpdateEvent extends CashChangerStatusUpdateEvent {
         public SampleUdpDeviceCashChangerStatusUpdateEvent(JposBase source, int state, int devstate) {
             super(source, state, devstate);
         }
@@ -1765,7 +1765,7 @@ public class BeltCashboxDrawer extends Device {
         return new SampleUdpDeviceCashChangerProperties(this);
     }
 
-    class SampleUdpDeviceBillDispenserStatusUpdateEvent extends BillDispenserStatusUpdateEvent {
+    private class SampleUdpDeviceBillDispenserStatusUpdateEvent extends BillDispenserStatusUpdateEvent {
         public SampleUdpDeviceBillDispenserStatusUpdateEvent(JposBase source, int state, int devstate) {
             super(source, state, devstate);
         }
@@ -1787,7 +1787,7 @@ public class BeltCashboxDrawer extends Device {
         return new SampleUdpDeviceBillDispenserProperties(this);
     }
 
-    class SampleUdpDeviceCoinDispenserStatusUpdateEvent extends CoinDispenserStatusUpdateEvent {
+    private class SampleUdpDeviceCoinDispenserStatusUpdateEvent extends CoinDispenserStatusUpdateEvent {
         public SampleUdpDeviceCoinDispenserStatusUpdateEvent(JposBase source, int state) {
             super(source, state);
         }
@@ -1800,7 +1800,7 @@ public class BeltCashboxDrawer extends Device {
         }
     }
 
-    class SampleUdpDeviceCoinDispenserProcessor extends CoinDispenserProperties {
+    private class SampleUdpDeviceCoinDispenserProcessor extends CoinDispenserProperties {
         protected SampleUdpDeviceCoinDispenserProcessor() {
             super(0);
         }

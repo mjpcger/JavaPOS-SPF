@@ -44,6 +44,10 @@ public class Data {
         TransitNumber = transit;
     }
 
+    /**
+     * Set device instance properties from properties of the device implementation.
+     * @param props Property set of claiming device instance.
+     */
     public void setDataProperties (MICRProperties props) {
         props.AccountNumber = AccountNumber;
         props.Amount = Amount;

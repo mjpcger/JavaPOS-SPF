@@ -998,7 +998,7 @@ public class Device extends JposDevice implements Runnable{
         }
     }
 
-    StreamReader ReadThread;
+    private StreamReader ReadThread;
 
     /**
      * Closes the port

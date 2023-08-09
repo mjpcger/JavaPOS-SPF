@@ -792,7 +792,10 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
             } catch (JposException e) {}
         }
 
-
+        /**
+         * Add signature to biometric properties.
+         * @param signature Any device specific signature data.
+         */
         public void addSignature(byte[] signature) {
             TheBIR = Arrays.copyOf(TheBIR, getLength() + signature.length);
             System.arraycopy(signature, 0, TheBIR, getLength(), signature.length);

@@ -99,7 +99,7 @@ public class Device extends JposDevice implements Runnable {
     private int MinClaimTimeout = 100;      // Minimum claim timeout, to be used whenever timeout in claim() method is
     // too small to guarantee correct working of service, even if everything
     // is OK.
-    JposBase Service;          // UPOS service instance
+    private JposBase Service;               // UPOS service instance
 
     private final static int MAX_UNITS = 5;     // Simulator supports up to 5 displays
     private final static int MAX_LINES = 20;    // Simulator supports up to 20 lines per unit
@@ -241,7 +241,7 @@ public class Device extends JposDevice implements Runnable {
 
     private Integer OpenCount = 0;
 
-    synchronized int changeOpenCount(int value) {
+    private synchronized int changeOpenCount(int value) {
         OpenCount += value;
         return OpenCount;
     }
@@ -543,6 +543,9 @@ public class Device extends JposDevice implements Runnable {
     class SampleBumpBarAccessor extends BumpBarProperties {
         private int[][] LogicalKeyCodes = new int[32][];
 
+        /**
+         * Creates the bump bar accessor instance.
+         */
         protected SampleBumpBarAccessor() {
             super(0);
             for (int i = 0; i < LogicalKeyCodes.length; i++)

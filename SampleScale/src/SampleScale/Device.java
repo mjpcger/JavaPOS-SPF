@@ -219,6 +219,9 @@ public class Device extends JposDevice implements Runnable {
      * classes. However, using inner classes makes things sometimes easier.
      */
     public class SampleScaleAccessor extends ScaleProperties {
+        /**
+         * Creates the scale accessor instance.
+         */
         SampleScaleAccessor() {
             super(0);
         }

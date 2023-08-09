@@ -85,6 +85,10 @@ public class Biometrics extends Device {
     private int FRRUserOnly = 10;
     private int FARUserOnly = 90;
 
+    /**
+     * The device implementation. See parent for further details.
+     * @param id  Device ID, UDP address of simulator.
+     */
     protected Biometrics(String id) {
         super(id);
         biometricsInit(1);

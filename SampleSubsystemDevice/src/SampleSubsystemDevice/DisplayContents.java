@@ -48,6 +48,9 @@ public class DisplayContents {
      */
     final static int COLUMNCOUNT = 25;
 
+    /**
+     * Maximum for bufferid parameter for video regions.
+     */
     final static int BUFFERIDLIMIT = 1;
 
     /**

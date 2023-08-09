@@ -27,7 +27,7 @@ import jpos.JposException;
 import java.util.Arrays;
 
 /**
- *
+ * Status update event implementation for CashChanger devices.
  */
 public class CashChangerStatusUpdateEvent extends JposStatusUpdateEvent {
     private JposException Exception = null;
