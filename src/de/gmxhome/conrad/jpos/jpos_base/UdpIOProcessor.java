@@ -20,9 +20,7 @@ import jpos.JposConst;
 import jpos.JposException;
 import net.bplaced.conrad.log4jpos.Level;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
@@ -102,11 +100,25 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
         return Timeout = timeout > 0 ? timeout : (timeout == 0 ? 1 : Integer.MAX_VALUE);
     }
 
+    /**
+     * Sets target address for further write operations.
+     * @param addr communication target, e.g. 127.0.0.1:23456 for IPv4 and [12:34:56:78:9a:bc:de:f0]:23456
+     *             for IPv6.
+     * @return Target in its internal String representation.
+     * @throws JposException
+     */
     @Override
     public String setTarget(String addr) throws JposException {
         String[] splitaddr = addr.split(":");
-        if (splitaddr.length != 2)
-            logerror("SetTarget", JposConst.JPOS_E_ILLEGAL, addr +" invalid: Format must be ip:port");
+        if (splitaddr.length != 2) {
+            int idx = 0;
+            if (addr.charAt(0) != '[' || (idx = addr.indexOf(']')) < 0 || addr.indexOf(']',idx + 1) >= 0
+                    || (splitaddr = addr.substring(idx).split(":")).length != 2 || !splitaddr[0].equals("]")) {
+                logerror("UdpClientIOProcessor", JposConst.JPOS_E_ILLEGAL, addr + " invalid: Format must be ip:port");
+            } else {
+                splitaddr[0] = addr.substring(1, idx);
+            }
+        }
         int port;
         InetAddress address;
         try {
@@ -121,17 +133,24 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
         } catch (Exception e) {
             logerror("SetTarget", JposConst.JPOS_E_FAILURE, e);
         }
-        return TargetIP.toString() + ":" + TargetPort;
+        return getTarget();
     }
 
     @Override
     public String getTarget() {
-        return TargetIP.toString() + ":" + TargetPort;
+        return getAddress(TargetIP, TargetPort);
     }
 
     @Override
     public String getSource() {
-        return SourceIP.toString() + ":" + SourcePort;
+        return getAddress(SourceIP, SourcePort);
+    }
+
+    private String getAddress(InetAddress addr, int port) {
+        String result = addr.getHostAddress();
+        if (addr instanceof Inet6Address)
+            result = "[" + result + "]";
+        return result + ":" + port;
     }
 
     @Override
@@ -154,8 +173,9 @@ public class UdpIOProcessor extends UniqueIOProcessor implements Runnable {
             (TheReader = new Thread(this, "localhost:" + Socket.socket().getLocalPort() + " Reader")).start();
         } catch (Exception e) {
             String message = e.getClass().getSimpleName() + ": " + e.getMessage();
-            Dev.log(Level.ERROR, LoggingPrefix + "Open error: " + message);
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, message, e);
+            if (noErrorLog)
+                throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, message, e);
+            logerror("Open", JposConst.JPOS_E_ILLEGAL, e);
         }
     }
 

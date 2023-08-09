@@ -38,14 +38,22 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
      *
      * @param dev  Device that uses the proceessor. Processor uses loging of device
      *             to produce logging entries
-     * @param addr Communication object, e.g. 127.0.0.1:23456
+     * @param addr Communication object, e.g. 127.0.0.1:23456 for IPv4 and [12:34:56:78:9a:bc:de:f0]:23456
+     *             for IPv6.
      * @throws JposException If addr if not a valid tcp address in format IP:port.
      */
     public TcpClientIOProcessor(JposDevice dev, String addr) throws JposException {
         super(dev, addr);
         String[] splitaddr = addr.split(":");
-        if (splitaddr.length != 2)
-            logerror("TcpClientIOProcessor", JposConst.JPOS_E_ILLEGAL, addr +" invalid: Format must be ip:port");
+        if (splitaddr.length != 2) {
+            int idx = 0;
+            if (addr.charAt(0) != '[' || (idx = addr.indexOf(']')) < 0 || addr.indexOf(']',idx + 1) >= 0
+                    || (splitaddr = addr.substring(idx).split(":")).length != 2 || !splitaddr[0].equals("]")) {
+                logerror("TcpClientIOProcessor", JposConst.JPOS_E_ILLEGAL, addr + " invalid: Format must be ip:port");
+            } else {
+                splitaddr[0] = addr.substring(1, idx);
+            }
+        }
         int port;
         try {
             if ((port = Integer.parseInt(splitaddr[1])) <= 0 || port > 0xffff)
@@ -191,8 +199,9 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
             Sock.connect(new InetSocketAddress(TargetIP, TargetPort), ConnectTimeout);
             super.open(noErrorLog);
         } catch (Exception e) {
-            Dev.log(Level.ERROR, LoggingPrefix + "Open error: " + e.getMessage());
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, e.getMessage(), e);
+            if (noErrorLog)
+                throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, e.getMessage(), e);
+            logerror("Open", JposConst.JPOS_E_ILLEGAL, e);
         }
     }
 

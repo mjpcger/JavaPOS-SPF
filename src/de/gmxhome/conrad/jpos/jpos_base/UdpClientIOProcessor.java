@@ -52,14 +52,22 @@ public class UdpClientIOProcessor extends UniqueIOProcessor implements Runnable 
      *
      * @param dev  Device that uses the processor. Processor uses logging of device
      *             to produce logging entries
-     * @param addr Communication object, e.g. 127.0.0.1:23456
+     * @param addr Communication object, e.g. 127.0.0.1:23456 for IPv4 and [12:34:56:78:9a:bc:de:f0]:23456
+     *             for IPv6.
      * @throws JposException If port does not specify a valid communication object
      */
     public UdpClientIOProcessor(JposDevice dev, String addr) throws JposException {
         super(dev, addr);
         String[] splitaddr = addr.split(":");
-        if (splitaddr.length != 2)
-            logerror("UdpClientIOProcessor", JposConst.JPOS_E_ILLEGAL, addr +" invalid: Format must be ip:port");
+        if (splitaddr.length != 2) {
+            int idx = 0;
+            if (addr.charAt(0) != '[' || (idx = addr.indexOf(']')) < 0 || addr.indexOf(']',idx + 1) >= 0
+                    || (splitaddr = addr.substring(idx).split(":")).length != 2 || !splitaddr[0].equals("]")) {
+                logerror("UdpClientIOProcessor", JposConst.JPOS_E_ILLEGAL, addr + " invalid: Format must be ip:port");
+            } else {
+                splitaddr[0] = addr.substring(1, idx);
+            }
+        }
         int port;
         try {
             if ((port = Integer.parseInt(splitaddr[1])) <= 0 || port > 0xffff)
@@ -115,8 +123,9 @@ public class UdpClientIOProcessor extends UniqueIOProcessor implements Runnable 
             (TheReader = new Thread(this, Port + " Reader")).start();
         } catch (Exception e) {
             String message = e.getClass().getSimpleName() + ": " + e.getMessage();
-            Dev.log(Level.ERROR, LoggingPrefix + "Open error: " + message);
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, message, e);
+            if (noErrorLog)
+                throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, message, e);
+            logerror("Open", JposConst.JPOS_E_ILLEGAL, e);
         }
     }
 
