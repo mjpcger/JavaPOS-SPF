@@ -39,6 +39,8 @@ de.gmxhome.conrad.jpos.jpos_base.smartcardrw
 de.gmxhome.conrad.jpos.jpos_base.toneindicator
 de.gmxhome.conrad.jSerialComm
 de.gmxhome.conrad.jSSC
+jpos
+jpos.services
 SampleCAT
 SampleCoinDispenser
 SampleCombiDevice
