@@ -31,7 +31,7 @@ import java.util.Properties;
  * Setting baud rate, number of stop bits, data size and parity will be performed using an external command. This command will be built using
  * property values read from <i>de.gmxhome.conrad.JNALinux.JnaLinuxSerial.properties</i> and is of the form
  * <blockquote><i>prefix baud size stop parity</i> &lt; <i>port</i></blockquote>, where<ul>
- *     <li><i>prefix</i> will be replaced by the property value <b>STTYPREFIX</b> (default: "<i>stty raw -echo</i>",</li>
+ *     <li><i>prefix</i> will be replaced by the property value <b>STTYPREFIX</b> (default: "<i>stty raw -echo</i>"),</li>
  *     <li><i>baud</i> will be replaced by one of the property values <b>BD1200</b> (default: "1200"),
  *     <b>BD2400</b> (default: "2400"),
  *     <b>BD4800</b> (default: "4800"),
@@ -43,7 +43,7 @@ import java.util.Properties;
  *     <b>BD128000</b> (default: "") or
  *     <b>BD256000</b> (default: ""), </li>
  *     <li><i>size</i> will be replaced by one of the property values <b>CS7</b> (default: "cs7") or <b>CS8</b> (default: "cs8"),</li>
- *     <li><i>stop</i> will be replaced by one of the property values <b>SB1</b> (default: "-cstopb") or <b>SB2</b> (default: "cstopb")</li>
+ *     <li><i>stop</i> will be replaced by one of the property values <b>SB1</b> (default: "-cstopb") or <b>SB2</b> (default: "cstopb"),</li>
  *     <li><i>parity</i> will be replaced by one of the property values
  *     <b>PARNO</b> (default: "-parenb"),
  *     <b>PARODD</b> (default: "parenb parodd"),
@@ -51,7 +51,7 @@ import java.util.Properties;
  *     <b>PARMARK</b> (default: ""),
  *     <b>PARSPACE</b> (default: "") and
  *     </li>
- *     <li><b>port</b> will be replaced by the the port as passed to method <b>open</b>.</li>
+ *     <li><i>port</i> will be replaced by the the port as passed to method <b>open</b>.</li>
  * </ul>
  * The default values work well for most Linux distributions. For Linux distributions or other Unix-like operating systems
  * which use a different syntax for the command that may be used to set the communication parameters of a COM port, the
