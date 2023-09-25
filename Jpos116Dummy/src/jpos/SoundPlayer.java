@@ -22,17 +22,19 @@ import jpos.services.*;
 
 import java.util.Vector;
 
-public class Lights extends BaseJposControl implements JposConst, LightsControl116 {
+public class SoundPlayer extends BaseJposControl implements JposConst, SoundPlayerControl116 {
     protected Vector directIOListeners;
     protected Vector statusUpdateListeners;
-
-    public Lights() {
-        deviceControlDescription = "JavaPOS Lights Dummy Control";
+    protected Vector errorListeners;
+    protected Vector outputCompleteListeners;
+    public SoundPlayer() {
+        deviceControlDescription = "JavaPOS SoundPlayer Dummy Control";
         deviceControlVersion = deviceVersion115 + 1000;
         directIOListeners = new Vector();
         statusUpdateListeners = new Vector();
+        errorListeners = new Vector();
+        outputCompleteListeners = new Vector();
     }
-
     protected class Callbacks implements EventCallbacks {
 
         @Override
@@ -49,10 +51,18 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
 
         @Override
         public void fireErrorEvent(ErrorEvent errorEvent) {
+            synchronized (errorListeners) {
+                for (Object listener : errorListeners)
+                    ((ErrorListener) listener).errorOccurred(errorEvent);
+            }
         }
 
         @Override
         public void fireOutputCompleteEvent(OutputCompleteEvent outputCompleteEvent) {
+            synchronized (outputCompleteListeners) {
+                for (Object listener : outputCompleteListeners)
+                    ((OutputCompleteListener) listener).outputCompleteOccurred(outputCompleteEvent);
+            }
         }
 
         @Override
@@ -65,10 +75,9 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
 
         @Override
         public BaseControl getEventSource() {
-            return Lights.this;
+            return SoundPlayer.this;
         }
     }
-
     @Override
     protected EventCallbacks createEventCallbacks() {
         return new Callbacks();
@@ -79,89 +88,13 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         if (baseService == null) {
             service = null;
         } else {
-            int version = 12;
+            int version = 16;
             try {
-                service = (LightsService112) baseService; version++;
-                service = (LightsService113) baseService; version++;
-                service = (LightsService114) baseService; version++;
-                service = (LightsService115) baseService; version++;
-                service = (LightsService116) baseService; version++;
+                service = (SoundPlayerService116) baseService; version++;
             } catch (Exception e) {
                 if (i >= version * 1000 + 1000000)
-                    throw new JposException(JPOS_E_NOSERVICE, "LightsService1" + version + " not fully implemented", e);
+                    throw new JposException(JPOS_E_NOSERVICE, "SoundPlayerService1" + version + " not fully implemented", e);
             }
-        }
-    }
-
-    @Override
-    public void addDirectIOListener(DirectIOListener directIOListener) {
-        synchronized(directIOListeners)
-        {
-            directIOListeners.addElement(directIOListener);
-        }
-    }
-
-    @Override
-    public void removeDirectIOListener(DirectIOListener directIOListener) {
-        synchronized(directIOListeners)
-        {
-            directIOListeners.removeElement(directIOListener);
-        }
-    }
-
-    @Override
-    public void addStatusUpdateListener(StatusUpdateListener statusUpdateListener) {
-        synchronized(statusUpdateListeners)
-        {
-            statusUpdateListeners.addElement(statusUpdateListener);
-        }
-    }
-
-    @Override
-    public void removeStatusUpdateListener(StatusUpdateListener statusUpdateListener) {
-        synchronized(statusUpdateListeners)
-        {
-            statusUpdateListeners.removeElement(statusUpdateListener);
-        }
-    }
-
-
-    @Override
-    public int getCapAlarm() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapAlarm();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapBlink() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapBlink();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public int getCapColor() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapColor();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
         }
     }
 
@@ -170,7 +103,7 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapCompareFirmwareVersion();
+            return ((SoundPlayerService116)service).getCapCompareFirmwareVersion();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -183,7 +116,7 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapPowerReporting();
+            return ((SoundPlayerService116)service).getCapPowerReporting();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -196,7 +129,7 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapStatisticsReporting();
+            return ((SoundPlayerService116)service).getCapStatisticsReporting();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -209,7 +142,7 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapUpdateFirmware();
+            return ((SoundPlayerService116)service).getCapUpdateFirmware();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -222,7 +155,7 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapUpdateStatistics();
+            return ((SoundPlayerService116)service).getCapUpdateStatistics();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -231,11 +164,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public int getMaxLights() throws JposException {
+    public int getOutputID() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getMaxLights();
+            return ((SoundPlayerService116)service).getOutputID();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -248,7 +181,7 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getPowerNotify();
+            return ((SoundPlayerService116)service).getPowerNotify();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -257,11 +190,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void setPowerNotify(int i) throws JposException {
+    public void setPowerNotify(int var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).setPowerNotify(i);
+            ((SoundPlayerService116)service).setPowerNotify(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -274,7 +207,7 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getPowerState();
+            return ((SoundPlayerService116)service).getPowerState();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -283,11 +216,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void compareFirmwareVersion(String s, int[] ints) throws JposException {
+    public void clearOutput() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).compareFirmwareVersion(s, ints);
+            ((SoundPlayerService116)service).clearOutput();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -296,11 +229,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void resetStatistics(String s) throws JposException {
+    public void compareFirmwareVersion(String var1, int[] var2) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).resetStatistics(s);
+            ((SoundPlayerService116)service).compareFirmwareVersion(var1, var2);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -309,11 +242,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void retrieveStatistics(String[] strings) throws JposException {
+    public void resetStatistics(String var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).retrieveStatistics(strings);
+            ((SoundPlayerService116)service).resetStatistics(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -322,11 +255,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void switchOff(int i) throws JposException {
+    public void retrieveStatistics(String[] var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).switchOff(i);
+            ((SoundPlayerService116)service).retrieveStatistics(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -335,11 +268,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void switchOn(int i, int i1, int i2, int i3, int i4) throws JposException {
+    public void updateFirmware(String var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).switchOn(i, i1, i2, i3, i4);
+            ((SoundPlayerService116)service).updateFirmware(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -348,11 +281,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void updateFirmware(String s) throws JposException {
+    public void updateStatistics(String var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).updateFirmware(s);
+            ((SoundPlayerService116)service).updateStatistics(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -361,11 +294,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void updateStatistics(String s) throws JposException {
+    public String getCapAssociatedHardTotalsDevice() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).updateStatistics(s);
+            return ((SoundPlayerService116)service).getCapAssociatedHardTotalsDevice();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -374,11 +307,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public int getCapPattern() throws JposException {
+    public boolean getCapMultiPlay() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService116)service).getCapPattern();
+            return ((SoundPlayerService116)service).getCapMultiPlay();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -387,11 +320,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void switchOnMultiple(String lightNumbers, int blinkOnCycle, int blinkOffCycle, int color, int alarm) throws JposException {
+    public String getCapSoundTypeList() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService116)service).switchOnMultiple(lightNumbers, blinkOnCycle, blinkOffCycle, color, alarm);
+            return ((SoundPlayerService116)service).getCapSoundTypeList();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -400,11 +333,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void switchOnPattern(int pattern, int alarm) throws JposException {
+    public int getCapStorage() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService116)service).switchOnPattern(pattern, alarm);
+            return ((SoundPlayerService116)service).getCapStorage();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -413,15 +346,178 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void switchOffPattern() throws JposException {
+    public boolean getCapVolume() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService116)service).switchOffPattern();
+            return ((SoundPlayerService116)service).getCapVolume();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
             throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public String getDeviceSoundList() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundPlayerService116)service).getDeviceSoundList();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public String getOutputIDList() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundPlayerService116)service).getOutputIDList();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public int getStorage() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundPlayerService116)service).getStorage();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void setStorage(int var1) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((SoundPlayerService116)service).setStorage(var1);
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public int getVolume() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundPlayerService116)service).getVolume();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void setVolume(int var1) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((SoundPlayerService116)service).setVolume(var1);
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void playSound(String fileName, boolean loop) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((SoundPlayerService116)service).playSound(fileName, loop);
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void stopSound(int outputID) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((SoundPlayerService116)service).stopSound(outputID);
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void addDirectIOListener(DirectIOListener l) {
+        synchronized(directIOListeners)
+        {
+            directIOListeners.addElement(l);
+        }
+    }
+
+    @Override
+    public void removeDirectIOListener(DirectIOListener l) {
+        synchronized(directIOListeners)
+        {
+            directIOListeners.removeElement(l);
+        }
+    }
+
+    @Override
+    public void addErrorListener(ErrorListener l) {
+        synchronized (errorListeners) {
+            errorListeners.addElement(l);
+        }
+    }
+
+    @Override
+    public void removeErrorListener(ErrorListener l) {
+        synchronized (errorListeners) {
+            errorListeners.removeElement(l);
+        }
+    }
+
+    @Override
+    public void addOutputCompleteListener(OutputCompleteListener l) {
+        synchronized (outputCompleteListeners) {
+            outputCompleteListeners.addElement(l);
+        }
+    }
+
+    @Override
+    public void removeOutputCompleteListener(OutputCompleteListener l) {
+        synchronized (outputCompleteListeners) {
+            outputCompleteListeners.removeElement(l);
+        }
+    }
+
+    @Override
+    public void addStatusUpdateListener(StatusUpdateListener l) {
+        synchronized (statusUpdateListeners) {
+            statusUpdateListeners.addElement(l);
+        }
+    }
+
+    @Override
+    public void removeStatusUpdateListener(StatusUpdateListener l) {
+        synchronized(statusUpdateListeners)
+        {
+            statusUpdateListeners.removeElement(l);
         }
     }
 }

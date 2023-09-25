@@ -19,26 +19,29 @@ package jpos;
 
 import jpos.events.*;
 import jpos.services.*;
-
 import java.util.Vector;
 
-public class POSPower extends BaseJposControl implements JposConst, POSPowerControl116 {
+public class SoundRecorder extends BaseJposControl implements JposConst, SoundRecorderControl116 {
     protected Vector directIOListeners;
     protected Vector statusUpdateListeners;
-
-    private static final int v116 = deviceVersion115 + 1000;
-
-    public POSPower() {
-        deviceControlDescription = "JavaPOS POSPower Dummy Control";
+    protected Vector dataListeners;
+    protected Vector errorListeners;
+    public SoundRecorder() {
+        deviceControlDescription = "JavaPOS GestureControl Dummy Control";
         deviceControlVersion = deviceVersion115 + 1000;
         directIOListeners = new Vector();
         statusUpdateListeners = new Vector();
+        dataListeners = new Vector();
+        errorListeners = new Vector();
     }
-
     protected class Callbacks implements EventCallbacks {
 
         @Override
         public void fireDataEvent(DataEvent dataEvent) {
+            synchronized (dataListeners) {
+                for (Object listener : dataListeners)
+                    ((DataListener) listener).dataOccurred(dataEvent);
+            }
         }
 
         @Override
@@ -51,6 +54,10 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
 
         @Override
         public void fireErrorEvent(ErrorEvent errorEvent) {
+            synchronized (errorListeners) {
+                for (Object listener : errorListeners)
+                    ((ErrorListener) listener).errorOccurred(errorEvent);
+            }
         }
 
         @Override
@@ -67,10 +74,9 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
 
         @Override
         public BaseControl getEventSource() {
-            return POSPower.this;
+            return SoundRecorder.this;
         }
     }
-
     @Override
     protected EventCallbacks createEventCallbacks() {
         return new Callbacks();
@@ -81,220 +87,38 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
         if (baseService == null) {
             service = null;
         } else {
-            int version = 5;
+            int version = 16;
             try {
-                service = (POSPowerService15) baseService; version++;
-                service = (POSPowerService16) baseService; version++;
-                service = (POSPowerService17) baseService; version++;
-                service = (POSPowerService18) baseService; version++;
-                service = (POSPowerService19) baseService; version++;
-                service = (POSPowerService110) baseService; version++;
-                service = (POSPowerService111) baseService; version++;
-                service = (POSPowerService112) baseService; version++;
-                service = (POSPowerService113) baseService; version++;
-                service = (POSPowerService114) baseService; version++;
-                service = (POSPowerService115) baseService; version++;
-                service = (POSPowerService116) baseService; version++;
+                service = (SoundRecorderService116) baseService; version++;
             } catch (Exception e) {
                 if (i >= version * 1000 + 1000000)
-                    throw new JposException(JPOS_E_NOSERVICE, "POSPowerService1" + version + " not fully implemented", e);
+                    throw new JposException(JPOS_E_NOSERVICE, "GestureControlService1" + version + " not fully implemented", e);
             }
         }
     }
 
     @Override
-    public void addDirectIOListener(DirectIOListener directIOListener) {
-        synchronized(directIOListeners)
-        {
-            directIOListeners.addElement(directIOListener);
-        }
-    }
-
-    @Override
-    public void removeDirectIOListener(DirectIOListener directIOListener) {
-        synchronized(directIOListeners)
-        {
-            directIOListeners.removeElement(directIOListener);
-        }
-    }
-
-    @Override
-    public void addStatusUpdateListener(StatusUpdateListener statusUpdateListener) {
-        synchronized(statusUpdateListeners)
-        {
-            statusUpdateListeners.addElement(statusUpdateListener);
-        }
-    }
-
-    @Override
-    public void removeStatusUpdateListener(StatusUpdateListener statusUpdateListener) {
-        synchronized(statusUpdateListeners)
-        {
-            statusUpdateListeners.removeElement(statusUpdateListener);
-        }
-    }
-
-    @Override
-    public int getBatteryCapacityRemainingInSeconds() throws JposException {
+    public boolean getAutoDisable() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService116)service).getBatteryCapacityRemainingInSeconds();
+            return ((SoundRecorderService116)service).getAutoDisable();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
-            if (serviceVersion < v116 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.16", e);
             throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
         }
     }
 
     @Override
-    public int getBatteryCriticallyLowThresholdInSeconds() throws JposException {
+    public void setAutoDisable(boolean var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService116)service).getBatteryCriticallyLowThresholdInSeconds();
+            ((SoundRecorderService116)service).setAutoDisable(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
-            if (serviceVersion < v116 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.16", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public void setBatteryCriticallyLowThresholdInSeconds(int seconds) throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService116)service).setBatteryCriticallyLowThresholdInSeconds(seconds);
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < v116 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.16", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public int getBatteryLowThresholdInSeconds() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService116)service).getBatteryLowThresholdInSeconds();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < v116 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.16", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public void setBatteryLowThresholdInSeconds(int seconds) throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService116)service).setBatteryLowThresholdInSeconds(seconds);
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < v116 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.16", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapBatteryCapacityRemainingInSeconds() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService116)service).getCapBatteryCapacityRemainingInSeconds();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < v116 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.16", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapChargeTime() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService116)service).getCapChargeTime();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < v116 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.16", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapVariableBatteryCriticallyLowThresholdInSeconds() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService116)service).getCapVariableBatteryCriticallyLowThresholdInSeconds();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < v116 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.16", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapVariableBatteryLowThresholdInSeconds() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService116)service).getCapVariableBatteryLowThresholdInSeconds();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < v116 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.16", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public int getChargeTime() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService116)service).getChargeTime();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < v116 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.16", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapBatteryCapacityRemaining() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService19)service).getCapBatteryCapacityRemaining();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
             throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
         }
     }
@@ -304,365 +128,7 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService19)service).getCapCompareFirmwareVersion();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapRestartPOS() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService19)service).getCapRestartPOS();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapStandbyPOS() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService19)service).getCapStandbyPOS();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapSuspendPOS() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService19)service).getCapSuspendPOS();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapUpdateFirmware() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService19)service).getCapUpdateFirmware();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapVariableBatteryCriticallyLowThreshold() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService19)service).getCapVariableBatteryCriticallyLowThreshold();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapVariableBatteryLowThreshold() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService19)service).getCapVariableBatteryLowThreshold();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public int getBatteryCapacityRemaining() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService19)service).getBatteryCapacityRemaining();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public int getBatteryCriticallyLowThreshold() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService19)service).getBatteryCriticallyLowThreshold();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public void setBatteryCriticallyLowThreshold(int i) throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService19)service).setBatteryCriticallyLowThreshold(i);
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public int getBatteryLowThreshold() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService19)service).getBatteryLowThreshold();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public void setBatteryLowThreshold(int i) throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService19)service).setBatteryLowThreshold(i);
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public int getPowerSource() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService19)service).getPowerSource();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public void compareFirmwareVersion(String s, int[] ints) throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService19)service).compareFirmwareVersion(s, ints);
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public void restartPOS() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService19)service).restartPOS();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public void standbyPOS(int i) throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService19)service).standbyPOS(i);
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public void suspendPOS(int i) throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService19)service).suspendPOS(i);
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public void updateFirmware(String s) throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService19)service).updateFirmware(s);
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapStatisticsReporting() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService19)service).getCapStatisticsReporting();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapUpdateStatistics() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService19)service).getCapUpdateStatistics();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public void resetStatistics(String s) throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService19)service).resetStatistics(s);
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public void retrieveStatistics(String[] strings) throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService19)service).retrieveStatistics(strings);
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public void updateStatistics(String s) throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService19)service).updateStatistics(s);
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            if (serviceVersion < deviceVersion19 )
-                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9", e);
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapFanAlarm() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService15)service).getCapFanAlarm();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public boolean getCapHeatAlarm() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService15)service).getCapHeatAlarm();
+            return ((SoundRecorderService116)service).getCapCompareFirmwareVersion();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -675,7 +141,7 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService15)service).getCapPowerReporting();
+            return ((SoundRecorderService116)service).getCapPowerReporting();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -684,11 +150,11 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
     }
 
     @Override
-    public boolean getCapQuickCharge() throws JposException {
+    public boolean getCapStatisticsReporting() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService15)service).getCapQuickCharge();
+            return ((SoundRecorderService116)service).getCapStatisticsReporting();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -697,11 +163,11 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
     }
 
     @Override
-    public boolean getCapShutdownPOS() throws JposException {
+    public boolean getCapUpdateFirmware() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService15)service).getCapShutdownPOS();
+            return ((SoundRecorderService116)service).getCapUpdateFirmware();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -710,11 +176,11 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
     }
 
     @Override
-    public int getCapUPSChargeState() throws JposException {
+    public boolean getCapUpdateStatistics() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService15)service).getCapUPSChargeState();
+            return ((SoundRecorderService116)service).getCapUpdateStatistics();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -723,11 +189,11 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
     }
 
     @Override
-    public int getEnforcedShutdownDelayTime() throws JposException {
+    public int getDataCount() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService15)service).getEnforcedShutdownDelayTime();
+            return ((SoundRecorderService116)service).getDataCount();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -736,11 +202,11 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
     }
 
     @Override
-    public void setEnforcedShutdownDelayTime(int i) throws JposException {
+    public boolean getDataEventEnabled() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService15)service).setEnforcedShutdownDelayTime(i);
+            return ((SoundRecorderService116)service).getDataEventEnabled();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -749,11 +215,11 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
     }
 
     @Override
-    public int getPowerFailDelayTime() throws JposException {
+    public void setDataEventEnabled(boolean var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService15)service).getPowerFailDelayTime();
+            ((SoundRecorderService116)service).setDataEventEnabled(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -766,7 +232,7 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService15)service).getPowerNotify();
+            return ((SoundRecorderService116)service).getPowerNotify();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -775,11 +241,11 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
     }
 
     @Override
-    public void setPowerNotify(int i) throws JposException {
+    public void setPowerNotify(int var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService15)service).setPowerNotify(i);
+            ((SoundRecorderService116)service).setPowerNotify(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -792,7 +258,7 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService15)service).getPowerState();
+            return ((SoundRecorderService116)service).getPowerState();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -801,11 +267,11 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
     }
 
     @Override
-    public boolean getQuickChargeMode() throws JposException {
+    public void clearInput() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService15)service).getQuickChargeMode();
+            ((SoundRecorderService116)service).clearInput();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -814,11 +280,11 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
     }
 
     @Override
-    public int getQuickChargeTime() throws JposException {
+    public void clearInputProperties() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService15)service).getQuickChargeTime();
+            ((SoundRecorderService116)service).clearInputProperties();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -827,11 +293,11 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
     }
 
     @Override
-    public int getUPSChargeState() throws JposException {
+    public void compareFirmwareVersion(String var1, int[] var2) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((POSPowerService15)service).getUPSChargeState();
+            ((SoundRecorderService116)service).compareFirmwareVersion(var1, var2);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -840,15 +306,412 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
     }
 
     @Override
-    public void shutdownPOS() throws JposException {
+    public void resetStatistics(String var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((POSPowerService15)service).shutdownPOS();
+            ((SoundRecorderService116)service).resetStatistics(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
             throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void retrieveStatistics(String[] var1) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((SoundRecorderService116)service).retrieveStatistics(var1);
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void updateFirmware(String var1) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((SoundRecorderService116)service).updateFirmware(var1);
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void updateStatistics(String var1) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((SoundRecorderService116)service).updateStatistics(var1);
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public String getCapAssociatedHardTotalsDevice() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getCapAssociatedHardTotalsDevice();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public boolean getCapChannel() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getCapChannel();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public boolean getCapRecordingLevel() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getCapRecordingLevel();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public boolean getCapSamplingRate() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getCapSamplingRate();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public boolean getCapSoundType() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getCapSoundType();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public int getCapStorage() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getCapStorage();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public String getChannel() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getChannel();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void setChannel(String var1) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((SoundRecorderService116)service).setChannel(var1);
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public String getChannelList() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getChannelList();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public int getRecordingLevel() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getRecordingLevel();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void setRecordingLevel(int var1) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((SoundRecorderService116)service).setRecordingLevel(var1);
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public int getRemainingRecordingTimeInSec() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getRemainingRecordingTimeInSec();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public String getSamplingRate() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getSamplingRate();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void setSamplingRate(String var1) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((SoundRecorderService116)service).setSamplingRate(var1);
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public String getSamplingRateList() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getSamplingRateList();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public byte[] getSoundData() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getSoundData();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public String getSoundType() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getSoundType();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void setSoundType(String var1) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((SoundRecorderService116)service).setSoundType(var1);
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public String getSoundTypeList() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getSoundTypeList();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public int getStorage() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((SoundRecorderService116)service).getStorage();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void setStorage(int var1) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((SoundRecorderService116)service).setStorage(var1);
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void startRecording(String fileName, boolean overwrite, int recordingTime) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((SoundRecorderService116)service).startRecording(fileName, overwrite, recordingTime);
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void stopRecording() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((SoundRecorderService116)service).stopRecording();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void addDataListener(DataListener l) {
+        synchronized (dataListeners) {
+            dataListeners.addElement(l);
+        }
+    }
+
+    @Override
+    public void removeDataListener(DataListener l) {
+        synchronized (dataListeners) {
+            dataListeners.removeElement(l);
+        }
+    }
+
+    @Override
+    public void addDirectIOListener(DirectIOListener l) {
+        synchronized(directIOListeners)
+        {
+            directIOListeners.addElement(l);
+        }
+    }
+
+    @Override
+    public void removeDirectIOListener(DirectIOListener l) {
+        synchronized(directIOListeners)
+        {
+            directIOListeners.removeElement(l);
+        }
+    }
+
+    @Override
+    public void addErrorListener(ErrorListener l) {
+        synchronized (errorListeners) {
+            errorListeners.addElement(l);
+        }
+    }
+
+    @Override
+    public void removeErrorListener(ErrorListener l) {
+        synchronized (errorListeners) {
+            errorListeners.removeElement(l);
+        }
+    }
+
+    @Override
+    public void addStatusUpdateListener(StatusUpdateListener l) {
+        synchronized (statusUpdateListeners) {
+            statusUpdateListeners.addElement(l);
+        }
+    }
+
+    @Override
+    public void removeStatusUpdateListener(StatusUpdateListener l) {
+        synchronized(statusUpdateListeners)
+        {
+            statusUpdateListeners.removeElement(l);
         }
     }
 }

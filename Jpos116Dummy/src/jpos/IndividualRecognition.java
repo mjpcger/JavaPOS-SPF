@@ -19,24 +19,29 @@ package jpos;
 
 import jpos.events.*;
 import jpos.services.*;
-
 import java.util.Vector;
 
-public class Lights extends BaseJposControl implements JposConst, LightsControl116 {
+public class IndividualRecognition extends BaseJposControl implements JposConst, IndividualRecognitionControl116 {
     protected Vector directIOListeners;
     protected Vector statusUpdateListeners;
-
-    public Lights() {
-        deviceControlDescription = "JavaPOS Lights Dummy Control";
+    protected Vector dataListeners;
+    protected Vector errorListeners;
+    public IndividualRecognition() {
+        deviceControlDescription = "JavaPOS IndividualRecognition Dummy Control";
         deviceControlVersion = deviceVersion115 + 1000;
         directIOListeners = new Vector();
         statusUpdateListeners = new Vector();
+        dataListeners = new Vector();
+        errorListeners = new Vector();
     }
-
     protected class Callbacks implements EventCallbacks {
 
         @Override
         public void fireDataEvent(DataEvent dataEvent) {
+            synchronized (dataListeners) {
+                for (Object listener : dataListeners)
+                    ((DataListener) listener).dataOccurred(dataEvent);
+            }
         }
 
         @Override
@@ -49,6 +54,10 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
 
         @Override
         public void fireErrorEvent(ErrorEvent errorEvent) {
+            synchronized (errorListeners) {
+                for (Object listener : errorListeners)
+                    ((ErrorListener) listener).errorOccurred(errorEvent);
+            }
         }
 
         @Override
@@ -65,10 +74,9 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
 
         @Override
         public BaseControl getEventSource() {
-            return Lights.this;
+            return IndividualRecognition.this;
         }
     }
-
     @Override
     protected EventCallbacks createEventCallbacks() {
         return new Callbacks();
@@ -79,59 +87,22 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         if (baseService == null) {
             service = null;
         } else {
-            int version = 12;
+            int version = 16;
             try {
-                service = (LightsService112) baseService; version++;
-                service = (LightsService113) baseService; version++;
-                service = (LightsService114) baseService; version++;
-                service = (LightsService115) baseService; version++;
-                service = (LightsService116) baseService; version++;
+                service = (IndividualRecognitionService116) baseService; version++;
             } catch (Exception e) {
                 if (i >= version * 1000 + 1000000)
-                    throw new JposException(JPOS_E_NOSERVICE, "LightsService1" + version + " not fully implemented", e);
+                    throw new JposException(JPOS_E_NOSERVICE, "IndividualRecognitionService1" + version + " not fully implemented", e);
             }
         }
     }
 
     @Override
-    public void addDirectIOListener(DirectIOListener directIOListener) {
-        synchronized(directIOListeners)
-        {
-            directIOListeners.addElement(directIOListener);
-        }
-    }
-
-    @Override
-    public void removeDirectIOListener(DirectIOListener directIOListener) {
-        synchronized(directIOListeners)
-        {
-            directIOListeners.removeElement(directIOListener);
-        }
-    }
-
-    @Override
-    public void addStatusUpdateListener(StatusUpdateListener statusUpdateListener) {
-        synchronized(statusUpdateListeners)
-        {
-            statusUpdateListeners.addElement(statusUpdateListener);
-        }
-    }
-
-    @Override
-    public void removeStatusUpdateListener(StatusUpdateListener statusUpdateListener) {
-        synchronized(statusUpdateListeners)
-        {
-            statusUpdateListeners.removeElement(statusUpdateListener);
-        }
-    }
-
-
-    @Override
-    public int getCapAlarm() throws JposException {
+    public boolean getAutoDisable() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapAlarm();
+            return ((IndividualRecognitionService116)service).getAutoDisable();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -140,24 +111,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public boolean getCapBlink() throws JposException {
+    public void setAutoDisable(boolean var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapBlink();
-        } catch (JposException e) {
-            throw e;
-        } catch(Exception e) {
-            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
-        }
-    }
-
-    @Override
-    public int getCapColor() throws JposException {
-        try {
-            if (!bOpen)
-                throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapColor();
+            ((IndividualRecognitionService116)service).setAutoDisable(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -170,7 +128,7 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapCompareFirmwareVersion();
+            return ((IndividualRecognitionService116)service).getCapCompareFirmwareVersion();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -183,7 +141,7 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapPowerReporting();
+            return ((IndividualRecognitionService116)service).getCapPowerReporting();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -196,7 +154,7 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapStatisticsReporting();
+            return ((IndividualRecognitionService116)service).getCapStatisticsReporting();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -209,7 +167,7 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapUpdateFirmware();
+            return ((IndividualRecognitionService116)service).getCapUpdateFirmware();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -222,7 +180,7 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getCapUpdateStatistics();
+            return ((IndividualRecognitionService116)service).getCapUpdateStatistics();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -231,11 +189,37 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public int getMaxLights() throws JposException {
+    public int getDataCount() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getMaxLights();
+            return ((IndividualRecognitionService116)service).getDataCount();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public boolean getDataEventEnabled() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((IndividualRecognitionService116)service).getDataEventEnabled();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void setDataEventEnabled(boolean var1) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((IndividualRecognitionService116)service).setDataEventEnabled(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -248,7 +232,7 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getPowerNotify();
+            return ((IndividualRecognitionService116)service).getPowerNotify();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -257,11 +241,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void setPowerNotify(int i) throws JposException {
+    public void setPowerNotify(int var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).setPowerNotify(i);
+            ((IndividualRecognitionService116)service).setPowerNotify(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -274,7 +258,7 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService112)service).getPowerState();
+            return ((IndividualRecognitionService116)service).getPowerState();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -283,11 +267,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void compareFirmwareVersion(String s, int[] ints) throws JposException {
+    public void clearInput() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).compareFirmwareVersion(s, ints);
+            ((IndividualRecognitionService116)service).clearInput();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -296,11 +280,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void resetStatistics(String s) throws JposException {
+    public void clearInputProperties() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).resetStatistics(s);
+            ((IndividualRecognitionService116)service).clearInputProperties();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -309,11 +293,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void retrieveStatistics(String[] strings) throws JposException {
+    public void compareFirmwareVersion(String var1, int[] var2) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).retrieveStatistics(strings);
+            ((IndividualRecognitionService116)service).compareFirmwareVersion(var1, var2);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -322,11 +306,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void switchOff(int i) throws JposException {
+    public void resetStatistics(String var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).switchOff(i);
+            ((IndividualRecognitionService116)service).resetStatistics(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -335,11 +319,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void switchOn(int i, int i1, int i2, int i3, int i4) throws JposException {
+    public void retrieveStatistics(String[] var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).switchOn(i, i1, i2, i3, i4);
+            ((IndividualRecognitionService116)service).retrieveStatistics(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -348,11 +332,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void updateFirmware(String s) throws JposException {
+    public void updateFirmware(String var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).updateFirmware(s);
+            ((IndividualRecognitionService116)service).updateFirmware(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -361,11 +345,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void updateStatistics(String s) throws JposException {
+    public void updateStatistics(String var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService112)service).updateStatistics(s);
+            ((IndividualRecognitionService116)service).updateStatistics(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -374,11 +358,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public int getCapPattern() throws JposException {
+    public String getCapIndividualList() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            return ((LightsService116)service).getCapPattern();
+            return ((IndividualRecognitionService116)service).getCapIndividualList();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -387,11 +371,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void switchOnMultiple(String lightNumbers, int blinkOnCycle, int blinkOffCycle, int color, int alarm) throws JposException {
+    public String getIndividualIDs() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService116)service).switchOnMultiple(lightNumbers, blinkOnCycle, blinkOffCycle, color, alarm);
+            return ((IndividualRecognitionService116)service).getIndividualIDs();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -400,11 +384,11 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void switchOnPattern(int pattern, int alarm) throws JposException {
+    public String getIndividualRecognitionFilter() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService116)service).switchOnPattern(pattern, alarm);
+            return ((IndividualRecognitionService116)service).getIndividualRecognitionFilter();
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
@@ -413,15 +397,87 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
     }
 
     @Override
-    public void switchOffPattern() throws JposException {
+    public void setIndividualRecognitionFilter(String var1) throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");
-            ((LightsService116)service).switchOffPattern();
+            ((IndividualRecognitionService116)service).setIndividualRecognitionFilter(var1);
         } catch (JposException e) {
             throw e;
         } catch(Exception e) {
             throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public String getIndividualRecognitionInformation() throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            return ((IndividualRecognitionService116)service).getIndividualRecognitionInformation();
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
+    public void addDataListener(DataListener l) {
+        synchronized (dataListeners) {
+            dataListeners.addElement(l);
+        }
+    }
+
+    @Override
+    public void removeDataListener(DataListener l) {
+        synchronized (dataListeners) {
+            dataListeners.removeElement(l);
+        }
+    }
+
+    @Override
+    public void addDirectIOListener(DirectIOListener l) {
+        synchronized(directIOListeners)
+        {
+            directIOListeners.addElement(l);
+        }
+    }
+
+    @Override
+    public void removeDirectIOListener(DirectIOListener l) {
+        synchronized(directIOListeners)
+        {
+            directIOListeners.removeElement(l);
+        }
+    }
+
+    @Override
+    public void addErrorListener(ErrorListener l) {
+        synchronized (errorListeners) {
+            errorListeners.addElement(l);
+        }
+    }
+
+    @Override
+    public void removeErrorListener(ErrorListener l) {
+        synchronized (errorListeners) {
+            errorListeners.removeElement(l);
+        }
+    }
+
+    @Override
+    public void addStatusUpdateListener(StatusUpdateListener l) {
+        synchronized (statusUpdateListeners) {
+            statusUpdateListeners.addElement(l);
+        }
+    }
+
+    @Override
+    public void removeStatusUpdateListener(StatusUpdateListener l) {
+        synchronized(statusUpdateListeners)
+        {
+            statusUpdateListeners.removeElement(l);
         }
     }
 }
