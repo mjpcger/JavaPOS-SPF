@@ -25,14 +25,18 @@ import de.gmxhome.conrad.jpos.jpos_base.cashchanger.CashChangerProperties;
 import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.CashDrawerProperties;
 import de.gmxhome.conrad.jpos.jpos_base.checkscanner.CheckScannerProperties;
 import de.gmxhome.conrad.jpos.jpos_base.coinacceptor.CoinAcceptorProperties;
+import de.gmxhome.conrad.jpos.jpos_base.devicemonitor.DeviceMonitorProperties;
 import de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw.ElectronicValueRWProperties;
 import de.gmxhome.conrad.jpos.jpos_base.gate.GateProperties;
 import de.gmxhome.conrad.jpos.jpos_base.cat.CATProperties;
 import de.gmxhome.conrad.jpos.jpos_base.coindispenser.CoinDispenserProperties;
 import de.gmxhome.conrad.jpos.jpos_base.electronicjournal.ElectronicJournalProperties;
 import de.gmxhome.conrad.jpos.jpos_base.fiscalprinter.FiscalPrinterProperties;
+import de.gmxhome.conrad.jpos.jpos_base.gesturecontrol.GestureControlProperties;
+import de.gmxhome.conrad.jpos.jpos_base.graphicdisplay.GraphicDisplayProperties;
 import de.gmxhome.conrad.jpos.jpos_base.hardtotals.HardTotalsProperties;
 import de.gmxhome.conrad.jpos.jpos_base.imagescanner.ImageScannerProperties;
+import de.gmxhome.conrad.jpos.jpos_base.individualrecognition.IndividualRecognitionProperties;
 import de.gmxhome.conrad.jpos.jpos_base.itemdispenser.ItemDispenserProperties;
 import de.gmxhome.conrad.jpos.jpos_base.keylock.KeylockProperties;
 import de.gmxhome.conrad.jpos.jpos_base.lights.LightsProperties;
@@ -51,7 +55,12 @@ import de.gmxhome.conrad.jpos.jpos_base.scale.ScaleProperties;
 import de.gmxhome.conrad.jpos.jpos_base.scanner.ScannerProperties;
 import de.gmxhome.conrad.jpos.jpos_base.signaturecapture.SignatureCaptureProperties;
 import de.gmxhome.conrad.jpos.jpos_base.smartcardrw.SmartCardRWProperties;
+import de.gmxhome.conrad.jpos.jpos_base.soundplayer.SoundPlayerProperties;
+import de.gmxhome.conrad.jpos.jpos_base.soundrecorder.SoundRecorderProperties;
+import de.gmxhome.conrad.jpos.jpos_base.speechsynthesis.SpeechSynthesisProperties;
 import de.gmxhome.conrad.jpos.jpos_base.toneindicator.ToneIndicatorProperties;
+import de.gmxhome.conrad.jpos.jpos_base.videocapture.VideoCaptureProperties;
+import de.gmxhome.conrad.jpos.jpos_base.voicerecognition.VoiceRecognitionProperties;
 import jpos.*;
 
 import java.util.ArrayList;
@@ -97,12 +106,16 @@ public class JposDevice extends JposBaseDevice {
                 getCount(CheckScanners) +
                 getCount(CoinAcceptors) +
                 getCount(CoinDispensers) +
+                getCount(DeviceMonitors) +
                 getCount(ElectronicJournals) +
                 getCount(ElectronicValueRWs) +
                 getCount(FiscalPrinters) +
                 getCount(Gates) +
+                getCount(GestureControls) +
+                getCount(GraphicDisplays) +
                 getCount(HardTotalss) +
                 getCount(ImageScanners) +
+                getCount(IndividualRecognitions) +
                 getCount(ItemDispensers) +
                 getCount(Keylocks) +
                 getCount(Lightss) +
@@ -121,7 +134,12 @@ public class JposDevice extends JposBaseDevice {
                 getCount(Scanners) +
                 getCount(SignatureCaptures) +
                 getCount(SmartCardRWs) +
-                getCount(ToneIndicators);
+                getCount(SoundPlayers) +
+                getCount(SoundRecorders) +
+                getCount(SpeechSynthesiss) +
+                getCount(ToneIndicators) +
+                getCount(VideoCaptures) +
+                getCount(VoiceRecognitions);
     }
 
     /*
@@ -762,6 +780,64 @@ public class JposDevice extends JposBaseDevice {
     }
 
     /*
+     * DeviceMonitor specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for DeviceMonitor devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of device monitors the device service supports. Each
+     * list element contains a list of all property sets owned by DeviceMonitorService
+     * objects belonging to the same device monitor.
+     */
+    public List<JposCommonProperties>[] DeviceMonitors = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of device monitor property sets, one element for each device monitor the device service
+     * supports. Whenever a device monitor device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public DeviceMonitorProperties[] ClaimedDeviceMonitor;
+
+    /**
+     * Allocate device specific property set list for device monitor devices. One list must be allocated for each device
+     * monitor the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxDeviceMonitor Maximum number of device monitors that can be controlled by the physical device
+     */
+    protected void deviceMonitorInit(int maxDeviceMonitor) {
+        if (DeviceMonitors.length == 0 && maxDeviceMonitor > 0) {
+            ClaimedDeviceMonitor = new DeviceMonitorProperties[maxDeviceMonitor];
+            DeviceMonitors = (List<JposCommonProperties>[])new List[maxDeviceMonitor];
+            for (int i = 0; i < maxDeviceMonitor; i++) {
+                DeviceMonitors[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support device monitor services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(DeviceMonitorProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
+        JposVersion = null;
+    }
+
+    /**
+     * Returns device implementation of DeviceMonitorProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of DeviceMonitorProperties that matches the requirements of the corresponding device service.
+     */
+    public DeviceMonitorProperties getDeviceMonitorProperties(int index) {
+        return null;
+    }
+
+    /*
      * ElectronicJournal specific implementations
      */
 
@@ -995,6 +1071,122 @@ public class JposDevice extends JposBaseDevice {
     }
 
     /*
+     * GestureControl specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for GestureControl devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of gesture controls the device service supports. Each
+     * list element contains a list of all property sets owned by GestureControlService
+     * objects belonging to the same gesture control.
+     */
+    public List<JposCommonProperties>[] GestureControls = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of gesture control property sets, one element for each gesture control the device service
+     * supports. Whenever a gesture control device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public GestureControlProperties[] ClaimedGestureControl;
+
+    /**
+     * Allocate device specific property set list for gesture control devices. One list must be allocated for each gesture
+     * control the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxGestureControl Maximum number of gesture controls that can be controlled by the physical device
+     */
+    protected void gestureControlInit(int maxGestureControl) {
+        if (GestureControls.length == 0 && maxGestureControl > 0) {
+            ClaimedGestureControl = new GestureControlProperties[maxGestureControl];
+            GestureControls = (List<JposCommonProperties>[])new List[maxGestureControl];
+            for (int i = 0; i < maxGestureControl; i++) {
+                GestureControls[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support gesture control services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(GestureControlProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
+        JposVersion = null;
+    }
+
+    /**
+     * Returns device implementation of GestureControlProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of GestureControlProperties that matches the requirements of the corresponding device service.
+     */
+    public GestureControlProperties getGestureControlProperties(int index) {
+        return null;
+    }
+
+    /*
+     * GraphicDisplay specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for GraphicDisplay devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of graphic displays the device service supports. Each
+     * list element contains a list of all property sets owned by GraphicDisplayService
+     * objects belonging to the same graphic display.
+     */
+    public List<JposCommonProperties>[] GraphicDisplays = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of graphic display property sets, one element for each graphic display the device service
+     * supports. Whenever a graphic display device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public GraphicDisplayProperties[] ClaimedGraphicDisplay;
+
+    /**
+     * Allocate device specific property set list for graphic display devices. One list must be allocated for each graphic
+     * display the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxGraphicDisplay Maximum number of graphic displays that can be controlled by the physical device
+     */
+    protected void graphicDisplayInit(int maxGraphicDisplay) {
+        if (GraphicDisplays.length == 0 && maxGraphicDisplay > 0) {
+            ClaimedGraphicDisplay = new GraphicDisplayProperties[maxGraphicDisplay];
+            GraphicDisplays = (List<JposCommonProperties>[])new List[maxGraphicDisplay];
+            for (int i = 0; i < maxGraphicDisplay; i++) {
+                GraphicDisplays[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support graphic display services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(GraphicDisplayProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
+        JposVersion = null;
+    }
+
+    /**
+     * Returns device implementation of GraphicDisplayProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of GraphicDisplayProperties that matches the requirements of the corresponding device service.
+     */
+    public GraphicDisplayProperties getGraphicDisplayProperties(int index) {
+        return null;
+    }
+
+    /*
      * HardTotals specific implementations
      */
 
@@ -1106,6 +1298,65 @@ public class JposDevice extends JposBaseDevice {
      * @return Instance of ImageScannerProperties that matches the requirements of the corresponding device service.
      */
     public ImageScannerProperties getImageScannerProperties(int index) {
+        return null;
+    }
+
+    /*
+     * IndividualRecognition specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for IndividualRecognition devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of individual recognitions the device service supports. Each
+     * list element contains a list of all property sets owned by IndividualRecognitionService
+     * objects belonging to the same individual recognition.
+     */
+    public List<JposCommonProperties>[] IndividualRecognitions = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of individual recognition property sets, one element for each individual recognition the device service
+     * supports. Whenever a individual recognition device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public IndividualRecognitionProperties[] ClaimedIndividualRecognition;
+
+    /**
+     * Allocate device specific property set list for individual recognition devices. One list must be allocated for each
+     * individual recognition the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxIndividualRecognition Maximum number of individual recognitions that can be controlled by the physical device
+     */
+    protected void individualRecognitionInit(int maxIndividualRecognition) {
+        if (IndividualRecognitions.length == 0 && maxIndividualRecognition > 0) {
+            ClaimedIndividualRecognition = new IndividualRecognitionProperties[maxIndividualRecognition];
+            IndividualRecognitions = (List<JposCommonProperties>[])new List[maxIndividualRecognition];
+            for (int i = 0; i < maxIndividualRecognition; i++) {
+                IndividualRecognitions[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support individual recognition
+     * services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(IndividualRecognitionProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
+        JposVersion = null;
+    }
+
+    /**
+     * Returns device implementation of IndividualRecognitionProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of IndividualRecognitionProperties that matches the requirements of the corresponding device service.
+     */
+    public IndividualRecognitionProperties getIndividualRecognitionProperties(int index) {
         return null;
     }
 
@@ -2142,6 +2393,180 @@ public class JposDevice extends JposBaseDevice {
     }
 
     /*
+     * SoundPlayer specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for SoundPlayer devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of sound players the device service supports. Each
+     * list element contains a list of all property sets owned by SoundPlayerService
+     * objects belonging to the same sound player.
+     */
+    public List<JposCommonProperties>[] SoundPlayers = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of sound player property sets, one element for each sound player the device service
+     * supports. Whenever a sound player device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public SoundPlayerProperties[] ClaimedSoundPlayer;
+
+    /**
+     * Allocate device specific property set list for sound player devices. One list must be allocated for each sound player
+     * the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxSoundPlayer Maximum number of sound players that can be controlled by the physical device
+     */
+    protected void soundPlayerInit(int maxSoundPlayer) {
+        if (SoundPlayers.length == 0 && maxSoundPlayer > 0) {
+            ClaimedSoundPlayer = new SoundPlayerProperties[maxSoundPlayer];
+            SoundPlayers = (List<JposCommonProperties>[])new List[maxSoundPlayer];
+            for (int i = 0; i < maxSoundPlayer; i++) {
+                SoundPlayers[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support sound player services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(SoundPlayerProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
+        JposVersion = null;
+    }
+
+    /**
+     * Returns device implementation of SoundPlayerProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of SoundPlayerProperties that matches the requirements of the corresponding device service.
+     */
+    public SoundPlayerProperties getSoundPlayerProperties(int index) {
+        return null;
+    }
+
+    /*
+     * SoundRecorder specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for SoundRecorder devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of sound recorders the device service supports. Each
+     * list element contains a list of all property sets owned by SoundRecorderService
+     * objects belonging to the same sound recorder.
+     */
+    public List<JposCommonProperties>[] SoundRecorders = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of sound recorder property sets, one element for each sound recorder the device service
+     * supports. Whenever a sound recorder device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public SoundRecorderProperties[] ClaimedSoundRecorder;
+
+    /**
+     * Allocate device specific property set list for sound recorder devices. One list must be allocated for each sound
+     * recorder the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxSoundRecorder Maximum number of sound recorders that can be controlled by the physical device
+     */
+    protected void soundRecorderInit(int maxSoundRecorder) {
+        if (SoundRecorders.length == 0 && maxSoundRecorder > 0) {
+            ClaimedSoundRecorder = new SoundRecorderProperties[maxSoundRecorder];
+            SoundRecorders = (List<JposCommonProperties>[])new List[maxSoundRecorder];
+            for (int i = 0; i < maxSoundRecorder; i++) {
+                SoundRecorders[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support sound recorder services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(SoundRecorderProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
+        JposVersion = null;
+    }
+
+    /**
+     * Returns device implementation of SoundRecorderProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of SoundRecorderProperties that matches the requirements of the corresponding device service.
+     */
+    public SoundRecorderProperties getSoundRecorderProperties(int index) {
+        return null;
+    }
+
+    /*
+     * SpeechSynthesis specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for SpeechSynthesis devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of speech synthesises the device service supports. Each
+     * list element contains a list of all property sets owned by SpeechSynthesisService
+     * objects belonging to the same speech synthesis.
+     */
+    public List<JposCommonProperties>[] SpeechSynthesiss = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of speech synthesis property sets, one element for each speech synthesis the device service
+     * supports. Whenever a speech synthesis device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public SpeechSynthesisProperties[] ClaimedSpeechSynthesis;
+
+    /**
+     * Allocate device specific property set list for speech synthesis devices. One list must be allocated for each speech
+     * synthesis the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxSpeechSynthesis Maximum number of speech synthesiss that can be controlled by the physical device
+     */
+    protected void speechSynthesisInit(int maxSpeechSynthesis) {
+        if (SpeechSynthesiss.length == 0 && maxSpeechSynthesis > 0) {
+            ClaimedSpeechSynthesis = new SpeechSynthesisProperties[maxSpeechSynthesis];
+            SpeechSynthesiss = (List<JposCommonProperties>[])new List[maxSpeechSynthesis];
+            for (int i = 0; i < maxSpeechSynthesis; i++) {
+                SpeechSynthesiss[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support speech synthesis services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(SpeechSynthesisProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
+        JposVersion = null;
+    }
+
+    /**
+     * Returns device implementation of SpeechSynthesisProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of SpeechSynthesisProperties that matches the requirements of the corresponding device service.
+     */
+    public SpeechSynthesisProperties getSpeechSynthesisProperties(int index) {
+        return null;
+    }
+
+    /*
      * ToneIndicator specific implemenmtations
      */
 
@@ -2194,6 +2619,122 @@ public class JposDevice extends JposBaseDevice {
      * @return Instance of ToneIndicatorProperties that matches the requirements of the corresponding device service.
      */
     public ToneIndicatorProperties getToneIndicatorProperties(int index) {
+        return null;
+    }
+
+    /*
+     * VideoCapture specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for VideoCapture devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of video captures the device service supports. Each
+     * list element contains a list of all property sets owned by VideoCaptureService
+     * objects belonging to the same video capture.
+     */
+    public List<JposCommonProperties>[] VideoCaptures = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of video capture property sets, one element for each video capture the device service
+     * supports. Whenever a video capture device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public VideoCaptureProperties[] ClaimedVideoCapture;
+
+    /**
+     * Allocate device specific property set list for video capture devices. One list must be allocated for each video
+     * capture the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxVideoCapture Maximum number of video captures that can be controlled by the physical device
+     */
+    protected void videoCaptureInit(int maxVideoCapture) {
+        if (VideoCaptures.length == 0 && maxVideoCapture > 0) {
+            ClaimedVideoCapture = new VideoCaptureProperties[maxVideoCapture];
+            VideoCaptures = (List<JposCommonProperties>[])new List[maxVideoCapture];
+            for (int i = 0; i < maxVideoCapture; i++) {
+                VideoCaptures[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support video capture services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(VideoCaptureProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
+        JposVersion = null;
+    }
+
+    /**
+     * Returns device implementation of VideoCaptureProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of VideoCaptureProperties that matches the requirements of the corresponding device service.
+     */
+    public VideoCaptureProperties getVideoCaptureProperties(int index) {
+        return null;
+    }
+
+    /*
+     * VoiceRecognition specific implementations
+     */
+
+    /**
+     * Set of Set of property sets for VoiceRecognition devices. The size of the list
+     * will be specified by the device service implementation (default is 0) and is
+     * identical to the number of voice recognitions the device service supports. Each
+     * list element contains a list of all property sets owned by VoiceRecognitionService
+     * objects belonging to the same voice recognition.
+     */
+    public List<JposCommonProperties>[] VoiceRecognitions = (List<JposCommonProperties>[])new List[0];
+
+    /**
+     * Array of voice recognition property sets, one element for each voice recognition the device service
+     * supports. Whenever a voice recognition device will be claimed, the corresponding property set will
+     * be stored within this array.
+     */
+    public VoiceRecognitionProperties[] ClaimedVoiceRecognition;
+
+    /**
+     * Allocate device specific property set list for voice recognition devices. One list must be allocated for each voice recognition
+     * the driver supports.
+     * Must be called within constructor of derived classes.
+     *
+     * @param maxVoiceRecognition Maximum number of voice recognitions that can be controlled by the physical device
+     */
+    protected void voiceRecognitionInit(int maxVoiceRecognition) {
+        if (VoiceRecognitions.length == 0 && maxVoiceRecognition > 0) {
+            ClaimedVoiceRecognition = new VoiceRecognitionProperties[maxVoiceRecognition];
+            VoiceRecognitions = (List<JposCommonProperties>[])new List[maxVoiceRecognition];
+            for (int i = 0; i < maxVoiceRecognition; i++) {
+                VoiceRecognitions[i] = new ArrayList<JposCommonProperties>(0);
+            }
+        }
+    }
+
+    /**
+     * Change defaults of properties. Must be implemented within derived classed that support voice recognition services.
+     *
+     * @param props Property set for setting the property defaults
+     */
+    public void changeDefaults(VoiceRecognitionProperties props) {
+        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
+        AllowAlwaysSetProperties = true;
+        JposVersion = null;
+    }
+
+    /**
+     * Returns device implementation of VoiceRecognitionProperties.
+     *
+     * @param index Device index, see constructor of JposCommonProperties.
+     * @return Instance of VoiceRecognitionProperties that matches the requirements of the corresponding device service.
+     */
+    public VoiceRecognitionProperties getVoiceRecognitionProperties(int index) {
         return null;
     }
 }
