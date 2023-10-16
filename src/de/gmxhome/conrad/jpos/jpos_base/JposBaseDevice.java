@@ -238,7 +238,7 @@ public class JposBaseDevice {
     }
 
     /**
-     * Checks whether the given condition it met. If not, throws
+     * Checks whether the given condition it met. If so, throws
      * a JposException with the given error code and error description
      *
      * @param condition Error condition
@@ -253,7 +253,7 @@ public class JposBaseDevice {
     }
 
     /**
-     * Checks whether the given condition it met. If not, throws
+     * Checks whether the given condition it met. If so, throws
      * a JposException with JPOS_E_EXTENDED and the given extended error code and error description
      *
      * @param condition Error condition
