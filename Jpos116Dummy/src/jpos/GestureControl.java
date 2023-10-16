@@ -488,6 +488,19 @@ public class GestureControl extends BaseJposControl implements JposConst, Gestur
     }
 
     @Override
+    public void setStorage(int var1) throws JposException {
+        try {
+            if (!bOpen)
+                throw new JposException(JPOS_E_CLOSED, "Control not open");
+            ((GestureControlService116)service).setStorage(var1);
+        } catch (JposException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new JposException(JPOS_E_FAILURE, "Unhandled exception from service", e);
+        }
+    }
+
+    @Override
     public void createMotion(String fileName, String poseList) throws JposException {
         try {
             if (!bOpen)

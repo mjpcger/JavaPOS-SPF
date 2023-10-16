@@ -527,7 +527,7 @@ public class GraphicDisplay extends BaseJposControl implements JposConst, Graphi
     }
 
     @Override
-    public int getURL() throws JposException {
+    public String getURL() throws JposException {
         try {
             if (!bOpen)
                 throw new JposException(JPOS_E_CLOSED, "Control not open");

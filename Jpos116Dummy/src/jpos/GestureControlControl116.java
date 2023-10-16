@@ -80,6 +80,8 @@ public interface GestureControlControl116 extends BaseControl {
 
     public int getStorage() throws JposException;
 
+    public void setStorage(int var1) throws JposException;
+
     public void createMotion(String fileName, String poseList) throws JposException;
 
     public void createPose(String fileName, int time) throws JposException;
