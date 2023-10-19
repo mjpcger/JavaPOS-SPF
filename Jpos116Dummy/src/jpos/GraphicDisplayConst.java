@@ -58,5 +58,5 @@ public interface GraphicDisplayConst {
 
     // ResultCodeExtended
 
-    public static final int OPOS_EGDSP_NOROOM        = 201; // (Several)
+    public static final int EGDSP_NOROOM        = 201; // (Several)
 }

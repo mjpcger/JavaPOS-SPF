@@ -44,5 +44,5 @@ public interface VideoCaptureConst {
 
     // ResultCodeExtended
 
-    public static final int OPOS_EVCAP_NOROOM        = 201; // (Several)
+    public static final int EVCAP_NOROOM        = 201; // (Several)
 }

@@ -37,5 +37,5 @@ public interface SoundPlayerConst {
 
     // ResultCodeExtended
 
-    public static final int OPOS_ESPLY_NOROOM        = 201;
+    public static final int ESPLY_NOROOM        = 201;
 }

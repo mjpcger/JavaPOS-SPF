@@ -37,5 +37,5 @@ public interface GestureControlConst {
 
     // ResultCodeExtended
 
-    public static final int OPOS_EGCTL_NOROOM        = 201;
+    public static final int EGCTL_NOROOM        = 201;
 }

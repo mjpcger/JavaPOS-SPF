@@ -37,5 +37,5 @@ public interface SoundRecorderConst {
 
     // ResultCodeExtended
 
-    public static final int OPOS_ESREC_NOROOM        = 201;
+    public static final int ESREC_NOROOM        = 201;
 }
