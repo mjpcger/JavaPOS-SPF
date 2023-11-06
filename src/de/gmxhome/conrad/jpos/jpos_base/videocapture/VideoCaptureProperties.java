@@ -33,4 +33,10 @@ public class VideoCaptureProperties extends JposCommonProperties implements Vide
     protected VideoCaptureProperties(int dev) {
         super(dev);
     }
+
+    @Override
+    public void initOnOpen() {
+        super.initOnOpen();
+        DataEventEnabled = true;
+    }
 }

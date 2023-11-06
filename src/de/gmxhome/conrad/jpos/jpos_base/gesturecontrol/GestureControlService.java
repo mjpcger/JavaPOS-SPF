@@ -118,6 +118,11 @@ public class GestureControlService extends JposBase implements GestureControlSer
     }
 
     @Override
+    public void setStorage(int i) throws JposException {
+
+    }
+
+    @Override
     public void createMotion(String s, String s1) throws JposException {
 
     }
