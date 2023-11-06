@@ -28,6 +28,7 @@ public interface GraphicDisplayConst {
     public static final int GDSP_CST_ALL             = 3;
     public static final int GDSP_ST_HOST             = 1;
     public static final int GDSP_ST_HARDTOTALS       = 2;
+    @Deprecated
     public static final int GDSP_ST_HOST_HARDTOTALS  = 3;
 
     // DisplayMode
