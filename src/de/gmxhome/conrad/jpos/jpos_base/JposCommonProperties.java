@@ -671,7 +671,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
                 }
             }
             UnitOutputRequest checker = new UnitOutputRequest(this, CurrentUnitID);
-            checker.clearAll();
+            checker.clearOutput();
             int remainingCommands = checker.countCommands();
             if (State != JposConst.JPOS_S_IDLE && remainingCommands == 0) {
                 State = JposConst.JPOS_S_IDLE;

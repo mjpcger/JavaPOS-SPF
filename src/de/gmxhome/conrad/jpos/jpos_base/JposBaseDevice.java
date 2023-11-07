@@ -197,6 +197,12 @@ public class JposBaseDevice {
     public JposOutputRequest CurrentCommand;
 
     /**
+     * Currently executed output requests if the device supports concurrent method execution. If a device supports
+     * concurrent method execution, it must set CurrentCommands to a non-null value.
+     */
+    public List<JposOutputRequest> CurrentCommands = null;
+
+    /**
      * Constructor. Initialize ID. Derived classes must allocate list of list of property sets
      * for all supported device types.
      *
@@ -786,6 +792,37 @@ public class JposBaseDevice {
             dev.EventList.add(event);
             log(Level.DEBUG, dev.LogicalName + ": Buffer StatusUpdateEvent: [" + event.toLogString() + "]");
             processEventList(dev);
+        }
+    }
+
+    /**
+     * Invoke asynchronous method that supports concurrent processing by design. The default implementation is no support
+     * for concurrent processing. In this case, this method must simply call invoke, but it must catch exceptions and
+     * handle error and output complete events and remove the request from CurrentCommands after completion.<br>
+     * If a device supports concurrent processing, a specific implementation will probably pass the request to a worker
+     * thread that calls invoke and catches exceptions and removes it after completion as well.
+     *
+     * @param request JposOutputConcurrentRequest for asynchronous method execution.
+     */
+    public void invokeConcurrentMethod(JposOutputRequest request) {
+        JposErrorEvent eev = null;
+        try {
+            request.invoke();
+            request.finished();
+            JposOutputCompleteEvent ocev = request.createOutputEvent();
+            if (ocev != null)
+                handleEvent(ocev);
+            return;
+        } catch (JposException e) {
+            request.Exception = e;
+        } catch (Throwable e) {
+            request.Exception = new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e instanceof Exception ?
+                    (Exception) e : new Exception(e));
+            e.printStackTrace();
+        }
+        request.finishAsyncProcessing();
+        synchronized (AsyncProcessorRunning) {
+            CurrentCommands.remove(request);
         }
     }
 

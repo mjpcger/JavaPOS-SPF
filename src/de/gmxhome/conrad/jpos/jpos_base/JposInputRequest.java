@@ -19,6 +19,9 @@ package de.gmxhome.conrad.jpos.jpos_base;
 import jpos.JposConst;
 import jpos.JposException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Class to invoke an input method synchronously or asynchronously, depending on AsyncMode property. Does neither change
  * OutputID nor fires OutputCompleteEvents.<br>
@@ -58,60 +61,6 @@ public class JposInputRequest extends JposOutputRequest {
                     (Device.AsyncProcessorRunning[0] = new JposRequestThread(Device)).start();
                 }
             }
-        }
-    }
-
-    @Override
-    public void clearInput() {
-        int i = 0;
-        JposOutputRequest current;
-        synchronized (Device.AsyncProcessorRunning) {
-            while (i < Props.SuspendedCommands.size()) {
-                if (Props.SuspendedCommands.get(i) instanceof JposInputRequest) {
-                    Props.SuspendedCommands.remove(i);
-                } else {
-                    i++;
-                }
-            }
-            i = 0;
-            while (i < Device.PendingCommands.size()) {
-                if ((current = Device.PendingCommands.get(i)).Props == Props && current instanceof JposInputRequest) {
-                    Device.PendingCommands.remove(i);
-                } else {
-                    i++;
-                }
-            }
-            current = Device.CurrentCommand;
-        }
-        if (current != null && current.Props == Props && current instanceof JposInputRequest) {
-            current.abortCommand();
-        }
-    }
-
-    @Override
-    public void clearOutput() {
-        int i = 0;
-        JposOutputRequest current;
-        synchronized (Device.AsyncProcessorRunning) {
-            while (i < Props.SuspendedCommands.size()) {
-                if (!(Props.SuspendedCommands.get(i) instanceof JposInputRequest)) {
-                    Props.SuspendedCommands.remove(i);
-                } else {
-                    i++;
-                }
-            }
-            i = 0;
-            while (i < Device.PendingCommands.size()) {
-                if ((current = Device.PendingCommands.get(i)).Props == Props && !(current instanceof JposInputRequest)) {
-                    Device.PendingCommands.remove(i);
-                } else {
-                    i++;
-                }
-            }
-            current = Device.CurrentCommand;
-        }
-        if (current != null && current.Props == Props && !(current instanceof JposInputRequest)) {
-            current.abortCommand();
         }
     }
 
