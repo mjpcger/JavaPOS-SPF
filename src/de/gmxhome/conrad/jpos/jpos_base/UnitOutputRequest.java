@@ -16,8 +16,9 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
-import jpos.JposConst;
-import jpos.JposException;
+import jpos.*;
+
+import java.util.*;
 
 /**
  * Output request class for subsystem unit devices.
@@ -52,29 +53,43 @@ public class UnitOutputRequest extends JposOutputRequest {
     }
 
     @Override
-    public void clearAll() {
-        UnitOutputRequest current;
+    public void clearOutput() {
+        List<UnitOutputRequest> current = new ArrayList<>();
+        UnitOutputRequest req;
         synchronized (Device.AsyncProcessorRunning) {
             for (int i = 0; i < Props.SuspendedCommands.size();) {
-                current = (UnitOutputRequest)Props.SuspendedCommands.get(i);
-                if ((current.Units & Units) != 0) {
+                req = (UnitOutputRequest)Props.SuspendedCommands.get(i);
+                if ((req.Units & Units) != 0) {
                     Props.SuspendedCommands.remove(i);
                 } else {
                     ++i;
                 }
             }
             for (int i = 0; i < Device.PendingCommands.size();) {
-                current = (UnitOutputRequest)Device.PendingCommands.get(i);
-                if (current.Props == Props && (current.Units & Units) != 0) {
+                if (Device.PendingCommands.get(i) instanceof UnitOutputRequest &&
+                        (req = (UnitOutputRequest)Device.PendingCommands.get(i)).Props == Props && (req.Units & Units) != 0) {
                     Device.PendingCommands.remove(i);
                 } else {
                     i++;
                 }
             }
+            if (Device.CurrentCommand instanceof UnitOutputRequest) {
+                req = (UnitOutputRequest)Device.CurrentCommand;
+                if (req.Props == Props && (req.Units & Units) != 0)
+                    current.add(req);
+            }
+            if (Device.CurrentCommands != null) {
+                for (JposOutputRequest request : Device.CurrentCommands) {
+                    if (request instanceof UnitOutputRequest) {
+                        req = (UnitOutputRequest) request;
+                        if (req.Props == Props && (req.Units & Units) != 0)
+                            current.add(req);
+                    }
+                }
+            }
         }
-        current = (UnitOutputRequest)Device.CurrentCommand;
-        if (current != null && current.Props == Props && (current.Units & Units) != 0)
-            current.abortCommand();
+        for (UnitOutputRequest request : current)
+            request.abortCommand();
     }
 
     /**
