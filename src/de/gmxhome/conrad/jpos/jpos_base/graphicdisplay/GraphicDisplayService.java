@@ -19,11 +19,14 @@ package de.gmxhome.conrad.jpos.jpos_base.graphicdisplay;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.services.GraphicDisplayService116;
+import jpos.services.*;
 
 /**
  * GraphicDisplay service implementation. For more details about getter, setter and method implementations,
- * see JposBase.
+ * see JposBase.<br>
+ * Even if the UPOS specification allows to implement concurrent asynchronous processing for GraphicDisplay, this
+ * implementation does not support concurrent video playback because playing more than one video at the same time,
+ * centered on the display or in full screen mode, seems to be meaningless.
  */
 public class GraphicDisplayService extends JposBase implements GraphicDisplayService116 {
     /**
@@ -32,8 +35,9 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
      * @param props  Property set.
      * @param device Device implementation object.
      */
-    public GraphicDisplayService(JposCommonProperties props, JposDevice device) {
+    public GraphicDisplayService(GraphicDisplayProperties props, JposDevice device) {
         super(props, device);
+        Data = props;
     }
 
     /**
@@ -42,163 +46,299 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
      */
     public GraphicDisplayInterface GraphicDisplay;
 
+    private GraphicDisplayProperties Data;
+
     @Override
     public int getBrightness() throws JposException {
-        return 0;
+        checkEnabled();
+        logGet("Brightness");
+        return Data.Brightness;
     }
 
     @Override
-    public void setBrightness(int i) throws JposException {
-
+    public void setBrightness(int brightness) throws JposException {
+        logPreSet("Brightness");
+        checkOpened();
+        JposDevice.check(!Data.CapBrightness && brightness != Data.Brightness, JposConst.JPOS_E_ILLEGAL, "Changing Brightness illegal");
+        JposDevice.check(brightness < 0 || brightness > 100, JposConst.JPOS_E_ILLEGAL, "Brightness must be between 0 and 100: " + brightness);
+        GraphicDisplay.brightness(brightness);
+        logSet("Brightness");
     }
 
     @Override
     public String getCapAssociatedHardTotalsDevice() throws JposException {
-        return null;
+        checkOpened();
+        logGet("CapAssociatedHardTotalsDevice");
+        return Data.CapAssociatedHardTotalsDevice;
     }
 
     @Override
     public boolean getCapBrightness() throws JposException {
-        return false;
+        checkOpened();
+        logGet("CapBrightness");
+        return Data.CapBrightness;
     }
 
     @Override
     public boolean getCapImageType() throws JposException {
-        return false;
+        checkOpened();
+        logGet("CapImageType");
+        return Data.CapImageType;
     }
 
     @Override
     public int getCapStorage() throws JposException {
-        return 0;
+        checkOpened();
+        logGet("CapStorage");
+        return Data.CapStorage;
     }
 
     @Override
     public boolean getCapURLBack() throws JposException {
-        return false;
+        checkOpened();
+        logGet("CapURLBack");
+        return Data.CapURLBack;
     }
 
     @Override
     public boolean getCapURLForward() throws JposException {
-        return false;
+        checkOpened();
+        logGet("CapURLForward");
+        return Data.CapURLForward;
     }
 
     @Override
     public boolean getCapVideoType() throws JposException {
-        return false;
+        checkOpened();
+        logGet("CapVideoType");
+        return Data.CapVideoType;
     }
 
     @Override
     public boolean getCapVolume() throws JposException {
-        return false;
+        checkOpened();
+        logGet("CapVolume");
+        return Data.CapVolume;
     }
 
     @Override
     public int getDisplayMode() throws JposException {
-        return 0;
+        checkEnabled();
+        logGet("DisplayMode");
+        return Data.DisplayMode;
     }
 
     @Override
-    public void setDisplayMode(int i) throws JposException {
-
+    public void setDisplayMode(int displayMode) throws JposException {
+        logPreSet("DisplayMode");
+        long[] valid = {
+                GraphicDisplayConst.GDSP_DMODE_HIDDEN,
+                GraphicDisplayConst.GDSP_DMODE_IMAGE_FIT,
+                GraphicDisplayConst.GDSP_DMODE_IMAGE_FILL,
+                GraphicDisplayConst.GDSP_DMODE_IMAGE_CENTER,
+                GraphicDisplayConst.GDSP_DMODE_VIDEO_NORMAL,
+                GraphicDisplayConst.GDSP_DMODE_VIDEO_FULL,
+                GraphicDisplayConst.GDSP_DMODE_WEB
+        };
+        checkEnabled();
+        JposDevice.checkMember(displayMode, valid, JposConst.JPOS_E_ILLEGAL, "DisplayMode invalid: " + displayMode);
+        GraphicDisplay.displayMode(displayMode);
+        logSet("DisplayMode");
     }
 
     @Override
     public String getImageType() throws JposException {
-        return null;
+        checkEnabled();
+        logGet("ImageType");
+        return Data.ImageType;
     }
 
     @Override
-    public void setImageType(String s) throws JposException {
-
+    public void setImageType(String imageType) throws JposException {
+        logPreSet("ImageType");
+        checkEnabled();
+        JposDevice.check(!Data.CapImageType && imageType != Data.ImageType, JposConst.JPOS_E_ILLEGAL, "Changing ImageType illegal");
+        JposDevice.check(!JposDevice.member(imageType, Data.ImageType.split(",")), JposConst.JPOS_E_ILLEGAL, "ImageType illegal: " + imageType);
+        GraphicDisplay.imageType(imageType);
+        logSet("ImageType");
     }
 
     @Override
     public String getImageTypeList() throws JposException {
-        return null;
+        checkOpened();
+        logGet("ImageTypeList");
+        return Data.ImageTypeList;
     }
 
     @Override
     public int getLoadStatus() throws JposException {
-        return 0;
+        checkOpened();
+        JposDevice.check(Data.LoadStatus == null, JposConst.JPOS_E_ILLEGAL, "Load Status Not Available");
+        logGet("LoadStatus");
+        return Data.LoadStatus;
     }
 
     @Override
     public int getStorage() throws JposException {
-        return 0;
+        checkEnabled();
+        logGet("Storage");
+        return Data.Storage;
     }
 
     @Override
-    public void setStorage(int i) throws JposException {
-
+    public void setStorage(int storage) throws JposException {
+        logPreSet("Storage");
+        checkEnabled();
+        long[] valid = {
+                GraphicDisplayConst.GDSP_ST_HOST, GraphicDisplayConst.GDSP_ST_HARDTOTALS
+        };
+        boolean[] condition = {
+                Data.CapStorage == GraphicDisplayConst.GDSP_CST_HOST_ONLY && storage != GraphicDisplayConst.GDSP_ST_HOST,
+                Data.CapStorage == GraphicDisplayConst.GDSP_CST_HARDTOTALS_ONLY && storage != GraphicDisplayConst.GDSP_ST_HARDTOTALS,
+                !JposDevice.member(storage, valid)
+        };
+        JposDevice.check(condition[0] || condition[1] || condition[2], JposConst.JPOS_E_ILLEGAL, "Storage invalid: " + storage);
+        GraphicDisplay.storage(storage);
+        logSet("Storage");
     }
 
     @Override
-    public int getURL() throws JposException {
-        return 0;
+    public String getURL() throws JposException {
+        checkOpened();
+        JposDevice.check(Data.URL == null, JposConst.JPOS_E_ILLEGAL, "Load Status Not Available");
+        logGet("URL");
+        return Data.URL;
     }
 
     @Override
     public String getVideoType() throws JposException {
-        return null;
+        checkEnabled();
+        logGet("VideoType");
+        return Data.VideoType;
     }
 
     @Override
-    public void setVideoType(String s) throws JposException {
-
+    public void setVideoType(String videoType) throws JposException {
+        logPreSet("VideoType");
+        checkEnabled();
+        JposDevice.check(videoType != Data.VideoType && !Data.CapVideoType, JposConst.JPOS_E_ILLEGAL, "Changing VideoType not supported.");
+        String[] valid = Data.VideoTypeList.split(",");
+        JposDevice.check(!JposDevice.member(videoType, valid), JposConst.JPOS_E_ILLEGAL, "VideoType not supported: " + videoType);
+        GraphicDisplay.videoType(videoType);
+        logSet("VideoType");
     }
 
     @Override
     public String getVideoTypeList() throws JposException {
-        return null;
+        checkOpened();
+        logGet("VideoTypeList");
+        return Data.VideoTypeList;
     }
 
     @Override
     public int getVolume() throws JposException {
-        return 0;
+        checkEnabled();
+        logGet("Volume");
+        return Data.Volume;
     }
 
     @Override
-    public void setVolume(int i) throws JposException {
-
+    public void setVolume(int volume) throws JposException {
+        logPreSet("Volume");
+        checkEnabled();
+        Device.check(volume < 0 || volume > 100, JposConst.JPOS_E_ILLEGAL, "Volume must be between 0 and 100: " + volume);
+        GraphicDisplay.volume(volume);
+        logSet("Volume");
     }
+
+    private void callIt(JposOutputRequest request, String name) throws JposException {
+        if (callNowOrLater(request))
+            logAsyncCall(name);
+        else
+            logCall(name);
+    }
+
+    /**
+     * Specifies whether a URL is currently loading.
+     */
+    public boolean UrlLoading = false;
+
+    /**
+     * Specifies whether a video is currently playing.
+     */
+    public boolean VideoPlaying = false;
 
     @Override
     public void cancelURLLoading() throws JposException {
-
+        logPreCall("CancelURLLoading");
+        checkEnabled();
+        JposDevice.check(!UrlLoading, JposConst.JPOS_E_ILLEGAL, "No URL loading");
+        GraphicDisplay.cancelURLLoading();
+        logCall("CancelURLLoading");
     }
 
     @Override
     public void goURLBack() throws JposException {
-
+        logPreCall("GoURLBack");
+        checkEnabled();
+        callIt(GraphicDisplay.goURLBack(), "GoURLBack");
     }
 
     @Override
     public void goURLForward() throws JposException {
-
+        logPreCall("GoURLForward");
+        checkEnabled();
+        callIt(GraphicDisplay.goURLForward(), "GoURLForward");
     }
 
     @Override
     public void loadImage(String s) throws JposException {
-
+        if (s == null)
+            s = "";
+        long[] valid = { GraphicDisplayConst.GDSP_DMODE_IMAGE_FIT, GraphicDisplayConst.GDSP_DMODE_IMAGE_FILL, GraphicDisplayConst.GDSP_DMODE_IMAGE_CENTER };
+        logPreCall("LoadImage", s);
+        checkEnabled();
+        JposDevice.check(!Data.CapImageType || Data.ImageTypeList.length() == 0, JposConst.JPOS_E_ILLEGAL, "No Image File Support");
+        JposDevice.checkMember(Data.DisplayMode, valid, JposConst.JPOS_E_ILLEGAL, "Invalid DisplayMode for LoadImage: " + Data.DisplayMode);
+        callIt(GraphicDisplay.loadImage(s), "LoadImage");
     }
 
     @Override
     public void loadURL(String s) throws JposException {
-
+        if (s == null)
+            s = "";
+        logPreCall("LoadURL", s);
+        checkEnabled();
+        JposDevice.check(s.length() <= 0, JposConst.JPOS_E_ILLEGAL, "Empty URL");
+        callIt(GraphicDisplay.loadURL(s), "LoadURL");
     }
 
     @Override
     public void playVideo(String s, boolean b) throws JposException {
-
+        if (s == null)
+            s = "";
+        long[] valid = { GraphicDisplayConst.GDSP_DMODE_VIDEO_NORMAL, GraphicDisplayConst.GDSP_DMODE_VIDEO_FULL };
+        logPreCall("PlayVideo", s + ", " + b);
+        checkEnabled();
+        JposDevice.check(!Data.CapVideoType || Data.VideoTypeList.length() == 0, JposConst.JPOS_E_ILLEGAL, "No Video File Support");
+        JposDevice.checkMember(Data.DisplayMode, valid, JposConst.JPOS_E_ILLEGAL, "Invalid DisplayMode for PlayVideo: " + Data.DisplayMode);
+        callIt(GraphicDisplay.playVideo(s, b), "PlayVideo");
     }
 
     @Override
     public void stopVideo() throws JposException {
-
+        logPreCall("StopVideo");
+        checkEnabled();
+        JposDevice.check(!VideoPlaying, JposConst.JPOS_E_ILLEGAL, "No video playing");
+        GraphicDisplay.stopVideo();
+        logCall("StopVideo");
     }
 
     @Override
     public void updateURLPage() throws JposException {
-
+        logPreCall("UpdateURLPage");
+        checkEnabled();
+        JposDevice.check(UrlLoading, JposConst.JPOS_E_ILLEGAL, "URL loading");
+        callIt(GraphicDisplay.updateURLPage(), "UpdateURLPage");
     }
 }
