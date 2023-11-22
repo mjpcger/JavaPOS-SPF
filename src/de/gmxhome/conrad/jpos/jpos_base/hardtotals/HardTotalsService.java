@@ -52,10 +52,11 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
 
     @Override
     public void deleteInstance() throws JposException {
+        JposDevice dev = Device;
         super.deleteInstance();
         synchronized (Factory.ClaimedHardTotals) {
-            if (Device.getCount(Device.HardTotalss) == 0) {
-                Factory.ClaimedHardTotals.remove(Device);
+            if (dev.getCount(dev.HardTotalss) == 0) {
+                Factory.ClaimedHardTotals.remove(dev);
             }
         }
     }
