@@ -805,24 +805,11 @@ public class JposBaseDevice {
      * @param request JposOutputConcurrentRequest for asynchronous method execution.
      */
     public void invokeConcurrentMethod(JposOutputRequest request) {
-        JposErrorEvent eev = null;
-        try {
-            request.invoke();
-            request.finished();
-            JposOutputCompleteEvent ocev = request.createOutputEvent();
-            if (ocev != null)
-                handleEvent(ocev);
-            return;
-        } catch (JposException e) {
-            request.Exception = e;
-        } catch (Throwable e) {
-            request.Exception = new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e instanceof Exception ?
-                    (Exception) e : new Exception(e));
-            e.printStackTrace();
-        }
-        request.finishAsyncProcessing();
+        request.catchedInvocation();
+        boolean processed = request.finishAsyncProcessing();
         synchronized (AsyncProcessorRunning) {
-            CurrentCommands.remove(request);
+            if (processed)
+                CurrentCommands.remove(request);
         }
     }
 

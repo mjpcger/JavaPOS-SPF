@@ -94,10 +94,21 @@ public class JposOutputRequest implements Runnable {
         while (Waiting.suspend(0));
         Exception = null;
     }
+
     /**
      * Force command to abort processing. Waits until command has been finished.
      */
     public void abortCommand() {
+        abortCommand(false);
+    }
+
+    /**
+     * Force command to abort processing. Waits until command has been finished.
+     * @param noEvents  If true, OutputCompleteEvents and ErrorEvents will be suppressed.
+     */
+    public void abortCommand(boolean noEvents) {
+        if (noEvents)
+            NoEvents = true;
         SyncObject waiter = new SyncObject();
         synchronized(this) {
             Abort = waiter;
@@ -229,7 +240,7 @@ public class JposOutputRequest implements Runnable {
                 Device.PendingCommands.remove(0);
             } else
                 Device.AsyncProcessorRunning[0] = null;
-            if (Device.CurrentCommands != null && EndSync == null)
+            if (Device.CurrentCommands != null && result != null && result.EndSync == null)
                 Device.CurrentCommands.add(result);
             else
                 Device.CurrentCommand = result;
@@ -243,7 +254,7 @@ public class JposOutputRequest implements Runnable {
      * Device.CurrentCommands!
      * @return false if another request is active or enqueued, true otherwise.
      */
-    boolean lastRequest() {
+    private boolean lastRequest() {
         for (JposOutputRequest req : Device.PendingCommands) {
             if (req.Props == Props)
                 return false;
@@ -254,6 +265,8 @@ public class JposOutputRequest implements Runnable {
                     return false;
             }
         }
+        if (Props.SuspendedCommands.size() == 0)
+            return false;
         return true;
     }
 
@@ -339,13 +352,13 @@ public class JposOutputRequest implements Runnable {
             }
             if (Device.CurrentCommands != null) {
                 for (JposOutputRequest request : Device.CurrentCommands) {
-                    if (!(request instanceof JposInputRequest) && request.Props == Props)
+                    if (!(request instanceof JposInputRequest) && request != null && request.Props == Props)
                         current.add(request);
                 }
             }
         }
         for (JposOutputRequest req : current) {
-            req.abortCommand();
+            req.abortCommand(true);
         }
     }
 
@@ -374,7 +387,7 @@ public class JposOutputRequest implements Runnable {
             }
         }
         for (JposOutputRequest req : current)
-            req.abortCommand();
+            req.abortCommand(!(req instanceof JposInputRequest));
     }
 
     /**
@@ -405,28 +418,29 @@ public class JposOutputRequest implements Runnable {
     /**
      * Moves the all output requests belonging to the same property set to the
      * suspended command list of the property set.
-     * @param current If true, the current command will be added to suspended command list as well.
      */
-    void suspend(boolean current) {
+    private void suspend() {
         int i = 0;
         int state;
         synchronized (Device.AsyncProcessorRunning) {
             state = Props.State;
-            if (current) {
-                JposOutputRequest request = Device.CurrentCommand;
+            JposOutputRequest request = Device.CurrentCommand;
+            if (request != null && request.Props == Props) {
+                Props.SuspendedCommands.add(request);
+                Device.CurrentCommand = null;
+                request.reset();
+                Props.State = JposConst.JPOS_S_ERROR;
+            }
+            while (Device.CurrentCommands.size() > 0) {
+                request = Device.CurrentCommands.get(0);
                 if (request.Props == Props) {
                     Props.SuspendedCommands.add(request);
-                    Device.CurrentCommand = null;
-                    request.reset();
+                    Device.CurrentCommands.remove(request);
+                    if (request == this)
+                        request.reset();
+                    else
+                        request.abortCommand(true);
                     Props.State = JposConst.JPOS_S_ERROR;
-                }
-                for (JposOutputRequest req : Device.CurrentCommands) {
-                    if (req.Props == Props) {
-                        Props.SuspendedCommands.add(req);
-                        Device.CurrentCommands.remove(req);
-                        req.reset();
-                        Props.State = JposConst.JPOS_S_ERROR;
-                    }
                 }
             }
             while (i < Device.PendingCommands.size()) {
@@ -477,52 +491,66 @@ public class JposOutputRequest implements Runnable {
         JposOutputRequest current;
         while ((current = dequeue()) != null) {
             boolean concurrent = Device.CurrentCommands != null && current.EndSync == null;
-            try {
-                if (concurrent)
-                    Device.invokeConcurrentMethod(current);
-                else
-                    current.invoke();
-            } catch (JposException e) {
-                current.Exception = e;
-            } catch (Throwable e) {
-                current.Exception = new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e instanceof Exception ?
-                        (Exception) e : new Exception(e));
-                e.printStackTrace();
-            }
-            if (current.EndSync != null) {
-                synchronized (Device.AsyncProcessorRunning) {
-                    current.finished();
-                    if (Device.PendingCommands.size() == 0 && current.Props.SuspendedCommands.size() == 0) {
-                        current.Props.State = JposConst.JPOS_S_IDLE;
-                        current.Props.EventSource.logSet("State");
+            if (concurrent)
+                Device.invokeConcurrentMethod(current);
+            else {
+                current.catchedInvocation();
+                if (current.EndSync != null) {
+                    synchronized (Device.AsyncProcessorRunning) {
+                        current.finished();
+                        transitionToIdle();
                     }
-                }
-                current.EndSync.signal();
-            } else if (!concurrent) {
-                current.finishAsyncProcessing();
+                    current.EndSync.signal();
+                } else
+                    current.finishAsyncProcessing();
             }
         }
     }
 
     /**
-     * Finishs asynchronous processing of a request: <ul>
-     *     <li>If Exception has been set, </li>
-     * </ul>
+     * Catches exceptions thrown by method invoke() and stores it in property Exception for further processing by
+     * asynchronous request handlers.
      */
-    void finishAsyncProcessing() {
+    public void catchedInvocation() {
         try {
-            boolean last = false;
-            if (Exception != null) {
+            invoke();
+        } catch (JposException e) {
+            Exception = e;
+        } catch (Throwable e) {
+            Exception = new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e instanceof Exception ?
+                    (Exception) e : new Exception(e));
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Specifies whether OutputCompleteEvent or ErrorEvent shall be suppressed after command finalization. Will be
+     * set in current commands whenever they will be discarded due to ClearOutput or ClearInput processing.
+     */
+    boolean NoEvents = false;
+
+    /**
+     * Finishs asynchronous processing of a request.
+     * @return true if request has been processed, false if suspended.
+     */
+    public boolean finishAsyncProcessing() {
+        boolean processed = false;
+        try {
+            if (NoEvents) {
+                NoEvents = false;
+                reset();
+                processed = true;
+            } else if (Exception != null) {
                 JposErrorEvent event = createErrorEvent(Exception);
                 if (event == null) {
                     synchronized (Device.AsyncProcessorRunning) {
                         finished();
                         Props.FlagWhenIdle = true;
                         Props.EventSource.logSet("FlagWhenIdle");
-                        last = lastRequest();
+                        processed = true;
                     }
                 } else {
-                    suspend(true);
+                    suspend();
                     Device.handleEvent(event);
                 }
             } else {
@@ -532,29 +560,36 @@ public class JposOutputRequest implements Runnable {
                     if (ocevent != null) {
                         Device.handleEvent(ocevent);
                     }
-                    last = lastRequest();
+                    processed = true;
                 }
             }
-            if (last)
-                transitionToIdle();
         } catch (JposException e1) {
         }
+        if (processed)
+            transitionToIdle();
+        return processed;
     }
 
     private void transitionToIdle() {
-        if (Props.State == JposConst.JPOS_S_BUSY) {
-            Props.State = JposConst.JPOS_S_IDLE;
-            Props.EventSource.logSet("State");
-        }
-        if (Props.FlagWhenIdle) {
-            Props.FlagWhenIdle = false;
-            Props.EventSource.logSet("FlagWhenIdle");
-            JposStatusUpdateEvent event;
-            synchronized (Device.AsyncProcessorRunning) {
-                JposOutputRequest savedCommand = Device.CurrentCommand;
-                event = (Device.CurrentCommand = this).createIdleEvent();
-                Device.CurrentCommand = savedCommand;
+        JposStatusUpdateEvent event = null;
+        synchronized (Device.AsyncProcessorRunning) {
+            if (lastRequest()) {
+                if (Props.State == JposConst.JPOS_S_BUSY) {
+                    Props.State = JposConst.JPOS_S_IDLE;
+                    Props.EventSource.logSet("State");
+                }
+                if (Props.FlagWhenIdle) {
+                    Props.FlagWhenIdle = false;
+                    Props.EventSource.logSet("FlagWhenIdle");
+                    synchronized (Device.AsyncProcessorRunning) {
+                        JposOutputRequest savedCommand = Device.CurrentCommand;
+                        event = (Device.CurrentCommand = this).createIdleEvent();
+                        Device.CurrentCommand = savedCommand;
+                    }
+                }
             }
+        }
+        if (event != null) {
             try {
                 Device.handleEvent(event);
             } catch (JposException e) {

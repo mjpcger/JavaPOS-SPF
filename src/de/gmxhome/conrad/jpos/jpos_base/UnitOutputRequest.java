@@ -89,7 +89,7 @@ public class UnitOutputRequest extends JposOutputRequest {
             }
         }
         for (UnitOutputRequest request : current)
-            request.abortCommand();
+            request.abortCommand(true);
     }
 
     /**
