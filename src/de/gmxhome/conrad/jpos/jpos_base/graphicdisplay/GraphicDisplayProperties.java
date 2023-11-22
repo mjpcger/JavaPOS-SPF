@@ -51,7 +51,7 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
      * UPOS property CapStorage. Default: GDSP_CST_HARDTOTALS_ONLY. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int CapStorage = GraphicDisplayConst.GDSP_CST_HARDTOTALS_ONLY;
+    public int CapStorage = GraphicDisplayConst.GDSP_CST_HOST_ONLY;
 
     /**
      * UPOS property CapURLBack. Default: false. Can be overwritten by objects derived from JposDevice within the
@@ -138,7 +138,6 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
      */
     protected GraphicDisplayProperties(int dev) {
         super(dev);
-        AsyncMode = true;
     }
 
     @Override

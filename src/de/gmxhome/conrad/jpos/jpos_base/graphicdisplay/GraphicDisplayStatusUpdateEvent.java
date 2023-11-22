@@ -77,7 +77,7 @@ public class GraphicDisplayStatusUpdateEvent extends JposStatusUpdateEvent {
     public void setLateProperties() {
         super.setStatusProperties();
         GraphicDisplayProperties props = (GraphicDisplayProperties) getPropertySet();
-        int loadstate = 0;
+        Integer loadstate = props.LoadStatus;
         switch (getStatus()) {
             case GraphicDisplayConst.GDSP_SUE_START_LOAD_WEBPAGE:
                 loadstate = GraphicDisplayConst.GDSP_LSTATUS_START;
@@ -91,7 +91,7 @@ public class GraphicDisplayStatusUpdateEvent extends JposStatusUpdateEvent {
             default:
                 return;
         }
-        if (loadstate != props.LoadStatus) {
+        if (loadstate != null && !loadstate.equals(props.LoadStatus)) {
             props.LoadStatus = loadstate;
             ((GraphicDisplayService) getSource()).logSet("LoadStatus");
         }

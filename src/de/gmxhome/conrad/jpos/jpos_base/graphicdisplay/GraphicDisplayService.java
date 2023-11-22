@@ -59,8 +59,8 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void setBrightness(int brightness) throws JposException {
         logPreSet("Brightness");
         checkOpened();
-        JposDevice.check(!Data.CapBrightness && brightness != Data.Brightness, JposConst.JPOS_E_ILLEGAL, "Changing Brightness illegal");
-        JposDevice.check(brightness < 0 || brightness > 100, JposConst.JPOS_E_ILLEGAL, "Brightness must be between 0 and 100: " + brightness);
+        JposDevice.check(!Data.CapBrightness && brightness != Data.Brightness, JposConst.JPOS_E_ILLEGAL, "Changing Brightness Illegal");
+        JposDevice.check(brightness < 0 || brightness > 100, JposConst.JPOS_E_ILLEGAL, "Brightness Must Be Between 0 And 100: " + brightness);
         GraphicDisplay.brightness(brightness);
         logSet("Brightness");
     }
@@ -133,15 +133,24 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
         logPreSet("DisplayMode");
         long[] valid = {
                 GraphicDisplayConst.GDSP_DMODE_HIDDEN,
-                GraphicDisplayConst.GDSP_DMODE_IMAGE_FIT,
-                GraphicDisplayConst.GDSP_DMODE_IMAGE_FILL,
-                GraphicDisplayConst.GDSP_DMODE_IMAGE_CENTER,
-                GraphicDisplayConst.GDSP_DMODE_VIDEO_NORMAL,
-                GraphicDisplayConst.GDSP_DMODE_VIDEO_FULL,
                 GraphicDisplayConst.GDSP_DMODE_WEB
         };
+        long[] validImage = {
+                GraphicDisplayConst.GDSP_DMODE_IMAGE_FIT,
+                GraphicDisplayConst.GDSP_DMODE_IMAGE_FILL,
+                GraphicDisplayConst.GDSP_DMODE_IMAGE_CENTER
+        };
+        long[] validVideo = {
+                GraphicDisplayConst.GDSP_DMODE_VIDEO_NORMAL,
+                GraphicDisplayConst.GDSP_DMODE_VIDEO_FULL
+        };
         checkEnabled();
-        JposDevice.checkMember(displayMode, valid, JposConst.JPOS_E_ILLEGAL, "DisplayMode invalid: " + displayMode);
+        if (!JposDevice.member(displayMode, valid)) {
+            if (!Data.CapImageType || !JposDevice.member(displayMode, validImage)) {
+                if (!Data.CapVideoType || !JposDevice.member(displayMode, validVideo))
+                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "DisplayMode Invalid: " + displayMode);
+            }
+        }
         GraphicDisplay.displayMode(displayMode);
         logSet("DisplayMode");
     }
@@ -157,8 +166,8 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void setImageType(String imageType) throws JposException {
         logPreSet("ImageType");
         checkEnabled();
-        JposDevice.check(!Data.CapImageType && imageType != Data.ImageType, JposConst.JPOS_E_ILLEGAL, "Changing ImageType illegal");
-        JposDevice.check(!JposDevice.member(imageType, Data.ImageType.split(",")), JposConst.JPOS_E_ILLEGAL, "ImageType illegal: " + imageType);
+        JposDevice.check(!Data.CapImageType, JposConst.JPOS_E_ILLEGAL, "Image Mode Not Supported");
+        JposDevice.check(!JposDevice.member(imageType, Data.ImageType.split(",")), JposConst.JPOS_E_ILLEGAL, "ImageType Illegal: " + imageType);
         GraphicDisplay.imageType(imageType);
         logSet("ImageType");
     }
@@ -197,7 +206,7 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
                 Data.CapStorage == GraphicDisplayConst.GDSP_CST_HARDTOTALS_ONLY && storage != GraphicDisplayConst.GDSP_ST_HARDTOTALS,
                 !JposDevice.member(storage, valid)
         };
-        JposDevice.check(condition[0] || condition[1] || condition[2], JposConst.JPOS_E_ILLEGAL, "Storage invalid: " + storage);
+        JposDevice.check(condition[0] || condition[1] || condition[2], JposConst.JPOS_E_ILLEGAL, "Storage Invalid: " + storage);
         GraphicDisplay.storage(storage);
         logSet("Storage");
     }
@@ -221,9 +230,9 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void setVideoType(String videoType) throws JposException {
         logPreSet("VideoType");
         checkEnabled();
-        JposDevice.check(videoType != Data.VideoType && !Data.CapVideoType, JposConst.JPOS_E_ILLEGAL, "Changing VideoType not supported.");
+        JposDevice.check(!Data.CapVideoType, JposConst.JPOS_E_ILLEGAL, "Video Mode Not Supported.");
         String[] valid = Data.VideoTypeList.split(",");
-        JposDevice.check(!JposDevice.member(videoType, valid), JposConst.JPOS_E_ILLEGAL, "VideoType not supported: " + videoType);
+        JposDevice.check(!JposDevice.member(videoType, valid), JposConst.JPOS_E_ILLEGAL, "VideoType Not Supported: " + videoType);
         GraphicDisplay.videoType(videoType);
         logSet("VideoType");
     }
@@ -246,16 +255,16 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void setVolume(int volume) throws JposException {
         logPreSet("Volume");
         checkEnabled();
-        Device.check(volume < 0 || volume > 100, JposConst.JPOS_E_ILLEGAL, "Volume must be between 0 and 100: " + volume);
+        JposDevice.check(!Data.CapVolume && volume != Data.Volume, JposConst.JPOS_E_ILLEGAL, "Volume Change Not Supported");
+        JposDevice.check(volume < 0 || volume > 100, JposConst.JPOS_E_ILLEGAL, "Volume Must Be Between 0 And 100: " + volume);
         GraphicDisplay.volume(volume);
         logSet("Volume");
     }
 
     private void callIt(JposOutputRequest request, String name) throws JposException {
-        if (callNowOrLater(request))
-            logAsyncCall(name);
-        else
-            logCall(name);
+        if (request != null)
+            request.enqueue();
+        logAsyncCall(name);
     }
 
     /**
@@ -272,7 +281,7 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void cancelURLLoading() throws JposException {
         logPreCall("CancelURLLoading");
         checkEnabled();
-        JposDevice.check(!UrlLoading, JposConst.JPOS_E_ILLEGAL, "No URL loading");
+        JposDevice.check(!UrlLoading, JposConst.JPOS_E_ILLEGAL, "No URL Loading");
         GraphicDisplay.cancelURLLoading();
         logCall("CancelURLLoading");
     }
@@ -281,6 +290,7 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void goURLBack() throws JposException {
         logPreCall("GoURLBack");
         checkEnabled();
+        JposDevice.check(Data.DisplayMode == GraphicDisplayConst.GDSP_DMODE_HIDDEN, JposConst.JPOS_E_ILLEGAL, "Bad Mode");
         callIt(GraphicDisplay.goURLBack(), "GoURLBack");
     }
 
@@ -288,6 +298,7 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void goURLForward() throws JposException {
         logPreCall("GoURLForward");
         checkEnabled();
+        JposDevice.check(Data.DisplayMode == GraphicDisplayConst.GDSP_DMODE_HIDDEN, JposConst.JPOS_E_ILLEGAL, "Bad Mode");
         callIt(GraphicDisplay.goURLForward(), "GoURLForward");
     }
 
@@ -298,8 +309,8 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
         long[] valid = { GraphicDisplayConst.GDSP_DMODE_IMAGE_FIT, GraphicDisplayConst.GDSP_DMODE_IMAGE_FILL, GraphicDisplayConst.GDSP_DMODE_IMAGE_CENTER };
         logPreCall("LoadImage", s);
         checkEnabled();
-        JposDevice.check(!Data.CapImageType || Data.ImageTypeList.length() == 0, JposConst.JPOS_E_ILLEGAL, "No Image File Support");
-        JposDevice.checkMember(Data.DisplayMode, valid, JposConst.JPOS_E_ILLEGAL, "Invalid DisplayMode for LoadImage: " + Data.DisplayMode);
+        JposDevice.check(!Data.CapImageType, JposConst.JPOS_E_ILLEGAL, "No Image Mode Support");
+        JposDevice.checkMember(Data.DisplayMode, valid, JposConst.JPOS_E_ILLEGAL, "Invalid DisplayMode For LoadImage: " + Data.DisplayMode);
         callIt(GraphicDisplay.loadImage(s), "LoadImage");
     }
 
@@ -309,6 +320,7 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
             s = "";
         logPreCall("LoadURL", s);
         checkEnabled();
+        JposDevice.check(Data.DisplayMode == GraphicDisplayConst.GDSP_DMODE_HIDDEN, JposConst.JPOS_E_ILLEGAL, "Bad Mode");
         JposDevice.check(s.length() <= 0, JposConst.JPOS_E_ILLEGAL, "Empty URL");
         callIt(GraphicDisplay.loadURL(s), "LoadURL");
     }
@@ -320,8 +332,8 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
         long[] valid = { GraphicDisplayConst.GDSP_DMODE_VIDEO_NORMAL, GraphicDisplayConst.GDSP_DMODE_VIDEO_FULL };
         logPreCall("PlayVideo", s + ", " + b);
         checkEnabled();
-        JposDevice.check(!Data.CapVideoType || Data.VideoTypeList.length() == 0, JposConst.JPOS_E_ILLEGAL, "No Video File Support");
-        JposDevice.checkMember(Data.DisplayMode, valid, JposConst.JPOS_E_ILLEGAL, "Invalid DisplayMode for PlayVideo: " + Data.DisplayMode);
+        JposDevice.check(!Data.CapVideoType, JposConst.JPOS_E_ILLEGAL, "No Video Mode Support");
+        JposDevice.checkMember(Data.DisplayMode, valid, JposConst.JPOS_E_ILLEGAL, "Invalid DisplayMode For PlayVideo: " + Data.DisplayMode);
         callIt(GraphicDisplay.playVideo(s, b), "PlayVideo");
     }
 
@@ -329,7 +341,7 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void stopVideo() throws JposException {
         logPreCall("StopVideo");
         checkEnabled();
-        JposDevice.check(!VideoPlaying, JposConst.JPOS_E_ILLEGAL, "No video playing");
+        JposDevice.check(!VideoPlaying, JposConst.JPOS_E_ILLEGAL, "No Video Playing");
         GraphicDisplay.stopVideo();
         logCall("StopVideo");
     }
@@ -338,7 +350,8 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void updateURLPage() throws JposException {
         logPreCall("UpdateURLPage");
         checkEnabled();
-        JposDevice.check(UrlLoading, JposConst.JPOS_E_ILLEGAL, "URL loading");
+        JposDevice.check(Data.DisplayMode == GraphicDisplayConst.GDSP_DMODE_HIDDEN, JposConst.JPOS_E_ILLEGAL, "Bad Mode");
+        JposDevice.check(UrlLoading, JposConst.JPOS_E_ILLEGAL, "URL Loading");
         callIt(GraphicDisplay.updateURLPage(), "UpdateURLPage");
     }
 }

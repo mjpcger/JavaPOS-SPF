@@ -31,6 +31,7 @@ public interface GraphicDisplayInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
+     *     <li>CapBrightness is true or brightness equals the previous value of Brightness,</li>
      *     <li>brightness is between 0 and 100.</li>
      * </ul>
      * @param brightness Brightness level in percent.
@@ -44,7 +45,10 @@ public interface GraphicDisplayInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>displayMode is one of DMODE_HIDDEN, DMODE_IMAGE_FIT, DMODE_IMAGE_FILL, DMODE_IMAGE_CENTER,
-     *                 DMODE_VIDEO_NORMAL, GDSP_DMODE_VIDEO_FULL or GDSP_DMODE_WEB.</li>
+     *                 DMODE_VIDEO_NORMAL, GDSP_DMODE_VIDEO_FULL or GDSP_DMODE_WEB,</li>
+     *     <li>if CapImageType is false, displayMode is not one of DMODE_IMAGE_FIT or DMODE_IMAGE_FILL or
+     *                 DMODE_IMAGE_CENTER,</li>
+     *     <li> if CapVideoType is false, displayMode is not one of DMODE_VIDEO_NORMAL or GDSP_DMODE_VIDEO_FULL.</li>
      * </ul>
      * @param displayMode Critical battery low power level in percent.
      * @throws JposException If an error occurs.
@@ -56,7 +60,7 @@ public interface GraphicDisplayInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>CapImageType is true or imageType is equal to the current imageType value,</li>
+     *     <li>CapImageType is true,</li>
      *     <li>imageType is one of the values listed in property ImageTypeList.</li>
      * </ul>
      * @param imageType Critical battery low power level in percent.
@@ -86,7 +90,7 @@ public interface GraphicDisplayInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>CapVideoType is true or videoType is equal to the current VideoType property value,</li>
+     *     <li>CapVideoType is true,</li>
      *     <li>videoType is one of the values listed in VideoTypeList.</li>
      * </ul>
      * @param videoType Critical battery low power level in percent.
@@ -99,6 +103,7 @@ public interface GraphicDisplayInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
+     *     <li>CapVolume is true or volume equals the previous value of Volume,</li>
      *     <li>volume is between 0 and 100.</li>
      * </ul>
      * @param volume Volume power level in percent.
@@ -145,7 +150,8 @@ public interface GraphicDisplayInterface extends JposBaseInterface {
      * method call for synchronous or asynchronous execution.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled.</li>
+     *     <li>Device is enabled,</li>
+     *     <li>DisplayMode is not equal to DMODE_HIDDEN.</li>
      * </ul>
      *
      * @return                  GoURLBack object for use in final part.
@@ -171,7 +177,8 @@ public interface GraphicDisplayInterface extends JposBaseInterface {
      * method call for synchronous or asynchronous execution.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled.</li>
+     *     <li>Device is enabled,</li>
+     *     <li>DisplayMode is not equal to DMODE_HIDDEN.</li>
      * </ul>
      *
      * @return                  GoURLForward object for use in final part.
@@ -198,7 +205,7 @@ public interface GraphicDisplayInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>CapImageType is true and ImageTypeList is not an empty string,</li>
+     *     <li>CapImageType is true,</li>
      *     <li>DisplayMode is DMODE_IMAGE_FIT, DMODE_IMAGE_FILL or DMODE_IMAGE_CENTER.</li>
      * </ul>
      *
@@ -227,6 +234,7 @@ public interface GraphicDisplayInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
+     *     <li>DisplayMode is not equal to DMODE_HIDDEN,</li>
      *     <li>url is neither an empty string nor null.</li>
      * </ul>
      *
@@ -255,7 +263,7 @@ public interface GraphicDisplayInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>CapVideoType is true and VideoTypeList is not an empty string,</li>
+     *     <li>CapVideoType is true,</li>
      *     <li>DisplayMode is DMODE_VIDEO_NORMAL or DMODE_VIDEO_FULL.</li>
      * </ul>
      *
@@ -285,6 +293,7 @@ public interface GraphicDisplayInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
+     *     <li>DisplayMode is not equal to DMODE_HIDDEN.</li>
      * </ul>
      *
      * @return                  UpdateURLPage object for use in final part.
