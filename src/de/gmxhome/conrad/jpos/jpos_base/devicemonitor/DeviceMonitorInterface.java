@@ -18,6 +18,7 @@
 package de.gmxhome.conrad.jpos.jpos_base.devicemonitor;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposBaseInterface;
+import jpos.JposException;
 
 /**
  * Interface for methods that implement property setter and method calls for the DeviceMonitor device category.
@@ -25,4 +26,66 @@ import de.gmxhome.conrad.jpos.jpos_base.JposBaseInterface;
  * Further details about error handling can be found in introduction - Device Behavior Models - Errors.
  */
 public interface DeviceMonitorInterface extends JposBaseInterface {
+    /**
+     * Final part of AddMonitoringDevice method. Can be overwritten within derived classes, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>deviceID is one of the device ids specified in property DeviceList,</li>
+     *     <li>monitoringMode is one of MMODE_UPDATE, MMODE_STRADDLED, MMODE_HIGH, MMODE_LOW, MMODE_WITHIN,
+     *     MMODE_OUTSIDE or MMODE_POLLING,</li>
+     *     <li>If monitorMode is MMODE_WITHIN or MMODE_OUTSIDE, boundary is greater than subBoundary,</li>
+     *     <li>intervalTime is greater than zero.</li>
+     * </ul>
+     * If successful, DeviceMonitorService will update property MonitoringDeviceList to match the specified values.
+     *
+     * @param deviceID       The deviceID of the monitored device.
+     * @param monitoringMode The monitoring mode.
+     * @param boundary       (Upper) boundary value to be monitored, if necessary for the specified monitoring mode.
+     * @param subBoundary    Lower boundary value to be monitored, if necessary for the specified monitoring mode.
+     * @param intervalTime   Monitoring interval in milliseconds.
+     * @throws JposException    If an error occurs.
+     */
+    void addMonitoringDevice(String deviceID, int monitoringMode, int boundary, int subBoundary, int intervalTime) throws JposException;
+
+    /**
+     * Final part of ClearMonitoringDevices method. Can be overwritten within derived classes, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled.</li>
+     * </ul>
+     * If successful, DeviceMonitorService will be reset to "".
+     *
+     * @throws JposException    If an error occurs.
+     */
+    void clearMonitoringDevices() throws JposException;
+
+    /**
+     * Final part of DeleteMonitoringDevice method. Can be overwritten within derived classes, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>deviceID is one of the device ids specified in property MonitoringDeviceList.</li>
+     * </ul>
+     * If successful, DeviceMonitorService will update property MonitoringDeviceList.
+     *
+     * @param deviceID       The deviceID of the monitored device.
+     * @throws JposException    If an error occurs.
+     */
+    void deleteMonitoringDevice(String deviceID) throws JposException;
+
+    /**
+     * Final part of AddMarker method. Can be overwritten within derived classes, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>deviceID is one of the device ids specified in property DeviceList,</li>
+     *     <li>pValue is a reference to an int[1].</li>
+     * </ul>
+     *
+     * @param deviceID  The deviceID of the device.
+     * @param pValue    Pointer that stores measurement value.
+     * @throws JposException    If an error occurs.
+     */
+    void getDeviceValue(String deviceID, int[] pValue) throws JposException;
 }

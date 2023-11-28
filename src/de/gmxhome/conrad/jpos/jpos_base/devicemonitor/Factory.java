@@ -41,6 +41,7 @@ public class Factory extends JposDeviceFactory {
         props.Device = dev;
         props.Claiming = dev.ClaimedDeviceMonitor;
         dev.changeDefaults(props);
+        JposDevice.check(props.DeviceList == null, JposConst.JPOS_E_NOSERVICE, "Bad Service: No DeviceList");
         props.addProperties(dev.DeviceMonitors);
         service.DeviceInterface = service.DeviceMonitor = props;
         return service;

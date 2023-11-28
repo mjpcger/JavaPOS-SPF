@@ -18,6 +18,7 @@
 package de.gmxhome.conrad.jpos.jpos_base.devicemonitor;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
+import jpos.JposException;
 
 /**
  * Class containing the device monitor specific properties, their default values and default implementations of
@@ -26,11 +27,44 @@ import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
  */
 public class DeviceMonitorProperties extends JposCommonProperties implements DeviceMonitorInterface {
     /**
+     * Default value of DeviceData property. Default: "".
+     */
+    public String DeviceData = "";
+
+    /**
+     * Default value of DeviceList property. Default: null. Must be overwritten
+     * by objects derived from JposDevice within the changeDefaults method at the latest.
+     */
+    public String DeviceList = null;
+
+    /**
+     * Default value of MonitoringDeviceList property. Default: "". Will be controlled by DeviceMonitorService and must
+     * not be changed by specific DeviceMonitor implementations.
+     */
+    public String MonitoringDeviceList = "";
+
+    /**
      * Constructor.
      *
      * @param dev Device index
      */
     protected DeviceMonitorProperties(int dev) {
         super(dev);
+    }
+
+    @Override
+    public void addMonitoringDevice(String deviceID, int monitoringMode, int boundary, int subBoundary, int intervalTime) throws JposException {
+    }
+
+    @Override
+    public void clearMonitoringDevices() throws JposException {
+    }
+
+    @Override
+    public void deleteMonitoringDevice(String deviceID) throws JposException {
+    }
+
+    @Override
+    public void getDeviceValue(String deviceID, int[] pValue) throws JposException {
     }
 }
