@@ -33,13 +33,13 @@ public class MSRProperties extends JposCommonProperties implements MSRInterface 
     public String CapCardAuthentication = "";
 
     /**
-     * UPOS property CapDataEncryption. Default: MSRConst.MSR_DE_NONE. Can be overwritten
+     * UPOS property CapDataEncryption. Default: DE_NONE. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public int CapDataEncryption = MSRConst.MSR_DE_NONE;
 
     /**
-     * UPOS property CapDeviceAuthentication. Default: MSRConst.MSR_DA_NOT_SUPPORTED. Can be overwritten
+     * UPOS property CapDeviceAuthentication. Default: DA_NOT_SUPPORTED. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public int CapDeviceAuthentication = MSRConst.MSR_DA_NOT_SUPPORTED;
@@ -51,7 +51,7 @@ public class MSRProperties extends JposCommonProperties implements MSRInterface 
     public boolean CapTrackDataMasking = false;
 
     /**
-     * UPOS property CapWritableTracks. Default: MSRConst.MSR_TR_NONE. Can be overwritten
+     * UPOS property CapWritableTracks. Default: TR_NONE. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public int CapWritableTracks = MSRConst.MSR_TR_NONE;
@@ -63,19 +63,19 @@ public class MSRProperties extends JposCommonProperties implements MSRInterface 
     public boolean CapTransmitSentinels = true;
 
     /**
-     * UPOS property CapISO. Default: "". Can be overwritten
+     * UPOS property CapISO. Default: false. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public boolean CapISO = false;
 
     /**
-     * UPOS property CapJISOne. Default: "". Can be overwritten
+     * UPOS property CapJISOne. Default: false. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public boolean CapJISOne = false;
 
     /**
-     * UPOS property CapJISTwo. Default: "". Can be overwritten
+     * UPOS property CapJISTwo. Default: false. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public boolean CapJISTwo = false;
@@ -112,7 +112,7 @@ public class MSRProperties extends JposCommonProperties implements MSRInterface 
     public String CardTypeList = "";
 
     /**
-     * UPOS property DataEncryptionAlgorithm. Default: "". Can be overwritten
+     * UPOS property DataEncryptionAlgorithm. Default: DE_NONE. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public int DataEncryptionAlgorithm = MSRConst.MSR_DE_NONE;
@@ -123,7 +123,7 @@ public class MSRProperties extends JposCommonProperties implements MSRInterface 
     public boolean DeviceAuthenticated;
 
     /**
-     * UPOS property DeviceAuthenticationProtocol. Default: "". Can be overwritten
+     * UPOS property DeviceAuthenticationProtocol. Default: AP_NONE. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public int DeviceAuthenticationProtocol = MSRConst.MSR_AP_NONE;

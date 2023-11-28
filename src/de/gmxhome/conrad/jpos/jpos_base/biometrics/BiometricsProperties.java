@@ -63,13 +63,13 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
     public int CapSensorOrientation = BiometricsConst.BIO_CSO_NORMAL;
 
     /**
-     * Default value of CapSensorType property. Default: 0. Should be updated
+     * Default value of CapSensorType property. Default: CST_PASSWORD. Should be updated
      * before calling initOnEnable the first time.
      */
     public int CapSensorTypeDef = BiometricsConst.BIO_CST_PASSWORD;
 
     /**
-     * UPOS property CapSensorType. Default: 0. Must be overwritten
+     * UPOS property CapSensorType. Default: null. Must be overwritten
      * by objects derived from JposDevice at least when the device is enabled the first time.
      */
     public Integer CapSensorType = null;

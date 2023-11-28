@@ -128,7 +128,7 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
     public long MediumFreeSpace;
 
     /**
-     * Default value of MediumID property. Default: false. Can be overwritten
+     * Default value of MediumID property. Default: "". Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public String MediumIDDef = "";
@@ -139,7 +139,7 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
     public String MediumID;
 
     /**
-     * Default value of MediumIsAvailable property. Default: false. Can be overwritten
+     * Default value of MediumIsAvailable property. Default: true. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public boolean MediumIsAvailableDef = true;
@@ -150,7 +150,7 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
     public boolean MediumIsAvailable;
 
     /**
-     * Default value of MediumSize property. Default: false. Can be overwritten
+     * Default value of MediumSize property. Default: 0. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public long MediumSizeDef = 0;

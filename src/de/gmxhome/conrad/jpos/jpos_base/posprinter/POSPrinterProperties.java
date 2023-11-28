@@ -182,7 +182,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     public int CapRecCartridgeSensor = 0;
 
     /**
-     * UPOS property CapRecColor. Default: true. Can be overwritten
+     * UPOS property CapRecColor. Default: COLOR_PRIMARY. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public int CapRecColor = POSPrinterConst.PTR_COLOR_PRIMARY;
@@ -730,7 +730,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     public int SlpCartridgeState;
 
     /**
-     * Default value of SlpCurrentCartridge property. Default: PTR_COLOR_PRIMARY. Should be overwritten
+     * Default value of SlpCurrentCartridge property. Default: 0. Should be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public int SlpCurrentCartridgeDef = 0;

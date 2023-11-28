@@ -85,7 +85,7 @@ public class ImageScannerProperties extends JposCommonProperties implements Imag
     public boolean AimMode = false;
 
     /**
-     * UPOS property BitsPerPixel. Default: 0.
+     * UPOS property BitsPerPixel. Default: null.
      */
     public Integer BitsPerPixel = null;
 

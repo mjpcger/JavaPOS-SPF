@@ -64,19 +64,19 @@ public class BillDispenserProperties extends JposCommonProperties implements Bil
     public boolean CapNearEmptySensor = false;
 
     /**
-     * UPOS property CurrencyCashList. Default: false. Must be overwritten
+     * UPOS property CurrencyCashList. Default: null. Must be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public String CurrencyCashList = null;
 
     /**
-     * UPOS property CurrencyCode. Default: false. Must be overwritten
+     * UPOS property CurrencyCode. Default: null. Must be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public String CurrencyCode = null;
 
     /**
-     * UPOS property CurrencyCodeList. Default: false. Must be overwritten
+     * UPOS property CurrencyCodeList. Default: null. Must be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public String CurrencyCodeList = null;

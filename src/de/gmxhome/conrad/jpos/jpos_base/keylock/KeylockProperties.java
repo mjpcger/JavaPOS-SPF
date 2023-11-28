@@ -26,7 +26,7 @@ import jpos.*;
  */
 public class KeylockProperties extends JposCommonProperties implements KeylockInterface {
     /**
-     * UPOS property CapKeylockType. Default: KeylockConst.LOCK_KT_STANDARD. Can be overwritten
+     * UPOS property CapKeylockType. Default: KT_STANDARD. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public int CapKeylockType = KeylockConst.LOCK_KT_STANDARD;
@@ -36,7 +36,7 @@ public class KeylockProperties extends JposCommonProperties implements KeylockIn
      */
     public byte[] ElectronicKeyValueDef = new byte[0];
     /**
-     * Default value of KeylockConst.LOCK_KP_ANY property. Default: KeylockConst.LOCK_KP_ANY. Can be overwritten
+     * Default value of KeyPosition property. Default: KP_ANY. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public int KeyPositionDef = KeylockConst.LOCK_KP_ANY;

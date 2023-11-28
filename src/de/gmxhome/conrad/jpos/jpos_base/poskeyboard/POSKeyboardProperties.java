@@ -32,7 +32,7 @@ public class POSKeyboardProperties extends JposCommonProperties implements POSKe
     public boolean CapKeyUp = false;
 
     /**
-     * UPOS property EventTypes. Default: POSKeyboardConst.KBD_ET_DOWN. Can be overwritten
+     * UPOS property EventTypes. Default: ET_DOWN. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public int EventTypes = POSKeyboardConst.KBD_ET_DOWN;

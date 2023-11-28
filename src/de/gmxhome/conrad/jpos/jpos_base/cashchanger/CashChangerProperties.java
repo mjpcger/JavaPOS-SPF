@@ -28,13 +28,13 @@ import jpos.JposException;
  */
 public class CashChangerProperties extends JposCommonProperties implements CashChangerInterface {
     /**
-     * UPOS property AsyncResultCode. Default: null. Will be set when throwing a BillDispenserStatusUpdateEvent with
+     * UPOS property AsyncResultCode. Default: STATUS_OK. Will be set when throwing a BillDispenserStatusUpdateEvent with
      * STATUS_ASYNC.
      */
     public int AsyncResultCode = CashChangerConst.CHAN_STATUS_OK;
 
     /**
-     * UPOS property AsyncResultCodeExtended. Default: null. Will be set when throwing a BillDispenserStatusUpdateEvent
+     * UPOS property AsyncResultCodeExtended. Default: 0. Will be set when throwing a BillDispenserStatusUpdateEvent
      * with STATUS_ASYNC.
      */
     public int AsyncResultCodeExtended = 0;
@@ -106,19 +106,19 @@ public class CashChangerProperties extends JposCommonProperties implements CashC
     public boolean CapRepayDeposit = false;
 
     /**
-     * UPOS property CurrencyCashList. Default: false. Must be overwritten
+     * UPOS property CurrencyCashList. Default: null. Must be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public String CurrencyCashList = null;
 
     /**
-     * UPOS property CurrencyCode. Default: false. Must be overwritten
+     * UPOS property CurrencyCode. Default: null. Must be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public String CurrencyCode = null;
 
     /**
-     * UPOS property CurrencyCodeList. Default: false. Must be overwritten
+     * UPOS property CurrencyCodeList. Default: null. Must be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
     public String CurrencyCodeList = null;

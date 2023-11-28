@@ -76,7 +76,7 @@ public class BumpBarProperties extends JposCommonProperties implements BumpBarIn
     public int Keys = 0;
 
     /**
-     * Default value of Timeout property. Default: 1 second. Can be
+     * Default value of Timeout property. Default: 1000 (1 second). Can be
      * overwritten by objects derived from JposDevice within the changeDefaults method.
      */
     public int TimeoutDef = 1000;

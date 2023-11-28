@@ -244,7 +244,7 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
     public String VideoModesListDef = "0:0x0x0M";
 
     /**
-     * Default value of CapMapCharacterSet property. Default: false. Can be
+     * Default value of CapMapCharacterSet property. Default: true. Can be
      * overwritten by objects derived from JposDevice within the changeDefaults method.
      */
     public boolean CapMapCharacterSetDef = true;
@@ -256,13 +256,13 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
     public int EventTypeDef = 0;
 
     /**
-     * Default value of CapMapCharacterSet property. Default: false. Can be
+     * Default value of CapMapCharacterSet property. Default: true. Can be
      * overwritten by objects derived from JposDevice within the changeDefaults method.
      */
     public boolean MapCharacterSetDef = true;
 
     /**
-     * Default value of Timeout property. Default: 1 second. Can be
+     * Default value of Timeout property. Default: 1000 (1 second). Can be
      * overwritten by objects derived from JposDevice within the changeDefaults method.
      */
     public int TimeoutDef = 1000;
@@ -285,7 +285,7 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
     public boolean CapMapCharacterSet;
 
     /**
-     * Default value of CapTransaction property. Default: false. Can be
+     * Default value of CapTransaction property. Default: true. Can be
      * overwritten by objects derived from JposDevice within the changeDefaults method.
      */
     public boolean CapTransactionDef = true;

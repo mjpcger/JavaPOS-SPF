@@ -171,13 +171,13 @@ public class PointCardRWProperties extends JposCommonProperties implements Point
     public int LineHeight = 0;
 
     /**
-     * UPOS property LineSpacing. Default: false. Can be overwritten by objects derived from JposDevice within the
+     * UPOS property LineSpacing. Default: 0. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
     public int LineSpacing = 0;
 
     /**
-     * UPOS property LineWidth. Default: false. Can be overwritten by objects derived from JposDevice within the
+     * UPOS property LineWidth. Default: 0. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
     public int LineWidth = 0;

@@ -203,7 +203,7 @@ public class CheckScannerProperties extends JposCommonProperties implements Chec
     public int ImageMemoryStatusDef = CheckScannerConst.CHK_IMS_OK;
 
     /**
-     * UPOS property ImageMemoryStatus. Default: false. Can be overwritten
+     * UPOS property ImageMemoryStatus. Default: 0. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults or checkProperties method.
      */
     public int ImageMemoryStatus = 0;
