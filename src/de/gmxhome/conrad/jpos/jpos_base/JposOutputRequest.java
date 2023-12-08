@@ -536,6 +536,8 @@ public class JposOutputRequest implements Runnable {
     public boolean finishAsyncProcessing() {
         boolean processed = false;
         try {
+            if (Abort != null)
+                Abort.signal();
             if (NoEvents) {
                 NoEvents = false;
                 reset();
