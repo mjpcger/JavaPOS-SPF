@@ -138,6 +138,7 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
      */
     protected GraphicDisplayProperties(int dev) {
         super(dev);
+        DeviceServiceVersion = 1016000;
     }
 
     @Override
