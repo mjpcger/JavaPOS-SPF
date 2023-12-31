@@ -195,7 +195,7 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
 
     @Override
     public GoURLBack goURLBack() throws JposException {
-        return null;
+        return new GoURLBack(this);
     }
 
     @Override
@@ -205,7 +205,7 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
 
     @Override
     public GoURLForward goURLForward() throws JposException {
-        return null;
+        return new GoURLForward(this);
     }
 
     @Override
@@ -215,7 +215,7 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
 
     @Override
     public LoadImage loadImage(String fileName) throws JposException {
-        return null;
+        return new LoadImage(this, fileName);
     }
 
     @Override
@@ -225,7 +225,7 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
 
     @Override
     public LoadURL loadURL(String url) throws JposException {
-        return null;
+        return new LoadURL(this, url);
     }
 
     @Override
@@ -235,7 +235,7 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
 
     @Override
     public PlayVideo playVideo(String fileName, boolean loop) throws JposException {
-        return null;
+        return new PlayVideo(this, fileName, loop);
     }
 
     @Override
@@ -245,7 +245,7 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
 
     @Override
     public UpdateURLPage updateURLPage() throws JposException {
-        return null;
+        return new UpdateURLPage(this);
     }
 
     @Override
