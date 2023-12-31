@@ -37,7 +37,7 @@ public class VoiceRecognitionService extends JposBase implements VoiceRecognitio
     }
 
     /**
-     * Instance of a class implementing the VoiceRecognitionInterface for tone indicator specific setter and method calls bound
+     * Instance of a class implementing the VoiceRecognitionInterface for voice recognition specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public VoiceRecognitionInterface VoiceRecognition;

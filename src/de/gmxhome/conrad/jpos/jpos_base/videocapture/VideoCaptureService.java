@@ -37,7 +37,7 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     }
 
     /**
-     * Instance of a class implementing the VideoCaptureInterface for tone indicator specific setter and method calls bound
+     * Instance of a class implementing the VideoCaptureInterface for video capture specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public VideoCaptureInterface VideoCapture;

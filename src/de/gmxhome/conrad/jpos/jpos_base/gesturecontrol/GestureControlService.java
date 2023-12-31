@@ -37,7 +37,7 @@ public class GestureControlService extends JposBase implements GestureControlSer
     }
 
     /**
-     * Instance of a class implementing the GestureControlInterface for tone indicator specific setter and method calls bound
+     * Instance of a class implementing the GestureControlInterface for gesture control specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public GestureControlInterface GestureControl;

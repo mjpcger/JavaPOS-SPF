@@ -27,7 +27,7 @@ import jpos.services.*;
  */
 public class BillDispenserService extends JposBase implements BillDispenserService115 {
     /**
-     * Instance of a class implementing the BillDispenserInterface for cash drawer specific setter and method calls bound
+     * Instance of a class implementing the BillDispenserInterface for bill dispenser specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public BillDispenserInterface BillDispenserInterface;

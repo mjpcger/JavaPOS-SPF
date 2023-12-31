@@ -802,7 +802,7 @@ public class JposBaseDevice {
      * If a device supports concurrent processing, a specific implementation will probably pass the request to a worker
      * thread that calls invoke and catches exceptions and removes it after completion as well.
      *
-     * @param request JposOutputConcurrentRequest for asynchronous method execution.
+     * @param request JposOutputRequest for asynchronous method execution.
      */
     public void invokeConcurrentMethod(JposOutputRequest request) {
         request.catchedInvocation();

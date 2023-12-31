@@ -37,7 +37,7 @@ public class IndividualRecognitionService extends JposBase implements Individual
     }
 
     /**
-     * Instance of a class implementing the IndividualRecognitionInterface for tone indicator specific setter and method calls bound
+     * Instance of a class implementing the IndividualRecognitionInterface for individual recognition specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public IndividualRecognitionInterface IndividualRecognition;

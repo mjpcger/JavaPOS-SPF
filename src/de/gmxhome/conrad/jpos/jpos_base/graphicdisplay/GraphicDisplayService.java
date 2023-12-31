@@ -41,7 +41,7 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     }
 
     /**
-     * Instance of a class implementing the GraphicDisplayInterface for tone indicator specific setter and method calls bound
+     * Instance of a class implementing the GraphicDisplayInterface for graphic display specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public GraphicDisplayInterface GraphicDisplay;

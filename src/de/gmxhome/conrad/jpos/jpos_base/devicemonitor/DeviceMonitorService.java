@@ -40,7 +40,7 @@ public class DeviceMonitorService extends JposBase implements DeviceMonitorServi
     }
 
     /**
-     * Instance of a class implementing the DeviceMonitorInterface for tone indicator specific setter and method calls bound
+     * Instance of a class implementing the DeviceMonitorInterface for device monitor specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public DeviceMonitorInterface DeviceMonitor;

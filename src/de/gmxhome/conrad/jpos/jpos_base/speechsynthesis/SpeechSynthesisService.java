@@ -37,7 +37,7 @@ public class SpeechSynthesisService extends JposBase implements SpeechSynthesisS
     }
 
     /**
-     * Instance of a class implementing the SpeechSynthesisInterface for tone indicator specific setter and method calls bound
+     * Instance of a class implementing the SpeechSynthesisInterface for speech synthesis specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public SpeechSynthesisInterface SpeechSynthesis;

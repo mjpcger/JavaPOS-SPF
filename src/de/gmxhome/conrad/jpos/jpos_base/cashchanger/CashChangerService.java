@@ -27,7 +27,7 @@ import jpos.services.*;
  */
 public class CashChangerService extends JposBase implements CashChangerService115 {
     /**
-     * Instance of a class implementing the CashChangerInterface for cash drawer specific setter and method calls bound
+     * Instance of a class implementing the CashChangerInterface for cash changer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public CashChangerInterface CashChangerInterface;
