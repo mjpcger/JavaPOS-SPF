@@ -92,6 +92,60 @@ public class JposDevice extends JposBaseDevice {
         super(id);
     }
 
+    /**
+     * Class for concurrent asynchronous output processing support.
+     */
+    private class RequestThread extends Thread {
+        JposOutputRequest Request;
+
+        RequestThread(JposOutputRequest request, String name) {
+            super(name);
+            Request = request;
+        }
+
+        @Override
+        public void run() {
+            Request.catchedInvocation();
+            boolean processed = Request.finishAsyncProcessing();
+            synchronized (AsyncProcessorRunning) {
+                if (processed)
+                    CurrentCommands.remove(Request);
+            }
+        }
+    }
+
+    /**
+     * Invoke asynchronous method that supports concurrent processing by design. The default implementation is to use
+     * a helper thread to invoke requests identified by method <b>concurrentProcessingSupported</b> and to use the
+     * default implementation for all other requests.
+     *
+     * @param request JposOutputRequest for asynchronous method execution.
+     */
+    @Override
+    public void invokeConcurrentMethod(JposOutputRequest request) {
+        if (!concurrentProcessingSupported(request)) {
+            super.invokeConcurrentMethod(request);
+        }
+        else {
+            synchronized (AsyncProcessorRunning) {
+                new RequestThread(request, request.getClass().getSimpleName() + request.OutputID).start();
+            }
+        }
+    }
+
+    /**
+     * Method with checks whether the device supports concurrent processing for the given request. This default implementation
+     * returns always false. You must override this method in derived classes to allow specific requests to be invoked
+     * concurrently.
+     *
+     * @param request Request to be checked.
+     * @return  true if the request can be processed concurrently, false otherwise. This default implementation returns
+     *          always false.
+     */
+    public boolean concurrentProcessingSupported(JposOutputRequest request) {
+        return false;
+    }
+
     @Override
     public int noOfPropertySets() {
         return super.noOfPropertySets() +

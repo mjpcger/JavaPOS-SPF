@@ -70,24 +70,6 @@ public class GraphicDisplayDevice extends JposDevice {
     private boolean CapBrightness = true;
     private boolean CapVolume = true;
 
-    private class RequestThread extends Thread {
-        JposOutputRequest Request;
-
-        RequestThread(JposOutputRequest request, String name) {
-            super(name);
-            Request = request;
-        }
-
-        @Override
-        public void run() {
-            Request.catchedInvocation();
-            boolean processed = Request.finishAsyncProcessing();
-            synchronized (AsyncProcessorRunning) {
-                if (processed)
-                    CurrentCommands.remove(Request);
-            }
-        }
-    }
 
     @Override
     public void checkProperties(JposEntry entries) throws JposException{
@@ -134,15 +116,8 @@ public class GraphicDisplayDevice extends JposDevice {
     }
 
     @Override
-    public void invokeConcurrentMethod(JposOutputRequest request) {
-        if (!(request instanceof PlayVideo)) {
-            super.invokeConcurrentMethod(request);
-        }
-        else {
-            synchronized (AsyncProcessorRunning) {
-                new RequestThread(request, "VideoPlayer").start();
-            }
-        }
+    public boolean concurrentProcessingSupported(JposOutputRequest request) {
+        return request instanceof PlayVideo;
     }
 
     @Override
