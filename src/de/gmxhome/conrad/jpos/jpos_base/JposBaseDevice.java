@@ -203,6 +203,37 @@ public class JposBaseDevice {
     public List<JposOutputRequest> CurrentCommands = null;
 
     /**
+     * Starts a new thread for concurrent asynchronous processing and adds it toCurrentCommands list.
+     * @param request   Request to be invoked.
+     */
+    public void createRequestThread(JposOutputRequest request) {
+        CurrentCommands.add(request);
+        new RequestThread(request, request.getClass().getSimpleName() + request.OutputID).start();
+    }
+
+    /**
+     * Class for concurrent asynchronous output processing support.
+     */
+    private class RequestThread extends Thread {
+        JposOutputRequest Request;
+
+        RequestThread(JposOutputRequest request, String name) {
+            super(name);
+            Request = request;
+        }
+
+        @Override
+        public void run() {
+            Request.catchedInvocation();
+            boolean processed = Request.finishAsyncProcessing();
+            synchronized (AsyncProcessorRunning) {
+                if (processed)
+                    CurrentCommands.remove(Request);
+            }
+        }
+    }
+
+    /**
      * Constructor. Initialize ID. Derived classes must allocate list of list of property sets
      * for all supported device types.
      *
@@ -792,24 +823,6 @@ public class JposBaseDevice {
             dev.EventList.add(event);
             log(Level.DEBUG, dev.LogicalName + ": Buffer StatusUpdateEvent: [" + event.toLogString() + "]");
             processEventList(dev);
-        }
-    }
-
-    /**
-     * Invoke asynchronous method that supports concurrent processing by design. The default implementation is no support
-     * for concurrent processing. In this case, this method must simply call invoke, but it must catch exceptions and
-     * handle error and output complete events and remove the request from CurrentCommands after completion.<br>
-     * If a device supports concurrent processing, a specific implementation will probably pass the request to a worker
-     * thread that calls invoke and catches exceptions and removes it after completion as well.
-     *
-     * @param request JposOutputRequest for asynchronous method execution.
-     */
-    public void invokeConcurrentMethod(JposOutputRequest request) {
-        request.catchedInvocation();
-        boolean processed = request.finishAsyncProcessing();
-        synchronized (AsyncProcessorRunning) {
-            if (processed)
-                CurrentCommands.remove(request);
         }
     }
 

@@ -193,7 +193,12 @@ public class JposOutputRequest implements Runnable {
                 Props.State = JposConst.JPOS_S_BUSY;
             OutputID = (Props.OutputID = (Props.OutputID + 1) % Integer.MAX_VALUE);
             Props.EventSource.logSet("OutputID");
-            if (state == JposConst.JPOS_S_ERROR) {
+            if (Device.concurrentProcessingSupported(this)){
+                if (state == JposConst.JPOS_S_ERROR)
+                    Props.SuspendedConcurrentCommands.add(this);
+                else
+                    Device.createRequestThread(this);
+            } else if (state == JposConst.JPOS_S_ERROR) {
                 Props.SuspendedCommands.add(this);
             }
             else {
@@ -240,10 +245,7 @@ public class JposOutputRequest implements Runnable {
                 Device.PendingCommands.remove(0);
             } else
                 Device.AsyncProcessorRunning[0] = null;
-            if (Device.CurrentCommands != null && result != null && result.EndSync == null)
-                Device.CurrentCommands.add(result);
-            else
-                Device.CurrentCommand = result;
+            Device.CurrentCommand = result;
         }
         return result;
     }
@@ -265,7 +267,7 @@ public class JposOutputRequest implements Runnable {
                     return false;
             }
         }
-        if (Props.SuspendedCommands.size() == 0)
+        if (Props.SuspendedCommands.size() == 0 && Props.SuspendedConcurrentCommands.size() == 0)
             return false;
         return true;
     }
@@ -289,6 +291,14 @@ public class JposOutputRequest implements Runnable {
             while (i < Props.SuspendedCommands.size()) {
                 if (Props.SuspendedCommands.get(i) instanceof JposInputRequest) {
                     Props.SuspendedCommands.remove(i);
+                } else {
+                    i++;
+                }
+            }
+            i = 0;
+            while (i < Props.SuspendedConcurrentCommands.size()) {
+                if (Props.SuspendedConcurrentCommands.get(i) instanceof JposInputRequest) {
+                    Props.SuspendedConcurrentCommands.remove(i);
                 } else {
                     i++;
                 }
@@ -337,6 +347,14 @@ public class JposOutputRequest implements Runnable {
                 }
             }
             i = 0;
+            while (i < Props.SuspendedConcurrentCommands.size()) {
+                if (!(Props.SuspendedConcurrentCommands.get(i) instanceof JposInputRequest)) {
+                    Props.SuspendedConcurrentCommands.remove(i);
+                } else {
+                    i++;
+                }
+            }
+            i = 0;
             while (i < Device.PendingCommands.size()) {
                 JposOutputRequest req;
                 if ((req = Device.PendingCommands.get(i)).Props == Props && !(req instanceof JposInputRequest)) {
@@ -370,6 +388,7 @@ public class JposOutputRequest implements Runnable {
         List<JposOutputRequest> current = new ArrayList<>();
         synchronized (Device.AsyncProcessorRunning) {
             Props.SuspendedCommands.clear();
+            Props.SuspendedConcurrentCommands.clear();
             while (i < Device.PendingCommands.size()) {
                 if (Device.PendingCommands.get(i).Props == Props) {
                     Device.PendingCommands.remove(i);
@@ -410,7 +429,7 @@ public class JposOutputRequest implements Runnable {
                         count++;
                 }
             }
-            count += Props.SuspendedCommands.size();
+            count += Props.SuspendedCommands.size() + Props.SuspendedConcurrentCommands.size();
         }
         return count;
     }
@@ -434,7 +453,7 @@ public class JposOutputRequest implements Runnable {
             while (Device.CurrentCommands.size() > 0) {
                 request = Device.CurrentCommands.get(0);
                 if (request.Props == Props) {
-                    Props.SuspendedCommands.add(request);
+                    Props.SuspendedConcurrentCommands.add(request);
                     Device.CurrentCommands.remove(request);
                     if (request == this)
                         request.reset();
@@ -480,6 +499,15 @@ public class JposOutputRequest implements Runnable {
                 Device.PendingCommands.add(current);
                 Props.SuspendedCommands.remove(0);
             }
+            while (Props.SuspendedConcurrentCommands.size() > 0) {
+                JposOutputRequest current = Props.SuspendedConcurrentCommands.get(0);
+                if (!(current instanceof JposInputRequest) && Props.State != JposConst.JPOS_S_BUSY) {
+                    Props.State = JposConst.JPOS_S_BUSY;
+                    Props.EventSource.logSet("State");
+                }
+                Device.createRequestThread(current);
+                Props.SuspendedConcurrentCommands.remove(0);
+            }
             if (Device.PendingCommands.size() > 0 && Device.AsyncProcessorRunning[0] == null) {
                 (Device.AsyncProcessorRunning[0] = new JposRequestThread(this)).start();
             }
@@ -490,20 +518,15 @@ public class JposOutputRequest implements Runnable {
     public void run() {
         JposOutputRequest current;
         while ((current = dequeue()) != null) {
-            boolean concurrent = Device.CurrentCommands != null && current.EndSync == null;
-            if (concurrent)
-                Device.invokeConcurrentMethod(current);
-            else {
-                current.catchedInvocation();
-                if (current.EndSync != null) {
-                    synchronized (Device.AsyncProcessorRunning) {
-                        current.finished();
-                        transitionToIdle();
-                    }
-                    current.EndSync.signal();
-                } else
-                    current.finishAsyncProcessing();
-            }
+            current.catchedInvocation();
+            if (current.EndSync != null) {
+                synchronized (Device.AsyncProcessorRunning) {
+                    current.finished();
+                    transitionToIdle();
+                }
+                current.EndSync.signal();
+            } else
+                current.finishAsyncProcessing();
         }
     }
 

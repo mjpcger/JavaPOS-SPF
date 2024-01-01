@@ -95,7 +95,9 @@ public class OutputRequest extends JposOutputRequest {
     static public SyncObject setIdleWaiter(JposDevice dev) {
         synchronized (dev.AsyncProcessorRunning) {
             synchronized(dev.ClaimedFiscalPrinter) {
-                if (dev.PendingCommands.size() != 0 || dev.ClaimedFiscalPrinter[0].SuspendedCommands.size() != 0) {
+                if (dev.PendingCommands.size() != 0 ||
+                        dev.ClaimedFiscalPrinter[0].SuspendedCommands.size() != 0 ||
+                        dev.ClaimedFiscalPrinter[0].SuspendedConcurrentCommands.size() != 0) {
                     return dev.ClaimedFiscalPrinter[0].IdleWaiter = new SyncObject();
                 }
             }

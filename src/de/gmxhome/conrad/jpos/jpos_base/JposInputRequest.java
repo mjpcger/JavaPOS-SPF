@@ -52,9 +52,13 @@ public class JposInputRequest extends JposOutputRequest {
     public void enqueue() throws JposException {
         synchronized (Device.AsyncProcessorRunning) {
             OutputID = -1;
-            if (Props.State == JposConst.JPOS_S_ERROR) {
+            if (Device.concurrentProcessingSupported(this)) {
+                if (Props.State == JposConst.JPOS_S_ERROR)
+                    Props.SuspendedConcurrentCommands.add(this);
+                else
+                    Device.createRequestThread(this);
+            } else if (Props.State == JposConst.JPOS_S_ERROR)
                 Props.SuspendedCommands.add(this);
-            }
             else {
                 Device.PendingCommands.add(this);
                 if (Device.AsyncProcessorRunning[0] == null) {
@@ -77,6 +81,20 @@ public class JposInputRequest extends JposOutputRequest {
                     }
                     Device.PendingCommands.add(Props.SuspendedCommands.get(i));
                     Props.SuspendedCommands.remove(i);
+                }
+                else
+                    i++;
+            }
+            i = 0;
+            while (Props.SuspendedConcurrentCommands.size() > 0) {
+                JposOutputRequest request = Props.SuspendedConcurrentCommands.get(0);
+                if ((request instanceof JposInputRequest) == queries) {
+                    if (!queries && Props.State != JposConst.JPOS_S_BUSY) {
+                        Props.State = JposConst.JPOS_S_BUSY;
+                        Props.EventSource.logSet("State");
+                    }
+                    Device.createRequestThread(Props.SuspendedConcurrentCommands.get(i));
+                    Props.SuspendedConcurrentCommands.remove(i);
                 }
                 else
                     i++;

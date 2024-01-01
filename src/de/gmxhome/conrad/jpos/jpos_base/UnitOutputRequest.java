@@ -65,6 +65,14 @@ public class UnitOutputRequest extends JposOutputRequest {
                     ++i;
                 }
             }
+            for (int i = 0; i < Props.SuspendedConcurrentCommands.size();) {
+                req = (UnitOutputRequest)Props.SuspendedConcurrentCommands.get(i);
+                if ((req.Units & Units) != 0) {
+                    Props.SuspendedCommands.remove(i);
+                } else {
+                    ++i;
+                }
+            }
             for (int i = 0; i < Device.PendingCommands.size();) {
                 if (Device.PendingCommands.get(i) instanceof UnitOutputRequest &&
                         (req = (UnitOutputRequest)Device.PendingCommands.get(i)).Props == Props && (req.Units & Units) != 0) {

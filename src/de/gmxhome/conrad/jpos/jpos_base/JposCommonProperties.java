@@ -286,6 +286,11 @@ public abstract class JposCommonProperties implements JposBaseInterface {
      */
     public List<JposOutputRequest> SuspendedCommands = new ArrayList<JposOutputRequest>();
 
+    /**
+     * List holding asynchronous output requests which allow concurrent processing whenever service is in error state.
+     */
+    public List<JposOutputRequest> SuspendedConcurrentCommands = new ArrayList<JposOutputRequest>();
+
     private SyncObject StatusWaiter = null;
 
     /**
