@@ -100,6 +100,7 @@ public class GraphicDisplayStatusUpdateEvent extends JposStatusUpdateEvent {
             ((GraphicDisplayService) getSource()).logSet("URL");
         }
     }
+
     @Override
     public String toLogString() {
         String ret = super.toLogString();

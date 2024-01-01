@@ -23,6 +23,8 @@ import jpos.JposException;
 import jpos.SoundPlayerConst;
 import jpos.services.SoundPlayerService116;
 
+import java.io.File;
+
 /**
  * SoundPlayer service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
@@ -139,11 +141,14 @@ public class SoundPlayerService extends JposBase implements SoundPlayerService11
     @Override
     public void playSound(String fileName, boolean loop) throws JposException {
         logPreCall("PlaySound", fileName + ", " + loop);
-        String[] supported = Data.CapSoundTypeList.split(",");
+        String[] supported = Data.CapSoundTypeList.toLowerCase().split(",");
         checkEnabled();
-        if (!JposDevice.member(fileName, Data.DeviceSoundList.split(",")))
-            JposDevice.check(!JposDevice.member(fileName.substring(fileName.lastIndexOf('.') + 1), supported),
+        if (!JposDevice.member(fileName, Data.DeviceSoundList.split(","))) {
+            String name = new File(fileName).getName();
+            int dotpos = name.lastIndexOf('.');
+            JposDevice.check(dotpos >= 0 && !JposDevice.member(name.substring(dotpos + 1), supported),
                     JposConst.JPOS_E_ILLEGAL, "File type not one of {" + Data.CapSoundTypeList + "}");
+        }
         JposOutputRequest request = SoundPlayer.playSound(fileName, loop);
         if (request != null)
             request.enqueue();

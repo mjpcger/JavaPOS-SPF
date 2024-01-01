@@ -20,6 +20,9 @@ package de.gmxhome.conrad.jpos.jpos_base.soundplayer;
 import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
 import jpos.JposException;
 
+/**
+ * Output request executor for SoundPlayer method PlaySound.
+ */
 public class PlaySound extends JposOutputRequest {
     /**
      * Audio file name or sound ID of sound to be played.

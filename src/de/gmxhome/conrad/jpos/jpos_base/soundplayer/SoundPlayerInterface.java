@@ -76,12 +76,12 @@ public interface SoundPlayerInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>action is one of STORE_DATA, STORE_PROGRAM, EXECUTE_DATA, XML_BLOCK_DATA, SECURITY_FUSE or RESET,</li>
-     *     <li>count is &gt; 0.</li>
+     *     <li>fileName is one of the names specified in property DeviceSoundList, the file name has been specified
+     *     without extension or the extension is one of the types specified in CapSoundTypeList.</li>
      * </ul>
      *
      * @param fileName Indicates the sound source located on host or HardTotals device, depending on Storage property.
-     * @param loop     Specified whether the sound shall be played in a loop or only once.
+     * @param loop     Specifies whether the sound shall be played in a loop or only once.
      * @throws JposException    If an error occurs.
      * @return PlaySound object for use in final part.
      */
