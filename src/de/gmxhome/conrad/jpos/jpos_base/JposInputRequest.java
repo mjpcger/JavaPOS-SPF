@@ -52,6 +52,8 @@ public class JposInputRequest extends JposOutputRequest {
     public void enqueue() throws JposException {
         synchronized (Device.AsyncProcessorRunning) {
             OutputID = -1;
+            if (EndSync == null)
+                Props.AsyncInputActive = true;
             if (Device.concurrentProcessingSupported(this)) {
                 if (Props.State == JposConst.JPOS_S_ERROR)
                     Props.SuspendedConcurrentCommands.add(this);
@@ -66,6 +68,25 @@ public class JposInputRequest extends JposOutputRequest {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean finishAsyncProcessing() {
+        boolean processed = super.finishAsyncProcessing();
+        synchronized (Device.AsyncProcessorRunning) {
+            if (Device.CurrentCommand != this && Device.CurrentCommand instanceof JposInputRequest && Device.CurrentCommand.Props == Props)
+                return processed;
+            for (Object o : new Object[]{ Device.PendingCommands, Props.SuspendedCommands, Props.SuspendedConcurrentCommands, Device.CurrentCommands }) {
+                if (o != null) {
+                    for (JposOutputRequest request : (List<JposOutputRequest>) o) {
+                        if (request != this && request instanceof JposInputRequest && request.Props == Props)
+                            return processed;
+                    }
+                }
+            }
+            Props.AsyncInputActive = false;
+        }
+        return processed;
     }
 
     @Override

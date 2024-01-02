@@ -189,10 +189,12 @@ public class JposOutputRequest implements Runnable {
         int state;
         synchronized (Device.AsyncProcessorRunning) {
             state = Props.State;
-            if (state == JposConst.JPOS_S_IDLE)
-                Props.State = JposConst.JPOS_S_BUSY;
-            OutputID = (Props.OutputID = (Props.OutputID + 1) % Integer.MAX_VALUE);
-            Props.EventSource.logSet("OutputID");
+            if (EndSync == null) {
+                if (state == JposConst.JPOS_S_IDLE)
+                    Props.State = JposConst.JPOS_S_BUSY;
+                OutputID = (Props.OutputID = (Props.OutputID + 1) % Integer.MAX_VALUE);
+                Props.EventSource.logSet("OutputID");
+            }
             if (Device.concurrentProcessingSupported(this)){
                 if (state == JposConst.JPOS_S_ERROR)
                     Props.SuspendedConcurrentCommands.add(this);
@@ -213,7 +215,7 @@ public class JposOutputRequest implements Runnable {
     }
 
     /**
-     * Enqueue request for synchronous processing. No JposEvent handling, but exception
+     * Enqueue request for synchronous processing. No JposErrorEvent handling, but exception
      * handling will take place.
      * @throws JposException JposException thrown within command execution thread.
      */
@@ -222,13 +224,7 @@ public class JposOutputRequest implements Runnable {
         enqueue();
         EndSync.suspend(SyncObject.INFINITE);
         JposException ex = Exception;
-        synchronized (Device.AsyncProcessorRunning) {
-            reset();
-            if (Device.PendingCommands.size() == 0 && Props.State == JposConst.JPOS_S_BUSY) {
-                Props.State = ex == null ? JposConst.JPOS_S_IDLE : JposConst.JPOS_S_ERROR;
-                Props.EventSource.logSet("State");
-            }
-        }
+        reset();
         if (ex != null)
             throw ex;
     }
@@ -267,9 +263,7 @@ public class JposOutputRequest implements Runnable {
                     return false;
             }
         }
-        if (Props.SuspendedCommands.size() == 0 && Props.SuspendedConcurrentCommands.size() == 0)
-            return false;
-        return true;
+        return Props.SuspendedCommands.size() == 0 && Props.SuspendedConcurrentCommands.size() == 0;
     }
 
     /**
@@ -287,6 +281,7 @@ public class JposOutputRequest implements Runnable {
         int i = 0;
         List<JposOutputRequest> current = new ArrayList<>();
         JposOutputRequest request;
+        int state = Props.State;
         synchronized (Device.AsyncProcessorRunning) {
             while (i < Props.SuspendedCommands.size()) {
                 if (Props.SuspendedCommands.get(i) instanceof JposInputRequest) {
@@ -305,7 +300,7 @@ public class JposOutputRequest implements Runnable {
             }
             i = 0;
             while (i < Device.PendingCommands.size()) {
-                if ((request = Device.PendingCommands.get(i)).Props == Props && current instanceof JposInputRequest) {
+                if ((request = Device.PendingCommands.get(i)).Props == Props && request instanceof JposInputRequest) {
                     Device.PendingCommands.remove(i);
                 } else {
                     i++;
@@ -319,7 +314,14 @@ public class JposOutputRequest implements Runnable {
                         current.add(req);
                 }
             }
+            if (current.size() == 0) {
+                Props.AsyncInputActive = false;
+                if (Props.State == JposConst.JPOS_S_ERROR && Props.SuspendedCommands.size() + Props.SuspendedConcurrentCommands.size() == 0)
+                    Props.State = JposConst.JPOS_S_IDLE;
+            }
         }
+        if (state != Props.State)
+            Props.EventSource.logSet("State");
         for (JposOutputRequest req : current)
             req.abortCommand();
     }
@@ -338,6 +340,7 @@ public class JposOutputRequest implements Runnable {
     public void clearOutput() {
         int i = 0;
         List<JposOutputRequest> current = new ArrayList<>();
+        int state = Props.State;
         synchronized (Device.AsyncProcessorRunning) {
             while (i < Props.SuspendedCommands.size()) {
                 if (!(Props.SuspendedCommands.get(i) instanceof JposInputRequest)) {
@@ -374,10 +377,15 @@ public class JposOutputRequest implements Runnable {
                         current.add(request);
                 }
             }
+            if (current.size() == 0) {
+                Props.State = Props.SuspendedCommands.size() + Props.SuspendedConcurrentCommands.size() == 0 ?
+                        JposConst.JPOS_S_IDLE : JposConst.JPOS_S_ERROR;
+            }
         }
-        for (JposOutputRequest req : current) {
+        if (state != Props.State)
+            Props.EventSource.logSet("State");
+        for (JposOutputRequest req : current)
             req.abortCommand(true);
-        }
     }
 
     /**
@@ -386,6 +394,7 @@ public class JposOutputRequest implements Runnable {
     public void clearAll() {
         int i = 0;
         List<JposOutputRequest> current = new ArrayList<>();
+        int state = Props.State;
         synchronized (Device.AsyncProcessorRunning) {
             Props.SuspendedCommands.clear();
             Props.SuspendedConcurrentCommands.clear();
@@ -396,15 +405,22 @@ public class JposOutputRequest implements Runnable {
                     i++;
                 }
             }
-            if (Device.CurrentCommand != null && Device.CurrentCommand.Props == Props)
+            if (Device.CurrentCommand != null && Device.CurrentCommand.Props == Props) {
                 current.add(Device.CurrentCommand);
+            }
             if (Device.CurrentCommands != null) {
                 for (JposOutputRequest req : Device.CurrentCommands) {
                     if (req.Props == Props)
                         current.add(req);
                 }
             }
+            if (current.size() == 0) {
+                Props.State = JposConst.JPOS_S_IDLE;
+                Props.AsyncInputActive = false;
+            }
         }
+        if (state != Props.State)
+            Props.EventSource.logSet("State");
         for (JposOutputRequest req : current)
             req.abortCommand(!(req instanceof JposInputRequest));
     }
@@ -482,7 +498,7 @@ public class JposOutputRequest implements Runnable {
      *              JposOutputRequests will be reactivated.
      */
     public void reactivate(boolean input) {
-        reactivate();
+        new JposInputRequest(Props).reactivate(input);
     }
 
     /**

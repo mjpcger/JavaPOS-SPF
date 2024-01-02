@@ -299,6 +299,12 @@ public abstract class JposCommonProperties implements JposBaseInterface {
      */
     JposBaseDevice.EventFirer EventProcessor = null;
 
+    /**
+     * State of asynchronous input processing. Will be set whenever asynchronous input request will be enqueued and
+     * reset when the last input operation has been finished.
+     */
+    public boolean AsyncInputActive = false;
+
 
     /**
      * Constructor.
