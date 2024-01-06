@@ -627,6 +627,11 @@ public abstract class JposCommonProperties implements JposBaseInterface {
                 }
                 DataCount = 0;
             }
+            // See UPOS spec, chapter 2.5.3. clearInput Method: Clears all device input that has been
+            // buffered. ... events that are enqueued ... are also cleared. This implies that clearInput must clear all
+            // buffered data and input error events as well as other buffered input stuff. Therefore, it is good
+            // practice to clear JposInputRequest objects from request buffers as well as follows:
+            newJposOutputRequest().clearInput();
         }
         Device.processEventList(this);
         State = JposConst.JPOS_S_IDLE;
