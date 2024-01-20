@@ -99,20 +99,19 @@ public interface SoundRecorderInterface extends JposBaseInterface {
     /**
      * Validation part of StartRecording method. Can be overwritten within derived
      * classes, if necessary.
-     * This method shall only perform additional validation. It will be called before the service buffers the
-     * method call for asynchronous execution.
+     * This method shall perform additional validation and may start sound recording. The functions to store the
+     * recorded data will be buffered for asynchronous execution.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>No other sound recording is active,</li>
-     *     <li>The specified file is present and overWrite is true,</li>
-     *     <li>If fileName is present, it is a regular file,</li>
      *     <li>recordingTime is &gt; 0 or FOREVER.</li>
      * </ul>
      *
      *
      * @param fileName      Indicates the sound target located on host, HardTotals device or both, depending on Storage property.
      * @param overWrite     Specifies whether the sound file shall be overwritten if just present. If false, StartRecording
+     *                      will fail if the specified file just exists.
      * @param recordingTime Specifies the recording time in seconds. If FOREVER, method StopRecording must be used to finish
      *                      the recording process.
      * @throws JposException    If an error occurs.
@@ -136,7 +135,8 @@ public interface SoundRecorderInterface extends JposBaseInterface {
      * Final part of StopRecording method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled.</li>
+     *     <li>Device is enabled,</li>
+     *     <li>Recording is active.</li>
      * </ul>
      * @throws JposException If an error occurs.
      */

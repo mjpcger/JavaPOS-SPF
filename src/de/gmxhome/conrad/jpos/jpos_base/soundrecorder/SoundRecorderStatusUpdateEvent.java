@@ -35,24 +35,6 @@ public class SoundRecorderStatusUpdateEvent extends JposStatusUpdateEvent {
     }
 
     @Override
-    public boolean setStatusProperties() {
-        if (super.setStatusProperties())
-            return true;
-        SoundRecorderService srv = (SoundRecorderService) getSource();
-        switch (getStatus()) {
-            case SoundRecorderConst.SREC_SUE_START_SOUND_RECORDING:
-                srv.VideoRecording = true;
-                break;
-            case SoundRecorderConst.SREC_SUE_STOP_SOUND_RECORDING:
-                srv.VideoRecording = false;
-                break;
-            default:
-                return false;
-        }
-        return true;
-    }
-
-    @Override
     public String toLogString() {
         String ret = super.toLogString();
         if (ret.length() > 0)

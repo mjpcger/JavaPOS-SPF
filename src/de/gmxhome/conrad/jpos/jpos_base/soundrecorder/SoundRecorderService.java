@@ -18,14 +18,9 @@
 package de.gmxhome.conrad.jpos.jpos_base.soundrecorder;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import de.gmxhome.conrad.jpos.jpos_base.soundplayer.SoundPlayerInterface;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.SoundRecorder;
-import jpos.SoundRecorderConst;
-import jpos.services.SoundRecorderService116;
+import jpos.*;
+import jpos.services.*;
 
-import java.io.File;
 import java.util.Arrays;
 
 /**
@@ -223,9 +218,6 @@ public class SoundRecorderService extends JposBase implements SoundRecorderServi
         logPreCall("StartRecording", fileName + ", " + overWrite + ", " + recordingTime);
         checkEnabled();
         JposDevice.check(Data.AsyncInputActive, JposConst.JPOS_E_BUSY, "Just recording other sound");
-        File f = new File(fileName);
-        JposDevice.check(f.exists() && !overWrite, JposConst.JPOS_E_EXISTS, "Just present: " + fileName);
-        JposDevice.check(f.exists() && !f.isFile(), JposConst.JPOS_E_FAILURE, "No regular file: " + fileName);
         JposDevice.check(recordingTime <= 0 && recordingTime != JposConst.JPOS_FOREVER,
                 JposConst.JPOS_E_ILLEGAL, "Invalid recording time: " + recordingTime);
         StartRecording request = SoundRecorder.startRecording(fileName, overWrite, recordingTime);
@@ -234,15 +226,11 @@ public class SoundRecorderService extends JposBase implements SoundRecorderServi
         logAsyncCall("StartRecording");
     }
 
-    /**
-     * Specifies whether a video is currently recording.
-     */
-    public boolean VideoRecording = false;
-
     @Override
     public void stopRecording() throws JposException {
         logPreCall("StopRecording");
         checkEnabled();
+        JposDevice.check(!Data.AsyncInputActive, JposConst.JPOS_E_ILLEGAL, "Recording not active");
         SoundRecorder.stopRecording();
         logAsyncCall("StopRecording");
     }
