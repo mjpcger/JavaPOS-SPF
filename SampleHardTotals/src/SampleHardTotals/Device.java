@@ -283,6 +283,7 @@ public class Device extends JposDevice {
         private long HardTotalOffset;             // Offset of HardTotals representation in disk file
         private List<DirEntry> Directory;         // Holds directory
         private HashMap<Integer, DirEntry> Files; // Holds file handles
+        private int RealFreeData;                     // Really free data, can become negative
 
         @Override
         public void checkHealth(int level) throws JposException {
@@ -316,16 +317,17 @@ public class Device extends JposDevice {
             NumberOfFiles = Directory.size();
             EventSource.logSet("NumberOfFiles");
             if (CapSingleFile) {    // Capacity reduced by file size
-                TotalsSize = FreeData = HardTotalFileSize - INTSIZE; // Capacity reduced by size (4 byte int)
+                TotalsSize = RealFreeData = HardTotalFileSize - INTSIZE; // Capacity reduced by size (4 byte int)
                 for (DirEntry entry : Directory) {
-                    FreeData -= entry.Size;
+                    RealFreeData -= entry.Size;
                 }
             } else {    // Capacity reduced by directory size (4 byte length, 10 byte name) and EOD mark (4 byte 0)
-                TotalsSize = FreeData = HardTotalFileSize - INTSIZE - NAMESIZE - INTSIZE;
+                TotalsSize = RealFreeData = HardTotalFileSize - INTSIZE - NAMESIZE - INTSIZE;
                 for (DirEntry entry : Directory) {
-                    FreeData -= INTSIZE + NAMESIZE + entry.Size;    // Reduce by file size + directory size (4 byte length, 10 byte length)
+                    RealFreeData -= INTSIZE + NAMESIZE + entry.Size;    // Reduce by file size + directory size (4 byte length, 10 byte length)
                 }
             }
+            FreeData = RealFreeData < 0 ? 0 : RealFreeData;
             EventSource.logSet("TotalsSize");
             EventSource.logSet("FreeData");
         }
@@ -336,7 +338,7 @@ public class Device extends JposDevice {
                 List<DirEntry> entries = Directory;
                 for (DirEntry e : entries)
                     check(e.Name.equals(fileName), JposConst.JPOS_E_EXISTS, "File exists: " + fileName);
-                checkext(size > FreeData, HardTotalsConst.JPOS_ETOT_NOROOM, "File too large for " + fileName + ": " + size);
+                checkext(size > RealFreeData, HardTotalsConst.JPOS_ETOT_NOROOM, "File too large for " + fileName + ": " + size);
                 DirEntry entry = new DirEntry();
                 entry.Size = size;
                 entry.Name = fileName;
@@ -366,7 +368,8 @@ public class Device extends JposDevice {
                     NextHandle -= HANDLELIMIT;
                 Directory.add(entry);
                 Files.put(entry.Handle, entry);
-                FreeData -= buffer.length - (INTSIZE);
+                RealFreeData -= buffer.length - (INTSIZE);
+                FreeData = RealFreeData < 0 ? 0 : RealFreeData;
                 EventSource.logSet("FreeData");
                 NumberOfFiles++;
                 EventSource.logSet("NumberOfFiles");
@@ -429,13 +432,13 @@ public class Device extends JposDevice {
                         endFrom = last.Offset + last.Size + INTSIZE;
                     }
                     file.seek(HardTotalOffset + startTo);
-                    file.write(buffer, startFrom, endFrom);
+                    file.write(buffer, startFrom, endFrom - startFrom);
                     System.arraycopy(buffer, startFrom, FileBuffer, startTo, endFrom - startFrom);
                     while (++index < Directory.size())
                         Directory.get(index).Offset -= entry.Size + INTSIZE + NAMESIZE;
                     Directory.remove(entry);
                     Files.remove(entry);
-                    FreeData += entry.Size + (CapSingleFile ? 0 : NAMESIZE + INTSIZE);
+                    FreeData = RealFreeData += entry.Size + (CapSingleFile ? 0 : NAMESIZE + INTSIZE);
                     EventSource.logSet("FreeData");
                     NumberOfFiles--;
                     EventSource.logSet("NumberOfFiles");
