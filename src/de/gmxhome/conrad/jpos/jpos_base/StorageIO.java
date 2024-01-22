@@ -21,6 +21,7 @@ import jpos.*;
 
 import java.io.*;
 import java.lang.reflect.*;
+import java.nio.channels.*;
 import java.util.*;
 
 /**
@@ -68,39 +69,79 @@ public class StorageIO {
     final private Integer ExtendedErrorCode;
 
     /**
-     * Retrieves data from storage device.
-     * @param fileName   Source file name. For HardTotals devices, it must consist of up to <i>N</i> ASCII characters,
-     *                   optionally followed by a dot and further characters. <i>N</i> is 0 if property <i>CapSingleFile</i>
-     *                   of the HardTotals device is true, otherwise 10. If present, all characters behind the dot and
-     *                   the dot itself will be ignored in case of HardTotals files.
+     * Retrieves all data of a given file from storage device.
+     * @param fileName   Source file name.<br>
+     *                   For HardTotals devices, fileName will be ignored if CapSingleFile is true
+     *                   (in this case, the empty string will be used as file name). If CapSingleFile is false, the
+     *                   directory part of the file name will be removed and a maximum of 10 characters of the remainder
+     *                   will be used as file name. It must consist of ASCII characters only.<br>
+     *                   For the file system, fileName must match the rules for file names specific to the corresponding
+     *                   file system and operating system.
+     * @param hardTotals Optional parameter, can be set to true to force read from HardTotals device if the specified
+     *                   file is present on both data sources.
      * @return The contents of the storage file specified by the parameters.
      * @throws JposException If an error occurs.
      */
     public byte[] getStorageData(String fileName, boolean... hardTotals) throws JposException {
-        if (fileName == null)
-            fileName = "";
         JposDevice.check(hardTotals.length > 1, JposConst.JPOS_E_ILLEGAL, "Too many conditions");
-        byte[] data = null;
+        return hardTotals.length == 1 ? getStorageData(fileName, Integer.MAX_VALUE, hardTotals[0])
+                : getStorageData(fileName, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Retrieves data from storage device. Source file remains open until end of file will be reached during data
+     * retrieval. To close the source file explicitly, length can be set to -1.
+     * @param fileName   Source file name.<br>
+     *                   For HardTotals devices, fileName will be ignored if CapSingleFile is true
+     *                   (in this case, the empty string will be used as file name). If CapSingleFile is false, the
+     *                   directory part of the file name will be removed and a maximum of 10 characters of the remainder
+     *                   will be used as file name. It must consist of ASCII characters only.<br>
+     *                   For the file system, fileName must match the rules for file names specific to the corresponding
+     *                   file system and operating system.<br>
+     *                   If null, data will be retrieved from the file specified in a previous getStorageData call. It
+     *                   will always be retrieved starting at the position of the first previously unread byte.
+     * @param length     Maximum number of bytes to be read.
+     * @param hardTotals Optional parameter, can be set to true to force read from HardTotals device if the specified
+     *                   file is present on both data sources.
+     * @return The contents of the storage file part specified by the parameters.
+     * @throws JposException If an error occurs.
+     */
+    public byte[] getStorageData(String fileName, int length, boolean... hardTotals) throws JposException {
+        if ((fileName = checkFileName(fileName)) == null)
+            return getDataPart(length);
+        JposDevice.check(hardTotals.length > 1, JposConst.JPOS_E_ILLEGAL, "Too many conditions");
+        byte[] data = {};
         if (totals != null && (path == null || (hardTotals.length != 0 && hardTotals[0]))) {
-            String htname = getHardTotalsFileName(fileName);
-            int[] handle = {0}, size = {0};
-            totals.find(htname, handle, size);
-            data = new byte[size[0]];
-            totals.read(handle[0], data, 0, data.length);
+            data = getDataFromHardTotals(fileName, length, data);
         } else if (path != null && (totals == null || hardTotals.length == 0 || !hardTotals[0])) {
-            File f = new File(path, fileName);
-            if (f.exists() && f.isFile() && f.length() <= Integer.MAX_VALUE)
-                data = new byte[(int)f.length()];
-            try (FileInputStream in = new FileInputStream(f)) {
-                int len;
-                for (int pos = 0; pos < data.length; pos += len) {
-                    len = in.read(data, pos, data.length - pos);
-                }
-            } catch (IOException e) {
-                throw new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e);
-            }
+            data = getDataFromFileSystem(fileName, length);
         }
         return data;
+    }
+
+    /**
+     * Retrieve size of the currently open file, if any. Can be used in combination with getStorageData to retrieve the
+     * total amount of data in the data store after getting a part of it.
+     * @return The size of the storage file, if just open, 0 otherwise.
+     */
+    public long getOpenFileSize() {
+        long ret = 0;
+        if (TheFile instanceof FileInputStream) {
+            FileInputStream in = (FileInputStream) TheFile;
+            try {
+                ret = in.getChannel().size();
+            } catch (IOException e) {
+                TheFile = null;
+                try {
+                    in.close();
+                } catch (IOException ee) {}
+            }
+        } else if (TheFile instanceof int[][]) {
+            ret = ((int[][])TheFile)[1][0];
+        } else if (TheFile instanceof Object[]) {
+            ret = ((int[])((Object[])TheFile)[1])[0];
+        }
+        return ret;
     }
 
     /**
@@ -135,59 +176,55 @@ public class StorageIO {
 
     /**
      * Writes data to storage device. If specified file is just present, it will be overwritten.
-     * @param fileName   Source file name. For HardTotals devices, it must consist of up to <i>N</i> ASCII characters,
-     *                   optionally followed by a dot and further characters. <i>N</i> is 0 if property <i>CapSingleFile</i>
-     *                   of the HardTotals device is true, otherwise 10. If present, all characters behind the dot and
-     *                   the dot itself will be ignored in case of HardTotals files.
+     * @param fileName   Source file name.<br>
+     *                   For HardTotals devices, fileName will be ignored if CapSingleFile is true
+     *                   (in this case, the empty string will be used as file name). If CapSingleFile is false, the
+     *                   directory part of the file name will be removed and a maximum of 10 characters of the remainder
+     *                   will be used as file name. It must consist of ASCII characters only.<br>
+     *                   For the file system, fileName must match the rules for file names specific to the corresponding
+     *                   file system and operating system.
      * @param data       Data to be written to the storage.
      * @return true if successful, false if not enough free space is available. In the latter case, the caller should
      *         throw a JposException with ErrorCode E_EXTENDED and the device class specific value E..._NOROOM.
      * @throws JposException If an error occurs.
      */
     public boolean setStorageData(String fileName, byte[] data) throws JposException {
-        if (fileName == null)
-            fileName = "";
+        return setStorageData(fileName, data, data.length) == 0;
+    }
+
+    /**
+     * Writes data to storage device. If specified file is just present, it will be overwritten.
+     * @param fileName   Source file name.<br>
+     *                   For HardTotals devices, fileName will be ignored if CapSingleFile is true
+     *                   (in this case, the empty string will be used as file name). If CapSingleFile is false, the
+     *                   directory part of the file name will be removed and a maximum of 10 characters of the remainder
+     *                   will be used as file name. It must consist of ASCII characters only.<br>
+     *                   For the file system, fileName must match the rules for file names specific to the corresponding
+     *                   file system and operating system.<br>
+     *                   To append data to a previously created file with a size greater than the data.length, specify
+     *                   null as fileName. In this case, data consists of the next data.length bytes to be written
+     *                   sequentially to the target until the previously specified file size will be reached.
+     * @param data       Data to be written to the storage. If fileName equals null, the previously created file can be
+     *                   closed by specifying a byte array of size 0.
+     * @param size       Size of the target file to be created. Contents will be ignored if fileName
+     *                   is null.
+     * @return Number of bytes between current write position and end of file, -1 if not enough space is available on
+     *         target
+     * @throws JposException If an error occurs.
+     */
+    public int setStorageData(String fileName, byte[] data, int size) throws JposException {
         if (data == null)
             data = new byte[0];
-        int[] handle = {0}, size = {0};
-        String htname = null;
+        if ((fileName = checkFileName(fileName)) == null)
+            return setPartData(data);
+        JposDevice.check(data.length > size, JposConst.JPOS_E_ILLEGAL, "End of target reached");
         if (totals != null) {
-            htname = getHardTotalsFileName(fileName);
-            try {
-                totals.find(htname, handle, size);
-                if (size[0] != data.length && size[0] + totals.getFreeData() >= data.length)
-                    totals.delete(htname);
-            } catch (JposException e) {}
-            if (size[0] != data.length) {
-                int free = totals.getFreeData();
-                if (free < data.length) {
-                    if (ExtendedErrorCode != null)
-                        throw new JposException(JposConst.JPOS_E_EXTENDED, ExtendedErrorCode, "Not enough space: " +
-                            free + " < " + data.length);
-                    return false;
-                }
-                totals.create(htname, handle, data.length, false);
-            }
-            totals.write(handle[0], data, 0, data.length);
+            if (setDataForHardTotals(fileName, data, size)) return -1;
         }
         if (path != null) {
-            File f = new File(path, fileName);
-            if (f.exists() && f.isFile() && f.length() > data.length)
-                f.delete();
-            long free = new File(path).getFreeSpace();
-            if (free < data.length) {
-                if (ExtendedErrorCode != null)
-                    throw new JposException(JposConst.JPOS_E_EXTENDED, ExtendedErrorCode, "Not enough space: " +
-                            free + " < " + data.length);
-                return false;
-            }
-            try (FileOutputStream ostr = new FileOutputStream(f, false)) {
-                ostr.write(data);
-            } catch (IOException e) {
-                throw new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e);
-            }
+            if (setDataForFileSystem(fileName, data, size)) return -1;
         }
-        return true;
+        return size - data.length;
     }
 
     /**
@@ -244,6 +281,221 @@ public class StorageIO {
             }
         }
         return results;
+    }
+
+    private byte[] getDataFromFileSystem(String fileName, int length) throws JposException {
+        byte[] data;
+        File f = new File(path, fileName);
+        JposDevice.check(!f.exists() || !f.isFile(), JposConst.JPOS_E_ILLEGAL, "Invalid file: " + fileName);
+        long size = f.length();
+        data = new byte[(int)(length < size ? length : size)];
+        try {
+            FileInputStream in = new FileInputStream(f);
+            int pos = 0;
+            try {
+                int len;
+                for (pos = 0; pos < data.length; pos += len)
+                    len = in.read(data, pos, data.length - pos);
+            } catch (IOException e) {
+                data = Arrays.copyOf(data, pos);
+                in.close();
+            }
+            if (data.length == length)
+                TheFile = in;
+            else
+                in.close();
+        } catch (IOException e) {
+            throw new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e);
+        }
+        return data;
+    }
+
+    private byte[] getDataFromHardTotals(String fileName, int length, byte[] data) throws JposException {
+        String htname = getHardTotalsFileName(fileName);
+        int[] handle = {0}, size = {0};
+        totals.find(htname, handle, size);
+        data = new byte[size[0] > length ? length : size[0]];
+        try {
+            totals.read(handle[0], data, 0, data.length);
+        } catch (JposException ignore) {
+            data = new byte[0];
+        }
+        if (data.length == length)
+            TheFile = new int[][]{ handle, new int[]{size[0], length} };
+        return data;
+    }
+
+    private byte[] getDataPart(int length) throws JposException {
+        byte[] data = {};
+        if (TheFile instanceof FileInputStream) {
+            data = getPartFromFileSystem(length);
+        } else if (TheFile instanceof int[][]) {
+            data = getPartFromHardTotals(length);
+        } else
+            throw new JposException (JposConst.JPOS_E_FAILURE, "Cannot retrieve data from target");
+        return data;
+    }
+
+    private byte[] getPartFromHardTotals(int length) {
+        int handle = ((int[][])TheFile)[0][0];
+        int size = ((int[][])TheFile)[1][0];
+        int offset = ((int[][])TheFile)[1][1];
+        byte[] data = new byte[size > length + offset ? length : size - offset];
+        try {
+            totals.read(handle, data, offset, data.length);
+            ((int[][])TheFile)[1][1] += data.length;
+        } catch (JposException e) {
+            data = new byte[0];
+        }
+        if (data.length < length)
+            TheFile = null;
+        return data;
+    }
+
+    private byte[] getPartFromFileSystem(int length) {
+        FileInputStream in = (FileInputStream) TheFile;
+        byte[] data;
+        try {
+            FileChannel fc = in.getChannel();
+            long size = fc.size() - fc.position();
+            data = new byte[(int) (size > length ? length : size)];
+            int pos;
+            int len;
+            for (pos = 0; pos < data.length; pos += len)
+                len = in.read(data, pos, data.length - pos);
+        } catch (IOException e) {
+            data = new byte[0];
+        }
+        if (data.length < length) {
+            TheFile = null;
+            try {
+                in.close();
+            } catch (IOException e) {}
+        }
+        return data;
+    }
+
+    private String checkFileName(String name) throws JposException {
+        if (name == null) {
+            if (TheFile == null)
+                name = "";
+        } else if (TheFile != null) {
+            try {
+                if (TheFile instanceof FileInputStream)
+                    ((FileInputStream) TheFile).close();
+                else if (TheFile instanceof FileOutputStream)
+                    ((FileOutputStream) TheFile).close();
+                else if (TheFile instanceof Object[] && ((Object[])TheFile)[0] instanceof FileOutputStream)
+                    ((FileOutputStream)(((Object[])TheFile)[0])).close();
+            } catch (IOException e) {
+                throw new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e);
+            } finally {
+                TheFile = null;
+            }
+        }
+        return name;
+    }
+
+    private Object TheFile = null;
+
+    private boolean setDataForFileSystem(String fileName, byte[] data, int size) throws JposException {
+        File f = new File(path, fileName);
+        if (f.exists() && f.isFile() && f.length() > data.length)
+            f.delete();
+        long free = new File(path).getFreeSpace();
+        if (free < data.length) {
+            if (ExtendedErrorCode != null)
+                throw new JposException(JposConst.JPOS_E_EXTENDED, ExtendedErrorCode, "Not enough space: " +
+                        free + " < " + data.length);
+            return true;
+        }
+        FileOutputStream ostr = null;
+        try {
+            ostr = new FileOutputStream(f, false);
+            ostr.write(data);
+            if (data.length < size) {
+                if (TheFile == null)
+                    TheFile = new Object[]{ostr, new int[]{size, data.length}};
+                else
+                    ((Object[]) TheFile)[0] = ostr;
+            }
+        } catch (IOException e) {
+            if (ostr != null)
+                try {
+                    ostr.close();
+                } catch (IOException ee) {}
+            throw new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e);
+        }
+        return false;
+    }
+
+    private boolean setDataForHardTotals(String fileName, byte[] data, int size) throws JposException {
+        int[] handle = {0}, oldsize = {0};
+        String htname = getHardTotalsFileName(fileName);
+        try {
+            totals.find(htname, handle, oldsize);
+            if (oldsize[0] != size && oldsize[0] + totals.getFreeData() >= size)
+                totals.delete(htname);
+        } catch (JposException e) {}
+        if (oldsize[0] != size) {
+            int free = totals.getFreeData();
+            if (free < size) {
+                if (ExtendedErrorCode != null)
+                    throw new JposException(JposConst.JPOS_E_EXTENDED, ExtendedErrorCode, "Not enough space: " +
+                            free + " < " + size);
+                return true;
+            }
+            totals.create(htname, handle, size, false);
+        }
+        totals.write(handle[0], data, 0, data.length);
+        if (data.length < size) {
+            if (TheFile == null)
+                TheFile = new Object[]{null, new int[]{size, data.length, handle[0]}};
+            else
+                ((Object[]) TheFile)[1] = new int[]{size, data.length, handle[0]};
+        }
+        return false;
+    }
+
+    private int setPartData(byte[] data)  throws JposException{
+        JposDevice.check(!(TheFile instanceof Object[]), JposConst.JPOS_E_ILLEGAL, "Cannot store data in source");
+        FileOutputStream ostr = (FileOutputStream) Array.get(TheFile, 0);
+        int[] fileparams = (int[]) Array.get(TheFile, 1);
+        if (fileparams[0] > fileparams[1]) {
+            int maxlen = fileparams[0] - fileparams[1];
+            int count = 0;
+            if (ostr != null)
+                count = setPartInFileSystem(ostr, fileparams, data, maxlen);
+            if (fileparams.length == 3)
+                count = setPartInHardTotals(fileparams, data, maxlen);
+            fileparams[1] += count;
+        }
+        if (fileparams[0] == fileparams[1]) {
+            if (ostr != null)
+                try {
+                    ostr.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            TheFile = null;
+        }
+        return fileparams[0] - fileparams[1];
+    }
+
+    private int setPartInFileSystem(FileOutputStream ostr, int[] fileparams, byte[] data, int maxlen) throws JposException {
+        int bytecount = maxlen > data.length ? data.length : maxlen;
+        try {
+            ostr.write(data, 0, bytecount);
+        } catch (IOException e) {
+            throw new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e);
+        }
+        return bytecount;
+    }
+
+    private int setPartInHardTotals(int[] fileparams, byte[] data, int maxlen) throws JposException {
+        int bytecount = maxlen > data.length ? data.length : maxlen;
+        totals.write(fileparams[2], data, fileparams[1], bytecount);
+        return bytecount;
     }
 
     private String[] extractHardTotalsFilesFromFileSystemFileList(String[] results) throws JposException {
