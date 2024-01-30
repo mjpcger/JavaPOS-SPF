@@ -47,9 +47,9 @@ public interface HardTotalsInterface extends JposBaseInterface {
      * Final part of ClaimFile method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled,</li>
-     *     <li>Device has not been claimed previously,</li>
-     *     <li>timeout is FOREVER or positive,</li>
+     *     <li>Device is enabled and not claimed by other instance,</li>
+     *     <li>The hard totals file specified by <i>hTotalsFile</i> has not been claimed previously,</li>
+     *     <li>timeout is FOREVER or positive.</li>
      * </ul>
      * If the service must wait for a release from another instance and timeout is not FOREVER, timeout will be reduced
      * by the number of milliseconds the service must wait to get exclusive access. If the service cannot get
@@ -65,10 +65,9 @@ public interface HardTotalsInterface extends JposBaseInterface {
      * Final part of CommitTrans method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled,</li>
+     *     <li>Device is enabled and not claimed by other instance,</li>
      *     <li>CapTransactions is true,</li>
      *     <li>TransactionInProgress is true,</li>
-     *     <li>Device has not been claimed by another instance,</li>
      *     <li>All files used in stored Write or SetAll operations have not been claimed by another instance.</li>
      * </ul>
      * The ChangeRequest instances to be processed can be found in property Transaction.
@@ -80,13 +79,12 @@ public interface HardTotalsInterface extends JposBaseInterface {
      * Final part of Create method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled,</li>
+     *     <li>Device is enabled and not claimed by other instance,</li>
      *     <li>if CapSingleFile is true, fileName is an empty string,</li>
      *     <li>otherwise, fileName consists of no more than 10 ASCII characters (character codes between 0x20 and
      *          0x7f,</li>
      *     <li>hTotalsFile is an array with length = 1,</li>
-     *     <li>size is a positive value,</li>
-     *     <li>Device has not been claimed by another instance.</li>
+     *     <li>size is a positive value.</li>
      * </ul>
      *
      * @param fileName          Name of totals file.
@@ -101,12 +99,11 @@ public interface HardTotalsInterface extends JposBaseInterface {
      * Final part of Delete method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled,</li>
+     *     <li>Device is enabled and not claimed by other instance,</li>
      *     <li>if CapSingleFile is true, fileName is an empty string,</li>
-     *     <li>otherwise, fileName consists of no more than 10 ASCII characters (character codes between 0x20 and
-     *          0x7f,</li>
-     *     <li>Device has not been claimed by another instance.</li>
+     *     <li>otherwise, fileName consists of no more than 10 ASCII characters (character codes between 0x20 and 0x7f.</li>
      * </ul>
+     * Keep in mind: This method must check whether the specified file has been claimed by another instance.
      * @param fileName          Name of file to be deleted.
      * @throws JposException If an error occurs.
      */
@@ -116,7 +113,7 @@ public interface HardTotalsInterface extends JposBaseInterface {
      * Final part of Find method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled,</li>
+     *     <li>Device is enabled and not claimed by other instance,</li>
      *     <li>if CapSingleFile is true, fileName is an empty string,</li>
      *     <li>otherwise, fileName consists of no more than 10 ASCII characters (character codes between 0x20 and
      *          0x7f,</li>
@@ -150,10 +147,10 @@ public interface HardTotalsInterface extends JposBaseInterface {
      * Final part of Read method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled,</li>
+     *     <li>Device is enabled and not claimed by other instance,</li>
      *     <li>offset &ge; 0, count &ge; 0 and length of data &ge; count,</li>
      *     <li>offset + count &le; TotalsSize,</li>
-     *     <li>Neither the device nor the file referenced by hTotalsFile has been claimed by another instance.</li>
+     *     <li>The hard totals file specified by <i>hTotalsFile</i> has not been claimed by another instance.</li>
      * </ul>
      * The list of ChangeRequest objects passed via <i>transaction</i> consists of stored Write and SetAll requests
      * stored due to transaction processing for the given file. The contents of these objects can be used to modify data
@@ -175,9 +172,8 @@ public interface HardTotalsInterface extends JposBaseInterface {
      * Final part of RecalculateValidationData method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled,</li>
-     *     <li>Device has not been claimed by other instance,</li>
-     *     <li>The file referenced by hTotalsFile has not been claimed by other instance,</li>
+     *     <li>Device is enabled and not claimed by other instance,</li>
+     *     <li>The hard totals file specified by <i>hTotalsFile</i> has not been claimed by other instance,</li>
      *     <li>Device supports advanced error detection.</li>
      * </ul>
      *
@@ -190,8 +186,8 @@ public interface HardTotalsInterface extends JposBaseInterface {
      * Final part of ReleaseFile method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled,</li>
-     *     <li>The file referenced by hTotalsFile has been claimed.</li>
+     *     <li>Device is enabled and not claimed by other instance,</li>
+     *     <li>The hard totals file specified by <i>hTotalsFile</i> has not been claimed.</li>
      * </ul>
      *
      * @param hTotalsFile   Handle of a totals file.
@@ -203,10 +199,10 @@ public interface HardTotalsInterface extends JposBaseInterface {
      * Final part of Rename method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled,</li>
+     *     <li>Device is enabled and not claimed by other instance,</li>
      *     <li>if CapSingleFile is true, fileName is an empty string,</li>
-     *     <li>otherwise, fileName consists of no more than 10 ASCII characters (character codes between 0x20 and
-     *          0x7f.</li>
+     *     <li>otherwise, fileName consists of no more than 10 ASCII characters (character codes between 0x20 and 0x7f,</li>
+     *     <li>The hard totals file specified by <i>hTotalsFile</i> has not been claimed by other instance.</li>
      * </ul>
      *
      * @param hTotalsFile   Handle of a totals file.
@@ -231,9 +227,8 @@ public interface HardTotalsInterface extends JposBaseInterface {
      * Final part of OpenGate method. Can be overwritten in derived class, if necessary.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled,</li>
-     *     <li>Device has not been claimed by other instance,</li>
-     *     <li>The file referenced by hTotalsFile has not been claimed by other instance,</li>
+     *     <li>Device is enabled and not claimed by other instance,</li>
+     *     <li>The hard totals file specified by <i>hTotalsFile</i> has not been claimed by other instance,</li>
      *     <li>Device supports advanced error detection.</li>
      * </ul>
      *
@@ -249,8 +244,7 @@ public interface HardTotalsInterface extends JposBaseInterface {
      * method call for synchronous or asynchronous execution.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled,</li>
-     *     <li>Device has not been claimed by another instance,</li>
+     *     <li>Device is enabled and not claimed by other instance,</li>
      *     <li>The hard totals file specified by <i>hTotalsFile</i> has not been claimed by another instance.</li>
      * </ul>
      *
@@ -282,7 +276,7 @@ public interface HardTotalsInterface extends JposBaseInterface {
      * method call for synchronous or asynchronous execution.
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
-     *     <li>Device is enabled,</li>
+     *     <li>Device is enabled and not claimed by other instance,</li>
      *     <li>The byte buffer consists of at least <i>count</i> bytes,</li>
      *     <li>Both, <i>offset</i> and <i>count</i>, are &ge; 0 and their sum is %le; TotalsSize,</li>
      *     <li>Device has not been claimed by another instance,</li>

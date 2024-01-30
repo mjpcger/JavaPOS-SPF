@@ -121,7 +121,7 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
      */
     public void signalRelease(int handle) {
         synchronized (Props.Claiming) {
-            Factory.ClaimedHardTotals.get(Device)[Data.Index].remove(Props);
+            Factory.ClaimedHardTotals.get(Device)[Data.Index].remove(handle);
         }
         for (SyncObject waiter : Props.ClaimWaiters)
             waiter.signal();
@@ -196,9 +196,10 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
     @Override
     public void claimFile(int hTotalsFile, int timeout) throws JposException {
         logPreCall("ClaimFile", "" + hTotalsFile + ", " + timeout);
-        checkEnabled();
+        checkEnabledUnclaimed();
         Boolean res = myHandle(hTotalsFile);
         JposDevice.check(res != null && res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
+        JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed by other instance");
         JposDevice.check(timeout != JposConst.JPOS_FOREVER && timeout < 0, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value");
         long start = System.currentTimeMillis();
         JposCommonProperties props;
@@ -224,11 +225,9 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
     @Override
     public void commitTrans() throws JposException {
         logPreCall("CommitTrans");
-        checkEnabled();
+        checkEnabledUnclaimed();
         JposDevice.check(!Data.CapTransactions, JposConst.JPOS_E_ILLEGAL, "Transactions not supported by service");
         JposDevice.check(!Data.TransactionInProgress, JposConst.JPOS_E_ILLEGAL, "Transaction has not been started");
-        JposCommonProperties props = Props.getClaimingInstance();
-        JposDevice.check(props != null && props != Data, JposConst.JPOS_E_CLAIMED, "Device claimed");
         synchronized (Device.HardTotalss[Data.Index]) {
             for (ChangeRequest cr : Data.Transaction) {
                 Boolean res = myHandle(cr.getHTotalsFile());
@@ -247,14 +246,12 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         if (fileName == null)
             fileName = "";
         logPreCall("Create", fileName + ", [], " + size + ", " + errorDetection);
-        checkEnabled();
+        checkEnabledUnclaimed();
         JposDevice.check(Data.CapSingleFile && fileName.length() > 0, JposConst.JPOS_E_ILLEGAL, "Filename not empty");
         JposDevice.check(fileName.length() > 10, JposConst.JPOS_E_ILLEGAL, "Filename too long");
         JposDevice.check(invalidCharacters(fileName), JposConst.JPOS_E_ILLEGAL, "Filename " + fileName + "contains non-ASCII characters");
         JposDevice.check(hTotalsFile == null || hTotalsFile.length != 1, JposConst.JPOS_E_ILLEGAL, "Bad file handle type, must be int[1]");
         JposDevice.check(size < 0, JposConst.JPOS_E_ILLEGAL, "Invalid file size: " + size);
-        JposCommonProperties props = Props.getClaimingInstance();
-        JposDevice.check(props != null && props != Data, JposConst.JPOS_E_CLAIMED, "Device claimed");
         HardTotals.create(fileName, hTotalsFile, size, errorDetection);
         logCall("Create", "" + hTotalsFile[0]);
     }
@@ -273,12 +270,10 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         if (fileName == null)
             fileName = "";
         logPreCall("Delete", fileName);
-        checkEnabled();
+        checkEnabledUnclaimed();
         JposDevice.check(Data.CapSingleFile && fileName.length() > 0, JposConst.JPOS_E_ILLEGAL, "Filename not empty");
         JposDevice.check(fileName.length() > 10, JposConst.JPOS_E_ILLEGAL, "Filename too long");
         JposDevice.check(invalidCharacters(fileName), JposConst.JPOS_E_ILLEGAL, "Filename " + fileName + "contains non-ASCII characters");
-        JposCommonProperties props = Props.getClaimingInstance();
-        JposDevice.check(props != null && props != Data, JposConst.JPOS_E_CLAIMED, "Device claimed");
         HardTotals.delete(fileName);
         logCall("Delete");
     }
@@ -288,7 +283,7 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         if (fileName == null)
             fileName = "";
         logPreCall("Find", fileName + ", [], []");
-        checkEnabled();
+        checkEnabledUnclaimed();
         JposDevice.check(Data.CapSingleFile && fileName.length() > 0, JposConst.JPOS_E_ILLEGAL, "Filename not empty");
         JposDevice.check(fileName.length() > 10, JposConst.JPOS_E_ILLEGAL, "Filename too long");
         JposDevice.check(invalidCharacters(fileName), JposConst.JPOS_E_ILLEGAL, "Filename " + fileName + "contains non-ASCII characters");
@@ -313,14 +308,12 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         if (data == null)
             data = new byte[0];
         logPreCall("Read", "" + hTotalsFile + ", [], " + offset + ", " + count);
-        checkEnabled();
+        checkEnabledUnclaimed();
         JposDevice.check(data == null, JposConst.JPOS_E_ILLEGAL, "Bad data type, must be byte[]");
         JposDevice.check(offset < 0, JposConst.JPOS_E_ILLEGAL, "Invalid offset: " + count);
         JposDevice.check(count < 0, JposConst.JPOS_E_ILLEGAL, "Invalid count: " + count);
         JposDevice.check(offset + count > Data.TotalsSize, JposConst.JPOS_E_ILLEGAL, "Invalid read position");
         JposDevice.check(data.length < count, JposConst.JPOS_E_ILLEGAL, "Data buffer too small: " + data.length);
-        JposCommonProperties props = Props.getClaimingInstance();
-        JposDevice.check(props != null && props != Data, JposConst.JPOS_E_CLAIMED, "Device claimed");
         Boolean res = myHandle(hTotalsFile);
         JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
         List<ChangeRequest> openChanges = new ArrayList<>();
@@ -341,9 +334,7 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
     @Override
     public void recalculateValidationData(int hTotalsFile) throws JposException {
         logPreCall("RecalculateValidationData", "" + hTotalsFile);
-        checkEnabled();
-        JposCommonProperties props = Props.getClaimingInstance();
-        JposDevice.check(props != null && props != Data, JposConst.JPOS_E_CLAIMED, "Device claimed");
+        checkEnabledUnclaimed();
         Boolean res = myHandle(hTotalsFile);
         JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
         JposDevice.check(!Data.CapErrorDetection, JposConst.JPOS_E_ILLEGAL, "Error detection not supported");
@@ -354,9 +345,10 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
     @Override
     public void releaseFile(int hTotalsFile) throws JposException {
         logPreCall("ReleaseFile", "" + hTotalsFile);
-        checkEnabled();
+        checkEnabledUnclaimed();
         Boolean res = myHandle(hTotalsFile);
-        JposDevice.check(res == null || !res, JposConst.JPOS_E_NOTCLAIMED, "Hard total file not claimed");
+        JposDevice.check(res == null, JposConst.JPOS_E_NOTCLAIMED, "Hard total file not claimed");
+        JposDevice.check(!res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed by other instance");
         HardTotals.releaseFile(hTotalsFile);
         signalRelease(hTotalsFile);
         logCall("ReleaseFile");
@@ -367,10 +359,12 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         if (fileName == null)
             fileName = "";
         logPreCall("Rename", "" + hTotalsFile + ", " + fileName);
-        checkEnabled();
+        checkEnabledUnclaimed();
         JposDevice.check(Data.CapSingleFile && fileName.length() > 0, JposConst.JPOS_E_ILLEGAL, "Filename not empty");
         JposDevice.check(fileName.length() > 10, JposConst.JPOS_E_ILLEGAL, "Filename too long");
         JposDevice.check(invalidCharacters(fileName), JposConst.JPOS_E_ILLEGAL, "Filename " + fileName + "contains non-ASCII characters");
+        Boolean res = myHandle(hTotalsFile);
+        JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
         HardTotals.rename(hTotalsFile, fileName);
         logCall("Rename");
     }
@@ -391,9 +385,7 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
     @Override
     public void setAll(int hTotalsFile, byte value) throws JposException {
         logPreCall("SetAll", "" + hTotalsFile + ", " + value);
-        checkEnabled();
-        JposCommonProperties props = Props.getClaimingInstance();
-        JposDevice.check(props != null && props != Data, JposConst.JPOS_E_CLAIMED, "Device claimed");
+        checkEnabledUnclaimed();
         Boolean res = myHandle(hTotalsFile);
         JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
         SetAll request = HardTotals.setAll(hTotalsFile, value);
@@ -411,9 +403,7 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
     @Override
     public void validateData(int hTotalsFile) throws JposException {
         logPreCall("ValidateData", "" + hTotalsFile);
-        checkEnabled();
-        JposCommonProperties props = Props.getClaimingInstance();
-        JposDevice.check(props != null && props != Data, JposConst.JPOS_E_CLAIMED, "Device claimed");
+        checkEnabledUnclaimed();
         Boolean res = myHandle(hTotalsFile);
         JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
         JposDevice.check(!Data.CapErrorDetection, JposConst.JPOS_E_ILLEGAL, "Error detection not supported");
@@ -426,14 +416,12 @@ public class HardTotalsService extends JposBase implements HardTotalsService115 
         if (data == null)
             data = new byte[0];
         logPreCall("Write", "" + hTotalsFile + ", " + data.toString() + ", " + offset + ", " + count);
-        checkEnabled();
+        checkEnabledUnclaimed();
         JposDevice.check(data == null, JposConst.JPOS_E_ILLEGAL, "Bad data type, must be byte[]");
         JposDevice.check(offset < 0, JposConst.JPOS_E_ILLEGAL, "Invalid offset: " + count);
         JposDevice.check(count < 0, JposConst.JPOS_E_ILLEGAL, "Invalid count: " + count);
         JposDevice.check(offset + count > Data.TotalsSize, JposConst.JPOS_E_ILLEGAL, "Invalid read position");
         JposDevice.check(data.length < count, JposConst.JPOS_E_ILLEGAL, "Data buffer too small: " + data.length);
-        JposCommonProperties props = Props.getClaimingInstance();
-        JposDevice.check(props != null && props != Data, JposConst.JPOS_E_CLAIMED, "Device claimed");
         Boolean res = myHandle(hTotalsFile);
         JposDevice.check(res != null && !res, JposConst.JPOS_E_CLAIMED, "Hard total file claimed");
         Write request = HardTotals.write(hTotalsFile, data, offset, count);
