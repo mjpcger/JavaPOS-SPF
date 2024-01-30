@@ -95,7 +95,9 @@ public class SoundPlayerService extends JposBase implements SoundPlayerService11
     public String getOutputIDList() throws JposException {
         logGet("OutputIDList(");
         checkEnabled();
-        return Data.OutputIDList;
+        synchronized (Data.OutputIdListSync) {
+            return Data.OutputIDList;
+        }
     }
 
     @Override
@@ -158,10 +160,12 @@ public class SoundPlayerService extends JposBase implements SoundPlayerService11
     @Override
     public void stopSound(int outputID) throws JposException {
         logPreCall("StopSound", "" + outputID);
-        String[] supported = Data.OutputIDList.split(",");
-        checkEnabled();
-        JposDevice.check(!JposDevice.member(Integer.toString(outputID), supported),
-                JposConst.JPOS_E_ILLEGAL, "outputID not one of {" + String.join(",", supported) + "}");
+        synchronized (Data.OutputIdListSync) {
+            String[] supported = Data.OutputIDList.split(",");
+            checkEnabled();
+            JposDevice.check(!JposDevice.member(Integer.toString(outputID), supported),
+                    JposConst.JPOS_E_ILLEGAL, "outputID not one of {" + String.join(",", supported) + "}");
+        }
         SoundPlayer.stopSound(outputID);
         logCall("StopSound");
     }

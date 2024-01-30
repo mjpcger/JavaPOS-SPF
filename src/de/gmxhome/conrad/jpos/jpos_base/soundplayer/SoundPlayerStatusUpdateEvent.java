@@ -48,14 +48,18 @@ public class SoundPlayerStatusUpdateEvent extends JposStatusUpdateEvent {
         synchronized (this) {
             switch (getStatus()) {
                 case SoundPlayerConst.SPLY_SUE_START_PLAY_SOUND:
-                    data.OutputIDList = data.OutputIDList.length() == 0 ? Integer.toString(OutputID) : data.OutputIDList + "," + OutputID;
+                    synchronized (data.OutputIdListSync) {
+                        data.OutputIDList = data.OutputIDList.length() == 0 ? Integer.toString(OutputID) : data.OutputIDList + "," + OutputID;
+                    }
                     break;
                 case SoundPlayerConst.SPLY_SUE_STOP_PLAY_SOUND:
-                    String[] parts = data.OutputIDList.split(",");
-                    data.OutputIDList = "";
-                    for (String part : parts) {
-                        if (OutputID != Integer.parseInt(part))
-                            data.OutputIDList += (data.OutputIDList.length() > 0 ? "," : "") + part;
+                    synchronized (data.OutputIdListSync) {
+                        String[] parts = data.OutputIDList.split(",");
+                        data.OutputIDList = "";
+                        for (String part : parts) {
+                            if (OutputID != Integer.parseInt(part))
+                                data.OutputIDList += (data.OutputIDList.length() > 0 ? "," : "") + part;
+                        }
                     }
                     break;
                 default:

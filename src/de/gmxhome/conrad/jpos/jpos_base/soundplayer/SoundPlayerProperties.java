@@ -70,6 +70,11 @@ public class SoundPlayerProperties extends JposCommonProperties implements Sound
     public String OutputIDList = "";
 
     /**
+     * Every assess to OutputIDList must be synchronized via OutputIdListSync.
+     */
+    public String[] OutputIdListSync = { OutputIDList };
+
+    /**
      * UPOS property Storage. Default: an empty string. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
