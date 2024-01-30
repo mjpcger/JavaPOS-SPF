@@ -505,7 +505,11 @@ public class JposBase implements BaseService {
      */
     public void checkClaimed() throws JposException {
         checkOpened();
-        Device.check(Props.ExclusiveUse == JposCommonProperties.ExclusiveYes && !Props.Claimed, Props.getClaimingInstance() == null ? JposConst.JPOS_E_NOTCLAIMED : JposConst.JPOS_E_CLAIMED, "Device not claimed");
+        JposCommonProperties claiming = Props.getClaimingInstance();
+        if (Props.ExclusiveUse == JposCommonProperties.ExclusiveYes) {
+            JposDevice.check(claiming == null, JposConst.JPOS_E_NOTCLAIMED, "Device not claimed");
+            JposDevice.check(claiming != Props, JposConst.JPOS_E_CLAIMED, "Device claimed by other instance");
+        }
     }
 
     /**
