@@ -58,16 +58,17 @@ public class SoundRecorderProperties extends JposCommonProperties implements Sou
     public boolean CapSoundType = false;
 
     /**
-     * UPOS property CapChannel. Default: CST_HOST_ONLY. Can be overwritten by objects derived from JposDevice within the
+     * UPOS property CapStorage. Default: CST_HOST_ONLY. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
     public int CapStorage = SoundRecorderConst.SREC_CST_HOST_ONLY;
 
     /**
-     * UPOS property Channel. Default: an empty string. Can be overwritten by objects derived from JposDevice within the
-     * changeDefaults method.
+     * UPOS property Channel. Default: null. Can be overwritten by objects derived from JposDevice within the
+     * changeDefaults method. If not set, Channel will be set to the first type listed in ChannelList within the
+     * initOnOpen method.
      */
-    public String Channel = "";
+    public String Channel = null;
 
     /**
      * UPOS property ChannelList. Default: an empty string. Can be overwritten by objects derived from JposDevice within the
@@ -88,10 +89,11 @@ public class SoundRecorderProperties extends JposCommonProperties implements Sou
     public int RemainingRecordingTimeInSec;
 
     /**
-     * UPOS property SamplingRate. Default: an empty string. Can be overwritten by objects derived from JposDevice within the
-     * changeDefaults method.
+     * UPOS property SamplingRate. Default: null. Can be overwritten by objects derived from JposDevice within the
+     * changeDefaults method. If not set, SamplingRate will be set to the first type listed in SamplingRateList within the
+     * initOnOpen method.
      */
-    public String SamplingRate = "";
+    public String SamplingRate = null;
 
     /**
      * UPOS property SamplingRateList. Default: an empty string. Can be overwritten by objects derived from JposDevice within the
@@ -105,10 +107,11 @@ public class SoundRecorderProperties extends JposCommonProperties implements Sou
     public byte[] SoundData = {};
 
     /**
-     * UPOS property SoundType. Default: an empty string. Can be overwritten by objects derived from JposDevice within the
-     * changeDefaults method.
+     * UPOS property SoundType. Default: null. Can be overwritten by objects derived from JposDevice within the
+     * changeDefaults method. If not set, SoundType will be set to the first type listed in SoundTypeList within the
+     * initOnOpen method.
      */
-    public String SoundType = "";
+    public String SoundType = null;
 
     /**
      * UPOS property SoundTypeList. Default: an empty string. Can be overwritten by objects derived from JposDevice within the
@@ -132,6 +135,16 @@ public class SoundRecorderProperties extends JposCommonProperties implements Sou
         DeviceServiceVersion = 1016000;
 }
 
+    @Override
+    public void initOnOpen() {
+        super.initOnOpen();
+        if (Channel == null)
+            Channel = ChannelList.split(",")[0];
+        if (SamplingRate == null)
+            SamplingRate = SamplingRateList.split(",")[0];
+        if (SoundType == null)
+            SoundType = SoundTypeList.split(",")[0];
+    }
     @Override
     public void initOnEnable(boolean flag) {
         RemainingRecordingTimeInSec = 0;

@@ -167,7 +167,7 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
         logPreSet("ImageType");
         checkEnabled();
         JposDevice.check(!Data.CapImageType, JposConst.JPOS_E_ILLEGAL, "Image Mode Not Supported");
-        JposDevice.check(!JposDevice.member(imageType, Data.ImageType.split(",")), JposConst.JPOS_E_ILLEGAL, "ImageType Illegal: " + imageType);
+        JposDevice.check(!JposDevice.member(imageType, Data.ImageTypeList.split(",")), JposConst.JPOS_E_ILLEGAL, "ImageType Illegal: " + imageType);
         GraphicDisplay.imageType(imageType);
         logSet("ImageType");
     }

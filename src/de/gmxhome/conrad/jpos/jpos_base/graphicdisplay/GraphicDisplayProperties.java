@@ -22,6 +22,8 @@ import jpos.GraphicDisplay;
 import jpos.GraphicDisplayConst;
 import jpos.JposException;
 
+import java.awt.*;
+
 public class GraphicDisplayProperties extends JposCommonProperties implements GraphicDisplayInterface {
     /**
      * UPOS property Brightness. Default: 0. Should be overwritten by objects derived from JposDevice within the
@@ -84,10 +86,11 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
     public int DisplayMode = GraphicDisplayConst.GDSP_DMODE_HIDDEN;
 
     /**
-     * UPOS property ImageType. Default: An empty string. Should be overwritten by objects derived from JposDevice within the
-     * changeDefaults method.
+     * UPOS property ImageType. Default: null. Can be overwritten by objects derived from JposDevice within the
+     * changeDefaults method. If not set, ImageType will be set to the first type listed in ImageTypeList within the
+     * initOnOpen method.
      */
-    public String ImageType = "";
+    public String ImageType = null;
 
     /**
      * UPOS property ImageTypeList. Default: An empty string. Must be overwritten by objects derived from JposDevice within the
@@ -114,10 +117,11 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
     public String URL = null;
 
     /**
-     * UPOS property VideoType. Default: An empty string. Can be overwritten by objects derived from JposDevice within the
-     * changeDefaults method.
+     * UPOS property VideoType. Default: null. Can be overwritten by objects derived from JposDevice within the
+     * changeDefaults method. If not set, VideoType will be set to the first type listed in VideoTypeList within the
+     * initOnOpen method.
      */
-    public String VideoType = "";
+    public String VideoType = null;
 
     /**
      * UPOS property VideoTypeList. Default: An empty string. Must be overwritten by objects derived from JposDevice within the
@@ -139,6 +143,14 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
     protected GraphicDisplayProperties(int dev) {
         super(dev);
         DeviceServiceVersion = 1016000;
+    }
+
+    @Override
+    public void initOnOpen() {
+        if (ImageType == null)
+            ImageType = ImageTypeList.split(",")[0];
+        if (VideoType == null)
+            VideoType = VideoTypeList.split(",")[0];
     }
 
     @Override

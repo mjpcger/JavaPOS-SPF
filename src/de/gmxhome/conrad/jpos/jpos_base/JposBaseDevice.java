@@ -21,13 +21,11 @@ import jpos.config.JposEntry;
 import jpos.events.*;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jpos.services.EventCallbacks;
 import jpos.services.EventCallbacks2;
 import net.bplaced.conrad.log4jpos.*;
 
@@ -192,7 +190,7 @@ public class JposBaseDevice {
     public JposOutputRequest.JposRequestThread[] AsyncProcessorRunning = new JposOutputRequest.JposRequestThread[]{null};
 
     /**
-     * Currently executed output request.
+     * Currently executed output request, if concurrent asynchronous requests are not supported.
      */
     public JposOutputRequest CurrentCommand;
 
@@ -203,7 +201,7 @@ public class JposBaseDevice {
     public List<JposOutputRequest> CurrentCommands = null;
 
     /**
-     * Starts a new thread for concurrent asynchronous processing and adds it toCurrentCommands list.
+     * Starts a new thread for concurrent asynchronous processing and adds it to CurrentCommands list.
      * @param request   Request to be invoked.
      */
     public void createRequestThread(JposOutputRequest request) {

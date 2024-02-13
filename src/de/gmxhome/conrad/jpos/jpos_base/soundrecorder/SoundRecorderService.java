@@ -223,7 +223,7 @@ public class SoundRecorderService extends JposBase implements SoundRecorderServi
         StartRecording request = SoundRecorder.startRecording(fileName, overWrite, recordingTime);
         if (request != null)
             request.enqueue();
-        logAsyncCall("StartRecording");
+        logCall("StartRecording");
     }
 
     @Override
@@ -232,6 +232,6 @@ public class SoundRecorderService extends JposBase implements SoundRecorderServi
         checkEnabled();
         JposDevice.check(!Data.AsyncInputActive, JposConst.JPOS_E_ILLEGAL, "Recording not active");
         SoundRecorder.stopRecording();
-        logAsyncCall("StopRecording");
+        logCall("StopRecording");
     }
 }

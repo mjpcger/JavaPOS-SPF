@@ -15,29 +15,29 @@
  *
  */
 
-package de.gmxhome.conrad.jpos.jpos_base.soundrecorder;
+package de.gmxhome.conrad.jpos.jpos_base.videocapture;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.JposException;
 
 /**
- * Input request executor for SoundRecorder method StartRecording.
+ * Input request executor for VideoCapture method StartVideo.
  */
-public class StartRecording extends JposInputRequest {
+public class TakePhoto extends JposInputRequest {
     /**
      * Constructor. Stores given parameters for later use.
      *
      * @param props Property set of device service.
      */
-    public StartRecording(SoundRecorderProperties props, String fileName, boolean overWrite, int recordingTime) {
+    public TakePhoto(JposCommonProperties props, String fileName, boolean overWrite, int timeout) {
         super(props);
         FileName = fileName;
         OwerWrite = overWrite;
-        RecordingTime = recordingTime;
+        Timeout = timeout;
     }
 
     /**
-     * Audio file name of sound to be recorded.
+     * Image file name of image to be recorded.
      */
     public final String FileName;
 
@@ -47,12 +47,12 @@ public class StartRecording extends JposInputRequest {
     public final boolean OwerWrite;
 
     /**
-     * Time for recording in seconds or FOREVER.
+     * Timeout for recording the photo or FOREVER.
      */
-    public final int RecordingTime;
+    public final int Timeout;
 
     @Override
     public void invoke() throws JposException {
-        ((SoundRecorderService)Props.EventSource).SoundRecorder.startRecording(this);
+        ((VideoCaptureService)Props.EventSource).VideoCapture.takePhoto(this);
     }
 }

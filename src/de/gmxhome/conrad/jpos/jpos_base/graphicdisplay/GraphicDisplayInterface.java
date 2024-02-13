@@ -50,7 +50,7 @@ public interface GraphicDisplayInterface extends JposBaseInterface {
      *                 DMODE_IMAGE_CENTER,</li>
      *     <li> if CapVideoType is false, displayMode is not one of DMODE_VIDEO_NORMAL or GDSP_DMODE_VIDEO_FULL.</li>
      * </ul>
-     * @param displayMode Critical battery low power level in percent.
+     * @param displayMode New value for property DisplayMode.
      * @throws JposException If an error occurs.
      */
     void displayMode(int displayMode) throws JposException;
