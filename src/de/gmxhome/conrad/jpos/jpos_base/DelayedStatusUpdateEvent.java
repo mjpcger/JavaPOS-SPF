@@ -111,12 +111,16 @@ public class DelayedStatusUpdateEvent extends JposStatusUpdateEvent implements R
             props.BufferedEvent = null;
         }
         synchronized (props.EventList) {
-            setAndCheckStatusProperties();
+            try {
+                setAndCheckStatusProperties();
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
             props.EventList.add(this);
             props.Device.log(Level.DEBUG, props.LogicalName + ": Buffer StatusUpdateEvent: [" + toLogString() + "]");
             try {
                 props.Device.processEventList(props);
-            } catch (JposException e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
             }
         }

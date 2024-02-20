@@ -905,10 +905,15 @@ public class JposBaseDevice {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            Props.EventCB.fireDirectIOEvent(dioev);
-                            log(Level.DEBUG, Props.LogicalName + ": Fire Transition Event: [" + dioev.toLogString() + "]");
-                            postDirectIOProcessing(dioev);
-                            waiter.signal();
+                            try {
+                                Props.EventCB.fireDirectIOEvent(dioev);
+                                log(Level.DEBUG, Props.LogicalName + ": Fire Transition Event: [" + dioev.toLogString() + "]");
+                                postDirectIOProcessing(dioev);
+                            } catch (Throwable e) {
+                                e.printStackTrace();
+                            } finally {
+                                waiter.signal();
+                            }
                         }
                     }, "DirectIOEventRunner") {
                     }.start();
@@ -920,14 +925,19 @@ public class JposBaseDevice {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            if (Props.EventCB instanceof EventCallbacks2) {
-                                ((EventCallbacks2) Props.EventCB).fireTransitionEvent(tev);
-                                log(Level.DEBUG, Props.LogicalName + ": Fire Transition Event: [" + tev.toLogString() + "]");
-                            } else {
-                                log(Level.DEBUG, Props.LogicalName + ": Transition Event: [" + tev.toLogString() + "]: Unsupported");
+                            try {
+                                if (Props.EventCB instanceof EventCallbacks2) {
+                                    ((EventCallbacks2) Props.EventCB).fireTransitionEvent(tev);
+                                    log(Level.DEBUG, Props.LogicalName + ": Fire Transition Event: [" + tev.toLogString() + "]");
+                                } else {
+                                    log(Level.DEBUG, Props.LogicalName + ": Transition Event: [" + tev.toLogString() + "]: Unsupported");
+                                }
+                                postTransitionProcessing(tev);
+                            } catch (Throwable e) {
+                                e.printStackTrace();
+                            } finally {
+                                waiter.signal();
                             }
-                            postTransitionProcessing(tev);
-                            waiter.signal();
                         }
                     }, "TransitionEventRunner") {
                     }.start();
@@ -939,21 +949,26 @@ public class JposBaseDevice {
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                synchronized (AsyncProcessorRunning) {
-                                    Props.EventCB.fireErrorEvent(errev);
-                                    log(Level.DEBUG, Props.LogicalName + ": Fire Error Event: [" + errev.toLogString() + "]");
-                                    if (errev.getErrorResponse() == JposConst.JPOS_ER_CLEAR) {
-                                        errev.clear();
+                                try {
+                                    synchronized (AsyncProcessorRunning) {
+                                        Props.EventCB.fireErrorEvent(errev);
+                                        log(Level.DEBUG, Props.LogicalName + ": Fire Error Event: [" + errev.toLogString() + "]");
+                                        if (errev.getErrorResponse() == JposConst.JPOS_ER_CLEAR) {
+                                            errev.clear();
+                                        }
                                     }
-                                }
-                                if (errev.getErrorResponse() == JposConst.JPOS_ER_RETRY) {
-                                    try {   // retryInput should never throw an exception!
-                                        Props.EventSource.DeviceInterface.retryOutput();
-                                    } catch (JposException e) {
-                                        e.printStackTrace();
+                                    if (errev.getErrorResponse() == JposConst.JPOS_ER_RETRY) {
+                                        try {   // retryInput should never throw an exception!
+                                            Props.EventSource.DeviceInterface.retryOutput();
+                                        } catch (JposException e) {
+                                            e.printStackTrace();
+                                        }
                                     }
+                                } catch (Throwable e) {
+                                    e.printStackTrace();
+                                } finally {
+                                    waiter.signal();
                                 }
-                                waiter.signal();
                             }
                         }, "OutputErrorEventRunner") {
                         }.start();
@@ -962,41 +977,54 @@ public class JposBaseDevice {
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                synchronized (AsyncProcessorRunning) {
-                                    Props.EventCB.fireErrorEvent(errev);
-                                    log(Level.DEBUG, Props.LogicalName + ": Fire Error Event: [" + errev.toLogString() + "]");
-                                    if (errev.getErrorResponse() == JposConst.JPOS_ER_CLEAR) {
-                                        errev.clear();
+                                try {
+                                    synchronized (AsyncProcessorRunning) {
+                                        Props.EventCB.fireErrorEvent(errev);
+                                        log(Level.DEBUG, Props.LogicalName + ": Fire Error Event: [" + errev.toLogString() + "]");
+                                        if (errev.getErrorResponse() == JposConst.JPOS_ER_CLEAR) {
+                                            errev.clear();
+                                        }
                                     }
-                                }
-                                if (errev.getErrorResponse() == JposConst.JPOS_ER_RETRY) {
-                                    try {   // retryInput should never throw an exception!
-                                        Props.EventSource.DeviceInterface.retryInput();
-                                    } catch (JposException e) {
-                                        e.printStackTrace();
+                                    if (errev.getErrorResponse() == JposConst.JPOS_ER_RETRY) {
+                                        try {   // retryInput should never throw an exception!
+                                            Props.EventSource.DeviceInterface.retryInput();
+                                        } catch (JposException e) {
+                                            e.printStackTrace();
+                                        }
                                     }
+                                }  catch (Throwable e) {
+                                    e.printStackTrace();
+                                } finally {
+                                    waiter.signal();
                                 }
-                                waiter.signal();
                             }
                         }, "InputErrorEventRunner") {
                         }.start();
                         waiter.suspend(Props.EventSource.MaximumConfirmationEventWaitingTime);
                     }
                 } else if (ocevent != null) {
-                    Props.EventCB.fireOutputCompleteEvent(ocevent);
+                    try {
+                        Props.EventCB.fireOutputCompleteEvent(ocevent);
+                    }  catch (Throwable e) {
+                        e.printStackTrace();
+                    }
                     log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Output Complete Event: [" + ocevent.toLogString() + "]");
                 } else if (stevent != null) {
-                    Props.EventCB.fireStatusUpdateEvent(stevent);
+                    try {
+                        Props.EventCB.fireStatusUpdateEvent(stevent);
+                    }  catch (Throwable e) {
+                        e.printStackTrace();
+                    }
                     log(Level.DEBUG, Props.LogicalName + ": Fire Buffered Status Update Event: [" + stevent.toLogString() + "]");
                 } else if (devent != null) {
                     try {
                         Props.EventSource.setDataEventEnabled(false);
-                    } catch (JposException e) {
+                        Props.DataCount--;
+                        Props.EventSource.logSet("DataCount");
+                        Props.EventCB.fireDataEvent(devent);
+                    } catch (Throwable e) {
                         e.printStackTrace();
                     }
-                    Props.DataCount--;
-                    Props.EventSource.logSet("DataCount");
-                    Props.EventCB.fireDataEvent(devent);
                     log(Level.DEBUG, Props.LogicalName + ": Fire Data Event: [" + devent.toLogString() + "]");
                 }
             }

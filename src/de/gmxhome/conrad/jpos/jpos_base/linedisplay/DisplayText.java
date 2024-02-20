@@ -61,30 +61,18 @@ public class DisplayText extends JposOutputRequest {
     }
 
     @Override
-    public void run() {
-        JposOutputRequest current;
-        while ((current = dequeue()) != null) {
-            try {
-                current.invoke();
-            } catch (JposException e) {}
-            current.finished();
-            if (current.EndSync != null) {
-                synchronized (Device.AsyncProcessorRunning) {
-                    if (Device.PendingCommands.size() == 0 && current.Props.SuspendedCommands.size() == 0) {
-                        current.Props.State = JposConst.JPOS_S_IDLE;
-                        current.Props.EventSource.logSet("State");
-                    }
-                }
-                current.EndSync.signal();
-            } else {
-                if (current.OutputID == current.Props.OutputID) {
-                    synchronized (Device.AsyncProcessorRunning) {
-                        current.Props.State = JposConst.JPOS_S_IDLE;
-                        current.Props.EventSource.logSet("State");
-                    }
-                }
-            }
-        }
+    public JposStatusUpdateEvent createIdleEvent() {
+        return null;
+    }
+
+    @Override
+    public JposErrorEvent createErrorEvent(JposException e) {
+        return null;
+    }
+
+    @Override
+    public JposOutputCompleteEvent createOutputEvent() {
+        return null;
     }
 
     @Override

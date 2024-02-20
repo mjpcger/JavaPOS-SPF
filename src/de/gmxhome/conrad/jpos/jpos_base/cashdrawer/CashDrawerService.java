@@ -139,6 +139,8 @@ public class CashDrawerService extends JposBase implements CashDrawerService115,
                 }
             }
         }
-        catch (Exception e) {}
+        catch (Throwable e) {
+            e.printStackTrace();
+        }
     }
 }

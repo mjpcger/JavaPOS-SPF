@@ -604,7 +604,10 @@ public class JposOutputRequest implements Runnable {
                     processed = true;
                 }
             }
-        } catch (JposException e1) {
+        } catch (Throwable e1) {
+            e1.printStackTrace();
+            if (!(e1 instanceof JposException))
+                processed = true;
         }
         if (processed)
             transitionToIdle();
@@ -624,7 +627,11 @@ public class JposOutputRequest implements Runnable {
                     Props.EventSource.logSet("FlagWhenIdle");
                     synchronized (Device.AsyncProcessorRunning) {
                         JposOutputRequest savedCommand = Device.CurrentCommand;
-                        event = (Device.CurrentCommand = this).createIdleEvent();
+                        try {
+                            event = (Device.CurrentCommand = this).createIdleEvent();
+                        } catch (Throwable e) {
+                            e.printStackTrace();
+                        }
                         Device.CurrentCommand = savedCommand;
                     }
                 }
@@ -633,7 +640,8 @@ public class JposOutputRequest implements Runnable {
         if (event != null) {
             try {
                 Device.handleEvent(event);
-            } catch (JposException e) {
+            } catch (Throwable e) {
+                e.printStackTrace();
             }
         }
     }

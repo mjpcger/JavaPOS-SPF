@@ -112,7 +112,8 @@ public class SoundPlayer implements Runnable {
                 playMaxOneSecond(sec == 0 ? Duration % 1000 : 1000);
             }
             SoundData.drain();
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            e.printStackTrace();
         } finally {
             clear();
         }
