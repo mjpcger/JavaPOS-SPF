@@ -26,6 +26,8 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest.JposRequestThread.ActiveMessageBoxes;
+
 /**
  * Base class for all UPOS device services using this framework. Each service owns a
  * driver object derived from JposDevice and a device class specific property set
@@ -101,10 +103,12 @@ public class JposBase implements BaseService {
         if (Props.State != JposConst.JPOS_S_CLOSED)
             close();
         Device.removePropertySet(Props);
+        synchronized (ActiveMessageBoxes) {
+            for (SynchronizedMessageBox msg : ActiveMessageBoxes)
+                msg.abortDialog();
+        }
         synchronized(Device.AsyncProcessorRunning) {
             Device.PendingCommands.clear();
-            if (Device.AsyncProcessorRunning[0] != null && Device.AsyncProcessorRunning[0].TheActiveBox != null)
-                Device.AsyncProcessorRunning[0].TheActiveBox.abortDialog();
         }
         Props.EventSource = null;
         Props.Device = null;

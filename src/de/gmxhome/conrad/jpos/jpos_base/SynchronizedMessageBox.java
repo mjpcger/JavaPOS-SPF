@@ -20,6 +20,8 @@ package de.gmxhome.conrad.jpos.jpos_base;
 import javax.swing.*;
 import java.awt.event.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest.JposRequestThread.ActiveMessageBoxes;
+
 /**
  * Helper class to create message boxes from any thread that are synchronized with the current thread. Option dialogs
  * as well as simple message boxes can be created that way.
@@ -56,12 +58,8 @@ public class SynchronizedMessageBox {
     public int synchronizedConfirmationBox(final String message, final String title, final String[] options, final String defaultOption, final int messageType, final int timeout) {
         Result = null;
         Thread current = Thread.currentThread();
-        JposOutputRequest.JposRequestThread asynchandler = null;
-        if (current instanceof JposOutputRequest.JposRequestThread) {
-            asynchandler = (JposOutputRequest.JposRequestThread)current;
-            synchronized (asynchandler) {
-                asynchandler.TheActiveBox = this;
-            }
+        synchronized (ActiveMessageBoxes) {
+            ActiveMessageBoxes.add(this);
         }
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -133,10 +131,8 @@ public class SynchronizedMessageBox {
             }
         });
         Ready.suspend(SyncObject.INFINITE);
-        if (asynchandler != null) {
-            synchronized (asynchandler) {
-                asynchandler.TheActiveBox = null;
-            }
+        synchronized (ActiveMessageBoxes) {
+            ActiveMessageBoxes.remove(this);
         }
         return Result;
     }

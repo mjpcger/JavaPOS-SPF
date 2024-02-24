@@ -287,11 +287,27 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     public List<JposOutputRequest> SuspendedCommands = new ArrayList<JposOutputRequest>();
 
     /**
+     * Currently executed output requests if the service supports concurrent method execution. If a service supports
+     * concurrent method execution, it must set CurrentCommands to a non-null value.
+     */
+    public List<JposOutputRequest> CurrentCommands = null;
+
+    /**
      * List holding asynchronous output requests which allow concurrent processing whenever service is in error state.
      */
     public List<JposOutputRequest> SuspendedConcurrentCommands = new ArrayList<JposOutputRequest>();
 
     private SyncObject StatusWaiter = null;
+
+    /**
+     * Runnable for serialized request processing.
+     */
+    public Runnable SerializedRequestRunner = null;
+
+    /**
+     * Output request runners waiting for service-specific serialization of asynchronous processing.
+     */
+    public List<Runnable> SerializedRequests = new LinkedList<>();
 
     /**
      * Event processor. Thread that fires status update events, ouitput complete events and direct IO and transition

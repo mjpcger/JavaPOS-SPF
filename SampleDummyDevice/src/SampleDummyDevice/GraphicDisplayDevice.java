@@ -61,7 +61,6 @@ public class GraphicDisplayDevice extends JposDevice {
         PhysicalDeviceDescription = "Dummy GraphicDisplay simulator";
         PhysicalDeviceName = "Dummy GraphicDisplay Simulator";
         CapPowerReporting = JposConst.JPOS_PR_NONE;
-        CurrentCommands = new ArrayList<>();
         }
 
     private String CapAssociatedHardTotalsDevice = "";
@@ -113,10 +112,11 @@ public class GraphicDisplayDevice extends JposDevice {
         props.CapVideoType = (props.VideoTypeList = VideoTypeList).length() > 0;
         props.CapBrightness = CapBrightness;
         props.CapVolume = CapVolume;
+        props.CurrentCommands = new ArrayList<>();
     }
 
     @Override
-    public boolean concurrentProcessingSupported(JposOutputRequest request) {
+    public Boolean concurrentProcessingSupported(JposOutputRequest request) {
         return request instanceof PlayVideo;
     }
 

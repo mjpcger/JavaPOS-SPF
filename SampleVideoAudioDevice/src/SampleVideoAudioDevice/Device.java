@@ -100,7 +100,6 @@ public class Device extends JposDevice {
         CapPowerReporting = JposConst.JPOS_PR_NONE;
         PhysicalDeviceName = "Sample Sound And Video Device";
         PhysicalDeviceDescription = "Sample sound and video device based on usage of Videolan's vlx";
-        CurrentCommands = new ArrayList<>();
     }
 
     @Override
@@ -159,6 +158,7 @@ public class Device extends JposDevice {
         data.Storage = SoundPlayerConst.SPLY_ST_HOST;
         data.CapVolume = true;
         data.Volume = 30;
+        data.CurrentCommands = new ArrayList<>();
     }
 
     @Override
@@ -187,6 +187,7 @@ public class Device extends JposDevice {
         data.ChannelList = "1";
         for (int i = 2; i <= AudioChannel.size(); i++)
             data.ChannelList += "," + i;
+        data.CurrentCommands = new ArrayList<>();
     }
 
     @Override
@@ -208,6 +209,7 @@ public class Device extends JposDevice {
         data.CapImageType = true;
         data.ImageTypeList = "jpg,bmp,png";
         data.VideoTypeList = "mkv,mpg,mp4";
+        data.CurrentCommands = new ArrayList<>();
     }
 
     @Override
@@ -261,6 +263,7 @@ public class Device extends JposDevice {
         data.TypeArgs.put("mpg-ac3", new String[]{"ps", "mpgv", "a52"});
         data.TypeArgs.put("mpg-mp2", new String[]{"ps", "mpgv", "mpga"});
         data.VideoFrameRate = props.VideoMaxFrameRate = 25;
+        data.CurrentCommands = new ArrayList<>();
     }
 
     @Override
@@ -284,8 +287,8 @@ public class Device extends JposDevice {
     }
 
     @Override
-    public boolean concurrentProcessingSupported(JposOutputRequest request) {
-        return request instanceof PlaySound || request instanceof StartRecording || request instanceof StartVideo;
+    public Boolean concurrentProcessingSupported(JposOutputRequest request) {
+        return request instanceof PlaySound ? true : null;
     }
 
     private class MySoundPlayerProperties extends SoundPlayerProperties {
@@ -769,11 +772,10 @@ public class Device extends JposDevice {
         public void stopVideo() throws JposException {
             JposOutputRequest request;
             synchronized (AsyncProcessorRunning) {
-                check (!(CurrentCommand instanceof PlayVideo), JposConst.JPOS_E_ILLEGAL, "No video playing");
-                request = CurrentCommand;
+                request = getRequestRunnersRequest(SerializedRequestRunner);
+                check (!(request instanceof PlayVideo), JposConst.JPOS_E_ILLEGAL, "No video playing");
             }
-            if (request != null)
-                request.abortCommand(true);
+            request.abortCommand(true);
         }
 
         @Override
@@ -807,7 +809,7 @@ public class Device extends JposDevice {
                 if (imagefile != null) {
                     String cmd[] = {
                             VlcPath.getCanonicalPath(), imagefile.getCanonicalPath(), "--qt-minimal-view", "-f",
-                            "--image-duration=-1", "--no-qt-error-dialogs", "--freetype-opacity=0",
+                            "--image-duration=-1", "--no-qt-error-dialogs", "--freetype-opacity=0", "--qt-notification=0",
                             DisplayMode == GraphicDisplayConst.GDSP_DMODE_IMAGE_CENTER ? "--no-autoscale" : "--autoscale"
                     };
                     ImageProcess = Runtime.getRuntime().exec(cmd);

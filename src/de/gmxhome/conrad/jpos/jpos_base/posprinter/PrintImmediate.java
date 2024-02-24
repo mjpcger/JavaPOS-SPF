@@ -44,15 +44,7 @@ public class PrintImmediate extends PrintNormal {
             if (state == JposConst.JPOS_S_IDLE)
                 Props.State = JposConst.JPOS_S_BUSY;
             OutputID = -1;
-            int index = 0;
-            while (Device.PendingCommands.size() > index) {
-                if (!(Device.PendingCommands.get(index) instanceof PrintImmediate))
-                    break;
-            }
-            Device.PendingCommands.add(index, this);
-            if (Device.AsyncProcessorRunning[0] == null) {
-                (Device.AsyncProcessorRunning[0] = new JposRequestThread(Device)).start();
-            }
+            Device.invokeRequestThread(this, PrintImmediate.class);
         }
         if (state != Props.State)
             Device.log(Level.DEBUG, Props.LogicalName + ": State <- " + Props.State);

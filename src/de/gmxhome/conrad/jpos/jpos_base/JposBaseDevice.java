@@ -195,38 +195,112 @@ public class JposBaseDevice {
     public JposOutputRequest CurrentCommand;
 
     /**
-     * Currently executed output requests if the device supports concurrent method execution. If a device supports
-     * concurrent method execution, it must set CurrentCommands to a non-null value.
+     * Invokes a JposRequestThread for handling the specified request. If an immediate class has been specified (not null),
+     * it specifies a high priority class. Requests of a high priority class will be inserted before the first request
+     * with normal priority (immediate requests). All other requests will be appended at the end of the request queue.<br>
+     * After insertion, the request handler thread will be created and started if it is currently not running.
+     * @param request   Request to be added. If null, only handler thread invocation, if necessary.
+     * @param immediate If specified, class with high priority.
      */
-    public List<JposOutputRequest> CurrentCommands = null;
+    public void invokeRequestThread(JposOutputRequest request, Class immediate) {
+        if (immediate != null) {
+            int index;
+            for (index = 0; index < PendingCommands.size(); index++) {
+                if (!immediate.isInstance(PendingCommands.get(index)))
+                    break;
+            }
+            PendingCommands.add(index, request);
+        } else
+            PendingCommands.add(request);
+        if (AsyncProcessorRunning[0] == null) {
+            (AsyncProcessorRunning[0] = new JposOutputRequest.JposRequestThread(request, request)).start();
+        }
+    }
 
     /**
-     * Starts a new thread for concurrent asynchronous processing and adds it to CurrentCommands list.
+     * Method with checks whether the device supports concurrent processing for the given request. This default implementation
+     * returns always false. You must override this method in derived classes to allow specific requests to be invoked
+     * concurrently.
+     *
+     * @param request Request to be checked.
+     * @return  true if the request can be processed concurrently. Otherwise, false will be returned if synchronization
+     * with other requests of the device is necessary. If only serialization with other non-concurrent requests of the
+     * same service is necessary, null can be returned.
+     */
+    public Boolean concurrentProcessingSupported(JposOutputRequest request) {
+        return false;
+    }
+
+    /**
+     * Starts a new thread for concurrent asynchronous processing and adds it to the CurrentCommands list of the
+     * property set the request belongs to.
      * @param request   Request to be invoked.
      */
-    public void createRequestThread(JposOutputRequest request) {
-        CurrentCommands.add(request);
-        new RequestThread(request, request.getClass().getSimpleName() + request.OutputID).start();
+    public void createConcurrentRequestThread(JposOutputRequest request) {
+        request.Props.CurrentCommands.add(request);
+        RequestRunner runner = new RequestRunner(request);
+        new JposOutputRequest.JposRequestThread(runner, request).start();
+    }
+
+    /**
+     * Retrieves JposOutputRequest belonging to a RequestRunner object or null, if the given Runnable is no RequestRunner
+     * @param runner    Runnable, almost always a RequestRunner.
+     * @return          runner.Request, if runner is an instance of RequestRunner, otherwise null.
+     */
+    public JposOutputRequest getRequestRunnersRequest(Runnable runner) {
+        return runner instanceof RequestRunner ? ((RequestRunner)runner).Request : null;
     }
 
     /**
      * Class for concurrent asynchronous output processing support.
      */
-    private class RequestThread extends Thread {
+    class RequestRunner implements Runnable {
+        /**
+         * Request to be handled by the thread using this Runnable.
+         */
         JposOutputRequest Request;
 
-        RequestThread(JposOutputRequest request, String name) {
-            super(name);
+        /**
+         * Specifies whether the request must be serialised within the service specifies by its property set (true)
+         * or can run independent of all other requests.
+         */
+        boolean Serialized;
+
+        RequestRunner(JposOutputRequest request) {
             Request = request;
+            Serialized = concurrentProcessingSupported(request) == null;
+            if (Serialized) {
+                if (request.Props.SerializedRequestRunner == null)
+                    request.Props.SerializedRequestRunner = this;
+                else
+                    request.Props.SerializedRequests.add(this);
+            }
         }
 
         @Override
         public void run() {
-            Request.catchedInvocation();
+            if (Serialized) {
+                boolean wait;
+                synchronized (AsyncProcessorRunning) {
+                    wait = Request.Props.SerializedRequestRunner != this;
+                }
+                if (wait)
+                    Request.Waiting.suspend(SyncObject.INFINITE);
+            }
+            if (Request.Abort == null)
+                Request.catchedInvocation();
             boolean processed = Request.finishAsyncProcessing();
             synchronized (AsyncProcessorRunning) {
                 if (processed)
-                    CurrentCommands.remove(Request);
+                    Request.Props.CurrentCommands.remove(Request);
+                if (Request.Props.SerializedRequestRunner == this) {
+                    if (Request.Props.SerializedRequests.size() > 0) {
+                        Request.Props.SerializedRequestRunner = Request.Props.SerializedRequests.get(0);
+                        getRequestRunnersRequest(Request.Props.SerializedRequestRunner).Waiting.signal();
+                        Request.Props.SerializedRequests.remove(0);
+                    } else
+                        Request.Props.SerializedRequestRunner = null;
+                }
             }
         }
     }

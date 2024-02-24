@@ -98,7 +98,7 @@ public class SoundPlayerProperties extends JposCommonProperties implements Sound
 
     @Override
     public void initOnOpen() {
-        CapMultiPlay = Device.CurrentCommands != null;
+        CapMultiPlay = CurrentCommands != null;
         AsyncMode = true;
     }
 

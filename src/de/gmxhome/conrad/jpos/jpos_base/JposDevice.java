@@ -92,19 +92,6 @@ public class JposDevice extends JposBaseDevice {
         super(id);
     }
 
-    /**
-     * Method with checks whether the device supports concurrent processing for the given request. This default implementation
-     * returns always false. You must override this method in derived classes to allow specific requests to be invoked
-     * concurrently.
-     *
-     * @param request Request to be checked.
-     * @return  true if the request can be processed concurrently, false otherwise. This default implementation returns
-     *          always false.
-     */
-    public boolean concurrentProcessingSupported(JposOutputRequest request) {
-        return false;
-    }
-
     @Override
     public int noOfPropertySets() {
         return super.noOfPropertySets() +

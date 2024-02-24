@@ -86,11 +86,11 @@ public class UnitOutputRequest extends JposOutputRequest {
                 if (req.Props == Props && (req.Units & Units) != 0)
                     current.add(req);
             }
-            if (Device.CurrentCommands != null) {
-                for (JposOutputRequest request : Device.CurrentCommands) {
+            if (Props.CurrentCommands != null) {
+                for (JposOutputRequest request : Props.CurrentCommands) {
                     if (request instanceof UnitOutputRequest) {
                         req = (UnitOutputRequest) request;
-                        if (req.Props == Props && (req.Units & Units) != 0)
+                        if ((req.Units & Units) != 0)
                             current.add(req);
                     }
                 }
