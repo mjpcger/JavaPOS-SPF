@@ -57,33 +57,34 @@ import java.util.Properties;
  * which use a different syntax for the command that may be used to set the communication parameters of a COM port, the
  * corresponding property values must be changed. If one of the values is not supported, it must remain empty.
  */
+@SuppressWarnings("unused")
 public class JnaLinuxSerial implements SerialIOAdapter {
     /**
      * Interface for some I/O relevant functions provided by Linux and other Unix-like operating systems.
      */
-    public static interface LibCExt extends LibC {
+    public interface LibCExt extends LibC {
         /**
          * Open a file or device.
          * @param name  File or device name
          * @param mode  Access mode
          * @return      A positive value as a file descriptor for use in subsequent OS calls or -1 to report an error.
          */
-        public int open(String name, int mode);
+        int open(String name, int mode);
 
         /**
          * Access mode value for read-only access.
          */
-        public static final int O_RDONLY = 0;
+        int O_RDONLY = 0;
 
         /**
          * Access mode value for write-only access.
          */
-        public static final int O_WRONLY = 1;
+        int O_WRONLY = 1;
 
         /**
          * Access mode for read and write access.
          */
-        public static final int O_RDWR = 2;
+        int O_RDWR = 2;
 
         /**
          * Read data from file or device.
@@ -92,7 +93,7 @@ public class JnaLinuxSerial implements SerialIOAdapter {
          * @param count Maximum number of bytes to read.
          * @return  Number of bytes read. 0 in case of timeout, -1 in error case.
          */
-        public int read(int fd, byte[] buffer, int count);
+        int read(int fd, byte[] buffer, int count);
 
         /**
          * Write data to file or device.
@@ -101,14 +102,14 @@ public class JnaLinuxSerial implements SerialIOAdapter {
          * @param count Number of bytes to be written.
          * @return  Number of bytes written or -1 in error cases.
          */
-        public int write(int fd, byte[] buffer, int count);
+        int write(int fd, byte[] buffer, int count);
 
         /**
          * Close a file or device
          * @param fd    File descriptor from previous open call.
          * @return      0 on success, -1 in error case.
          */
-        public int close(int fd);
+        int close(int fd);
 
         /**
          * Checks whether files or devices are ready for reading or writing.
@@ -119,13 +120,13 @@ public class JnaLinuxSerial implements SerialIOAdapter {
          * @return  Number of file descriptors that can be used for at least one of the requested operations without
          *          blocking, 0 in case of a timeout, -1 if an error occurred.
          */
-        public int poll(pollfd[] fds, int count, int timeout);
+        int poll(pollfd[] fds, int count, int timeout);
 
         /**
          * Structure pollfd, to be used in OS call poll().
          */
         @Structure.FieldOrder({"fd", "events", "revents"})
-        public static class pollfd extends Structure {
+        class pollfd extends Structure {
             /**
              * Input field, must contain a file descriptor returned by a previous open call. A negative value makes
              * this pollfd entry invalid. The poll() system calls ignores invalid pollfd entries.
@@ -149,34 +150,34 @@ public class JnaLinuxSerial implements SerialIOAdapter {
          * file descriptor shall be checked for the ability to read without blocking. If set in pollfd property revents,
          * it specifies that the next read will not block.
          */
-        public static final short POLLIN = 1;
+        short POLLIN = 1;
 
         /**
          * Bit value for poll request for non-blocking output. If set in pollfd property events, it specifies that the
          * file descriptor shall be checked for the ability to write without blocking. If set in pollfd property
          * revents, it specifies that the next write will not block.
          */
-        public static final short POLLOUT = 4;
+        short POLLOUT = 4;
 
         /**
          * Bit value for poll request to signal an error condition on the specified file descriptor. Whenever set in
          * pollfd property revents, it specifies an error condition on the corresponding file descriptor.
          */
-        public static final short POLLERR = 8;
+        short POLLERR = 8;
 
         /**
          * Bit value for poll request to signal that the specified file descriptor is invalid. Whenever set in
          * pollfd property revents, the corresponding file descriptor has been closed in the meantime (or has not been
          * opened previously).
          */
-        public static final short POLLNVAL = 32;
+        short POLLNVAL = 32;
 
         /**
          * Run a shell command and returns its exit code.
          * @param command   Any command as it can be specified in a shell (/bin/sh).
          * @return The exit code of the command.
          */
-        public int system(String command);
+        int system(String command);
     }
 
     private static LibCExt LibCLib;
@@ -192,7 +193,7 @@ public class JnaLinuxSerial implements SerialIOAdapter {
         }
     }
 
-    private String Port = null;
+    private String Port;
     private int Filedesc = -1;
 
     /**
@@ -244,7 +245,7 @@ public class JnaLinuxSerial implements SerialIOAdapter {
     private byte[] Buffer;
     private int    BufferCount = 0;
     private int    CurrentBuffer;
-    private byte[][] InputBuffers = { new byte[1000], new byte[1000] };
+    private final byte[][] InputBuffers = { new byte[1000], new byte[1000] };
 
     @Override
     synchronized public int available() throws IOException {
@@ -279,7 +280,7 @@ public class JnaLinuxSerial implements SerialIOAdapter {
         int fd;
         synchronized (this) {
             if (available() > 0) {
-                byte[] ret = Arrays.copyOf(Buffer, count < BufferCount ? count : BufferCount);
+                byte[] ret = Arrays.copyOf(Buffer, Math.min(count, BufferCount));
                 if (ret.length < BufferCount) {
                     CurrentBuffer = 1 - CurrentBuffer;
                     System.arraycopy(Buffer, ret.length, InputBuffers[CurrentBuffer], 0, BufferCount -= ret.length);

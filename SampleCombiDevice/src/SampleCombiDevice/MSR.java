@@ -19,19 +19,21 @@ package SampleCombiDevice;
 
 import de.gmxhome.conrad.jpos.jpos_base.SyncObject;
 import de.gmxhome.conrad.jpos.jpos_base.msr.*;
-import jpos.JposConst;
 import jpos.JposException;
-import jpos.MSRConst;
 
-import javax.swing.*;
 import java.util.Arrays;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposBaseDevice.*;
+import static javax.swing.JOptionPane.*;
+import static jpos.JposConst.*;
+import static jpos.MSRConst.*;
 
 /**
  * Class implementing the MSRInterface for the sample combi device.
  * External and interactive Checkhealth might be implemented in a later version.
  */
 public class MSR extends MSRProperties {
-    private Device Dev;
+    private final Device Dev;
 
     /**
      * Constructor. Gets instance of Device to be used as communication object. Device index for
@@ -63,50 +65,50 @@ public class MSR extends MSRProperties {
 
     @Override
     public void checkHealth(int level) throws JposException {
-        if (!Dev.internalCheckHealth(this, level) && !externalCheckHealth(level)) {
+        if (Dev.internalCheckHealth(this, level) && !externalCheckHealth(level)) {
             interactiveCheckHealth(level);
         }
         super.checkHealth(level);
     }
 
     private void interactiveCheckHealth(int level) {
-        if (level == JposConst.JPOS_CH_INTERACTIVE) {
+        if (level == JPOS_CH_INTERACTIVE) {
             int datacount = DataCount;
             int loopcount;
             String result;
             try {
                 clearDataProperties();
-                ((MSRService) EventSource).setFreezeEvents(true);
+                EventSource.setFreezeEvents(true);
                 if (!DataEventEnabled)
-                    ((MSRService) EventSource).setDataEventEnabled(true);
-                Dev.synchronizedMessageBox("Press OK, then swipe a card", "CheckHealth MSR", JOptionPane.INFORMATION_MESSAGE);
+                    EventSource.setDataEventEnabled(true);
+                synchronizedMessageBox("Press OK, then swipe a card", "CheckHealth MSR", INFORMATION_MESSAGE);
                 for (loopcount = 0; loopcount < 100 && datacount == DataCount && (!Dev.DeviceIsOffline && !Dev.InIOError); loopcount++)
                     new SyncObject().suspend(100);
                 result = (loopcount == 100 ? "Timed out" : (datacount < DataCount ? "OK" : "Error"));
-                ((MSRService) EventSource).setFreezeEvents(false);
+                EventSource.setFreezeEvents(false);
             } catch (JposException e) {
                 result = "Error, " + e.getMessage();
             }
-            Dev.synchronizedMessageBox("MSR check " + result + ".", "CheckHealth MSR",
-                    (result.equals("OK") ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE));
+            synchronizedMessageBox("MSR check " + result + ".", "CheckHealth MSR",
+                    (result.equals("OK") ? INFORMATION_MESSAGE : ERROR_MESSAGE));
             CheckHealthText = "Interactive check: " + result;
         }
     }
 
     private boolean externalCheckHealth(int level) {
-        if (level == JposConst.JPOS_CH_EXTERNAL) {
+        if (level == JPOS_CH_EXTERNAL) {
             int datacount = DataCount;
             int loopcount;
             String result;
             try {
                 clearDataProperties();
-                ((MSRService) EventSource).setFreezeEvents(true);
+                EventSource.setFreezeEvents(true);
                 if (!DataEventEnabled)
-                    ((MSRService) EventSource).setDataEventEnabled(true);
+                    EventSource.setDataEventEnabled(true);
                 for (loopcount = 0; loopcount < 100 && datacount == DataCount && (!Dev.DeviceIsOffline && !Dev.InIOError); loopcount++)
                     new SyncObject().suspend(100);
                 result = (loopcount == 100 ? "Timed out" : (datacount < DataCount ? "OK" : "Error"));
-                ((MSRService) EventSource).setFreezeEvents(false);
+                EventSource.setFreezeEvents(false);
             } catch (JposException e) {
                 result = "Error, " + e.getMessage();
             }
@@ -121,9 +123,9 @@ public class MSR extends MSRProperties {
         if (o instanceof Device.TrackData) {
             byte[][] tracks = ((Device.TrackData) o).Tracks;
             if (tracks.length == 3) {
-                Track1Data = (TracksToRead & MSRConst.MSR_TR_1) != 0 ? storeData(tracks[0], 0x20, 0x3f) : new byte[0];
-                Track2Data = (TracksToRead & MSRConst.MSR_TR_2) != 0 ? storeData(tracks[1], 0x30, 0xf) : new byte[0];
-                Track3Data = (TracksToRead & MSRConst.MSR_TR_3) != 0 ? storeData(tracks[2], 0x30, 0xf) : new byte[0];
+                Track1Data = (TracksToRead & MSR_TR_1) != 0 ? storeData(tracks[0], 0x20, 0x3f) : new byte[0];
+                Track2Data = (TracksToRead & MSR_TR_2) != 0 ? storeData(tracks[1], 0x30, 0xf) : new byte[0];
+                Track3Data = (TracksToRead & MSR_TR_3) != 0 ? storeData(tracks[2], 0x30, 0xf) : new byte[0];
             }
         }
     }

@@ -17,7 +17,6 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.rfidscanner;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
 import jpos.JposException;
 
 import java.util.Arrays;
@@ -42,8 +41,8 @@ public class WriteTagData extends RFIDRequest {
         return Start;
     }
 
-    private byte[] UserData;
-    private int Start;
+    private final byte[] UserData;
+    private final int Start;
 
     /**
      * Constructor, stores given parameters for later use of WriteData operation.

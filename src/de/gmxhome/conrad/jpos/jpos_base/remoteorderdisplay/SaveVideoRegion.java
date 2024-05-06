@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.JposConst.*;
+
 /**
  * Output request executor for RemoteOrderDisplay method SaveVideoRegion.
  */
@@ -30,7 +32,7 @@ public class SaveVideoRegion extends AreaBase {
     public int getBufferId() {
         return BufferId;
     }
-    private int BufferId;
+    private final int BufferId;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -55,7 +57,7 @@ public class SaveVideoRegion extends AreaBase {
             checkUnitsOnline();
             checkAreaValid();
             int errorunits = svc.validateBufferID(getUnits(), getBufferId());
-            svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + getBufferId() + " for units specified by " + errorunits, EndSync != null);
+            svc.check(errorunits != 0, errorunits, JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + getBufferId() + " for units specified by " + errorunits, EndSync != null);
         }
         svc.RemoteOrderDisplayInterface.saveVideoRegion(this);
     }

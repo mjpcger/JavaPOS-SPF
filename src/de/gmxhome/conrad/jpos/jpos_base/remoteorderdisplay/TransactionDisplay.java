@@ -19,8 +19,10 @@ package de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * Output request executor for RemoteOrderDisplay method TransactionDisplay.
@@ -34,12 +36,12 @@ public class TransactionDisplay extends UnitOutputRequest {
         return Function;
     }
 
-    private int Function;
+    private final int Function;
 
     /**
      * List holds all outstanding output requests.
      */
-    List<UnitOutputRequest> TransactionCommands = new ArrayList<UnitOutputRequest>();
+    final List<UnitOutputRequest> TransactionCommands = new ArrayList<>();
 
     /**
      * Adds an output request to the request queue.
@@ -47,7 +49,7 @@ public class TransactionDisplay extends UnitOutputRequest {
      * @throws JposException if request is null (specifying synchronous method implementation).
      */
     synchronized void addMethod(UnitOutputRequest request) throws JposException {
-        Props.Device.check(request == null, JposConst.JPOS_E_FAILURE, "Transaction mode not supported for synchronous implementation");
+        check(request == null, JPOS_E_FAILURE, "Transaction mode not supported for synchronous implementation");
         TransactionCommands.add(request);
     }
 
@@ -69,7 +71,7 @@ public class TransactionDisplay extends UnitOutputRequest {
             checkUnitsOnline();
         ((RemoteOrderDisplayService)Props.EventSource).RemoteOrderDisplayInterface.transactionDisplay(this);
         for (UnitOutputRequest request : TransactionCommands) {
-            Device.check (Abort != null, JposConst.JPOS_E_FAILURE, "Transaction interrupted");
+            check (Abort != null, JPOS_E_FAILURE, "Transaction interrupted");
             request.invoke();
         }
     }

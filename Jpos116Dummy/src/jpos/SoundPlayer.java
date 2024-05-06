@@ -22,18 +22,19 @@ import jpos.services.*;
 
 import java.util.Vector;
 
+@SuppressWarnings({"unused","SynchronizeOnNonFinalField"})
 public class SoundPlayer extends BaseJposControl implements JposConst, SoundPlayerControl116 {
-    protected Vector directIOListeners;
-    protected Vector statusUpdateListeners;
-    protected Vector errorListeners;
-    protected Vector outputCompleteListeners;
+    protected Vector<DirectIOListener> directIOListeners;
+    protected Vector<StatusUpdateListener> statusUpdateListeners;
+    protected Vector<ErrorListener> errorListeners;
+    protected Vector<OutputCompleteListener> outputCompleteListeners;
     public SoundPlayer() {
         deviceControlDescription = "JavaPOS SoundPlayer Dummy Control";
         deviceControlVersion = deviceVersion115 + 1000;
-        directIOListeners = new Vector();
-        statusUpdateListeners = new Vector();
-        errorListeners = new Vector();
-        outputCompleteListeners = new Vector();
+        directIOListeners = new Vector<>();
+        statusUpdateListeners = new Vector<>();
+        errorListeners = new Vector<>();
+        outputCompleteListeners = new Vector<>();
     }
     protected class Callbacks implements EventCallbacks {
 
@@ -44,32 +45,32 @@ public class SoundPlayer extends BaseJposControl implements JposConst, SoundPlay
         @Override
         public void fireDirectIOEvent(DirectIOEvent directIOEvent) {
             synchronized (directIOListeners) {
-                for (Object listener : directIOListeners)
-                    ((DirectIOListener) listener).directIOOccurred(directIOEvent);
+                for (DirectIOListener listener : directIOListeners)
+                    listener.directIOOccurred(directIOEvent);
             }
         }
 
         @Override
         public void fireErrorEvent(ErrorEvent errorEvent) {
             synchronized (errorListeners) {
-                for (Object listener : errorListeners)
-                    ((ErrorListener) listener).errorOccurred(errorEvent);
+                for (ErrorListener listener : errorListeners)
+                    listener.errorOccurred(errorEvent);
             }
         }
 
         @Override
         public void fireOutputCompleteEvent(OutputCompleteEvent outputCompleteEvent) {
             synchronized (outputCompleteListeners) {
-                for (Object listener : outputCompleteListeners)
-                    ((OutputCompleteListener) listener).outputCompleteOccurred(outputCompleteEvent);
+                for (OutputCompleteListener listener : outputCompleteListeners)
+                    listener.outputCompleteOccurred(outputCompleteEvent);
             }
         }
 
         @Override
         public void fireStatusUpdateEvent(StatusUpdateEvent statusUpdateEvent) {
             synchronized (statusUpdateListeners) {
-                for (Object listener : statusUpdateListeners)
-                    ((StatusUpdateListener)listener).statusUpdateOccurred(statusUpdateEvent);
+                for (StatusUpdateListener listener : statusUpdateListeners)
+                    listener.statusUpdateOccurred(statusUpdateEvent);
             }
         }
 
@@ -90,7 +91,13 @@ public class SoundPlayer extends BaseJposControl implements JposConst, SoundPlay
         } else {
             int version = 16;
             try {
-                service = (SoundPlayerService116) baseService; version++;
+                for (Class<?> current : new Class<?>[]{SoundPlayerService116.class}) {
+                    if (current.isInstance(service))
+                        version++;
+                    else
+                        break;
+                }
+                service = baseService;
             } catch (Exception e) {
                 if (i >= version * 1000 + 1000000)
                     throw new JposException(JPOS_E_NOSERVICE, "SoundPlayerService1" + version + " not fully implemented", e);

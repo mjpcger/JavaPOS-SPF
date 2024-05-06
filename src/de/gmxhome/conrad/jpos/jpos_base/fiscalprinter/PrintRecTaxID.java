@@ -22,7 +22,7 @@ import jpos.*;
  * Output request executor for FiscalPrinter method PrintRecTaxID.
  */
 public class PrintRecTaxID extends OutputRequest {
-    private String TaxId;
+    private final String TaxId;
 
     /**
      * FiscalPrinter method PrintRecTaxID parameter taxId, see UPOS specification.

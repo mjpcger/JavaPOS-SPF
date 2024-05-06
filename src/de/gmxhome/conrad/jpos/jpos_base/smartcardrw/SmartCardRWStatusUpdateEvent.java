@@ -19,7 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.smartcardrw;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposBase;
 import de.gmxhome.conrad.jpos.jpos_base.JposStatusUpdateEvent;
-import jpos.SmartCardRWConst;
+
+import static jpos.SmartCardRWConst.*;
 
 /**
  * Status update event implementation for SmartCardRW devices.
@@ -41,12 +42,10 @@ public class SmartCardRWStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         SmartCardRWProperties props = (SmartCardRWProperties)getPropertySet();
         switch (getStatus()) {
-            case SmartCardRWConst.SC_SUE_NO_CARD:
+            case SC_SUE_NO_CARD, SC_SUE_CARD_PRESENT -> {
                 props.signalWaiter();
                 return true;
-            case SmartCardRWConst.SC_SUE_CARD_PRESENT:
-                props.signalWaiter();
-                return true;
+            }
         }
         return false;
     }
@@ -54,14 +53,10 @@ public class SmartCardRWStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        if (ret.length() > 0)
-            return ret;
-        switch (getStatus()) {
-            case SmartCardRWConst.SC_SUE_NO_CARD:
-                return "No Card";
-            case SmartCardRWConst.SC_SUE_CARD_PRESENT:
-                return "Card Present";
-        }
-        return "Unknown Status Change: " + getStatus();
+        return ret.length() > 0 ? ret : switch (getStatus()) {
+            case SC_SUE_NO_CARD -> "No Card";
+            case SC_SUE_CARD_PRESENT -> "Card Present";
+            default -> "Unknown Status Change: " + getStatus();
+        };
     }
 }

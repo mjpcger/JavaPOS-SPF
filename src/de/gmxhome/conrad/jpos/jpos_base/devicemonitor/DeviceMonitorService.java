@@ -18,10 +18,12 @@
 package de.gmxhome.conrad.jpos.jpos_base.devicemonitor;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.DeviceMonitorConst;
-import jpos.JposConst;
 import jpos.JposException;
 import jpos.services.DeviceMonitorService116;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.DeviceMonitorConst.*;
+import static jpos.JposConst.*;
 
 /**
  * DeviceMonitor service implementation. For more details about getter, setter and method implementations,
@@ -45,7 +47,7 @@ public class DeviceMonitorService extends JposBase implements DeviceMonitorServi
      */
     public DeviceMonitorInterface DeviceMonitor;
 
-    private DeviceMonitorProperties Data;
+    private final DeviceMonitorProperties Data;
 
     @Override
     public String getDeviceData() throws JposException {
@@ -71,15 +73,10 @@ public class DeviceMonitorService extends JposBase implements DeviceMonitorServi
     @Override
     public void addMonitoringDevice(String deviceID, int monitoringMode, int boundary, int subBoundary, int intervalTime) throws JposException {
         long[] valid = {
-                DeviceMonitorConst.DMON_MMODE_UPDATE,
-                DeviceMonitorConst.DMON_MMODE_STRADDLED,
-                DeviceMonitorConst.DMON_MMODE_HIGH,
-                DeviceMonitorConst.DMON_MMODE_LOW,
-                DeviceMonitorConst.DMON_MMODE_WITHIN,
-                DeviceMonitorConst.DMON_MMODE_OUTSIDE,
-                DeviceMonitorConst.DMON_MMODE_POLLING
+                DMON_MMODE_UPDATE, DMON_MMODE_STRADDLED, DMON_MMODE_HIGH, DMON_MMODE_LOW,
+                DMON_MMODE_WITHIN, DMON_MMODE_OUTSIDE, DMON_MMODE_POLLING
         };
-        long[] important = { DeviceMonitorConst.DMON_MMODE_WITHIN, DeviceMonitorConst.DMON_MMODE_OUTSIDE };
+        long[] important = { DMON_MMODE_WITHIN, DMON_MMODE_OUTSIDE };
         logPreCall("AddMonitoringDevice", removeOuterArraySpecifier(new Object[]{deviceID, monitoringMode, boundary, subBoundary, intervalTime}, Device.MaxArrayStringElements));
         checkEnabled();
         String[] alldevs = Data.DeviceList.split(",");
@@ -93,10 +90,10 @@ public class DeviceMonitorService extends JposBase implements DeviceMonitorServi
                     if (moncomponents[0].equals(deviceID))
                         break;
                 }
-                JposDevice.checkMember(monitoringMode, valid, JposConst.JPOS_E_ILLEGAL, "Illegal monitoringMode: " + monitoringMode);
-                JposDevice.check(JposDevice.member(monitoringMode, important) && boundary <= subBoundary,
-                        JposConst.JPOS_E_ILLEGAL, "Invalid boundaries: " + boundary + " <= " + subBoundary + "!");
-                JposDevice.check(intervalTime <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid interval time: " + intervalTime);
+                checkMember(monitoringMode, valid, JPOS_E_ILLEGAL, "Illegal monitoringMode: " + monitoringMode);
+                check(member(monitoringMode, important) && boundary <= subBoundary,
+                        JPOS_E_ILLEGAL, "Invalid boundaries: " + boundary + " <= " + subBoundary + "!");
+                check(intervalTime <= 0, JPOS_E_ILLEGAL, "Invalid interval time: " + intervalTime);
                 DeviceMonitor.addMonitoringDevice(deviceID, monitoringMode, boundary, subBoundary, intervalTime);
                 if (index < 0) {
                     Data.MonitoringDeviceList = Data.MonitoringDeviceList + "," + deviceID + ":" + monitoringMode + ":" + boundary + ":" + subBoundary + ":" + intervalTime;
@@ -109,7 +106,7 @@ public class DeviceMonitorService extends JposBase implements DeviceMonitorServi
                 return;
             }
         }
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid device id: " + (deviceID == null ? "(null)" : deviceID));
+        throw new JposException(JPOS_E_ILLEGAL, "Invalid device id: " + (deviceID == null ? "(null)" : deviceID));
     }
 
     @Override
@@ -145,7 +142,7 @@ public class DeviceMonitorService extends JposBase implements DeviceMonitorServi
             } else
                 newmonlist = (newmonlist.length() > 0) ? newmonlist + "," + devs[index] : devs[index];
         }
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid device id: " + deviceID);
+        throw new JposException(JPOS_E_ILLEGAL, "Invalid device id: " + deviceID);
     }
 
     @Override
@@ -155,16 +152,16 @@ public class DeviceMonitorService extends JposBase implements DeviceMonitorServi
         logPreCall("GetDeviceValue", deviceID);
         checkEnabled();
         String[] devs = Data.DeviceList.split(",");
-        for (int index = 0; index < devs.length; index++) {
-            String[] components = devs[index].split(":");
+        for (String dev : devs) {
+            String[] components = dev.split(":");
             if (components.length > 0 && components[0].equals(deviceID)) {
-                JposDevice.check(pValue == null || pValue.length != 1, JposConst.JPOS_E_ILLEGAL, "pValue must be int[1]");
+                check(pValue == null || pValue.length != 1, JPOS_E_ILLEGAL, "pValue must be int[1]");
                 DeviceMonitor.getDeviceValue(deviceID, pValue);
                 logSet("MonitoringDeviceList");
-                logCall("GetDeviceValue", removeOuterArraySpecifier(new Object[]{deviceID, pValue}, Device.MaxArrayStringElements));
+                logCall("GetDeviceValue", removeOuterArraySpecifier(new Object[]{deviceID, pValue[0]}, Device.MaxArrayStringElements));
                 return;
             }
         }
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid device id: " + deviceID);
+        throw new JposException(JPOS_E_ILLEGAL, "Invalid device id: " + deviceID);
     }
 }

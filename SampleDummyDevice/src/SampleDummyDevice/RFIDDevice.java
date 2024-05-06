@@ -23,13 +23,13 @@ import de.gmxhome.conrad.jpos.jpos_base.rfidscanner.*;
 import jpos.*;
 import jpos.config.JposEntry;
 
-import javax.swing.*;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static javax.swing.JOptionPane.*;
+import static jpos.JposConst.*;
+import static jpos.RFIDScannerConst.*;
 
 /**
  * JposDevice based dummy implementation for JavaPOS RFIDScanner device service implementation.
@@ -60,7 +60,7 @@ import java.util.Map;
  * </ul>
  */
 public class RFIDDevice extends JposDevice implements Runnable {
-    private ArrayList<byte[][][]> Labels = new ArrayList<>();
+    private final ArrayList<byte[][][]> Labels = new ArrayList<>();
     private int LabelIndex = 0;
     static final private int IDIdx = 0;             // Index of ID
     static final private int DataIdx = 1;           // Index of UserData
@@ -74,14 +74,14 @@ public class RFIDDevice extends JposDevice implements Runnable {
         rFIDScannerInit(1);
         PhysicalDeviceDescription = "Dummy RFIDScanner simulator";
         PhysicalDeviceName = "Dummy RFIDScanner Simulator";
-        CapPowerReporting = JposConst.JPOS_PR_NONE;
+        CapPowerReporting = JPOS_PR_NONE;
         try (RandomAccessFile file = new RandomAccessFile(id, "r")) {
             byte[] data = new byte[(int)file.length()];
             file.readFully(data);
             String[] document = new String(data).replace("\r", "\n").replace("\n\n", "\n").split("\n");
             for (String line : document) {
                 String[] values = line.split(" ");
-                check((values.length & 1) != 0, JposConst.JPOS_E_FAILURE, "Invalid read label: " + line);
+                check((values.length & 1) != 0, JPOS_E_FAILURE, "Invalid read label: " + line);
                 byte[][][] label = new byte[values.length / 2][][];
                 for (int i = 0; i < values.length; i += 2) {
                     label[i >> 1] = new byte[3][];
@@ -92,9 +92,9 @@ public class RFIDDevice extends JposDevice implements Runnable {
             }
 
         } catch (IOException e) {
-            throw new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e);
+            throw new JposException(JPOS_E_FAILURE, e.getMessage(), e);
         }
-        check(Labels.size() == 0, JposConst.JPOS_E_ILLEGAL, "No label in " + id);
+        check(Labels.size() == 0, JPOS_E_ILLEGAL, "No label in " + id);
     }
 
     private byte[] hexStringToByteArray(String s) throws JposException {
@@ -107,7 +107,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
                 int c = data.charAt(j);
                 byte v = (byte) "0123456789ABCDEF".indexOf(c);
                 if (v < 0) {
-                    throw new JposException(JposConst.JPOS_E_FAILURE, "No hexadecimal value: " + data);
+                    throw new JposException(JPOS_E_FAILURE, "No hexadecimal value: " + data);
                 }
                 b = (byte) (b * 0x10 + v);
             }
@@ -116,7 +116,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
         return Arrays.copyOf(result, i);
     }
 
-    private String[][] Capabilities = {
+    private final String[][] Capabilities = {
             {"CapContinuousRead", PropTypeBool, "TRUE", "FALSE"},
             {"CapDisableTag", PropTypeBool, "TRUE", "FALSE"},
             {"CapLockTag", PropTypeBool, "TRUE", "FALSE"},
@@ -131,7 +131,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
     static private final String PropTypeSym = "1";  // Property type symbol, allowed values static properties of class RFIDScannerConst
     static private final String PropTypeHex = "2";  // Property type hexadecimal, allowed any hexadecimal integer value
 
-    private Map<String, String[]> LastEntries = new HashMap<>();
+    private final Map<String, String[]> LastEntries = new HashMap<>();
 
     @Override
     public void checkProperties(JposEntry entry) throws JposException {
@@ -143,10 +143,10 @@ public class RFIDDevice extends JposDevice implements Runnable {
                 if (capability[PropType].equals(PropTypeHex)) {
                     try {
                         long lval = Long.parseLong(o.toString(), 16);
-                        check(lval < 0 || lval > Integer.MAX_VALUE, JposConst.JPOS_E_ILLEGAL, "Invalid value for property " + capability[PropName] + ": " + o.toString());
+                        check(lval < 0 || lval > Integer.MAX_VALUE, JPOS_E_ILLEGAL, "Invalid value for property " + capability[PropName] + ": " + o.toString());
                         o = String.valueOf((int) lval);
                     } catch (NumberFormatException e) {
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Invalid property: " + capability[PropName] + " - " + o.toString() + ": " + e.getMessage(), e);
+                        throw new JposException(JPOS_E_NOSERVICE, "Invalid property: " + capability[PropName] + " - " + o.toString() + ": " + e.getMessage(), e);
                     }
                 } else {
                     int j;
@@ -154,7 +154,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
                         if (capability[j].equals(o.toString().toUpperCase()))
                             break;
                     }
-                    check(j == capability.length, JposConst.JPOS_E_ILLEGAL, "Invalid value for property " + capability[PropName] + ": " + o.toString());
+                    check(j == capability.length, JPOS_E_ILLEGAL, "Invalid value for property " + capability[PropName] + ": " + o.toString());
                 }
                 LastEntries.put(capability[PropName], new String[]{ capability[PropType], o.toString()});
             }
@@ -171,7 +171,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
                 String[] attr = LastEntries.get(capa);
                 Object value = null;
                 if (attr[0].equals(PropTypeBool))
-                    value = attr[1].toUpperCase().equals("TRUE");
+                    value = attr[1].equalsIgnoreCase("TRUE");
                 else if (attr[0].equals(PropTypeHex))
                     value = (int) Long.parseLong(attr[1]);
                 else
@@ -217,90 +217,81 @@ public class RFIDDevice extends JposDevice implements Runnable {
         TheBox = new SynchronizedMessageBox();
         while (RFIDScanners[0].size() > 0 && !ToBeFinished) {
             switch (ReaderState) {
-                case idle:
+                case idle -> {
                     message = "Present an RFID label for operation. Select an option when ready";
                     options = new String[]{"Label Failed", "Label Present"};
-                    if (TheBox.synchronizedConfirmationBox(message, title, options, options[1], JOptionPane.INFORMATION_MESSAGE, JposConst.JPOS_FOREVER) < 0)
+                    if (TheBox.synchronizedConfirmationBox(message, title, options, options[1], INFORMATION_MESSAGE, JPOS_FOREVER) < 0)
                         continue;
                     ReaderState = handleReadResult();
-                    break;
-                case gotTags:
+                }
+                case gotTags -> {
                     message = "Got Label: " + toString(Labels.get(LabelIndex)) + "Select option for the label";
                     options = new String[]{"OK, Finish", "OK, Continue", "Error, Retry", "Error, Give Up"};
-                    if (TheBox.synchronizedConfirmationBox(message, title, options, options[0], JOptionPane.INFORMATION_MESSAGE, JposConst.JPOS_FOREVER) < 0)
+                    if (TheBox.synchronizedConfirmationBox(message, title, options, options[0], INFORMATION_MESSAGE, JPOS_FOREVER) < 0)
                         continue;
                     if ((ReaderState = handleLabelResult()) == Status.idle)
                         LabelIndex = LabelIndex < Labels.size() - 1 ? LabelIndex + 1 : 0;
-                    break;
-                case errorTags:
+                }
+                case errorTags -> {
                     message = "Label present but not readable. Select option";
                     options = new String[]{"Finish", "Retry OK", "Retry Failed"};
-                    if (TheBox.synchronizedConfirmationBox(message, title, options, options[0], JOptionPane.INFORMATION_MESSAGE, JposConst.JPOS_FOREVER) < 0)
+                    if (TheBox.synchronizedConfirmationBox(message, title, options, options[0], INFORMATION_MESSAGE, JPOS_FOREVER) < 0)
                         continue;
                     ReaderState = handleErrorResult();
-                    break;
+                }
             }
         }
     }
 
     private String toString(byte[][][] label) {
-        String result = "\n";
-        for (int i = 0; i < label.length; i++) {
-            if ((label[i][ProtoIdx][0] & TagDisabled) == 0) {
-                String line = "ID: ";
-                for (byte c : label[i][IDIdx])
-                    line += String.format("%02X", c & 0xff);
-                line += ", Data: ";
-                for (byte c : label[i][DataIdx])
-                    line += String.format("%02X", c & 0xff);
+        StringBuilder result = new StringBuilder("\n");
+        for (byte[][] bytes : label) {
+            if ((bytes[ProtoIdx][0] & TagDisabled) == 0) {
+                StringBuilder line = new StringBuilder("ID: ");
+                for (byte c : bytes[IDIdx])
+                    line.append(String.format("%02X", c & 0xff));
+                line.append(", Data: ");
+                for (byte c : bytes[DataIdx])
+                    line.append(String.format("%02X", c & 0xff));
                 if (line.length() > 200)
-                    line = line.substring(0, 200) + "...";
-                result += line + "\n";
+                    line = new StringBuilder(line.substring(0, 200) + "...");
+                result.append(line).append("\n");
             }
         }
-        return result;
+        return result.toString();
     }
 
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     private Status handleReadResult() {
         Status ret = TheBox.Result == IdleToPreasent ? Status.gotTags : Status.errorTags;
         synchronized (TheRunner) {
-            RFIDScannerProperties props = ClaimedRFIDScanner[0];
-            switch (CurrentOp) {
-                case read:
-                    finishRead(TheBox.Result != IdleToFailed);
+            if (CurrentOp == Operation.read) {
+                finishRead(TheBox.Result != IdleToFailed);
             }
         }
         return ret;
     }
 
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     private Status handleErrorResult() {
         Status ret = TheBox.Result == FailedToIdle ? Status.idle : (TheBox.Result == FailedToFailed ? Status.errorTags : Status.gotTags);
         synchronized (TheRunner) {
-            RFIDScannerProperties props = ClaimedRFIDScanner[0];
-            switch (CurrentOp) {
-                case read:
-                    finishRead(TheBox.Result == FailedToPresent);
+            if (CurrentOp == Operation.read) {
+                finishRead(TheBox.Result == FailedToPresent);
             }
         }
         return ret;
     }
 
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     private Status handleLabelResult() {
         Status ret = (TheBox.Result == PresentToIdleOK || TheBox.Result == PresentToIdleNOK) ? Status.idle : (TheBox.Result == PresentToPresent ? Status.gotTags : Status.errorTags);
         synchronized (TheRunner) {
-            RFIDScannerProperties props = ClaimedRFIDScanner[0];
             switch (CurrentOp) {
-                case lock:
-                    finishLock();
-                    break;
-                case disable:
-                    finishDisable();
-                    break;
-                case writeData:
-                    finishWrite();
-                    break;
-                case writeId:
-                    finishID();
+                case lock -> finishLock();
+                case disable -> finishDisable();
+                case writeData -> finishWrite();
+                case writeId -> finishID();
             }
         }
         return ret;
@@ -309,7 +300,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
     private void finishID() {
         if (TheBox.Result < PresentToFailed) {
             byte[][][] data = Labels.get(LabelIndex);
-            OperationOK[0] = JposConst.JPOS_E_NOEXIST;
+            OperationOK[0] = JPOS_E_NOEXIST;
             OperationOK[1] = "No matching source ID";
             for (byte[][]tag : data) {
                 if (Arrays.equals(tag[IDIdx], FilterID)) {
@@ -317,14 +308,14 @@ public class RFIDDevice extends JposDevice implements Runnable {
                         tag[IDIdx] = Filtermask;
                         OperationOK[0] = null;
                     } else {
-                        OperationOK[0] = JposConst.JPOS_E_ILLEGAL;
+                        OperationOK[0] = JPOS_E_ILLEGAL;
                         OperationOK[1] = "Source ID " + ((tag[ProtoIdx][0] & TagLocked) != 0 ? "locked" : "disabled");
                     }
                     break;
                 }
             }
         } else {
-            OperationOK[0] = JposConst.JPOS_E_FAILURE;
+            OperationOK[0] = JPOS_E_FAILURE;
             OperationOK[1] = "Source ID change error";
         }
         CurrentOp = Operation.noop;
@@ -335,7 +326,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
     private void finishWrite() {
         if (TheBox.Result < PresentToFailed) {
             byte[][][] data = Labels.get(LabelIndex);
-            OperationOK[0] = JposConst.JPOS_E_NOEXIST;
+            OperationOK[0] = JPOS_E_NOEXIST;
             OperationOK[1] = "No matching tag ID";
             for (byte[][]tag : data) {
                 if (Arrays.equals(tag[IDIdx], FilterID)) {
@@ -345,14 +336,14 @@ public class RFIDDevice extends JposDevice implements Runnable {
                         System.arraycopy(Filtermask, 0, tag[DataIdx], Start, Filtermask.length);
                         OperationOK[0] = null;
                     } else {
-                        OperationOK[0] = JposConst.JPOS_E_ILLEGAL;
+                        OperationOK[0] = JPOS_E_ILLEGAL;
                         OperationOK[1] = "Tag ID " + ((tag[ProtoIdx][0] & TagLocked) != 0 ? "locked" : "disabled");
                     }
                     break;
                 }
             }
         } else {
-            OperationOK[0] = JposConst.JPOS_E_FAILURE;
+            OperationOK[0] = JPOS_E_FAILURE;
             OperationOK[1] = "Tag data write error";
         }
         CurrentOp = Operation.noop;
@@ -363,7 +354,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
     private void finishDisable() {
         if (TheBox.Result < PresentToFailed) {
             byte[][][] data = Labels.get(LabelIndex);
-            OperationOK[0] = JposConst.JPOS_E_NOEXIST;
+            OperationOK[0] = JPOS_E_NOEXIST;
             OperationOK[1] = "No matching tag ID";
             for (byte[][]tag : data) {
                 if (Arrays.equals(tag[IDIdx], FilterID)) {
@@ -371,14 +362,14 @@ public class RFIDDevice extends JposDevice implements Runnable {
                         tag[ProtoIdx][0] |= TagDisabled;
                         OperationOK[0] = null;
                     } else {
-                        OperationOK[1] = JposConst.JPOS_E_ILLEGAL;
+                        OperationOK[0] = JPOS_E_ILLEGAL;
                         OperationOK[1] = "Tag ID " + ((tag[ProtoIdx][0] & TagLocked) != 0 ? "locked" : "disabled");
                     }
                     break;
                 }
             }
         } else {
-            OperationOK[0] = JposConst.JPOS_E_FAILURE;
+            OperationOK[0] = JPOS_E_FAILURE;
             OperationOK[1] = "Tag access error";
         }
         CurrentOp = Operation.noop;
@@ -389,7 +380,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
     private void finishLock() {
         if (TheBox.Result < PresentToFailed) {
             byte[][][] data = Labels.get(LabelIndex);
-            OperationOK[0] = JposConst.JPOS_E_NOEXIST;
+            OperationOK[0] = JPOS_E_NOEXIST;
             OperationOK[1] = "No matching tag ID";
             for (byte[][]tag : data) {
                 if (Arrays.equals(tag[IDIdx], FilterID)) {
@@ -397,14 +388,14 @@ public class RFIDDevice extends JposDevice implements Runnable {
                         tag[ProtoIdx][0] |= TagLocked;
                         OperationOK[0] = null;
                     } else {
-                        OperationOK[1] = JposConst.JPOS_E_ILLEGAL;
+                        OperationOK[0] = JPOS_E_ILLEGAL;
                         OperationOK[1] = "Tag ID " + ((tag[ProtoIdx][0] & TagLocked) != 0 ? "locked" : "disabled");
                     }
                     break;
                 }
             }
         } else {
-            OperationOK[0] = JposConst.JPOS_E_FAILURE;
+            OperationOK[0] = JPOS_E_FAILURE;
             OperationOK[1] = "Tag access error";
         }
         CurrentOp = Operation.noop;
@@ -422,14 +413,14 @@ public class RFIDDevice extends JposDevice implements Runnable {
                 for (byte[][] tag : data) {
                     if ((tag[ProtoIdx][0] & TagDisabled) == 0) {
                         if (((1 << (tag[ProtoIdx][0] & TagProtoMask)) & props.ProtocolMask) != 0 ||
-                                (props.ProtocolMask & RFIDScannerConst.RFID_PR_ALL) != 0) {
+                                (props.ProtocolMask & RFID_PR_ALL) != 0) {
                             byte[] id = tag[IDIdx].length == FilterID.length ? getMaskedData(tag[IDIdx]) : new byte[0];
                             if (Arrays.equals(id, FilterID)) {
-                                id = (Cmd & RFIDScannerConst.RFID_RT_ID) != 0 ? tag[IDIdx] : new byte[0];
-                                byte[] tagdata = new byte[0];
-                                if ((Cmd & RFIDScannerConst.RFID_RT_FULLUSERDATA) != 0)
+                                id = (Cmd & RFID_RT_ID) != 0 ? tag[IDIdx] : new byte[0];
+                                byte[] tagdata = {};
+                                if ((Cmd & RFID_RT_FULLUSERDATA) != 0)
                                     tagdata = tag[DataIdx];
-                                else if ((Cmd & RFIDScannerConst.RFID_RT_PARTIALUSERDATA) != 0) {
+                                else if ((Cmd & RFID_RT_PARTIALUSERDATA) != 0) {
                                     if (Start + Length <= tag[DataIdx].length)
                                         tagdata = Arrays.copyOfRange(tag[DataIdx], Start, Start + Length);
                                     else if (Start < tag[DataIdx].length)
@@ -444,8 +435,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
             if (tags.size() > 0) {
                 try {
                     handleEvent(new RFIDScannerDataEvent(props.EventSource, 0, tags));
-                } catch (JposException e) {
-                }
+                } catch (JposException ignored) {}
             }
             if (DataEventWaiter != null) {
                 CurrentOp = Operation.noop;
@@ -454,11 +444,11 @@ public class RFIDDevice extends JposDevice implements Runnable {
                     if (tags.size() > 0)
                         OperationOK[0] = null;
                     else {
-                        OperationOK[0] = JposConst.JPOS_E_NOEXIST;
+                        OperationOK[0] = JPOS_E_NOEXIST;
                         OperationOK[1] = "No tags matching the filter found";
                     }
                 } else {
-                    OperationOK[0] = JposConst.JPOS_E_FAILURE;
+                    OperationOK[0] = JPOS_E_FAILURE;
                     OperationOK[1] = "Could not read RFID tags";
                 }
                 DataEventWaiter.signal();
@@ -466,11 +456,10 @@ public class RFIDDevice extends JposDevice implements Runnable {
             } else if (tags.size() == 0) {
                 try {
                     if (!ok)
-                        handleEvent(new RFIDScannerErrorEvent(props.EventSource, JposConst.JPOS_E_FAILURE, 0, JposConst.JPOS_EL_INPUT, "RFID read error"));
+                        handleEvent(new RFIDScannerErrorEvent(props.EventSource, JPOS_E_FAILURE, 0, JPOS_EL_INPUT, "RFID read error"));
                     else
-                        handleEvent(new RFIDScannerErrorEvent(props.EventSource, JposConst.JPOS_E_NOEXIST, 0, JposConst.JPOS_EL_INPUT, "No ID match"));
-                } catch (JposException e) {
-                }
+                        handleEvent(new RFIDScannerErrorEvent(props.EventSource, JPOS_E_NOEXIST, 0, JPOS_EL_INPUT, "No ID match"));
+                } catch (JposException ignored) {}
             }
         }
     }
@@ -489,17 +478,16 @@ public class RFIDDevice extends JposDevice implements Runnable {
 
         @Override
         synchronized public void open() throws JposException {
-            check(CapMultipleProtocols == 0, JposConst.JPOS_E_ILLEGAL, "Invalid CapMultipleProtocols: 0");
+            check(CapMultipleProtocols == 0, JPOS_E_ILLEGAL, "Invalid CapMultipleProtocols: 0");
             if (Labels.get(0)[0][ProtoIdx] == null) {
                 byte index = 0;
+                outerloop:
                 for (byte[][][] data : Labels) {
                     for (byte[][] tag : data) {
-                        while (true) {
+                        do {
                             if ((1 << index) > CapMultipleProtocols)
-                                index = 0;
-                            if (((1 << index) & CapMultipleProtocols) != 0)
-                                break;
-                        }
+                                break outerloop;
+                        } while (((1 << index) & CapMultipleProtocols) == 0);
                         tag[ProtoIdx] = new byte[]{index++};
                     }
                 }
@@ -528,6 +516,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings("SynchronizeOnNonFinalField")
         public StartReadTags startReadTags(int cmd, byte[] filterID, byte[] filtermask, int start, int length, byte[] password) throws JposException {
             synchronized (TheRunner) {
                 Cmd = cmd;
@@ -545,6 +534,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings("SynchronizeOnNonFinalField")
         public void stopReadTags(byte[] password) throws JposException {
             synchronized (TheRunner) {
                 Filtermask = FilterID = null;
@@ -560,11 +550,12 @@ public class RFIDDevice extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings("SynchronizeOnNonFinalField")
         public void readTags(ReadTags request) throws JposException {
             SyncObject waiter;
             Object[] result = {null, null, true};
             synchronized (TheRunner) {
-                check(CurrentOp != Operation.noop, JposConst.JPOS_E_ILLEGAL, "Device busy");
+                check(CurrentOp != Operation.noop, JPOS_E_ILLEGAL, "Device busy");
                 Cmd = request.getCmd();
                 Filtermask = request.getFiltermask();
                 FilterID = getMaskedData(request.getFilterID());
@@ -576,7 +567,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
                 if (ReaderState == Status.gotTags)
                     finishRead(true);
             }
-            result[2] = waiter.suspend(request.getTimeout() == JposConst.JPOS_FOREVER ? SyncObject.INFINITE : request.getTimeout());
+            result[2] = waiter.suspend(request.getTimeout() == JPOS_FOREVER ? INFINITE : request.getTimeout());
             checkResult(result);
         }
 
@@ -586,17 +577,18 @@ public class RFIDDevice extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings("SynchronizeOnNonFinalField")
         public void disableTag(DisableTag request) throws JposException {
             SyncObject waiter;
             Object[] result = {null, null, true};
             synchronized (TheRunner) {
-                check(CurrentOp != Operation.noop, JposConst.JPOS_E_ILLEGAL, "Device busy");
+                check(CurrentOp != Operation.noop, JPOS_E_ILLEGAL, "Device busy");
                 FilterID = request.getTagID();
                 DataEventWaiter = waiter = new SyncObject();
                 OperationOK = result;
                 CurrentOp = Operation.disable;
             }
-            result[2] = waiter.suspend(request.getTimeout() == JposConst.JPOS_FOREVER ? SyncObject.INFINITE : request.getTimeout());
+            result[2] = waiter.suspend(request.getTimeout() == JPOS_FOREVER ? INFINITE : request.getTimeout());
             checkResult(result);
         }
 
@@ -606,17 +598,18 @@ public class RFIDDevice extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings("SynchronizeOnNonFinalField")
         public void lockTag(LockTag request) throws JposException {
             SyncObject waiter;
             Object[] result = {null, null, true};
             synchronized (TheRunner) {
-                check(CurrentOp != Operation.noop, JposConst.JPOS_E_ILLEGAL, "Device busy");
+                check(CurrentOp != Operation.noop, JPOS_E_ILLEGAL, "Device busy");
                 FilterID = request.getTagID();
                 DataEventWaiter = waiter = new SyncObject();
                 OperationOK = result;
                 CurrentOp = Operation.lock;
             }
-            result[2] = waiter.suspend(request.getTimeout() == JposConst.JPOS_FOREVER ? SyncObject.INFINITE : request.getTimeout());
+            result[2] = waiter.suspend(request.getTimeout() == JPOS_FOREVER ? INFINITE : request.getTimeout());
             checkResult(result);
         }
 
@@ -626,11 +619,12 @@ public class RFIDDevice extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings("SynchronizeOnNonFinalField")
         public void writeTagData(WriteTagData request) throws JposException {
             SyncObject waiter;
             Object[] result = {null, null, true};
             synchronized (TheRunner) {
-                check(CurrentOp != Operation.noop, JposConst.JPOS_E_ILLEGAL, "Device busy");
+                check(CurrentOp != Operation.noop, JPOS_E_ILLEGAL, "Device busy");
                 FilterID = request.getTagID();
                 Filtermask = request.getUserData();
                 Start = request.getStart();
@@ -638,7 +632,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
                 OperationOK = result;
                 CurrentOp = Operation.writeData;
             }
-            result[2] = waiter.suspend(request.getTimeout() == JposConst.JPOS_FOREVER ? SyncObject.INFINITE : request.getTimeout());
+            result[2] = waiter.suspend(request.getTimeout() == JPOS_FOREVER ? INFINITE : request.getTimeout());
             checkResult(result);
         }
 
@@ -648,18 +642,19 @@ public class RFIDDevice extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings("SynchronizeOnNonFinalField")
         public void writeTagID(WriteTagID request) throws JposException {
             SyncObject waiter;
             Object[] result = {null, null, true};
             synchronized (TheRunner) {
-                check(CurrentOp != Operation.noop, JposConst.JPOS_E_ILLEGAL, "Device busy");
+                check(CurrentOp != Operation.noop, JPOS_E_ILLEGAL, "Device busy");
                 FilterID = request.getTagID();
                 Filtermask = request.getDestID();
                 DataEventWaiter = waiter = new SyncObject();
                 OperationOK = result;
                 CurrentOp = Operation.writeId;
             }
-            result[2] = waiter.suspend(request.getTimeout() == JposConst.JPOS_FOREVER ? SyncObject.INFINITE : request.getTimeout());
+            result[2] = waiter.suspend(request.getTimeout() == JPOS_FOREVER ? INFINITE : request.getTimeout());
             checkResult(result);
         }
 
@@ -677,6 +672,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
          *                      or above.
          * @throws JposException    Throws JposException if result[0] != null or result[2] = false.
          */
+        @SuppressWarnings("SynchronizeOnNonFinalField")
         private void checkResult(Object[] result) throws JposException {
             if (!(Boolean)result[2]) {
                 synchronized (TheRunner) {
@@ -689,7 +685,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
                         result[2] = true;   // Operation finished in the meantime
                 }
             }
-            check(!(Boolean)result[2], JposConst.JPOS_E_TIMEOUT, "");
+            check(!(Boolean)result[2], JPOS_E_TIMEOUT, "");
             if (result[0] != null)
                 throw new JposException((Integer) result[0], (String) result[1]);
         }

@@ -18,33 +18,34 @@ package SampleFiscalPrinter;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.linedisplay.*;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.LineDisplayConst;
+import jpos.*;
 
 import static SampleFiscalPrinter.Device.*;
+import static javax.swing.JOptionPane.*;
+import static jpos.JposConst.*;
+import static jpos.LineDisplayConst.*;
 
-import javax.swing.*;
+import java.util.Arrays;
 
 /**
  * Class implementing the LineDisplayInterface for the sample fiscal printer.
  */
 class LineDisplay extends LineDisplayProperties implements StatusUpdater {
-    private SampleFiscalPrinter.Device Dev;
+    private final SampleFiscalPrinter.Device Dev;
 
-    private char Lines[][];
+    private char[][] Lines;
 
     @Override
     public void updateState(boolean notused) {
         char[] state = Dev.getCurrentState();
-        if (PowerNotify == JposConst.JPOS_PN_ENABLED) {
-            int value = state.length <= DRAWER ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
+        if (PowerNotify == JPOS_PN_ENABLED) {
+            int value = state.length <= DRAWER ? JPOS_PS_OFF_OFFLINE : JPOS_PS_ONLINE;
             if (new JposStatusUpdateEvent(EventSource, value).setAndCheckStatusProperties())
                 Dev.signalStatusWaits(Dev.LineDisplays[Index]);
         }
     }
 
-    private class Coordinates {
+    private static class Coordinates {
         int Row;
         int Column;
         Coordinates(int row, int column) {
@@ -92,17 +93,17 @@ class LineDisplay extends LineDisplayProperties implements StatusUpdater {
 
     @Override
     public void checkHealth(int level) throws JposException {
-        if (level == JposConst.JPOS_CH_INTERNAL) {
+        if (level == JPOS_CH_INTERNAL) {
             CheckHealthText = "Internal CheckHealth: OK";
             return;
         }
-        if (level == JposConst.JPOS_CH_INTERACTIVE) {
-            Dev.synchronizedMessageBox("Press OK to start health test.", "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+        if (level == JPOS_CH_INTERACTIVE) {
+            synchronizedMessageBox("Press OK to start health test.", "CheckHealth", INFORMATION_MESSAGE);
         }
-        CheckHealthText = (level == JposConst.JPOS_CH_EXTERNAL ? "Externel" : "Interactive") + " CheckHealth: ";
+        CheckHealthText = (level == JPOS_CH_EXTERNAL ? "Externel" : "Interactive") + " CheckHealth: ";
         try {
             ((LineDisplayService) EventSource).clearText();
-            ((LineDisplayService) EventSource).displayTextAt(1, 3, "CheckHealth: OK!", LineDisplayConst.DISP_DT_NORMAL);
+            ((LineDisplayService) EventSource).displayTextAt(1, 3, "CheckHealth: OK!", DISP_DT_NORMAL);
             CheckHealthText += "OK";
         } catch (JposException e) {
             CheckHealthText += "Failed, " + e.getMessage();
@@ -146,30 +147,23 @@ class LineDisplay extends LineDisplayProperties implements StatusUpdater {
 
     @Override
     public void refreshWindow(int index) throws JposException {
-        String[] cmd = new String[]{"display", "", ""};
+        String[] cmd = {"display", "", ""};
         for (int line = 0; line < Lines.length; line++) {
             cmd[1] = Integer.toString(line + 1);
             cmd[2] = new String(Lines[line]);
             String[] resp = Dev.sendrecv(cmd);
-            Dev.check(resp == null || resp.length < 1, JposConst.JPOS_E_FAILURE, "Communication error");
-            Dev.check(resp[0].charAt(0) != SUCCESS, JposConst.JPOS_E_FAILURE, resp.length != 3 ? "Unknown error" : "Error " + resp[1] + " [" + resp[2] + "]");
+            check(resp == null || resp.length < 1, JPOS_E_FAILURE, "Communication error");
+            check(resp[0].charAt(0) != SUCCESS, JPOS_E_FAILURE, resp.length != 3 ? "Unknown error" : "Error " + resp[1] + " [" + resp[2] + "]");
         }
     }
 
     @Override
     public void scrollText(int direction, int units) throws JposException {
         switch (direction) {
-            case LineDisplayConst.DISP_ST_UP:
-                scrollUp(units);
-                break;
-            case LineDisplayConst.DISP_ST_DOWN:
-                scrollDown(units);
-                break;
-            case LineDisplayConst.DISP_ST_LEFT:
-                scrollLeft(units);
-                break;
-            case LineDisplayConst.DISP_ST_RIGHT:
-                scrollRight(units);
+            case DISP_ST_UP -> scrollUp(units);
+            case DISP_ST_DOWN -> scrollDown(units);
+            case DISP_ST_LEFT -> scrollLeft(units);
+            case DISP_ST_RIGHT -> scrollRight(units);
         }
         refreshWindow(0);
     }
@@ -207,9 +201,7 @@ class LineDisplay extends LineDisplayProperties implements StatusUpdater {
     private void scrollDown(int units) {
         if (!clearIfNotLess(units, DeviceRows)) {
             for (int l = DeviceRows - 1; l >= units; l--) {
-                for (int i = 0; i < DeviceColumns; i++) {
-                    Lines[l][i] = Lines[l - units][i];
-                }
+                if (DeviceColumns >= 0) System.arraycopy(Lines[l - units], 0, Lines[l], 0, DeviceColumns);
             }
             while (--units >= 0) {
                 for (int i = 0; i < DeviceColumns; i++) {
@@ -222,9 +214,7 @@ class LineDisplay extends LineDisplayProperties implements StatusUpdater {
     private void scrollUp(int units) {
         if (!clearIfNotLess(units, DeviceRows)) {
             for (int l = units; l < DeviceRows; l++) {
-                for (int i = 0; i < DeviceColumns; i++) {
-                    Lines[l - units][i] = Lines[l][i];
-                }
+                if (DeviceColumns >= 0) System.arraycopy(Lines[l], 0, Lines[l - units], 0, DeviceColumns);
             }
             do {
                 for (int i = 0; i < DeviceColumns; i++) {
@@ -238,8 +228,7 @@ class LineDisplay extends LineDisplayProperties implements StatusUpdater {
     private boolean clearIfNotLess(int units, int dimension) {
         if (units >= dimension) {
             for (char[] line : Lines) {
-                for (int i = 0; i < line.length; i++)
-                    line[i] = ' ';
+                Arrays.fill(line, ' ');
             }
             return true;
         }

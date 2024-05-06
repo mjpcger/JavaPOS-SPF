@@ -30,7 +30,7 @@ public class OutputRequest extends JposOutputRequest {
     public String getAdditionalSecurityInformation() {
         return AdditionalSecurityInformation;
     }
-    private String AdditionalSecurityInformation;
+    private final String AdditionalSecurityInformation;
 
     /**
      * Returns contents of PaymentMedia when the output request has been generated.
@@ -39,7 +39,7 @@ public class OutputRequest extends JposOutputRequest {
     public int getPaymentMedia() {
         return PaymentMedia;
     }
-    private int PaymentMedia;
+    private final int PaymentMedia;
 
     /**
      * Returns contents of TrainingModeState when the output request has been generated.
@@ -48,7 +48,7 @@ public class OutputRequest extends JposOutputRequest {
     public int getTrainingMode() {
         return TrainingMode;
     }
-    private int TrainingMode;
+    private final int TrainingMode;
 
     /**
      * Returns contents of CurrentService when the output request has been generated.
@@ -57,7 +57,7 @@ public class OutputRequest extends JposOutputRequest {
     public String getCurrentService() {
         return CurrentService;
     }
-    private String CurrentService;
+    private final String CurrentService;
 
     /**
      * Returns contents of ApprovalCode when the output request has been generated.
@@ -66,7 +66,7 @@ public class OutputRequest extends JposOutputRequest {
     public String getApprovalCode() {
         return ApprovalCode;
     }
-    private String ApprovalCode;
+    private final String ApprovalCode;
 
     /**
      * Returns contents of PINEntry when the output request has been generated.
@@ -75,7 +75,7 @@ public class OutputRequest extends JposOutputRequest {
     public int getPINEntry() {
         return PINEntry;
     }
-    private int PINEntry;
+    private final int PINEntry;
 
     /**
      * Returns contents of ServiceType when the output request has been generated.
@@ -84,13 +84,14 @@ public class OutputRequest extends JposOutputRequest {
     public int getServiceType() {
         return ServiceType;
     }
-    private int ServiceType;
+    private final int ServiceType;
 
     /**
      * Get parameter set by setParameterInformation before request has been created.
      * @param key Key of parameter to be queried, e.g. "Amount".
      * @return parameter value as String, null if parameter has not been set.
      */
+    @SuppressWarnings("deprecation")
     public String getParameter(String key) {
         return Parameters.get(key);
     }
@@ -106,13 +107,14 @@ public class OutputRequest extends JposOutputRequest {
         return Parameters.getObject(key);
     }
 
-    private TypeSafeStringMap Parameters;
+    private final TypeSafeStringMap Parameters;
 
     /**
      * Constructor. Stores given parameters for later use.
      *
      * @param props Property set of device service.
      */
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     public OutputRequest(ElectronicValueRWProperties props) {
         super(props);
         AdditionalSecurityInformation = props.AdditionalSecurityInformation;

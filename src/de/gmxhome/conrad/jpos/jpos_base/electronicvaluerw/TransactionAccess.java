@@ -18,13 +18,13 @@
 package de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.ElectronicValueRW;
-import jpos.ElectronicValueRWConst;
-import jpos.JposConst;
-import jpos.JposException;
+import jpos.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.ElectronicValueRWConst.*;
+import static jpos.JposConst.*;
 
 /**
  * Output request executor for ElectronicValueRW method TransactionAccess.
@@ -37,22 +37,12 @@ public class TransactionAccess extends OutputRequest {
     public int getControl() {
         return Control;
     }
-    private int Control;
+    private final int Control;
 
     /**
      * List holds all outstanding output requests.
      */
-    List<JposOutputRequest> TransactionCommands = new ArrayList<JposOutputRequest>();
-
-    /**
-     * Adds an output request to the request queue.
-     * @param request Request to be enqueued.
-     * @throws JposException if request is null (specifying synchronous method implementation).
-     */
-    synchronized void addMethod(OutputRequest request) throws JposException {
-        Props.Device.check(request == null, JposConst.JPOS_E_FAILURE, "Transaction mode not supported for synchronous implementation");
-        TransactionCommands.add(request);
-    }
+    List<JposOutputRequest> TransactionCommands = new ArrayList<>();
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -68,11 +58,11 @@ public class TransactionAccess extends OutputRequest {
     public void invoke() throws JposException {
         ElectronicValueRWService svc = (ElectronicValueRWService)Props.EventSource;
         if (EndSync == null) {
-            JposDevice.check(((ElectronicValueRWProperties)svc.Props).DetectionStatus == ElectronicValueRWConst.EVRW_DS_NOCARD, JposConst.JPOS_E_FAILURE, "No card present");
+            check(((ElectronicValueRWProperties)svc.Props).DetectionStatus == EVRW_DS_NOCARD, JPOS_E_FAILURE, "No card present");
         }
         svc.ElectronicValueRW.transactionAccess(this);
         for (JposOutputRequest request : TransactionCommands) {
-            Device.check (Abort != null, JposConst.JPOS_E_FAILURE, "Transaction interrupted");
+            check (Abort != null, JPOS_E_FAILURE, "Transaction interrupted");
             request.invoke();
         }
     }

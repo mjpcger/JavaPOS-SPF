@@ -17,8 +17,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.motionsensor;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.*;
-import net.bplaced.conrad.log4jpos.Level;
+
+import static jpos.MotionSensorConst.*;
 
 /**
  * Status update event implementation for MotionSensor devices.
@@ -44,28 +44,23 @@ public class MotionSensorStatusUpdateEvent extends DelayedStatusUpdateEvent {
         super.setLateProperties();
         MotionSensorProperties props = (MotionSensorProperties)getPropertySet();
         switch (getStatus()) {
-            case MotionSensorConst.MOTION_M_ABSENT:
-                props.Motion = false;
-                props.signalWaiter();
-                break;
-            case MotionSensorConst.MOTION_M_PRESENT:
-                props.Motion = true;
-                props.signalWaiter();
+            case MOTION_M_ABSENT -> props.Motion = false;
+            case MOTION_M_PRESENT -> props.Motion = true;
+            default -> {
+                return;
+            }
         }
+        props.signalWaiter();
     }
 
     @Override
     public boolean checkStatusCorresponds() {
-        if (super.checkStatusCorresponds())
-            return true;
         MotionSensorProperties props = (MotionSensorProperties)getPropertySet();
-        switch (getStatus()) {
-            case MotionSensorConst.MOTION_M_ABSENT:
-                return props.Motion == false;
-            case MotionSensorConst.MOTION_M_PRESENT:
-                return props.Motion == true;
-        }
-        return false;
+        return super.checkStatusCorresponds() || switch (getStatus()) {
+            case MOTION_M_ABSENT -> !props.Motion;
+            case MOTION_M_PRESENT -> props.Motion;
+            default -> false;
+        };
     }
 
     @Override
@@ -84,22 +79,18 @@ public class MotionSensorStatusUpdateEvent extends DelayedStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        if (ret.length() > 0)
-            return ret;
-        switch (getStatus()) {
-            case MotionSensorConst.MOTION_M_PRESENT:
-                return "Motion detected";
-            case MotionSensorConst.MOTION_M_ABSENT:
-                return "No motion detected";
-        }
-        return "Unknown Status Change: " + getStatus();
+        return ret.length() > 0 ? ret : switch (getStatus()) {
+            case MOTION_M_PRESENT -> "Motion detected";
+            case MOTION_M_ABSENT -> "No motion detected";
+            default -> "Unknown Status Change: " + getStatus();
+        };
     }
 
     @Override
     public long handleDelay() {
-        if (getStatus() == MotionSensorConst.MOTION_M_ABSENT)
+        if (getStatus() == MOTION_M_ABSENT)
             return ((MotionSensorProperties)getPropertySet()).Timeout;
-        else if (getStatus() == MotionSensorConst.MOTION_M_PRESENT)
+        else if (getStatus() == MOTION_M_PRESENT)
             return CANCEL_ONLY;
         return 0;
     }

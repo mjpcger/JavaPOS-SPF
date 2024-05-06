@@ -17,9 +17,12 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.imagescanner;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.JposDeviceFactory;
+import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of ImageScanner factory for JPOS devices using this framework.
@@ -30,20 +33,31 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults.
      * @param index ImageScanner  property set index.
      * @param dev ImageScanner implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return ImageScannerService object.
      * @throws JposException If property set could not be retrieved.
      */
-    public ImageScannerService addDevice(int index, JposDevice dev) throws JposException {
-        ImageScannerService service;
+    public ImageScannerService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         ImageScannerProperties props = dev.getImageScannerProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getImageScannerProperties()");
-        service = (ImageScannerService) (props.EventSource = new ImageScannerService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedImageScanner;
+        validateJposConfiguration(props, dev, dev.ClaimedImageScanner, entry);
+        ImageScannerService service = (ImageScannerService) (props.EventSource = new ImageScannerService(props, dev));
         dev.changeDefaults(props);
-        JposDevice.check(!props.CapVideoData && !props.CapImageData && !props.CapDecodeData, JposConst.JPOS_E_ILLEGAL, "Missing video, image or decode capability");
+        check(!props.CapVideoData && !props.CapImageData && !props.CapDecodeData, JPOS_E_NOSERVICE, "Missing video, image or decode capability");
         props.addProperties(dev.ImageScanners);
         service.DeviceInterface = service.ImageScanner = props;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index ImageScanner  property set index.
+     * @param dev ImageScanner implementation instance derived from JposDevice to be used by the service.
+     * @return ImageScannerService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public ImageScannerService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

@@ -18,8 +18,9 @@
 package de.gmxhome.conrad.jpos.jpos_base.billdispenser;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import jpos.BillDispenserConst;
 import jpos.JposException;
+
+import static jpos.BillDispenserConst.*;
 
 /**
  * Class containing the bill dispenser specific properties, their default values and default implementations of
@@ -31,7 +32,7 @@ public class BillDispenserProperties extends JposCommonProperties implements Bil
      * UPOS property AsyncResultCode. Default: STATUS_OK. Will be set when throwing a BillDispenserStatusUpdateEvent with
      * STATUS_ASYNC.
      */
-    public int AsyncResultCode = BillDispenserConst.BDSP_STATUS_OK;
+    public int AsyncResultCode = BDSP_STATUS_OK;
 
     /**
      * UPOS property AsyncResultCodeExtended. Default: 0. Will be set when throwing a BillDispenserStatusUpdateEvent

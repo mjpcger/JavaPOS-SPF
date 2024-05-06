@@ -16,7 +16,7 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
-import jpos.JposConst;
+import static jpos.JposConst.*;
 
 /**
  * Subsystem unit input error event class. Holds unit and error message.
@@ -31,7 +31,7 @@ public class UnitInputErrorEvent extends UnitOutputErrorEvent {
      * @param text      Error message. Value to be stored in property EventString.
      */
     public UnitInputErrorEvent(JposBase source, int errorcode, int extended, int units, String text) {
-        super(source, errorcode, extended, JposConst.JPOS_EL_INPUT, units, text);
+        super(source, errorcode, extended, JPOS_EL_INPUT, units, text);
     }
 
     private UnitInputErrorEvent(JposBase o, int errorcode, int extended, int locus, int units, String text) {
@@ -50,7 +50,7 @@ public class UnitInputErrorEvent extends UnitOutputErrorEvent {
 
     @Override
     public JposErrorEvent getInputDataErrorEvent() {
-        return new UnitInputErrorEvent((JposBase) getSource(), getErrorCode(), getErrorCodeExtended(), JposConst.JPOS_EL_INPUT, Units, Message);
+        return new UnitInputErrorEvent((JposBase) getSource(), getErrorCode(), getErrorCodeExtended(), JPOS_EL_INPUT, Units, Message);
     }
 
 }

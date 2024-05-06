@@ -17,9 +17,10 @@
 
 package SampleCAT;
 
+import de.gmxhome.conrad.jpos.jpos_base.ThreadHandler;
 import de.gmxhome.conrad.jpos.jpos_base.cat.*;
-import jpos.JposConst;
 import jpos.JposException;
+import static jpos.JposConst.*;
 
 /**
  * Sample device specific accessor class. The device uses the following commands:
@@ -58,7 +59,7 @@ import jpos.JposException;
  * The device will be connected via TCP.
  */
 public class CAT extends CATProperties {
-    private Device Dev;
+    private final Device Dev;
 
     /**
      * Constructor. Gets instance of Device to be used as communication object. Device index for sample is always 0.
@@ -75,30 +76,26 @@ public class CAT extends CATProperties {
             timeout = Dev.MinClaimTimeout;
         super.claim(timeout);
         if (Dev.StateWatcher == null) {
-            Dev.StateWatcher = new Thread(Dev, "StateWatcher");
+            Dev.StateWatcher = new ThreadHandler("StateWatcher", Dev);
             Dev.StateWatcher.start();
         }
         Dev.setPrintWidth(Dev.JournalWidth);
         if (Dev.InIOError) {
             release();
-            throw new JposException(JposConst.JPOS_E_NOHARDWARE, "CAT not detected");
+            throw new JposException(JPOS_E_NOHARDWARE, "CAT not detected");
         }
     }
 
     @Override
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     public void release() throws JposException {
-        Dev.ToBeFinished = true;
+        Dev.StateWatcher.ToBeFinished = true;
         synchronized(Dev) {
             Dev.closePort();
         }
-        while (Dev.ToBeFinished) {
-            try {
-                Dev.StateWatcher.join();
-            } catch (Exception e) {}
-            break;
-        }
+        Dev.StateWatcher.waitFinished();
         Dev.StateWatcher = null;
-        PowerState = JposConst.JPOS_PS_UNKNOWN;
+        PowerState = JPOS_PS_UNKNOWN;
         EventSource.logSet("PowerState");
         Dev.InIOError = false;
         super.release();
@@ -119,7 +116,7 @@ public class CAT extends CATProperties {
     @Override
     public void handlePowerStateOnEnable() throws JposException {
         synchronized(Dev) {
-            PowerState = Dev.OutStream == null ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
+            PowerState = Dev.OutStream == null ? JPOS_PS_OFF_OFFLINE : JPOS_PS_ONLINE;
         }
         super.handlePowerStateOnEnable();
     }
@@ -128,7 +125,7 @@ public class CAT extends CATProperties {
     public void authorizeSales(AuthorizeSales request) throws JposException  {
         Dev.Display.init();
         Dev.Ticket.init();
-        int timeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
+        int timeout = request.getTimeout() == JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
         try {
             long starttime = System.currentTimeMillis();
             Dev.beginAuthorization(timeout);
@@ -137,7 +134,7 @@ public class CAT extends CATProperties {
                 Dev.sale(false, request.getAmount() + request.getTaxOthers(), (int) (timeout - deltatime));
                 deltatime = System.currentTimeMillis() - starttime;
                 if (Integer.parseInt(CenterResultCode) != 0 && deltatime < timeout) {
-                    Dev.confirm(Integer.parseInt(AdditionalSecurityInformation), true, (int) (timeout - deltatime));
+                    Dev.confirm(Integer.parseInt(AdditionalSecurityInformation), (int) (timeout - deltatime));
                 }
                 SequenceNumber = request.getSequenceNumber();
             }
@@ -156,7 +153,7 @@ public class CAT extends CATProperties {
             Integer.parseInt(AdditionalSecurityInformation);
         }
         catch (Exception e) {
-            Dev.check(true, JposConst.JPOS_E_ILLEGAL, "AdditionalSecurityInformation (device transaction number) invalid");
+            throw new JposException(JPOS_E_ILLEGAL, "AdditionalSecurityInformation (device transaction number) invalid: " + AdditionalSecurityInformation);
         }
         return super.authorizeVoid(sequenceNumber, amount, taxOthers, timeout);
     }
@@ -165,7 +162,7 @@ public class CAT extends CATProperties {
     public void authorizeVoid(AuthorizeVoid request) throws JposException  {
         Dev.Display.init();
         Dev.Ticket.init();
-        int timeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
+        int timeout = request.getTimeout() == JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
         try {
             long starttime = System.currentTimeMillis();
             Dev.beginAuthorization(timeout);
@@ -185,7 +182,7 @@ public class CAT extends CATProperties {
     public void authorizeRefund(AuthorizeRefund request) throws JposException  {
         Dev.Display.init();
         Dev.Ticket.init();
-        int timeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
+        int timeout = request.getTimeout() == JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
         try {
             long starttime = System.currentTimeMillis();
             Dev.beginAuthorization(timeout);

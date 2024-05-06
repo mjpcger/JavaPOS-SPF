@@ -19,7 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.rfidscanner;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
 import jpos.JposException;
-import jpos.RFIDScannerConst;
+
+import static jpos.RFIDScannerConst.*;
 
 /**
  * Class containing the RFID scanner specific properties, their default values and default implementations of
@@ -57,7 +58,7 @@ public class RFIDScannerProperties extends JposCommonProperties implements RFIDS
      * UPOS property CapWriteTag. Default: CWT_NONE. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int CapWriteTag = RFIDScannerConst.RFID_CWT_NONE;
+    public int CapWriteTag = RFID_CWT_NONE;
     /**
      * UPOS property ContinuousReadMode. Default: false. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.

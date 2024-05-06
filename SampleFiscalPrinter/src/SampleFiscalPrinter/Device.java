@@ -23,11 +23,17 @@ import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.*;
 import de.gmxhome.conrad.jpos.jpos_base.electronicjournal.*;
 import jpos.*;
 import jpos.config.JposEntry;
-import net.bplaced.conrad.log4jpos.Level;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties.ExclusiveAllowed;
+import static de.gmxhome.conrad.jpos.jpos_base.SerialIOProcessor.*;
+import static jpos.CashDrawerConst.*;
+import static jpos.ElectronicJournalConst.*;
+import static jpos.FiscalPrinterConst.*;
+import static jpos.JposConst.*;
+import static jpos.LineDisplayConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * Base of a JposDevice based implementation of JavaPOS CashDrawer, ElectronicJournal, FiscalPrinter and LineDisplay
@@ -111,11 +117,9 @@ import static de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties.ExclusiveAll
  *     <li>SignOnHeader: Header text for signon receipt. Default: "S I G N O N".</li>
  *     <li>Stopbits: Number of stop bits per data unit. Must be 1 or 2. Default: 2.
  *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
- *     <li>UsbToSerial: Specifies whether the specified port is a virtual port that will be removed by the operating
- *     system when the device is not connected. Default: false.
- *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
  * </ul>
  */
+@SuppressWarnings("unused")
 public class Device extends JposDevice implements Runnable {
     /**
      * The device implementation. See parent for further details.
@@ -129,10 +133,11 @@ public class Device extends JposDevice implements Runnable {
         cashDrawerInit(1);
         PhysicalDeviceDescription = "Fiscal printer simulator for TCP and COM port";
         PhysicalDeviceName = "Fiscal printer Simulator";
-        CapPowerReporting = JposConst.JPOS_PR_ADVANCED;
+        CapPowerReporting = JPOS_PR_ADVANCED;
     }
 
     @Override
+    @SuppressWarnings("resource")
     public void checkProperties(JposEntry entry) throws JposException {
         super.checkProperties(entry);
         try {
@@ -147,22 +152,22 @@ public class Device extends JposDevice implements Runnable {
             if ((o = entry.getPropertyValue("Baudrate")) != null) {
                 Baudrate = Integer.parseInt(o.toString());
                 if (TcpType)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Baudrate");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Baudrate");
             }
             if ((o = entry.getPropertyValue("Databits")) != null) {
                 Databits = Integer.parseInt(o.toString());
                 if (TcpType)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Databits");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Databits");
             }
             if ((o = entry.getPropertyValue("Stopbits")) != null) {
                 Stopbits = Integer.parseInt(o.toString());
                 if (TcpType)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Stopbits");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Stopbits");
             }
             if ((o = entry.getPropertyValue("Parity")) != null) {
                 Parity = Integer.parseInt(o.toString());
                 if (TcpType)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Parity");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Parity");
             }
             if ((o = entry.getPropertyValue("OwnPort")) != null) {
                 int port = Integer.parseInt(o.toString());
@@ -170,7 +175,7 @@ public class Device extends JposDevice implements Runnable {
                     throw new IOException("Invalid TCP port: " + o.toString());
                 OwnPort = port;
                 if (!TcpType)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: OwnPort");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: OwnPort");
             }
             if ((o = entry.getPropertyValue("RequestTimeout")) != null && (value = Integer.parseInt(o.toString())) > 0)
                 RequestTimeout = value;
@@ -180,8 +185,6 @@ public class Device extends JposDevice implements Runnable {
                 MaxRetry = Integer.parseInt(o.toString());
             if ((o = entry.getPropertyValue("PollDelay")) != null)
                 PollDelay = Integer.parseInt(o.toString());
-            if ((o = entry.getPropertyValue("UsbToSerial")) != null)
-                UsbToSerial = Boolean.parseBoolean(o.toString());
             if ((o = entry.getPropertyValue("MaxJournalSize")) != null)
                 MaxJournalSize = Long.parseLong(o.toString());
             if ((o = entry.getPropertyValue("JournalSizeNearFull")) != null)
@@ -209,19 +212,19 @@ public class Device extends JposDevice implements Runnable {
                 RefundVoidText = o.toString();
             if ((o = entry.getPropertyValue("AllowItemAdjustmentTypesInPackageAdjustment")) != null)
                 AllowItemAdjustmentTypesInPackageAdjustment = Boolean.parseBoolean(o.toString());
-            check(SignOffHeader.length() > MAXPRINTLINELENGTH, JposConst.JPOS_E_ILLEGAL, "Signoff header too long");
-            check(SignOnHeader.length() > MAXPRINTLINELENGTH, JposConst.JPOS_E_ILLEGAL, "Signon header too long");
-            check(CashierName.length() > MAXFIXEDTEXTLENGTH, JposConst.JPOS_E_ILLEGAL, "Cashier prefix too long");
-            check(CashierID.length() > MAXFIXEDTEXTLENGTH, JposConst.JPOS_E_ILLEGAL, "Cashier prefix too long");
-            check(SecretText.length() > MAXFIXEDTEXTLENGTH, JposConst.JPOS_E_ILLEGAL, "Secret prefix too long");
-            check(PrinterResetText.length() > MAXFISCALPRINTLINE, JposConst.JPOS_E_ILLEGAL, "Invalid PrinterResetText: " + PrinterResetText);
-            check(centeredLine(AdjustmentVoidText).length() > MAXFISCALPRINTLINE, JposConst.JPOS_E_ILLEGAL, "Adjustment void text too long");
-            check(centeredLine(RefundVoidText).length() > MAXFISCALPRINTLINE, JposConst.JPOS_E_ILLEGAL, "Refund void text too long");
-            check(MaxJournalSize - JournalSizeNearFull < 10000, JposConst.JPOS_E_ILLEGAL, "JournalSizeNearFull too big: " + JournalSizeNearFull);
+            check(SignOffHeader.length() > MAXPRINTLINELENGTH, JPOS_E_ILLEGAL, "Signoff header too long");
+            check(SignOnHeader.length() > MAXPRINTLINELENGTH, JPOS_E_ILLEGAL, "Signon header too long");
+            check(CashierName.length() > MAXFIXEDTEXTLENGTH, JPOS_E_ILLEGAL, "Cashier prefix too long");
+            check(CashierID.length() > MAXFIXEDTEXTLENGTH, JPOS_E_ILLEGAL, "Cashier prefix too long");
+            check(SecretText.length() > MAXFIXEDTEXTLENGTH, JPOS_E_ILLEGAL, "Secret prefix too long");
+            check(PrinterResetText.length() > MAXFISCALPRINTLINE, JPOS_E_ILLEGAL, "Invalid PrinterResetText: " + PrinterResetText);
+            check(centeredLine(AdjustmentVoidText).length() > MAXFISCALPRINTLINE, JPOS_E_ILLEGAL, "Adjustment void text too long");
+            check(centeredLine(RefundVoidText).length() > MAXFISCALPRINTLINE, JPOS_E_ILLEGAL, "Refund void text too long");
+            check(MaxJournalSize - JournalSizeNearFull < 10000, JPOS_E_ILLEGAL, "JournalSizeNearFull too big: " + JournalSizeNearFull);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, e.getMessage(), e);
+            throw new JposException(JPOS_E_ILLEGAL, e.getMessage(), e);
         }
     }
 
@@ -348,29 +351,27 @@ public class Device extends JposDevice implements Runnable {
      */
     public  int RequestTimeout = 2000;
     private int CharacterTimeout = 50;      // Maximum delay between two characters of the same frame.
-    private int AckTimeout = 1000;          // Maximum time between a command and the corresponding response.
+    private final int AckTimeout = 1000;          // Maximum time between a command and the corresponding response.
     private int PollDelay = 500;            // Delay between status poll cycles
     private int OwnPort = 0;                // Own port, used in case of TCP connection.
                                             // The following four values will only be used in case of a COM port.
-    private int Baudrate = SerialIOProcessor.BAUDRATE_9600;
-    private int Databits = SerialIOProcessor.DATABITS_8;
-    private int Stopbits = SerialIOProcessor.STOPBITS_2;
-    private int Parity = SerialIOProcessor.PARITY_NONE;
+    private int Baudrate = BAUDRATE_9600;
+    private int Databits = DATABITS_8;
+    private int Stopbits = STOPBITS_2;
+    private int Parity = PARITY_NONE;
 
     private UniqueIOProcessor Stream = null;
-    private Thread StateWatcher = null;
-    private boolean ToBeFinished;
+    private ThreadHandler StateWatcher = null;
 
     private boolean InIOError = false;
 
-    private char[] CurrentState = new char[0];      // Updated when receiving a response
+    private char[] CurrentState = {};      // Updated when receiving a response
 
     /**
      * Maximum number of retries. Default: 2. Can be set via jpos.xml.
      */
     int MaxRetry = 2;
-    private boolean UsbToSerial = false;
-    private int[] OpenCount = new int[]{0};
+    private final int[] OpenCount = {0};
 
     /**
      * Maximum size of all journal files of the device simulator. Default fits for 100 periods, 100000 receipts
@@ -641,7 +642,7 @@ public class Device extends JposDevice implements Runnable {
      * Further lines contain an array of allowed minimum line values: AllowedDocumentLineTable[i][j] contains
      * the minimum line number after line (j-1) has been printed or -1 for the last line.
      */
-    long[][] AllowedDocumentLineTable = new long[][]{
+    long[][] AllowedDocumentLineTable = {
             new long[]{SAMPLEFISCALPRINTERFXO_SIGNON, SAMPLEFISCALPRINTERFXO_SIGNOFF},
             new long[]{SAMPLEFISCALPRINTERFXO_ON_CASHIER, SAMPLEFISCALPRINTERFXO_ON_END, -1},
             new long[]{SAMPLEFISCALPRINTERFXO_OFF_CASHIER, SAMPLEFISCALPRINTERFXO_OFF_SECRET, SAMPLEFISCALPRINTERFXO_OFF_END, -1}
@@ -702,11 +703,12 @@ public class Device extends JposDevice implements Runnable {
     private boolean AllowItemAdjustmentTypesInPackageAdjustment = false;
 
     @Override
+    @SuppressWarnings("deprecation")
     public void changeDefaults(FiscalPrinterProperties props) {
         super.changeDefaults(props);
         props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Fiscal printer service for sample fiscal printer";
-        props.ActualCurrencyDef = FiscalPrinterConst.FPTR_AC_EUR;
+        props.ActualCurrencyDef = FPTR_AC_EUR;
         props.CapAdditionalHeader = true;
         props.CapAdditionalLines = true;
         props.CapAdditionalTrailer = true;
@@ -767,8 +769,8 @@ public class Device extends JposDevice implements Runnable {
         props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Line display service for sample fiscal printer";
         // Defaults are good for plain 2x20 character display. Changes of defaults only for Unicode support:
-        props.CapCharacterSet = LineDisplayConst.DISP_CCS_UNICODE;
-        props.CharacterSetDef = LineDisplayConst.DISP_CS_UNICODE;
+        props.CapCharacterSet = DISP_CCS_UNICODE;
+        props.CharacterSetDef = DISP_CS_UNICODE;
         props.CharacterSetList = "997";
         props.DeviceRows = MAXDISPLAYLINE;
         props.DeviceColumns = MAXDISPLAYLINELENGTH;
@@ -783,6 +785,7 @@ public class Device extends JposDevice implements Runnable {
         // All other defaults match the abilities of this service.
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private JposException closePort() {
         JposException e = null;
         if (Stream != null) {
@@ -796,6 +799,7 @@ public class Device extends JposDevice implements Runnable {
         return e;
     }
 
+    @SuppressWarnings("resource")
     private JposException initPort() {
         try {
             if (!TcpType) {
@@ -822,6 +826,7 @@ public class Device extends JposDevice implements Runnable {
      * @param args Array of command components,
      * @return Array of response components, <i>null</i> on IO error, zero length array on timeout.
      */
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     synchronized String[] sendrecv(String[] args) {
         if (Stream == null) {
             JposException e = initPort();
@@ -833,8 +838,8 @@ public class Device extends JposDevice implements Runnable {
             String[] response = sendFrameRetrieveResponse(args);
             if (response != null) return response;
         } catch (Exception e) {
-            log(Level.TRACE, ID + ": IO error: " + e.getMessage());
-            JposException ee = closePort();
+            log(TRACE, ID + ": IO error: " + e.getMessage());
+            closePort();
             InIOError = true;
             return null;
         }
@@ -854,7 +859,7 @@ public class Device extends JposDevice implements Runnable {
                 response = retrieveResponse(acknowledge, response);
                 if (response[response.length - 1] == ETX && response[response.length - 3] == ETB && getChecksum(response) % 96 == 31) {
                     // The frame is valid: Truncate ETB SUM ETX from frame, convert to string, split at ETB
-                    return new String(Arrays.copyOf(response, response.length - 3), "UTF8").split(new String(new char[]{ETB}), -1);
+                    return new String(Arrays.copyOf(response, response.length - 3), StandardCharsets.UTF_8).split(new String(new char[]{ETB}), -1);
                 }
                 Stream.setTimeout(CharacterTimeout);
             }
@@ -866,7 +871,7 @@ public class Device extends JposDevice implements Runnable {
     }
 
     private void checkPortPresent(byte[] acknowledge) throws JposException {
-        check(!TcpType && acknowledge.length == 0 && !((SerialIOProcessor)Stream).exists(), JposConst.JPOS_E_FAILURE, "Port missing");
+        check(!TcpType && acknowledge.length == 0 && !((SerialIOProcessor)Stream).exists(), JPOS_E_FAILURE, "Port missing");
     }
 
     private byte[] retrieveResponse(byte[] acknowledge, byte[] response) throws JposException {
@@ -894,11 +899,11 @@ public class Device extends JposDevice implements Runnable {
     }
 
     private byte[] getFrame(String[] args) throws UnsupportedEncodingException {
-        String command = "";
-        for (int i = 0; i < args.length; i++) {
-            command = command + args[i] + new String(new byte[]{ETB});
+        StringBuilder command = new StringBuilder();
+        for (String arg : args) {
+            command.append(arg).append(new String(new byte[]{ETB}));
         }
-        byte[] frame = command.getBytes("UTF8");
+        byte[] frame = command.toString().getBytes(StandardCharsets.UTF_8);
         byte[] ret = Arrays.copyOf(frame, frame.length + 2);
         ret[frame.length] = (byte) (127 - getChecksum(frame) % 96);
         ret[frame.length + 1] = ETX;
@@ -907,22 +912,22 @@ public class Device extends JposDevice implements Runnable {
 
     private int getChecksum(byte[] frame) {
         int sum = 0;
-        for (int i = 0; i < frame.length; i++) {
-            if (frame[i] == ETX)
+        for (byte b : frame) {
+            if (b == ETX)
                 break;
-            sum += (int) frame[i] & 0xff;
+            sum += (int) b & 0xff;
         }
         return sum;
     }
 
     @Override
     public void run() {
-        String[][] commands = new String[][]{new String[]{"getJournalUsed"}, new String[]{"get", "SerialNo", "Period"}};
+        String[][] commands = {new String[]{"getJournalUsed"}, new String[]{"get", "SerialNo", "Period"}};
         char[] newstate;
         String newserno = SerialNumber;
         long newjournalsize = CurrentJournalSize;
         prepareStatusWaitingObjects();
-        for (int index = 0; !ToBeFinished; index = 1 - index) {
+        for (int index = 0; !StateWatcher.ToBeFinished; index = 1 - index) {
             try {
                 String[] result = sendrecv(commands[index]);
                 if (result == null || result.length < 1 || result[0].length() < DRAWER + 2) {
@@ -961,6 +966,7 @@ public class Device extends JposDevice implements Runnable {
         prepareSignalStatusWaits(LineDisplays[0]);
     }
 
+    @SuppressWarnings({"SynchronizeOnNonFinalField", "ThrowableInstanceNeverThrown"})
     private void handleStates(char[] newstate, String newserno, long newjournalsize) {
         char[] oldstate = CurrentState;
         if ((newstate.length <= DRAWER) != (oldstate.length <= DRAWER) || InitializeVatTable) {
@@ -973,7 +979,7 @@ public class Device extends JposDevice implements Runnable {
                 oldstate = "9999999".toCharArray();
         }
         if (!newserno.equals(SerialNumber) && !SerialNumber.equals("")) {
-            log(Level.ERROR, ID + ": Serial number does not match the expected number: " + SerialNumber + " - " + newserno);
+            log(ERROR, ID + ": Serial number does not match the expected number: " + SerialNumber + " - " + newserno);
             if (newstate.length > RECEIPT) {
                 newstate[RECEIPT] = BLOCKED;
             }
@@ -997,6 +1003,7 @@ public class Device extends JposDevice implements Runnable {
      * Retrieves a copy of the current device state.
      * @return See description.
      */
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     char[] getCurrentState() {
         char[] actstate;
         synchronized(CurrentState) {
@@ -1012,20 +1019,22 @@ public class Device extends JposDevice implements Runnable {
         }
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private JposException handleDrawerState(char c) {
         try {
             JposCommonProperties props = getPropertySetInstance(CashDrawers, 0, 0);
             if (props != null) {
-                int state = c == OPENED ? CashDrawerConst.CASH_SUE_DRAWEROPEN : CashDrawerConst.CASH_SUE_DRAWERCLOSED;
+                int state = c == OPENED ? CASH_SUE_DRAWEROPEN : CASH_SUE_DRAWERCLOSED;
                 handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, state));
             }
         } catch (JposException e) {
             return e;
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException ignored) {}
         return null;
     }
 
 
+    @SuppressWarnings({"UnusedReturnValue", "SynchronizeOnNonFinalField"})
     private JposException handleEJState(long newjournalsize) {
         long oldsize = CurrentJournalSize;
         CurrentJournalSize = newjournalsize;
@@ -1040,11 +1049,13 @@ public class Device extends JposDevice implements Runnable {
                 }
             }
             if (oldsize <= JournalSizeNearFull && newjournalsize > JournalSizeNearFull) {
-                handleEvent(new ElectronicJournalStatusUpdateEvent(jrn.EventSource, ElectronicJournalConst.EJ_SUE_MEDIUM_NEAR_FULL));
+                assert jrn != null;
+                handleEvent(new ElectronicJournalStatusUpdateEvent(jrn.EventSource, EJ_SUE_MEDIUM_NEAR_FULL));
             }
             else if (newjournalsize > MaxJournalSize) {
                 if (oldsize <= MaxJournalSize) {
-                    handleEvent(new ElectronicJournalStatusUpdateEvent(jrn.EventSource, ElectronicJournalConst.EJ_SUE_MEDIUM_FULL));
+                    assert jrn != null;
+                    handleEvent(new ElectronicJournalStatusUpdateEvent(jrn.EventSource, EJ_SUE_MEDIUM_FULL));
                 }
                 synchronized (CurrentState) {
                     CurrentState[FISCAL] = FISCALBLOCK;
@@ -1062,12 +1073,12 @@ public class Device extends JposDevice implements Runnable {
             JposCommonProperties props = getClaimingInstance(ClaimedFiscalPrinter, 0);
             FiscalPrinterProperties prt = (FiscalPrinterProperties) props;
             if (newstate.length > DRAWER) {
-                state = JposConst.JPOS_SUE_POWER_ONLINE;
+                state = JPOS_SUE_POWER_ONLINE;
             }
             else {
-                state = JposConst.JPOS_SUE_POWER_OFF_OFFLINE;
-                if (prt != null && prt.DeviceEnabled && prt.PrinterState != FiscalPrinterConst.FPTR_PS_LOCKED) {
-                    prt.PrinterState = FiscalPrinterConst.FPTR_PS_LOCKED;
+                state = JPOS_SUE_POWER_OFF_OFFLINE;
+                if (prt != null && prt.DeviceEnabled && prt.PrinterState != FPTR_PS_LOCKED) {
+                    prt.PrinterState = FPTR_PS_LOCKED;
                     prt.EventSource.logSet("PrinterState");
                 }
             }
@@ -1083,7 +1094,7 @@ public class Device extends JposDevice implements Runnable {
             if ((prt) != null) {
                 handleEvent(new FiscalPrinterStatusUpdateEvent(prt.EventSource, state));
             }
-        } catch (JposException e) {}
+        } catch (JposException ignored) {}
     }
 
     private char[] fillVatTable(char[] newstate) {
@@ -1096,7 +1107,7 @@ public class Device extends JposDevice implements Runnable {
             for (int i = 1; i <= MAXVATINDEX; i++) {
                 cmd[i + 1] = Long.toString(i);
             }
-            String resp[] = sendrecv(cmd);
+            String[] resp = sendrecv(cmd);
             if (resp == null || resp.length != MAXVATINDEX + 1 || resp[0].length() != newstate.length + 1 || resp[0].charAt(0) != SUCCESS) {
                 return new char[0];
             }
@@ -1104,7 +1115,7 @@ public class Device extends JposDevice implements Runnable {
             for (int i = 0; i < VatTable.length; i++) {
                 try {
                     VatTable[i] = prt.stringToCurrency(resp[i + 1], "VAT " + (i + 1));
-                } catch (JposException e) {}
+                } catch (JposException ignored) {}
             }
             if (InitializeVatTable) {
                 System.arraycopy(VatTable, 0, NewVatTable, 0, NewVatTable.length);
@@ -1135,17 +1146,16 @@ public class Device extends JposDevice implements Runnable {
      * @param props  Property set of device to be opened.
      * @return The new open count.
      */
+    @SuppressWarnings("UnusedReturnValue")
     int startPolling(JposCommonProperties props) {
         synchronized (OpenCount) {
             if (OpenCount[0] == 0) {
-                ToBeFinished = false;
                 PollWaiter = new SyncObject();
                 StartPollingWaiter = props;
-                (StateWatcher = new Thread(this)).start();
-                StateWatcher.setName("StatusUpdater");
+                (StateWatcher = new ThreadHandler("FiscalPrinterStatusUpdater", this)).start();
                 OpenCount[0] = 1;
                 props.attachWaiter();
-                props.waitWaiter(MaxRetry * (RequestTimeout + AckTimeout));
+                props.waitWaiter((long)MaxRetry * (RequestTimeout + AckTimeout));
                 props.releaseWaiter();
             }
             else
@@ -1161,17 +1171,13 @@ public class Device extends JposDevice implements Runnable {
      * polling. This method is the inverse operation to startPolling().
      * @return The new open count.
      */
+    @SuppressWarnings({"UnusedReturnValue", "ThrowableInstanceNeverThrown"})
     int stopPolling() {
         synchronized(OpenCount) {
             if (OpenCount[0] == 1) {
-                ToBeFinished = true;
+                StateWatcher.ToBeFinished = true;
                 PollWaiter.signal();
-                while (true) {
-                    try {
-                        StateWatcher.join();
-                        break;
-                    } catch (InterruptedException e) {}
-                }
+                StateWatcher.waitFinished();
                 StartPollingWaiter = null;
                 closePort();
             }
@@ -1197,13 +1203,12 @@ public class Device extends JposDevice implements Runnable {
      * @throws JposException If obj does not match the specified needs.
      */
     int executeCommands(int data, Object obj) throws JposException {
-        check(!(obj instanceof String[][][] || obj instanceof String[][] || obj instanceof String[]), JposConst.JPOS_E_ILLEGAL, "Unsupported object type for obj");
-        check(obj instanceof String[] && data > ((String[])obj).length, JposConst.JPOS_E_ILLEGAL, "data[0] > obj.length");
-        if (obj instanceof String[]) {
-            String[] cmd = (String[])obj;
+        check(!(obj instanceof String[][][] || obj instanceof String[][] || obj instanceof String[]), JPOS_E_ILLEGAL, "Unsupported object type for obj");
+        check(obj instanceof String[] && data > ((String[])obj).length, JPOS_E_ILLEGAL, "data[0] > obj.length");
+        if (obj instanceof String[] cmd) {
             String[] resp = sendrecv(Arrays.copyOf(cmd, data));
             if ((data = resp == null ? 0 : resp.length) > 0)
-                System.arraycopy(resp, 0, cmd, 0, resp.length < cmd.length ? resp.length : cmd.length);
+                System.arraycopy(resp, 0, cmd, 0, Math.min(resp.length, cmd.length));
         }
         else if (obj instanceof String[][] && ((String[][])obj).length == 2) {
             String[][] arg = (String[][])obj;
@@ -1213,13 +1218,13 @@ public class Device extends JposDevice implements Runnable {
         else if (obj instanceof String[][][]) {
             data = 0;
             for (String[][] arg : (String[][][])obj) {
-                check(arg.length != 2, JposConst.JPOS_E_ILLEGAL, "One element stored in obj is not String[2][]");
+                check(arg.length != 2, JPOS_E_ILLEGAL, "One element stored in obj is not String[2][]");
                 arg[1] = sendrecv(arg[0]);
                 data += arg[1] == null || arg[1][0] == null || arg[1][0].length() < DRAWER + 2 || arg[1][0].charAt(0) != SUCCESS ? 0 : 1;
             }
         }
         else
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Unsupported format of obj");
+            throw new JposException(JPOS_E_ILLEGAL, "Unsupported format of obj");
         return data;
     }
 

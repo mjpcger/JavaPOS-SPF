@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.posprinter;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.POSPrinterConst.*;
+
 /**
  * Output request executor for POSPrinter method CutPaper.
  */
@@ -31,7 +33,7 @@ public class CutPaper extends OutputRequest {
         return Percentage;
     }
 
-    private int Percentage;
+    private final int Percentage;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -48,7 +50,7 @@ public class CutPaper extends OutputRequest {
     public void invoke() throws JposException {
         POSPrinterService svc = (POSPrinterService)Props.EventSource;
         if (EndSync == null) {
-            svc.extendedErrorCheck(POSPrinterConst.PTR_S_RECEIPT);
+            svc.extendedErrorCheck(PTR_S_RECEIPT);
         }
         svc.POSPrinterInterface.cutPaper(this);
     }

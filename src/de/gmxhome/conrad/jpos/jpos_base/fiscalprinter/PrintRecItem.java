@@ -23,7 +23,7 @@ import jpos.*;
  * with quantity and price data.
  */
 public class PrintRecItem extends SimpleItemOutputRequest {
-    private int Quantity;
+    private final int Quantity;
 
     /**
      * FiscalPrinter method parameter quantity, see UPOS specification.
@@ -33,7 +33,7 @@ public class PrintRecItem extends SimpleItemOutputRequest {
         return Quantity;
     }
 
-    private long UnitPrice;
+    private final long UnitPrice;
 
     /**
      * FiscalPrinter method parameter unitPrice, see UPOS specification.
@@ -43,7 +43,7 @@ public class PrintRecItem extends SimpleItemOutputRequest {
         return UnitPrice;
     }
 
-    private String UnitName;
+    private final String UnitName;
 
     /**
      * FiscalPrinter method parameter unitName, see UPOS specification.

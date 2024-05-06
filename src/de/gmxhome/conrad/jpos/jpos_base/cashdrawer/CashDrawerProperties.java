@@ -18,6 +18,9 @@ package de.gmxhome.conrad.jpos.jpos_base.cashdrawer;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static jpos.JposConst.JPOS_E_NOSERVICE;
 
 /**
  * Class containing the drawer specific properties, their default values and default implementations of
@@ -41,6 +44,12 @@ public class CashDrawerProperties extends JposCommonProperties implements CashDr
     public boolean DrawerOpened;
 
     /**
+     * Volume for drawer beep. Valid values are from 0 to 127. Will be initialized with an Integer object only for
+     * CashDrawer devices within jpos.xml. The default is 127 (the maximum volume).
+     */
+    public int DrawerBeepVolume = 127;
+
+    /**
      * Constructor. Sets ExclusiveUse to ExclusiveAllowed to match the CashDrawer device model.
      *
      * @param dev Device index
@@ -50,6 +59,21 @@ public class CashDrawerProperties extends JposCommonProperties implements CashDr
         super(dev);
         ExclusiveUse = ExclusiveAllowed;
         FlagWhenIdleStatusValue = -1;   // To avoid FlagWhenIdle handling for CASH_SUE_DRAWERCLOSED
+    }
+
+    @Override
+    public void checkProperties(JposEntry entry) throws JposException {
+        super.checkProperties(entry);
+        Object o = entry.getPropertyValue("DrawerBeepVolume");
+        if (o != null) {
+            try {
+                DrawerBeepVolume = Integer.parseInt(o.toString());
+            } catch (NumberFormatException e) {
+                throw new JposException(JPOS_E_NOSERVICE, "DrawerBeepVolume not an integer value: " + o, e);
+            }
+            if (DrawerBeepVolume < 0 || DrawerBeepVolume > 127)
+                throw new JposException(JPOS_E_NOSERVICE, "Drawer beep value not between 0 and 127: " + DrawerBeepVolume);
+        }
     }
 
     @Override

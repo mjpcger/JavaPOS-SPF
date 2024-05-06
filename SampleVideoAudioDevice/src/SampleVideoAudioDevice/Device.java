@@ -25,11 +25,19 @@ import jpos.*;
 import jpos.config.*;
 
 import java.io.*;
-import java.lang.reflect.Array;
-import java.math.BigDecimal;
+import java.lang.reflect.*;
+import java.math.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import net.bplaced.conrad.log4jpos.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static java.math.RoundingMode.*;
+import static jpos.GraphicDisplayConst.*;
+import static jpos.JposConst.*;
+import static jpos.SoundPlayerConst.*;
+import static jpos.SoundRecorderConst.*;
+import static jpos.VideoCaptureConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * JposDevice based dummy implementation for JavaPOS GraphicDisplay and SoundPlayer, based on Videolan VLC player.
@@ -80,7 +88,7 @@ import net.bplaced.conrad.log4jpos.*;
  */
 public class Device extends JposDevice {
     private File VlcPath = null;
-    private List<String> AudioChannel = new ArrayList<>();
+    private final List<String> AudioChannel = new ArrayList<>();
     private String VideoChannel = null;
     private Integer AudioBitRate = null;
     private int VideoBitRate = 8000;
@@ -93,11 +101,12 @@ public class Device extends JposDevice {
 
     public Device(String id) {
         super(id);
-        soundPlayerInit( 1);
-        soundRecorderInit(1);
-        graphicDisplayInit(1);
-        videoCaptureInit(1);
-        CapPowerReporting = JposConst.JPOS_PR_NONE;
+        int devcount = 1;
+        soundPlayerInit( devcount);
+        soundRecorderInit(devcount);
+        graphicDisplayInit(devcount);
+        videoCaptureInit(devcount);
+        CapPowerReporting = JPOS_PR_NONE;
         PhysicalDeviceName = "Sample Sound And Video Device";
         PhysicalDeviceDescription = "Sample sound and video device based on usage of Videolan's vlx";
     }
@@ -107,8 +116,8 @@ public class Device extends JposDevice {
         super.checkProperties(entries);
         Object o = entries.getPropertyValue("VLCPath");
         String deviceclass = entries.getPropertyValue("deviceCategory").toString();
-        check(o == null, JposConst.JPOS_E_NOSERVICE, "VLCPath not specified");
-        check(!(VlcPath = new File(o.toString())).isFile(), JposConst.JPOS_E_NOSERVICE, "Invalid VLC path: " + o.toString());
+        check(o == null, JPOS_E_NOSERVICE, "VLCPath not specified");
+        check(!(VlcPath = new File(o.toString())).isFile(), JPOS_E_NOSERVICE, "Invalid VLC path: " + o.toString());
         AssociatedHardTotalsDevice = "";
         if ((o = entries.getPropertyValue("AssociatedHardTotalsDevice")) != null)
             AssociatedHardTotalsDevice = o.toString();
@@ -117,7 +126,7 @@ public class Device extends JposDevice {
             BufferSize = (Integer) o;
         if (member(deviceclass, new String[]{"SoundRecorder", "VideoCapture", "GraphicDisplay"})) {
             if ((o = entries.getPropertyValue("TempFileFolder")) != null) {
-                JposDevice.check(!new File(o.toString()).isDirectory(), JposConst.JPOS_E_NOSERVICE, "Invalid TempFileFolder: " + o);
+                check(!new File(o.toString()).isDirectory(), JPOS_E_NOSERVICE, "Invalid TempFileFolder: " + o);
                 TempFileFolder = o.toString();
             }
             if (deviceclass.equals("GraphicDisplay")) {
@@ -132,9 +141,9 @@ public class Device extends JposDevice {
                     AudioChannel.clear();
                     for (int i = 1; (o = entries.getPropertyValue("AudioChannel" + i)) != null; i++)
                         AudioChannel.add(o.toString());
-                    check(AudioChannel.size() == 0, JposConst.JPOS_E_NOSERVICE, "No audio channel specified");
+                    check(AudioChannel.size() == 0, JPOS_E_NOSERVICE, "No audio channel specified");
                 } else if (deviceclass.equals("VideoCapture")) {
-                    check((o = entries.getPropertyValue("VideoChannel")) == null, JposConst.JPOS_E_NOSERVICE, "No video channel specified");
+                    check((o = entries.getPropertyValue("VideoChannel")) == null, JPOS_E_NOSERVICE, "No video channel specified");
                     VideoChannel = o.toString();
                     VideoBitRate = 8000;
                     if ((o = entries.getPropertyValue("VideoBitRate")) != null)
@@ -153,18 +162,19 @@ public class Device extends JposDevice {
         data.DeviceServiceDescription = "VLC based sound player";
         data.CapSoundTypeList = "mp3,mp2,aac,wav";
         data.CapAssociatedHardTotalsDevice = AssociatedHardTotalsDevice;
-        data.CapStorage = data.CapAssociatedHardTotalsDevice.length() == 0 ? SoundPlayerConst.SPLY_CST_HOST_ONLY
-                : SoundPlayerConst.SPLY_CST_ALL;
-        data.Storage = SoundPlayerConst.SPLY_ST_HOST;
+        data.CapStorage = data.CapAssociatedHardTotalsDevice.length() == 0 ? SPLY_CST_HOST_ONLY
+                : SPLY_CST_ALL;
+        data.Storage = SPLY_ST_HOST;
         data.CapVolume = true;
         data.Volume = 30;
         data.CurrentCommands = new ArrayList<>();
     }
 
     @Override
+    @SuppressWarnings("StringContatenationInLoop")
     public void changeDefaults(SoundRecorderProperties props) {
         MySoundRecorderProperties data = (MySoundRecorderProperties) props;
-        data.AudioDeviceNames = AudioChannel.toArray(new String[AudioChannel.size()]);
+        data.AudioDeviceNames = AudioChannel.toArray(new String[0]);
         data.AudioBitRate = AudioBitRate;
         data.TempFileFolder = TempFileFolder;
         super.changeDefaults(data);
@@ -172,12 +182,11 @@ public class Device extends JposDevice {
         data.DeviceServiceDescription = "VLC based sound recorder";
         data.CapSoundType = true;
         data.CapAssociatedHardTotalsDevice = AssociatedHardTotalsDevice;
-        data.CapStorage = data.CapAssociatedHardTotalsDevice.length() == 0 ? SoundRecorderConst.SREC_CST_HOST_ONLY
-                : SoundRecorderConst.SREC_CST_ALL;
-        data.Storage = SoundRecorderConst.SREC_ST_HOST;
+        data.CapStorage = data.CapAssociatedHardTotalsDevice.length() == 0 ? SREC_CST_HOST_ONLY
+                : SREC_CST_ALL;
+        data.Storage = SREC_ST_HOST;
         data.CapSamplingRate = true;
         data.SamplingRateList = "11250,22500,44100,48000";
-        data.CapSoundType = true;
         data.SoundTypeList = "mp3,flac,wav";
         data.TypeArgs.put("mp3", new String[]{"mp3", "mp3"});
         data.TypeArgs.put("flac", new String[]{"flac", "flac"});
@@ -202,9 +211,9 @@ public class Device extends JposDevice {
         data.CapVolume = true;
         data.Volume = 30;
         data.CapAssociatedHardTotalsDevice = AssociatedHardTotalsDevice;
-        data.CapStorage = data.CapAssociatedHardTotalsDevice.length() == 0 ? GraphicDisplayConst.GDSP_CST_HOST_ONLY
-                : GraphicDisplayConst.GDSP_CST_ALL;
-        data.Storage = GraphicDisplayConst.GDSP_ST_HOST;
+        data.CapStorage = data.CapAssociatedHardTotalsDevice.length() == 0 ? GDSP_CST_HOST_ONLY
+                : GDSP_CST_ALL;
+        data.Storage = GDSP_ST_HOST;
         data.CapVideoType = true;
         data.CapImageType = true;
         data.ImageTypeList = "jpg,bmp,png";
@@ -306,7 +315,7 @@ public class Device extends JposDevice {
                 try {
                     TheStorage.open(CapAssociatedHardTotalsDevice);
                 } catch (JposException e) {
-                    throw new JposException(JposConst.JPOS_E_NOSERVICE, e.getErrorCode(), e.getMessage(), e);
+                    throw new JposException(JPOS_E_NOSERVICE, e.getErrorCode(), e.getMessage(), e);
                 }
             }
             super.open();
@@ -343,7 +352,7 @@ public class Device extends JposDevice {
             File file = new File(filename);
             StorageIO storage;
 
-            if (Storage == SoundPlayerConst.SPLY_ST_HOST)
+            if (Storage == SPLY_ST_HOST)
                 storage = new StorageIO(file.getParent());
             else {
                 if (!TheStorage.getDeviceEnabled())
@@ -351,7 +360,7 @@ public class Device extends JposDevice {
                 storage = new StorageIO(TheStorage);
             }
             String name = file.getName();
-            check(!storage.checkFileExists(name), JposConst.JPOS_E_NOEXIST, "File " + filename + " does not exist.");
+            check(!storage.checkFileExists(name), JPOS_E_NOEXIST, "File " + filename + " does not exist.");
             PlaySound request = super.playSound(name, loop);
             request.AdditionalData = storage;
             return request;
@@ -360,32 +369,32 @@ public class Device extends JposDevice {
         @Override
         public void playSound(PlaySound request) throws JposException {
             try {
-                BigDecimal volumefactor = new BigDecimal(Volume).divide(new BigDecimal("12.5"));
-                String cmd[] = {
+                BigDecimal volumefactor = new BigDecimal(Volume).divide(new BigDecimal("12.5"), HALF_UP);
+                String[] cmd = {
                         VlcPath.getCanonicalPath(), "-", "--qt-start-minimized", "--qt-minimal-view", "--qt-notification=0",
                         "--no-video", "--gain=" + volumefactor.toString(), "--play-and-exit"
                 };
-                handleEvent(new SoundPlayerStatusUpdateEvent(EventSource, SoundPlayerConst.SPLY_SUE_START_PLAY_SOUND, request.OutputID));
+                handleEvent(new SoundPlayerStatusUpdateEvent(EventSource, SPLY_SUE_START_PLAY_SOUND, request.OutputID));
                 Process proc = Runtime.getRuntime().exec(cmd);
                 ProcessWaiter pw = new ProcessWaiter("PlaySoundWaiter" + request.OutputID, proc, request.Waiting,
                         (StorageIO) request.AdditionalData, request.getFileName(), BufferSize, request.getLoop());
                 pw.start();
-                request.Waiting.suspend(SyncObject.INFINITE);
+                request.Waiting.suspend(INFINITE);
                 if (proc.isAlive())
                     proc.destroy();
                 if (pw.Exception != null)
                     throw pw.Exception;
-                handleEvent(new SoundPlayerStatusUpdateEvent(EventSource, SoundPlayerConst.SPLY_SUE_STOP_PLAY_SOUND, request.OutputID));
+                handleEvent(new SoundPlayerStatusUpdateEvent(EventSource, SPLY_SUE_STOP_PLAY_SOUND, request.OutputID));
                 if (pw.Storage.getOpenFileSize() != 0)
                     pw.Storage.getStorageData(null, -1);
                 synchronized (OutputIdListSync) {
-                    if (OutputIDList.length() == 0 && Storage != SoundPlayerConst.SPLY_ST_HOST && TheStorage.getDeviceEnabled())
+                    if (OutputIDList.length() == 0 && Storage != SPLY_ST_HOST && TheStorage.getDeviceEnabled())
                         TheStorage.setDeviceEnabled(false);
                 }
             } catch (Exception e) {
                 if (e instanceof JposException)
                     throw (JposException) e;
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Unexpected error: " + e.getMessage(), e);
+                throw new JposException(JPOS_E_FAILURE, "Unexpected error: " + e.getMessage(), e);
             }
         }
 
@@ -409,7 +418,7 @@ public class Device extends JposDevice {
         private  int AudioBitRate = 128;
         private String[] AudioDeviceNames = null;
         private String TempFileFolder = null;
-        private Map<String, String[]> TypeArgs = new HashMap<>();
+        private final Map<String, String[]> TypeArgs = new HashMap<>();
 
         HardTotals TheStorage = null;
 
@@ -424,7 +433,7 @@ public class Device extends JposDevice {
                 try {
                     TheStorage.open(CapAssociatedHardTotalsDevice);
                 } catch (JposException e) {
-                    throw new JposException(JposConst.JPOS_E_NOSERVICE, e.getErrorCode(), e.getMessage(), e);
+                    throw new JposException(JPOS_E_NOSERVICE, e.getErrorCode(), e.getMessage(), e);
                 }
             }
             super.open();
@@ -447,7 +456,7 @@ public class Device extends JposDevice {
         public void retryInput() throws JposException {
             super.retryInput();
             new JposInputRequest(this).reactivate(true);
-            Device.log(Level.DEBUG, LogicalName + ": Enter Retry input...");
+            Device.log(DEBUG, LogicalName + ": Enter Retry input...");
         }
 
         /**
@@ -461,7 +470,7 @@ public class Device extends JposDevice {
          *                device (JPOS_TRUE) or not (JPOS_FALSE).<br>
          *                If "SetAudioBitRate", data[0] specifies the bit rate to be used for audio recording.
          * @return  Since the supported methods will be performed synchronously, device specific directIO calls return null.
-         * @throws JposException
+         * @throws JposException If an error occurs.
          */
         @Override
         public DirectIO directIO(int cmd, int[]data, Object detail) throws JposException {
@@ -469,17 +478,17 @@ public class Device extends JposDevice {
                     : ((detail.getClass().isArray() && Array.getLength(detail) == 1 ? Array.get(detail, 0) : detail).toString());
             if (cmd == 1) {
                 if ("SetCommonAudio".equals(det) && data != null && data.length == 1 &&
-                        member(data[0], new long[]{JposConst.JPOS_FALSE, JposConst.JPOS_TRUE}))
+                        member(data[0], new long[]{JPOS_FALSE, JPOS_TRUE}))
                 {
-                    boolean newvalue = data[0] == JposConst.JPOS_TRUE;
-                    data[0] = CommonRecording ? JposConst.JPOS_TRUE : JposConst.JPOS_FALSE;
+                    boolean newvalue = data[0] == JPOS_TRUE;
+                    data[0] = CommonRecording ? JPOS_TRUE : JPOS_FALSE;
                     CommonRecording = newvalue;
                 } else if ("SetAudioBitRate".equals(det) && data != null && data.length == 1) {
                     int newrate = data[0];
                     data[0] = AudioBitRate;
                     this.AudioBitRate = newrate;
                 } else
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid detail: " + det);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid detail: " + det);
                 return null;
             }
             return super.directIO(cmd, data, detail);
@@ -499,20 +508,20 @@ public class Device extends JposDevice {
                     TempFile[0] = TempFileFolder == null ? File.createTempFile(this.getClass().getName(), "." + SoundType)
                             : File.createTempFile(this.getClass().getName(), "." + SoundType, new File(TempFileFolder));
                 } catch (IOException e) {
-                    throw new JposException(JposConst.JPOS_E_FAILURE, 0, e.getMessage(), e);
+                    throw new JposException(JPOS_E_FAILURE, 0, e.getMessage(), e);
                 }
-                if (Storage == SoundRecorderConst.SREC_ST_HARDTOTALS) {
+                if (Storage == SREC_ST_HARDTOTALS) {
                     obj = TheStorage;
                     if (!TheStorage.getDeviceEnabled())
                         TheStorage.setDeviceEnabled(true);
-                } else if (Storage == SoundRecorderConst.SREC_ST_HOST_HARDTOTALS) {
+                } else if (Storage == SREC_ST_HOST_HARDTOTALS) {
                     obj = new Object[]{TheStorage, obj};
                     if (!TheStorage.getDeviceEnabled())
                         TheStorage.setDeviceEnabled(true);
                 }
-                StorageIO storage = new StorageIO(obj, SoundRecorderConst.ESREC_NOROOM);
+                StorageIO storage = new StorageIO(obj, ESREC_NOROOM);
                 Boolean exists = storage.checkFileExists(name);
-                check(!overWrite && (exists == null || exists), JposConst.JPOS_E_EXISTS, "File exists: " + fileName);
+                check(!overWrite && (exists == null || exists), JPOS_E_EXISTS, "File exists: " + fileName);
                 int  maxsize = storage.getAvailableSpace(name);
                 if (TempFile[0].getFreeSpace() < maxsize)
                     maxsize = (int) TempFile[0].getFreeSpace();
@@ -542,19 +551,19 @@ public class Device extends JposDevice {
                     int maxsize = storage.getAvailableSpace(request.FileName);
                     if (TempFile[0].getFreeSpace() < maxsize)
                         maxsize = (int) TempFile[0].getFreeSpace();
-                    handleEvent(new SoundRecorderStatusUpdateEvent(EventSource, SoundRecorderConst.SREC_SUE_START_SOUND_RECORDING));
+                    handleEvent(new SoundRecorderStatusUpdateEvent(EventSource, SREC_SUE_START_SOUND_RECORDING));
                     recordingWithSizeCheck(request, proc, TempFile[0], starttime, Long.MAX_VALUE, maxsize);
-                    JposDevice.check(!TempFile[0].exists() || TempFile[0].length() == 0, JposConst.JPOS_E_FAILURE, "Sound capture failed");
-                    JposDevice.check(TempFile[0].length() > Integer.MAX_VALUE, JposConst.JPOS_E_FAILURE, "Capture more than 2GB data");
+                    check(!TempFile[0].exists() || TempFile[0].length() == 0, JPOS_E_FAILURE, "Sound capture failed");
+                    check(TempFile[0].length() > Integer.MAX_VALUE, JPOS_E_FAILURE, "Capture more than 2GB data");
                     retrievedData = readDataFromTempFile(request);
                 }
                 storage.setStorageData(request.FileName, retrievedData, retrievedData.length);
                 if (storage.getOpenFileSize() > 0)
                     storage.setStorageData(null, null, 0);
-                if (Storage != SoundRecorderConst.SREC_ST_HOST) {
+                if (Storage != SREC_ST_HOST) {
                     TheStorage.setDeviceEnabled(false);
                 }
-                handleEvent(new SoundRecorderStatusUpdateEvent(EventSource, SoundRecorderConst.SREC_SUE_STOP_SOUND_RECORDING));
+                handleEvent(new SoundRecorderStatusUpdateEvent(EventSource, SREC_SUE_STOP_SOUND_RECORDING));
                 handleEvent(new SoundRecorderDataEvent(EventSource, 0, retrievedData));
                 retrievedData = null;
             } catch (Exception e) {
@@ -563,7 +572,7 @@ public class Device extends JposDevice {
                 Array.set(request.AdditionalData, 1, retrievedData);
                 if (e instanceof JposException)
                     throw (JposException) e;
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Unexpected error: " + e.getMessage(), e);
+                throw new JposException(JPOS_E_FAILURE, "Unexpected error: " + e.getMessage(), e);
             } finally {
                 if (retrievedData == null)
                     resetTempFile(TempFile);
@@ -586,12 +595,12 @@ public class Device extends JposDevice {
         }
 
         private String[] getAudioRecordingCommand(int maxsize, int recordingTime) throws JposException {
-            int bitrate = SoundType.toLowerCase().equals("wav") ? Integer.parseInt(SamplingRate)  / 32 : AudioBitRate;
+            int bitrate = SoundType.equalsIgnoreCase("wav") ? Integer.parseInt(SamplingRate)  / 32 : AudioBitRate;
             int recordingtime = getRecordingtime(recordingTime, maxsize, bitrate);
             int devindex = Integer.parseInt(Channel) - 1;
             String[] typeArgs = TypeArgs.get(SoundType);
             try {
-                String cmd[] = {
+                return new String[]{
                         VlcPath.getCanonicalPath(), "--qt-start-minimized", "--qt-minimal-view", "--qt-notification=0", "dshow://",
                         ":dshow-vdev=none", ":dshow-adev=" + AudioDeviceNames[devindex], ":live-caching=300",
                         ":sout=#transcode{vcodec=none,acodec=" + typeArgs[0] +
@@ -601,9 +610,8 @@ public class Device extends JposDevice {
                         "--stop-time=" + recordingtime,
                         "vlc://quit"
                 };
-                return cmd;
             } catch (IOException e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, e.getMessage(), e);
+                throw new JposException(JPOS_E_ILLEGAL, e.getMessage(), e);
             }
         }
 
@@ -611,17 +619,15 @@ public class Device extends JposDevice {
             byte[] retrievedData;
             retrievedData = new byte[(int) TempFile[0].length()];
             int len;
-            FileInputStream in = new FileInputStream(TempFile[0]);
-            try {
+            try (FileInputStream in = new FileInputStream(TempFile[0])) {
                 for (int pos = 0; pos < retrievedData.length; pos += len) {
                     if ((len = in.read(retrievedData, pos, retrievedData.length - pos)) <= 0) {
                         retrievedData = Arrays.copyOf(retrievedData, pos);
-                        throw new JposException(JposConst.JPOS_E_FAILURE, 0, "Access to all captured data failed at byte " + pos);
+                        throw new JposException(JPOS_E_FAILURE, 0, "Access to all captured data failed at byte " + pos);
                     }
                 }
             } finally {
                 ((Object[]) request.AdditionalData)[1] = retrievedData;
-                in.close();
                 resetTempFile(TempFile);
             }
             return retrievedData;
@@ -645,7 +651,7 @@ public class Device extends JposDevice {
                 try {
                     TheStorage.open(CapAssociatedHardTotalsDevice);
                 } catch (JposException e) {
-                    throw new JposException(JposConst.JPOS_E_NOSERVICE, e.getErrorCode(), e.getMessage(), e);
+                    throw new JposException(JPOS_E_NOSERVICE, e.getErrorCode(), e.getMessage(), e);
                 }
             }
             super.open();
@@ -673,15 +679,15 @@ public class Device extends JposDevice {
             PlayingVideo[0] = null;
         }
 
-        private Integer[] PlayingVideo = {null};
-        private File[] TempFile = {null};
+        private final Integer[] PlayingVideo = {null};
+        private final File[] TempFile = {null};
 
         @Override
         public PlayVideo playVideo(String filename, boolean loop) throws JposException {
             File file = new File(filename);
             StorageIO storage;
 
-            if (Storage == GraphicDisplayConst.GDSP_ST_HOST)
+            if (Storage == GDSP_ST_HOST)
                 storage = new StorageIO(file.getParent());
             else {
                 if (!TheStorage.getDeviceEnabled())
@@ -689,7 +695,7 @@ public class Device extends JposDevice {
                 storage = new StorageIO(TheStorage);
             }
             String name = file.getName();
-            check(!storage.checkFileExists(name), JposConst.JPOS_E_NOEXIST, "File " + filename + " does not exist.");
+            check(!storage.checkFileExists(name), JPOS_E_NOEXIST, "File " + filename + " does not exist.");
             PlayVideo request = super.playVideo(name, loop);
             request.AdditionalData = storage;
             return request;
@@ -697,24 +703,25 @@ public class Device extends JposDevice {
 
         @Override
         public void playVideo(PlayVideo request) throws JposException {
+            final PlayVideo[] syncRequest = {request};
             synchronized (PlayingVideo) {
-                synchronized (request) {
+                synchronized (syncRequest[0]) {
                     PlayingVideo[0] = request.OutputID;
                 }
                 try {
-                    BigDecimal volumefactor = new BigDecimal(Volume).divide(new BigDecimal("12.5"));
+                    BigDecimal volumefactor = new BigDecimal(Volume).divide(new BigDecimal("12.5"), HALF_UP);
                     resetTempFile(TempFile);
-                    StorageIO storage[] = {(StorageIO) request.AdditionalData};
+                    StorageIO[] storage = {(StorageIO) request.AdditionalData};
                     String[] cmd;
                     cmd = getVideoPlayingCommand(request, volumefactor, storage);
-                    handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GraphicDisplayConst.GDSP_SUE_START_PLAY_VIDEO));
+                    handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GDSP_SUE_START_PLAY_VIDEO));
                     for (boolean again = true; again; again = request.getLoop() && (request.Abort == null)) {
                         Process proc = Runtime.getRuntime().exec(cmd);
                         ProcessWaiter pw = new ProcessWaiter("GraphicDisplayWaiter" + request.OutputID, proc, request.Waiting,
                                 storage[0], request.getFileName(), storage[0] == null ? 0 : BufferSize, false);
                         pw.TempFile = TempFile[0];
                         pw.start();
-                        request.Waiting.suspend(SyncObject.INFINITE);
+                        request.Waiting.suspend(INFINITE);
                         if (proc.isAlive())
                             proc.destroy();
                         if (pw.Exception != null)
@@ -722,15 +729,15 @@ public class Device extends JposDevice {
                         if (storage[0] != null && storage[0].getOpenFileSize() != 0)
                             storage[0].getStorageData(null, -1);
                     }
-                    handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GraphicDisplayConst.GDSP_SUE_STOP_PLAY_VIDEO));
-                    if (Storage != GraphicDisplayConst.GDSP_ST_HOST && TheStorage.getDeviceEnabled())
+                    handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GDSP_SUE_STOP_PLAY_VIDEO));
+                    if (Storage != GDSP_ST_HOST && TheStorage.getDeviceEnabled())
                         TheStorage.setDeviceEnabled(false);
                 } catch (Exception e) {
                     if (e instanceof JposException)
                         throw (JposException) e;
-                    throw new JposException(JposConst.JPOS_E_FAILURE, "Unexpected error: " + e.getMessage(), e);
+                    throw new JposException(JPOS_E_FAILURE, "Unexpected error: " + e.getMessage(), e);
                 } finally {
-                    synchronized (request) {
+                    synchronized (syncRequest[0]) {
                         PlayingVideo[0] = null;
                     }
                     resetTempFile(TempFile);
@@ -747,14 +754,14 @@ public class Device extends JposDevice {
                     cmd = new String[]{
                             VlcPath.getCanonicalPath(), "-", "--qt-notification=0", "--qt-minimal-view", "--freetype-opacity=0",
                             "-f", "--gain=" + volumefactor.toString(), TempFile[0].getCanonicalPath(), ":input-repeat=65535",
-                            DisplayMode == GraphicDisplayConst.GDSP_DMODE_VIDEO_FULL ? "--autoscale" : "--no-autoscale"
+                            DisplayMode == GDSP_DMODE_VIDEO_FULL ? "--autoscale" : "--no-autoscale"
                     };
                 } else {
                     File file = new File(storage[0].getStorageObject().toString(), request.getFileName());
                     cmd = new String[]{
                             VlcPath.getCanonicalPath(), file.getCanonicalPath(), "--qt-notification=0", "--qt-minimal-view",
                             "--freetype-opacity=0", "-f", "--gain=" + volumefactor.toString(), "--repeat",
-                            DisplayMode == GraphicDisplayConst.GDSP_DMODE_VIDEO_FULL ? "--autoscale" : "--no-autoscale"
+                            DisplayMode == GDSP_DMODE_VIDEO_FULL ? "--autoscale" : "--no-autoscale"
                     };
                     storage[0] = null;
                 }
@@ -762,7 +769,7 @@ public class Device extends JposDevice {
                 cmd = new String[]{
                         VlcPath.getCanonicalPath(), "-", "--qt-notification=0", "--qt-minimal-view", "--freetype-opacity=0",
                         "-f", "--gain=" + volumefactor.toString(), "--play-and-exit",
-                        DisplayMode == GraphicDisplayConst.GDSP_DMODE_VIDEO_FULL ? "--autoscale" : "--no-autoscale"
+                        DisplayMode == GDSP_DMODE_VIDEO_FULL ? "--autoscale" : "--no-autoscale"
                 };
             }
             return cmd;
@@ -773,7 +780,7 @@ public class Device extends JposDevice {
             JposOutputRequest request;
             synchronized (AsyncProcessorRunning) {
                 request = getRequestRunnersRequest(SerializedRequestRunner);
-                check (!(request instanceof PlayVideo), JposConst.JPOS_E_ILLEGAL, "No video playing");
+                check (!(request instanceof PlayVideo), JPOS_E_ILLEGAL, "No video playing");
             }
             request.abortCommand(true);
         }
@@ -783,7 +790,7 @@ public class Device extends JposDevice {
             File file = new File(filename);
             StorageIO storage;
 
-            if (Storage == GraphicDisplayConst.GDSP_ST_HOST)
+            if (Storage == GDSP_ST_HOST)
                 storage = new StorageIO(file.getParent());
             else {
                 if (!TheStorage.getDeviceEnabled())
@@ -791,9 +798,9 @@ public class Device extends JposDevice {
                 storage = new StorageIO(TheStorage);
             }
             String name = file.getName();
-            check(!storage.checkFileExists(name), JposConst.JPOS_E_NOEXIST, "File " + filename + " does not exist.");
+            check(!storage.checkFileExists(name), JPOS_E_NOEXIST, "File " + filename + " does not exist.");
             LoadImage request = super.loadImage(name);
-            request.AdditionalData = Storage == GraphicDisplayConst.GDSP_ST_HOST ? file : storage;
+            request.AdditionalData = Storage == GDSP_ST_HOST ? file : storage;
             return request;
         }
 
@@ -803,36 +810,36 @@ public class Device extends JposDevice {
         public void loadImage(LoadImage request) throws JposException {
             File imagefile;
             try {
-                handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GraphicDisplayConst.GDSP_SUE_START_IMAGE_LOAD));
+                handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GDSP_SUE_START_IMAGE_LOAD));
                 destroyImageProcess();
                 imagefile = getFileFromStorage(request);
                 if (imagefile != null) {
-                    String cmd[] = {
+                    String[] cmd = {
                             VlcPath.getCanonicalPath(), imagefile.getCanonicalPath(), "--qt-minimal-view", "-f",
                             "--image-duration=-1", "--no-qt-error-dialogs", "--freetype-opacity=0", "--qt-notification=0",
-                            DisplayMode == GraphicDisplayConst.GDSP_DMODE_IMAGE_CENTER ? "--no-autoscale" : "--autoscale"
+                            DisplayMode == GDSP_DMODE_IMAGE_CENTER ? "--no-autoscale" : "--autoscale"
                     };
                     ImageProcess = Runtime.getRuntime().exec(cmd);
                     ProcessWaiter pw = new ProcessWaiter("LoadImageWaiter" + request.OutputID, ImageProcess,
                             request.Waiting, null, request.getFileName(), MaximumTimeForImageLoadFailure, false);
                     pw.start();
-                    request.Waiting.suspend(SyncObject.INFINITE);
+                    request.Waiting.suspend(INFINITE);
                     if (pw.Exception != null)
                         throw pw.Exception;
-                    handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GraphicDisplayConst.GDSP_SUE_END_IMAGE_LOAD));
+                    handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GDSP_SUE_END_IMAGE_LOAD));
                 }
             } catch (Exception e) {
                 resetTempFile(TempFile);
                 if (e instanceof JposException)
                     throw (JposException) e;
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Unexpected error: " + e.getMessage(), e);
+                throw new JposException(JPOS_E_FAILURE, "Unexpected error: " + e.getMessage(), e);
             }
         }
 
         @Override
         public void displayMode(int mode) throws JposException {
-            check (mode == GraphicDisplayConst.GDSP_DMODE_WEB, JposConst.JPOS_E_FAILURE, "Service does not support WEB mode");
-            long[] imagemodi = {GraphicDisplayConst.GDSP_DMODE_IMAGE_FIT, GraphicDisplayConst.GDSP_DMODE_IMAGE_FILL, GraphicDisplayConst.GDSP_DMODE_IMAGE_CENTER};
+            check (mode == GDSP_DMODE_WEB, JPOS_E_FAILURE, "Service does not support WEB mode");
+            long[] imagemodi = {GDSP_DMODE_IMAGE_FIT, GDSP_DMODE_IMAGE_FILL, GDSP_DMODE_IMAGE_CENTER};
             if (!member(mode, imagemodi) && member(DisplayMode, imagemodi)) {
                 destroyImageProcess();
             }
@@ -882,7 +889,7 @@ public class Device extends JposDevice {
         private String TempFileFolder;
         private int VideoBitRate;
         int BufferSize;
-        private Map<String, String[]> TypeArgs = new HashMap<>();
+        private final Map<String, String[]> TypeArgs = new HashMap<>();
 
         protected MyVideoCaptureProperties() {
             super(0);
@@ -897,7 +904,7 @@ public class Device extends JposDevice {
                 try {
                     TheStorage.open(CapAssociatedHardTotalsDevice);
                 } catch (JposException e) {
-                    throw new JposException(JposConst.JPOS_E_NOSERVICE, e.getErrorCode(), e.getMessage(), e);
+                    throw new JposException(JPOS_E_NOSERVICE, e.getErrorCode(), e.getMessage(), e);
                 }
             }
             super.open();
@@ -929,7 +936,7 @@ public class Device extends JposDevice {
          *                mind: Audio recording will be performed only if CommonAudio has been enabled.<br>
          *                If "SetVideoBitRate", data[0] specifies the bit rate to be used for video recording.
          * @return  Since the supported methods will be performed synchronously, device specific directIO calls return null.
-         * @throws JposException
+         * @throws JposException If an error occurs.
          */
         @Override
         public DirectIO directIO(int cmd, int[]data, Object detail) throws JposException {
@@ -937,10 +944,10 @@ public class Device extends JposDevice {
                     : ((detail.getClass().isArray() && Array.getLength(detail) == 1 ? Array.get(detail, 0) : detail).toString());
             if (cmd == 1) {
                 if ("SetCommonAudio".equals(det) && data != null && data.length == 1 &&
-                        member(data[0], new long[]{JposConst.JPOS_FALSE, JposConst.JPOS_TRUE}))
+                        member(data[0], new long[]{JPOS_FALSE, JPOS_TRUE}))
                 {
-                    boolean newvalue = data[0] == JposConst.JPOS_TRUE;
-                    data[0] = CommonRecording ? JposConst.JPOS_TRUE : JposConst.JPOS_FALSE;
+                    boolean newvalue = data[0] == JPOS_TRUE;
+                    data[0] = CommonRecording ? JPOS_TRUE : JPOS_FALSE;
                     CommonRecording = newvalue;
                 } else if ("SetVideoBitRate".equals(det) && data != null && data.length == 1) {
                     int newrate = data[0];
@@ -951,7 +958,7 @@ public class Device extends JposDevice {
                     data[0] = AudioBitRate;
                     AudioBitRate = newrate;
                 } else
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid detail: " + det);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid detail: " + det);
                 return null;
             }
             return super.directIO(cmd, data, detail);
@@ -972,20 +979,20 @@ public class Device extends JposDevice {
                     TempFile[0] = TempFileFolder == null ? File.createTempFile(this.getClass().getName(), "." + extension)
                             : File.createTempFile(this.getClass().getName(), "." + extension, new File(TempFileFolder));
                 } catch (IOException e) {
-                    throw new JposException(JposConst.JPOS_E_FAILURE, 0, e.getMessage(), e);
+                    throw new JposException(JPOS_E_FAILURE, 0, e.getMessage(), e);
                 }
-                if (Storage == VideoCaptureConst.VCAP_ST_HARDTOTALS) {
+                if (Storage == VCAP_ST_HARDTOTALS) {
                     obj = TheStorage;
                     if (!TheStorage.getDeviceEnabled())
                         TheStorage.setDeviceEnabled(true);
-                } else if (Storage == VideoCaptureConst.VCAP_ST_HOST_HARDTOTALS) {
+                } else if (Storage == VCAP_ST_HOST_HARDTOTALS) {
                     obj = new Object[]{TheStorage, obj};
                     if (!TheStorage.getDeviceEnabled())
                         TheStorage.setDeviceEnabled(true);
                 }
-                StorageIO storage = new StorageIO(obj, VideoCaptureConst.EVCAP_NOROOM);
+                StorageIO storage = new StorageIO(obj, EVCAP_NOROOM);
                 Boolean exists = storage.checkFileExists(name);
-                check(!overWrite && (exists == null || exists), JposConst.JPOS_E_EXISTS, "File exists: " + fileName);
+                check(!overWrite && (exists == null || exists), JPOS_E_EXISTS, "File exists: " + fileName);
                 int  maxsize = storage.getAvailableSpace(name);
                 if (TempFile[0].getFreeSpace() < maxsize)
                     maxsize = (int) TempFile[0].getFreeSpace();
@@ -1013,20 +1020,20 @@ public class Device extends JposDevice {
             boolean retry = (boolean) Array.get(request.AdditionalData, 4);
             try {
                 if (!retry) {
-                    handleEvent(new VideoCaptureStatusUpdateEvent(EventSource, VideoCaptureConst.VCAP_SUE_START_VIDEO));
+                    handleEvent(new VideoCaptureStatusUpdateEvent(EventSource, VCAP_SUE_START_VIDEO));
                     recordingWithSizeCheck(request, proc, TempFile[0], starttime, Long.MAX_VALUE, maxsize);
                 }
                 checkError(starttime);
                 long remainder = TempFile[0].length();
-                JposDevice.check(remainder > Integer.MAX_VALUE, JposConst.JPOS_E_FAILURE, "Capture more than 2GB data");
+                check(remainder > Integer.MAX_VALUE, JPOS_E_FAILURE, "Capture more than 2GB data");
                 tempFileToStorage(request.FileName, storage, (int) remainder);
-                handleEvent(new VideoCaptureStatusUpdateEvent(EventSource, VideoCaptureConst.VCAP_SUE_STOP_VIDEO));
+                handleEvent(new VideoCaptureStatusUpdateEvent(EventSource, VCAP_SUE_STOP_VIDEO));
                 retry = false;
             } catch (Exception e) {
                 Array.set(request.AdditionalData, 4, retry = true);
                 if (e instanceof JposException)
                     throw (JposException) e;
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Unexpected error: " + e.getMessage(), e);
+                throw new JposException(JPOS_E_FAILURE, "Unexpected error: " + e.getMessage(), e);
             } finally {
                 if (!retry)
                     resetTempFile(TempFile);
@@ -1037,12 +1044,12 @@ public class Device extends JposDevice {
         public void retryInput() throws JposException {
             super.retryInput();
             new JposInputRequest(this).reactivate(true);
-            Device.log(Level.DEBUG, LogicalName + ": Enter Retry input...");
+            Device.log(DEBUG, LogicalName + ": Enter Retry input...");
         }
 
         private void checkError(long starttime) throws JposException {
             String check = System.currentTimeMillis() - starttime < 9000 ? ", recording time too low?" : "";
-            JposDevice.check(!TempFile[0].exists() || TempFile[0].length() == 0, JposConst.JPOS_E_FAILURE,
+            check(!TempFile[0].exists() || TempFile[0].length() == 0, JPOS_E_FAILURE,
                     "Video capture failed" + check);
         }
 
@@ -1072,20 +1079,20 @@ public class Device extends JposDevice {
                     TempFile[0] = TempFileFolder == null ? File.createTempFile(this.getClass().getName(), "." + PhotoType)
                             : File.createTempFile(this.getClass().getName(), "." + PhotoType, new File(TempFileFolder));
                 } catch (IOException e) {
-                    throw new JposException(JposConst.JPOS_E_FAILURE, 0, e.getMessage(), e);
+                    throw new JposException(JPOS_E_FAILURE, 0, e.getMessage(), e);
                 }
-                if (Storage == VideoCaptureConst.VCAP_ST_HARDTOTALS) {
+                if (Storage == VCAP_ST_HARDTOTALS) {
                     obj = TheStorage;
                     if (!TheStorage.getDeviceEnabled())
                         TheStorage.setDeviceEnabled(true);
-                } else if (Storage == VideoCaptureConst.VCAP_ST_HOST_HARDTOTALS) {
+                } else if (Storage == VCAP_ST_HOST_HARDTOTALS) {
                     obj = new Object[]{TheStorage, obj};
                     if (!TheStorage.getDeviceEnabled())
                         TheStorage.setDeviceEnabled(true);
                 }
-                StorageIO storage = new StorageIO(obj, VideoCaptureConst.EVCAP_NOROOM);
+                StorageIO storage = new StorageIO(obj, EVCAP_NOROOM);
                 Boolean exists = storage.checkFileExists(name);
-                check(!overWrite && (exists == null || exists), JposConst.JPOS_E_EXISTS, "File exists: " + fileName);
+                check(!overWrite && (exists == null || exists), JPOS_E_EXISTS, "File exists: " + fileName);
                 int  maxsize = storage.getAvailableSpace(name);
                 if (TempFile[0].getFreeSpace() < maxsize)
                     maxsize = (int) TempFile[0].getFreeSpace();
@@ -1113,27 +1120,28 @@ public class Device extends JposDevice {
             boolean retry = (boolean) Array.get(request.AdditionalData, 4);
             try {
                 if (!retry) {
-                    handleEvent(new VideoCaptureStatusUpdateEvent(EventSource, VideoCaptureConst.VCAP_SUE_START_PHOTO));
+                    handleEvent(new VideoCaptureStatusUpdateEvent(EventSource, VCAP_SUE_START_PHOTO));
                     recordingWithSizeCheck(request, proc, TempFile[0], starttime,
-                            request.Timeout == JposConst.JPOS_FOREVER ? Long.MAX_VALUE : request.Timeout, maxsize);
+                            request.Timeout == JPOS_FOREVER ? Long.MAX_VALUE : request.Timeout, maxsize);
                 }
-                JposDevice.check(!TempFile[0].exists() || TempFile[0].length() == 0, JposConst.JPOS_E_FAILURE, "Taking photo failed");
+                check(!TempFile[0].exists() || TempFile[0].length() == 0, JPOS_E_FAILURE, "Taking photo failed");
                 long remainder = TempFile[0].length();
-                JposDevice.check(remainder > Integer.MAX_VALUE, JposConst.JPOS_E_FAILURE, "Capture more than 2GB data");
+                check(remainder > Integer.MAX_VALUE, JPOS_E_FAILURE, "Capture more than 2GB data");
                 tempFileToStorage(request.FileName, storage, (int) remainder);
-                handleEvent(new VideoCaptureStatusUpdateEvent(EventSource, VideoCaptureConst.VCAP_SUE_STOP_VIDEO));
+                handleEvent(new VideoCaptureStatusUpdateEvent(EventSource, VCAP_SUE_STOP_VIDEO));
                 retry = false;
             } catch (Exception e) {
                 Array.set(request.AdditionalData, 4, retry = true);
                 if (e instanceof JposException)
                     throw (JposException) e;
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Unexpected error: " + e.getMessage(), e);
+                throw new JposException(JPOS_E_FAILURE, "Unexpected error: " + e.getMessage(), e);
             } finally {
                 if (!retry)
                     resetTempFile(TempFile);
             }
         }
 
+        @SuppressWarnings("unused")
         private MySoundRecorderProperties getAssociatedAudioProperties() {
             if (CommonRecording && ClaimedSoundRecorder != null)
                 return (MySoundRecorderProperties) ClaimedSoundRecorder[0];
@@ -1153,7 +1161,7 @@ public class Device extends JposDevice {
                     bitrate += AudioBitRate;
                 }
                 int recordingtime = getRecordingtime(request.RecordingTime, maxsize, bitrate);
-                String cmd[] = {
+                return new String[]{
                         VlcPath.getCanonicalPath(), "--qt-start-minimized", "--qt-notification=0", "--qt-minimal-view", "dshow://",
                         ":dshow-vdev=" + VideoDeviceName, ":dshow-adev=" + adev, ":live-caching=300",
                         ":sout=#transcode{vcodec=" + typeArgs[1] + ",vb=" + VideoBitRate + ",fps=" + VideoFrameRate + ",acodec=" +
@@ -1161,36 +1169,34 @@ public class Device extends JposDevice {
                         "--stop-time=" + recordingtime,
                         "vlc://quit"
                 };
-                return cmd;
             } catch (IOException e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Start VideoRecording Error: " + e.getMessage(), e);
+                throw new JposException(JPOS_E_ILLEGAL, "Start VideoRecording Error: " + e.getMessage(), e);
             }
         }
 
-        private String[] getTakingPhotoCommand(TakePhoto request) throws JposException {
+        private String[] getTakingPhotoCommand(TakePhoto ignored) throws JposException {
             try {
                 String prefix = TempFile[0].getName().substring(0, TempFile[0].getName().length() - PhotoType.length() - 1);
-                String cmd[] = {
+                return new String[]{
                         VlcPath.getCanonicalPath(), "--qt-start-minimized", "--qt-notification=0", "--qt-minimal-view", "dshow://",
                         ":dshow-vdev=" + VideoDeviceName, ":dshow-adev=none", "--scene-replace", "--video-filter=scene",
                         "--scene-format=" + PhotoType, "--scene-prefix=" + prefix, "--scene-path=" + TempFile[0].getParent(),
                         "--scene-ratio=24", "--stop-time=0.05", "vlc://quit"
                 };
-                return cmd;
             } catch (IOException e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Start TakePhoto Error: " + e.getMessage(), e);
+                throw new JposException(JPOS_E_ILLEGAL, "Start TakePhoto Error: " + e.getMessage(), e);
             }
         }
 
         private void tempFileToStorage(String filename, StorageIO storage, int remainder) throws IOException, JposException {
             byte[] buffer = new byte[BufferSize];
             try (FileInputStream in = new FileInputStream(TempFile[0])){
-                for (int len = 0; remainder > 0 && (len = in.read(buffer)) >= 0; filename = null)
+                for (; remainder > 0 && in.read(buffer) >= 0; filename = null)
                     remainder = storage.setStorageData(filename, buffer, remainder);
             }
             if (storage.getOpenFileSize() > 0)
                 storage.setStorageData(null, null, 0);
-            if (Storage != VideoCaptureConst.VCAP_ST_HOST) {
+            if (Storage != VCAP_ST_HOST) {
                 TheStorage.setDeviceEnabled(false);
             }
         }
@@ -1200,17 +1206,18 @@ public class Device extends JposDevice {
         if (CommonRecording) {
             JposCommonProperties props;
             if (ClaimedVideoCapture != null && (props = ClaimedVideoCapture[0]) != null) {
-                if (((MyVideoCaptureProperties)props).VideoCaptureMode == VideoCaptureConst.VCAP_VCMODE_VIDEO)
-                    check(props.AsyncInputActive, JposConst.JPOS_E_BUSY, "Video capture is busy");
+                if (((MyVideoCaptureProperties)props).VideoCaptureMode == VCAP_VCMODE_VIDEO)
+                    check(props.AsyncInputActive, JPOS_E_BUSY, "Video capture is busy");
             }
             if (ClaimedSoundRecorder != null && (props = ClaimedSoundRecorder[0]) != null) {
-                check(props.AsyncInputActive, JposConst.JPOS_E_BUSY, "Sound Recorder is busy");
+                check(props.AsyncInputActive, JPOS_E_BUSY, "Sound Recorder is busy");
                 return (MySoundRecorderProperties) props;
             }
         }
         return null;
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void resetTempFile(File[] tempfile) {
         try {
             if (tempfile[0] != null && tempfile[0].exists()) {
@@ -1225,7 +1232,7 @@ public class Device extends JposDevice {
     private int getRecordingtime(int recordingtime, int maxsize, long bytepersecond) {
         bytepersecond *= 125;   // 1/8 of 1000 because
         int maxtime = (int)((maxsize + bytepersecond - 1) / bytepersecond);
-        return recordingtime == JposConst.JPOS_FOREVER || recordingtime > maxtime ? maxtime : recordingtime;
+        return recordingtime == JPOS_FOREVER || recordingtime > maxtime ? maxtime : recordingtime;
     }
 
     private Process startRecordingProcess(JposOutputRequest request,String[] cmd, String procname) throws JposException {
@@ -1234,7 +1241,7 @@ public class Device extends JposDevice {
             new ProcessWaiter(procname, proc, request.Waiting, null, null, 0, false).start();
             return proc;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_FAILURE, "StartRecording error: " + e.getMessage(), e);
+            throw new JposException(JPOS_E_FAILURE, "StartRecording error: " + e.getMessage(), e);
         }
     }
 
@@ -1248,16 +1255,15 @@ public class Device extends JposDevice {
             proc.destroy();
     }
 
-    private class ProcessWaiter extends Thread {
-        private Process Proc;
-        private SyncObject Obj;
-        private StorageIO Storage;
-        private String Filename;
+    private static class ProcessWaiter extends Thread {
+        private final Process Proc;
+        private final SyncObject Obj;
+        private final StorageIO Storage;
+        private final String Filename;
         File TempFile;
         private int BufferSize;
-        private boolean Loop;
+        private final boolean Loop;
         private JposException Exception = null;
-        private byte[][] Data = null;   // If set, 2nd target for retrieved data
 
         ProcessWaiter(String name, Process proc, SyncObject waiter, StorageIO storage, String filename, int buffersizeOrTimeout, boolean loop) {
             super(name);
@@ -1270,6 +1276,7 @@ public class Device extends JposDevice {
         }
 
         @Override
+        @SuppressWarnings("LoopConditionNotUpdatedInsideLoop")
         public void run() {
             if (Storage != null) {  // With storage I/O
                 OutputStream output = Proc.getOutputStream();
@@ -1298,9 +1305,9 @@ public class Device extends JposDevice {
                     if (e instanceof JposException)
                         Exception = (JposException) e;
                     else if (e instanceof Exception)
-                        Exception = new JposException(JposConst.JPOS_E_FAILURE, 0, e.getMessage(), (Exception) e);
+                        Exception = new JposException(JPOS_E_FAILURE, 0, e.getMessage(), (Exception) e);
                     else
-                        Exception = new JposException(JposConst.JPOS_E_FAILURE, 0, e.getMessage());
+                        Exception = new JposException(JPOS_E_FAILURE, 0, e.getMessage());
                 } finally {
                     try {
                         output.close();
@@ -1317,7 +1324,7 @@ public class Device extends JposDevice {
                     if (BufferSize <= 0)
                         Proc.waitFor();
                     else if (Proc.waitFor(BufferSize - (int)(currenttime - starttime), TimeUnit.MILLISECONDS))
-                        Exception = new JposException(JposConst.JPOS_E_FAILURE, "Could not load " + Filename);
+                        Exception = new JposException(JPOS_E_FAILURE, "Could not load " + Filename);
                     break;
                 } catch (InterruptedException e) {
                     e.printStackTrace();

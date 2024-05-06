@@ -21,9 +21,15 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.electronicjournal.*;
 import jpos.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+
+import static SampleCAT.Device.*;
+import static SampleCAT.Device.TicketOutput.*;
+import static jpos.ElectronicJournalConst.*;
+import static jpos.JposConst.*;
 
 /**
  * Sample device specific accessor class, bound to the credit authorization terminal service.
@@ -50,7 +56,7 @@ import java.util.Arrays;
  */
 public class ElectronicJournal extends ElectronicJournalProperties {
     static private class TicketViaDirectIO extends Device.TicketOutput {
-        private Device Dev;
+        private final Device Dev;
         private TicketViaDirectIO(Device dev) {
             super();
             Dev = dev;
@@ -59,7 +65,7 @@ public class ElectronicJournal extends ElectronicJournalProperties {
         void setTicket(int count, String contents) {
             super.setTicket(count, contents);
             try {
-                Dev.handleEvent(new JposDirectIOEvent(Dev.getClaimingInstance(Dev.ClaimedCAT, 0).EventSource, Dev.CAT_CMD_TICKET, count == 1 ? Dev.CAT_DATA_CUSTOMER : Dev.CAT_DATA_BOTH, contents));
+                Dev.handleEvent(new JposDirectIOEvent(Dev.getClaimingInstance(Dev.ClaimedCAT, 0).EventSource, CAT_CMD_TICKET, count == 1 ? CAT_DATA_CUSTOMER : CAT_DATA_BOTH, contents));
             } catch (JposException e) {
                 e.printStackTrace();
             }
@@ -67,15 +73,15 @@ public class ElectronicJournal extends ElectronicJournalProperties {
     }
 
     static private class TicketViaEJ extends Device.TicketOutput {
-        private Device Dev;
+        private final Device Dev;
         private static final int MARKSIZE = 14; // YYYYmmddHHMMSS
         private int FRAMESIZE = 0;
         private String Contents;
         private int Count;
         private long MediumSize;
-        private RandomAccessFile[] DataFile = new RandomAccessFile[]{null, null};
-        private String[][] LastMarkers = new String[][]{new String[]{null, null}, new String[]{null, null}};
-        private long[][] LastPos = new long[][]{new long[]{0, 0}, new long[]{0, 0}};
+        private final RandomAccessFile[] DataFile = {null, null};
+        private final String[][] LastMarkers = {{null, null}, {null, null}};
+        private final long[][] LastPos = {{0, 0}, {0, 0}};
         private TicketViaEJ(Device dev) {
             super();
             Dev = dev;
@@ -83,16 +89,16 @@ public class ElectronicJournal extends ElectronicJournalProperties {
 
         @Override
         void prepare() throws JposException {
-            FRAMESIZE = Dev.JRN_MAX_LINE_COUNT * Dev.JournalWidth;
-            MediumSize = (Dev.JournalMaxSize * Dev.JournalWidth * Dev.JRN_MAX_LINE_COUNT + Dev.Ticket.HEADSIZE) * Dev.CURRENCYFACTOR;
+            FRAMESIZE = JRN_MAX_LINE_COUNT * Dev.JournalWidth;
+            MediumSize = (Dev.JournalMaxSize * Dev.JournalWidth * JRN_MAX_LINE_COUNT + HEADSIZE) * CURRENCYFACTOR;
         }
 
         @Override
         synchronized void init() throws JposException {
             try {
-                Dev.check(MediumSize <= validateFile(0) || MediumSize <= validateFile(1), JposConst.JPOS_E_FAILURE, "Insufficient space on journal medium");
+                check(MediumSize <= validateFile(0) || MediumSize <= validateFile(1), JPOS_E_FAILURE, "Insufficient space on journal medium");
             } catch (IOException e) {
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Journal file access error: " + e.getMessage(), e);
+                throw new JposException(JPOS_E_FAILURE, "Journal file access error: " + e.getMessage(), e);
             }
             Count = 0;
             super.init();
@@ -109,8 +115,8 @@ public class ElectronicJournal extends ElectronicJournalProperties {
         synchronized void release() {
             if (Count != 0) {
                 try {
-                    byte[] frame = Arrays.copyOf(TransactionDate.getBytes(Dev.UTF8), FRAMESIZE);
-                    byte[] ticket = Contents.getBytes(Dev.UTF8);
+                    byte[] frame = Arrays.copyOf(TransactionDate.getBytes(StandardCharsets.UTF_8), FRAMESIZE);
+                    byte[] ticket = Contents.getBytes(StandardCharsets.UTF_8);
                     System.arraycopy(ticket, 0, frame, MARKSIZE, ticket.length);
                     switch (Count) {
                         case 2:
@@ -137,13 +143,13 @@ public class ElectronicJournal extends ElectronicJournalProperties {
             ElectronicJournalProperties props = (ElectronicJournalProperties)Dev.getClaimingInstance(Dev.ClaimedElectronicJournal, index);
             if (props != null && props.DeviceEnabled) {
                 int oldstate = Dev.JournalState[index];
-                if ((length += frame.length) * Dev.CURRENCYFACTOR >= props.MediumSize) {
+                if ((length += frame.length) * CURRENCYFACTOR >= props.MediumSize) {
                     props.MediumFreeSpace = 0;
-                    Dev.JournalState[index] = ElectronicJournalConst.EJ_SUE_MEDIUM_FULL;
+                    Dev.JournalState[index] = EJ_SUE_MEDIUM_FULL;
                 } else {
-                    props.MediumFreeSpace = props.MediumSize - length * Dev.CURRENCYFACTOR;
-                    if (props.MediumFreeSpace <= FRAMESIZE * Dev.CURRENCYFACTOR * Dev.JournalLowSize) {
-                        Dev.JournalState[index] = ElectronicJournalConst.EJ_SUE_MEDIUM_NEAR_FULL;
+                    props.MediumFreeSpace = props.MediumSize - length * CURRENCYFACTOR;
+                    if (props.MediumFreeSpace <= FRAMESIZE * CURRENCYFACTOR * Dev.JournalLowSize) {
+                        Dev.JournalState[index] = EJ_SUE_MEDIUM_NEAR_FULL;
                     }
                 }
                 if (oldstate != Dev.JournalState[index]) {
@@ -156,8 +162,9 @@ public class ElectronicJournal extends ElectronicJournalProperties {
             }
         }
 
+        @SuppressWarnings("resource")
         private long validateFile(int index) throws IOException {
-            final String[] namesuffix = new String[]{".customer.tickets", ".merchant.tickets"};
+            final String[] namesuffix = {".customer.tickets", ".merchant.tickets"};
             try {
                 DataFile[index] = new RandomAccessFile(Dev.JournalPath + namesuffix[index], "rwd");
                 byte[] framesize = Arrays.copyOf(String.valueOf(FRAMESIZE).getBytes(), HEADSIZE);
@@ -207,14 +214,11 @@ public class ElectronicJournal extends ElectronicJournalProperties {
                 if (length > HEADSIZE) {
                     long pos = 0;
                     switch (type) {
-                        default:
+                        default -> {
                             return "";
-                        case ElectronicJournalConst.EJ_MT_DOCUMENT:
-                        case ElectronicJournalConst.EJ_MT_TAIL:
-                            DataFile[index].seek(pos = length - FRAMESIZE);
-                            break;
-                        case ElectronicJournalConst.EJ_MT_HEAD:
-                            DataFile[index].seek(pos = HEADSIZE);
+                        }
+                        case EJ_MT_DOCUMENT, EJ_MT_TAIL -> DataFile[index].seek(pos = length - FRAMESIZE);
+                        case EJ_MT_HEAD -> DataFile[index].seek(pos = HEADSIZE);
                     }
                     DataFile[index].read(mark);
                     return storeLastMarker(index, pos, new String(mark));
@@ -230,7 +234,7 @@ public class ElectronicJournal extends ElectronicJournalProperties {
         private synchronized String retrieveMarker(int index, int count, String date, long[] pos) {
             String retval = "";
             try {
-                long dateval = Long.valueOf(date);
+                long dateval = Long.parseLong(date);
                 byte[] buffer = new byte[date.length()];
                 long length = validateFile(index);
                 if (length == HEADSIZE)
@@ -258,7 +262,7 @@ public class ElectronicJournal extends ElectronicJournalProperties {
                 buffer = new byte[MARKSIZE];
                 if ((pos[0] = HEADSIZE + (from + count - 1) * FRAMESIZE) < length) {
                     readvalue(index, pos[0], buffer);
-                    if (Long.valueOf(new String(buffer, 0, date.length())) == dateval) {
+                    if (Long.parseLong(new String(buffer, 0, date.length())) == dateval) {
                         retval = storeLastMarker(index, pos[0], new String(buffer));
                     }
                 }
@@ -301,7 +305,7 @@ public class ElectronicJournal extends ElectronicJournalProperties {
             if (DataFile[index].read(buffer) < buffer.length)
                 throw new IOException("Insufficient data");
             try {
-                return Long.valueOf(new String(buffer));
+                return Long.parseLong(new String(buffer));
             } catch (NumberFormatException e) {
                 throw new IOException("Bad data format");
             }
@@ -317,27 +321,27 @@ public class ElectronicJournal extends ElectronicJournalProperties {
          */
         private synchronized void getTickets(int index, String from, String to, String filename) throws JposException {
             if (new File(filename).exists())
-                throw new JposException(JposConst.JPOS_E_EXISTS, "File exists: " + filename);
+                throw new JposException(JPOS_E_EXISTS, "File exists: " + filename);
             RandomAccessFile target = null;
             try {
                 byte[] frame = new byte[FRAMESIZE];
-                long[] pos = new long[]{HEADSIZE};
+                long[] pos = {HEADSIZE};
                 if (!from.equals("")) {
                     if ((pos[0] = getLastMarkerPosition(index, from)) == 0 && retrieveMarker(index, 1, from, pos).equals(""))
-                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid from marker");
+                        throw new JposException(JPOS_E_ILLEGAL, "Invalid from marker");
                 }
-                long[] filereadend = new long[]{validateFile(index)};
+                long[] filereadend = {validateFile(index)};
                 if (!to.equals("")) {
                     filereadend[0] = getLastMarkerPosition(index, to);
                     if (filereadend[0] == 0 && retrieveMarker(index, 1, to, filereadend).equals(""))
-                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid to marker");
+                        throw new JposException(JPOS_E_ILLEGAL, "Invalid to marker");
                     filereadend[0] += FRAMESIZE;
                 }
                 if (pos[0] >= filereadend[0])
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "To marker before from marker");
+                    throw new JposException(JPOS_E_ILLEGAL, "To marker before from marker");
                 DataFile[index].seek(pos[0]);
                 for (long currentpos = pos[0]; currentpos < filereadend[0]; currentpos += frame.length) {
-                    Dev.check(DataFile[index].read(frame) < frame.length, JposConst.JPOS_E_FAILURE, "Journal corrupted");
+                    check(DataFile[index].read(frame) < frame.length, JPOS_E_FAILURE, "Journal corrupted");
                     for (int i = 0; i < frame.length - MARKSIZE; i++) {
                         if (frame[i + MARKSIZE] == 0) {
                             if (i > 0) {
@@ -345,11 +349,11 @@ public class ElectronicJournal extends ElectronicJournalProperties {
                                     if (target == null) {
                                         (target = new RandomAccessFile(filename, "rw")).write(frame, MARKSIZE, i);
                                     } else {
-                                        frame[MARKSIZE - 1] = Dev.FF;
+                                        frame[MARKSIZE - 1] = FF;
                                         target.write(frame, MARKSIZE - 1, i + 1);
                                     }
                                 } catch (IOException e) {
-                                    throw new JposException(JposConst.JPOS_E_FAILURE, "Data file error: " + e.getMessage(), e);
+                                    throw new JposException(JPOS_E_FAILURE, "Data file error: " + e.getMessage(), e);
                                 }
                             }
                             break;
@@ -357,9 +361,9 @@ public class ElectronicJournal extends ElectronicJournalProperties {
                     }
                 }
             } catch (IOException e) {
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Journal file error: " + e.getMessage(), e);
+                throw new JposException(JPOS_E_FAILURE, "Journal file error: " + e.getMessage(), e);
             } catch (NumberFormatException e) {
-                throw new JposException(JposConst.JPOS_E_NOEXIST, "Invalid end marker", e);
+                throw new JposException(JPOS_E_NOEXIST, "Invalid end marker", e);
             } finally {
                 try {
                     if (target != null)
@@ -372,7 +376,7 @@ public class ElectronicJournal extends ElectronicJournalProperties {
         }
     }
 
-    private Device Dev;
+    private final Device Dev;
 
     /**
      * Constructor.
@@ -405,30 +409,31 @@ public class ElectronicJournal extends ElectronicJournalProperties {
 
     @Override
     public void claim(int timeout) throws JposException {
-        Dev.check(Dev.Ticket == null || !(Dev.Ticket instanceof TicketViaEJ), JposConst.JPOS_E_NOHARDWARE, "No electronic journal present");
+        check(Dev.Ticket == null || !(Dev.Ticket instanceof TicketViaEJ), JPOS_E_NOHARDWARE, "No electronic journal present");
         super.claim(timeout);
     }
 
     @Override
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     public void deviceEnabled(boolean enable) throws JposException {
         super.deviceEnabled(enable);
         if (enable) {
-            TicketViaEJ ej = (TicketViaEJ) Dev.Ticket;
-            synchronized(ej) {
+            final TicketViaEJ ej = (TicketViaEJ) Dev.Ticket;
+            synchronized(Dev.Ticket) {
                 try {
-                    long length = ej.validateFile(Index) * Dev.CURRENCYFACTOR;
+                    long length = ej.validateFile(Index) * CURRENCYFACTOR;
                     MediumFreeSpace = length >= MediumSize ? 0 : MediumSize - length;
                     Dev.JournalState[Index] = 0;
                     if (MediumFreeSpace == 0) {
-                        Dev.JournalState[Index] = ElectronicJournalConst.EJ_SUE_MEDIUM_FULL;
-                    } else if (MediumFreeSpace <= Dev.JournalLowSize * Dev.JournalWidth * Dev.JRN_MAX_LINE_COUNT * Dev.CURRENCYFACTOR) {
-                        Dev.JournalState[Index] = ElectronicJournalConst.EJ_SUE_MEDIUM_NEAR_FULL;
+                        Dev.JournalState[Index] = EJ_SUE_MEDIUM_FULL;
+                    } else if (MediumFreeSpace <= Dev.JournalLowSize * Dev.JournalWidth * JRN_MAX_LINE_COUNT * CURRENCYFACTOR) {
+                        Dev.JournalState[Index] = EJ_SUE_MEDIUM_NEAR_FULL;
                     }
                     if (Dev.JournalState[Index] != 0) {
                         Dev.handleEvent(new ElectronicJournalStatusUpdateEvent(EventSource, Dev.JournalState[Index]));
                     }
                 } catch (IOException e) {
-                    throw new JposException(JposConst.JPOS_E_FAILURE, "Journal fault: " + e.getMessage(), e);
+                    throw new JposException(JPOS_E_FAILURE, "Journal fault: " + e.getMessage(), e);
                 } finally {
                     ej.closefile(Index);
                 }
@@ -438,27 +443,28 @@ public class ElectronicJournal extends ElectronicJournalProperties {
 
     @Override
     public void station(int station) throws JposException {
-        Dev.check(station != ElectronicJournalConst.EJ_S_RECEIPT, JposConst.JPOS_E_ILLEGAL, "Journal deactivation not allowed");
+        check(station != EJ_S_RECEIPT, JPOS_E_ILLEGAL, "Journal deactivation not allowed");
     }
 
     @Override
     public void handlePowerStateOnEnable() throws JposException {
-        PowerState = JposConst.JPOS_PS_ONLINE;
+        PowerState = JPOS_PS_ONLINE;
         super.handlePowerStateOnEnable();
     }
 
     @Override
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     public void eraseMedium(EraseMedium request) throws JposException {
         TicketViaEJ ej = (TicketViaEJ) Dev.Ticket;
-        synchronized(ej) {
+        synchronized(Dev.Ticket) {
             try {
                 ej.validateFile(Index);
-                ej.DataFile[Index].setLength(ej.HEADSIZE);
-                MediumFreeSpace = MediumSize - ej.HEADSIZE * Dev.CURRENCYFACTOR;
+                ej.DataFile[Index].setLength(HEADSIZE);
+                MediumFreeSpace = MediumSize - HEADSIZE * CURRENCYFACTOR;
                 Dev.JournalState[Index] = 0;
                 ej.eraseLastMarkers(Index);
             } catch (IOException e) {
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Journal access error: " + e.getMessage(), e);
+                throw new JposException(JPOS_E_FAILURE, "Journal access error: " + e.getMessage(), e);
             } finally {
                 ej.closefile(Index);
             }
@@ -476,7 +482,7 @@ public class ElectronicJournal extends ElectronicJournalProperties {
     public void retrieveCurrentMarker(int type, String[] marker) throws JposException {
         TicketViaEJ ej = (TicketViaEJ) Dev.Ticket;
         String mark = "";
-        Dev.check((mark = ej.retrieveMarker(Index, type)).equals(""), JposConst.JPOS_E_NOEXIST, "Marker not found");
+        check((mark = ej.retrieveMarker(Index, type)).equals(""), JPOS_E_NOEXIST, "Marker not found");
         marker[0] = mark;
     }
 
@@ -484,8 +490,8 @@ public class ElectronicJournal extends ElectronicJournalProperties {
     public void retrieveMarkerByDateTime(int type, String date, String count, String[] marker) throws JposException {
         TicketViaEJ ej = (TicketViaEJ) Dev.Ticket;
         String mark;
-        Dev.check(type != ElectronicJournalConst.EJ_MT_DOCUMENT, JposConst.JPOS_E_NOEXIST, "Unsupported marker type: " + type);
-        Dev.check((mark = ej.retrieveMarker(Index, Integer.parseInt(count), date, new long[1])).equals(""), JposConst.JPOS_E_NOEXIST, "Marker not found");
+        check(type != EJ_MT_DOCUMENT, JPOS_E_NOEXIST, "Unsupported marker type: " + type);
+        check((mark = ej.retrieveMarker(Index, Integer.parseInt(count), date, new long[1])).equals(""), JPOS_E_NOEXIST, "Marker not found");
         marker[0] = mark;
     }
 
@@ -493,8 +499,8 @@ public class ElectronicJournal extends ElectronicJournalProperties {
     public void retrieveMarkersDateTime(String marker, String[] date) throws JposException {
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
         format.setLenient(false);
-        Dev.check(format.parse(marker, new ParsePosition(0)) == null, JposConst.JPOS_E_ILLEGAL, "Bad marker format");
-        Dev.check((((TicketViaEJ)Dev.Ticket).retrieveMarker(Index, Integer.parseInt("1"), marker, new long[1])).equals(""), JposConst.JPOS_E_NOEXIST, "Marker not found");
+        check(format.parse(marker, new ParsePosition(0)) == null, JPOS_E_ILLEGAL, "Bad marker format");
+        check((((TicketViaEJ)Dev.Ticket).retrieveMarker(Index, Integer.parseInt("1"), marker, new long[1])).equals(""), JPOS_E_NOEXIST, "Marker not found");
         date[0] = marker;
     }
 }

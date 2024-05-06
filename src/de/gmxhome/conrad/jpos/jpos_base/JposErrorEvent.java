@@ -28,7 +28,10 @@ import de.gmxhome.conrad.jpos.jpos_base.scanner.ScannerService;
 import de.gmxhome.conrad.jpos.jpos_base.signaturecapture.SignatureCaptureService;
 import jpos.*;
 import jpos.events.*;
-import net.bplaced.conrad.log4jpos.Level;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposBaseDevice.*;
+import static jpos.JposConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * Error event.
@@ -40,7 +43,7 @@ public class JposErrorEvent extends ErrorEvent {
      * Contains the error message stored in a JposException passed to method createErrorEvent of a JposOutputRequest.
      * Contains an empty string as default otherwise.
      */
-    public String Message = "";
+    public final String Message;
 
     /**
      * Constructor. Parameters passed to base class unchanged.
@@ -50,7 +53,8 @@ public class JposErrorEvent extends ErrorEvent {
      * @param locus ErrorLocus, see UPOS specification, chapter Common Properties, Methods, and Events - Events - ErrorEvent.
      */
     public JposErrorEvent(JposBase source, int errorcode, int extended, int locus) {
-        super(source, errorcode, extended, locus, locus == JposConst.JPOS_EL_OUTPUT ? JposConst.JPOS_ER_RETRY : (locus == JposConst.JPOS_EL_INPUT ? JposConst.JPOS_ER_CLEAR : JposConst.JPOS_ER_CONTINUEINPUT));
+        super(source, errorcode, extended, locus, locus == JPOS_EL_OUTPUT ? JPOS_ER_RETRY : (locus == JPOS_EL_INPUT ? JPOS_ER_CLEAR : JPOS_ER_CONTINUEINPUT));
+        Message = "";
     }
 
     /**
@@ -62,7 +66,7 @@ public class JposErrorEvent extends ErrorEvent {
      * @param message Error message from exception.
      */
     public JposErrorEvent(JposBase source, int errorcode, int extended, int locus, String message) {
-        super(source, errorcode, extended, locus, locus == JposConst.JPOS_EL_OUTPUT ? JposConst.JPOS_ER_RETRY : (locus == JposConst.JPOS_EL_INPUT ? JposConst.JPOS_ER_CLEAR : JposConst.JPOS_ER_CONTINUEINPUT));
+        super(source, errorcode, extended, locus, locus == JPOS_EL_OUTPUT ? JPOS_ER_RETRY : (locus == JPOS_EL_INPUT ? JPOS_ER_CLEAR : JPOS_ER_CONTINUEINPUT));
         Message = message;
     }
 
@@ -95,7 +99,7 @@ public class JposErrorEvent extends ErrorEvent {
      * @return JposErrorEvent with locus input data.
      */
     public JposErrorEvent getInputDataErrorEvent() {
-        return new JposErrorEvent((JposBase) getSource(), getErrorCode(), getErrorCodeExtended(), JposConst.JPOS_EL_INPUT_DATA);
+        return new JposErrorEvent((JposBase) getSource(), getErrorCode(), getErrorCodeExtended(), JPOS_EL_INPUT_DATA);
     }
 
     /**
@@ -106,7 +110,7 @@ public class JposErrorEvent extends ErrorEvent {
      */
     public void clear() {
         try {
-            if (getErrorLocus() == JposConst.JPOS_EL_OUTPUT) {
+            if (getErrorLocus() == JPOS_EL_OUTPUT) {
                 ((JposBase) getSource()).DeviceInterface.clearOutput();
             } else {
                 ((JposBase) getSource()).DeviceInterface.clearInput();
@@ -116,9 +120,9 @@ public class JposErrorEvent extends ErrorEvent {
         }
     }
 
-    private long[] validErrorResponses = {JposConst.JPOS_ER_CLEAR, JposConst.JPOS_ER_RETRY, JposConst.JPOS_ER_CONTINUEINPUT};
+    private final long[] validErrorResponses = { JPOS_ER_CLEAR, JPOS_ER_RETRY, JPOS_ER_CONTINUEINPUT };
 
-    private Class[] invalidContinueClasses = {
+    private final Class<?>[] invalidContinueClasses = {
             BumpBarService.class, CheckScannerService.class, ImageScannerService.class, MICRService.class,
             MSRService.class, PINPadService.class, POSKeyboardService.class, RemoteOrderDisplayService.class,
             ScannerService.class, SignatureCaptureService.class
@@ -147,18 +151,18 @@ public class JposErrorEvent extends ErrorEvent {
     public void setErrorResponse(int resp) {
         JposBase srv = ((JposBase)getSource());
         boolean valid = true;
-        if (!JposDevice.member(resp, validErrorResponses)) {
-            srv.Device.log(Level.INFO, srv.Props.LogicalName + ": setErrorResponse: Value must be one of"
+        if (!member(resp, validErrorResponses)) {
+            srv.Device.log(INFO, srv.Props.LogicalName + ": setErrorResponse: Value must be one of"
                     + " ER_CLEAR, ER_RETRY or ER_CONTINUEINPUT. " + resp + " has been ignored");
             valid = false;
-        } else if (resp == JposConst.JPOS_ER_CONTINUEINPUT && getErrorLocus() != JposConst.JPOS_EL_INPUT_DATA) {
-            srv.Device.log(Level.INFO, srv.Props.LogicalName + ": setErrorResponse: CONTINUEINPUT in"
+        } else if (resp == JPOS_ER_CONTINUEINPUT && getErrorLocus() != JPOS_EL_INPUT_DATA) {
+            srv.Device.log(INFO, srv.Props.LogicalName + ": setErrorResponse: CONTINUEINPUT in"
                     + " ErrorEvent where error locus is not INPUT_DATA has been ignored.");
             valid = false;
-        } else if (resp == JposConst.JPOS_ER_RETRY && getErrorLocus() == JposConst.JPOS_EL_INPUT) {
-            for (Class service : invalidContinueClasses) {
+        } else if (resp == JPOS_ER_RETRY && getErrorLocus() == JPOS_EL_INPUT) {
+            for (Class<?> service : invalidContinueClasses) {
                 if (service.isInstance(srv)) {
-                    srv.Device.log(Level.INFO, srv.Props.LogicalName + ": setErrorResponse: Retry in"
+                    srv.Device.log(INFO, srv.Props.LogicalName + ": setErrorResponse: Retry in"
                             + " ErrorEvent with error locus INPUT in device class "
                             + service.getSimpleName().substring(0, service.getSimpleName().indexOf("Service"))
                             + " has been ignored.");
@@ -170,15 +174,9 @@ public class JposErrorEvent extends ErrorEvent {
         if (!valid) {
             // Invalid response: recommended handling is default handling:
             switch (getErrorLocus()) {
-                case JposConst.JPOS_EL_INPUT:
-                    resp = JposConst.JPOS_ER_CLEAR;
-                    break;
-                case JposConst.JPOS_EL_INPUT_DATA:
-                    resp = JposConst.JPOS_ER_CONTINUEINPUT;
-                    break;
-                case JposConst.JPOS_EL_OUTPUT:
-                    resp = JposConst.JPOS_ER_RETRY;
-                    break;
+                case JPOS_EL_INPUT -> resp = JPOS_ER_CLEAR;
+                case JPOS_EL_INPUT_DATA -> resp = JPOS_ER_CONTINUEINPUT;
+                case JPOS_EL_OUTPUT -> resp = JPOS_ER_RETRY;
             }
         }
         super.setErrorResponse(resp);

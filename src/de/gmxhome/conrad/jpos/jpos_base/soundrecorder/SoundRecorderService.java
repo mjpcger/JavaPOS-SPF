@@ -21,7 +21,11 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
-import java.util.Arrays;
+import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.SoundRecorderConst.*;
 
 /**
  * SoundRecorder service implementation. For more details about getter, setter and method implementations,
@@ -100,8 +104,8 @@ public class SoundRecorderService extends JposBase implements SoundRecorderServi
     public void setChannel(String channel) throws JposException {
         logPreSet("Channel");
         checkEnabled();
-        JposDevice.check(!Data.CapChannel && !Data.Channel.equals(channel), JposConst.JPOS_E_ILLEGAL, "Changing channel not supported");
-        JposDevice.check(!JposDevice.member(channel, Data.ChannelList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid channel: " + channel);
+        check(!Data.CapChannel && !Data.Channel.equals(channel), JPOS_E_ILLEGAL, "Changing channel not supported");
+        check(!member(channel, Data.ChannelList.split(",")), JPOS_E_ILLEGAL, "Invalid channel: " + channel);
         SoundRecorder.channel(channel);
         logSet("Channel");
     }
@@ -124,8 +128,8 @@ public class SoundRecorderService extends JposBase implements SoundRecorderServi
     public void setRecordingLevel(int recordingLevel) throws JposException {
         logPreSet("RecordingLevel");
         checkEnabled();
-        JposDevice.check(!Data.CapRecordingLevel && Data.RecordingLevel != recordingLevel, JposConst.JPOS_E_ILLEGAL, "Changing channel not supported");
-        JposDevice.check(recordingLevel < 0 || recordingLevel > 100, JposConst.JPOS_E_ILLEGAL, "Invalid recording level: " + recordingLevel);
+        check(!Data.CapRecordingLevel && Data.RecordingLevel != recordingLevel, JPOS_E_ILLEGAL, "Changing channel not supported");
+        check(recordingLevel < 0 || recordingLevel > 100, JPOS_E_ILLEGAL, "Invalid recording level: " + recordingLevel);
         SoundRecorder.recordingLevel(recordingLevel);
         logSet("RecordingLevel");
     }
@@ -148,8 +152,8 @@ public class SoundRecorderService extends JposBase implements SoundRecorderServi
     public void setSamplingRate(String samplingRate) throws JposException {
         logPreSet("SamplingRate");
         checkEnabled();
-        JposDevice.check(!Data.CapSamplingRate && !Data.SamplingRate.equals(samplingRate), JposConst.JPOS_E_ILLEGAL, "Changing sampling rate not supported");
-        JposDevice.check(!JposDevice.member(samplingRate, Data.SamplingRateList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid sampling rate: " + samplingRate);
+        check(!Data.CapSamplingRate && !Data.SamplingRate.equals(samplingRate), JPOS_E_ILLEGAL, "Changing sampling rate not supported");
+        check(!member(samplingRate, Data.SamplingRateList.split(",")), JPOS_E_ILLEGAL, "Invalid sampling rate: " + samplingRate);
         SoundRecorder.samplingRate(samplingRate);
         logSet("SamplingRate");
     }
@@ -181,8 +185,8 @@ public class SoundRecorderService extends JposBase implements SoundRecorderServi
     public void setSoundType(String soundType) throws JposException {
         logPreSet("SoundType");
         checkEnabled();
-        JposDevice.check(!Data.CapSoundType && !Data.SoundType.equals(soundType), JposConst.JPOS_E_ILLEGAL, "Changing sampling rate not supported");
-        JposDevice.check(!JposDevice.member(soundType, Data.SoundTypeList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid sound type: " + soundType);
+        check(!Data.CapSoundType && !Data.SoundType.equals(soundType), JPOS_E_ILLEGAL, "Changing sampling rate not supported");
+        check(!member(soundType, Data.SoundTypeList.split(",")), JPOS_E_ILLEGAL, "Invalid sound type: " + soundType);
         SoundRecorder.soundType(soundType);
         logSet("SoundType");
     }
@@ -205,21 +209,21 @@ public class SoundRecorderService extends JposBase implements SoundRecorderServi
     public void setStorage(int storage) throws JposException {
         logPreSet("Storage");
         checkEnabled();
-        long[] valid = {SoundRecorderConst.SREC_ST_HOST, SoundRecorderConst.SREC_ST_HARDTOTALS, SoundRecorderConst.SREC_ST_HOST_HARDTOTALS};
-        JposDevice.check(Data.CapStorage == SoundRecorderConst.SREC_CST_HOST_ONLY && storage != SoundRecorderConst.SREC_ST_HOST, JposConst.JPOS_E_ILLEGAL, "Invalid storage: " + storage);
-        JposDevice.check(Data.CapStorage == SoundRecorderConst.SREC_CST_HARDTOTALS_ONLY && storage != SoundRecorderConst.SREC_ST_HARDTOTALS, JposConst.JPOS_E_ILLEGAL, "Invalid storage: " + storage);
-        JposDevice.checkMember(storage, valid, JposConst.JPOS_E_ILLEGAL, "Invalid storage: " + storage);
+        long[] valid = {SREC_ST_HOST, SREC_ST_HARDTOTALS, SREC_ST_HOST_HARDTOTALS};
+        check(Data.CapStorage == SREC_CST_HOST_ONLY && storage != SREC_ST_HOST, JPOS_E_ILLEGAL, "Invalid storage: " + storage);
+        check(Data.CapStorage == SREC_CST_HARDTOTALS_ONLY && storage != SREC_ST_HARDTOTALS, JPOS_E_ILLEGAL, "Invalid storage: " + storage);
+        checkMember(storage, valid, JPOS_E_ILLEGAL, "Invalid storage: " + storage);
         SoundRecorder.storage(storage);
         logSet("Storage");
     }
 
     @Override
     public void startRecording(String fileName, boolean overWrite, int recordingTime) throws JposException {
-        logPreCall("StartRecording", fileName + ", " + overWrite + ", " + recordingTime);
+        logPreCall("StartRecording", removeOuterArraySpecifier(new Object[]{fileName, overWrite, recordingTime}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(Data.AsyncInputActive, JposConst.JPOS_E_BUSY, "Just recording other sound");
-        JposDevice.check(recordingTime <= 0 && recordingTime != JposConst.JPOS_FOREVER,
-                JposConst.JPOS_E_ILLEGAL, "Invalid recording time: " + recordingTime);
+        check(Data.AsyncInputActive, JPOS_E_BUSY, "Just recording other sound");
+        check(recordingTime <= 0 && recordingTime != JPOS_FOREVER,
+                JPOS_E_ILLEGAL, "Invalid recording time: " + recordingTime);
         StartRecording request = SoundRecorder.startRecording(fileName, overWrite, recordingTime);
         if (request != null)
             request.enqueue();
@@ -230,7 +234,7 @@ public class SoundRecorderService extends JposBase implements SoundRecorderServi
     public void stopRecording() throws JposException {
         logPreCall("StopRecording");
         checkEnabled();
-        JposDevice.check(!Data.AsyncInputActive, JposConst.JPOS_E_ILLEGAL, "Recording not active");
+        check(!Data.AsyncInputActive, JPOS_E_ILLEGAL, "Recording not active");
         SoundRecorder.stopRecording();
         logCall("StopRecording");
     }

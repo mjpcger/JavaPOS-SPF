@@ -17,7 +17,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.cat;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.*;
+
+import static jpos.CATConst.*;
 
 /**
  * Status update event implementation for CAT devices.
@@ -37,31 +38,25 @@ public class CATStatusUpdateEvent extends JposStatusUpdateEvent {
     public boolean setStatusProperties() {
         if (super.setStatusProperties())
             return true;
-        CATProperties props = (CATProperties)getPropertySet();
+        CATProperties props = (CATProperties) getPropertySet();
         int status = getStatus();
         switch (status) {
-            case CATConst.CAT_LOGSTATUS_OK:
-            case CATConst.CAT_LOGSTATUS_NEARFULL:
-            case CATConst.CAT_LOGSTATUS_FULL:
+            case CAT_LOGSTATUS_OK, CAT_LOGSTATUS_NEARFULL, CAT_LOGSTATUS_FULL -> {
                 props.LogStatus = status;
                 return true;
+            }
         }
         return false;
     }
 
     @Override
     public boolean checkStatusCorresponds() {
-        if (super.checkStatusCorresponds())
-            return true;
-        CATProperties props = (CATProperties)getPropertySet();
+        CATProperties props = (CATProperties) getPropertySet();
         int status = getStatus();
-        switch (status) {
-            case CATConst.CAT_LOGSTATUS_OK:
-            case CATConst.CAT_LOGSTATUS_NEARFULL:
-            case CATConst.CAT_LOGSTATUS_FULL:
-                return props.LogStatus == status;
-        }
-        return false;
+        return super.checkStatusCorresponds() || switch (status) {
+            case CAT_LOGSTATUS_OK, CAT_LOGSTATUS_NEARFULL, CAT_LOGSTATUS_FULL -> props.LogStatus == status;
+            default -> false;
+        };
     }
 
     @Override
@@ -82,14 +77,11 @@ public class CATStatusUpdateEvent extends JposStatusUpdateEvent {
         String ret = super.toLogString();
         if (ret.length() > 0)
             return ret;
-        switch (getStatus()) {
-            case CATConst.CAT_LOGSTATUS_OK:
-                return "CAT Dealing Log OK";
-            case CATConst.CAT_LOGSTATUS_NEARFULL:
-                return "CAT Dealing Log Nearly Full";
-            case CATConst.CAT_LOGSTATUS_FULL:
-                return "CAT Dealing Log Full";
-        }
-        return "Unknown CAT Status Change: " + getStatus();
+        return switch (getStatus()) {
+            case CAT_LOGSTATUS_OK -> "CAT Dealing Log OK";
+            case CAT_LOGSTATUS_NEARFULL -> "CAT Dealing Log Nearly Full";
+            case CAT_LOGSTATUS_FULL -> "CAT Dealing Log Full";
+            default -> "Unknown CAT Status Change: " + getStatus();
+        };
     }
 }

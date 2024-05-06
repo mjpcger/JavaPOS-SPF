@@ -19,21 +19,25 @@ package de.gmxhome.conrad.jpos.jpos_base.individualrecognition;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.JposException;
+import jpos.config.JposEntry;
 import jpos.services.IndividualRecognitionService116;
 
+import static jpos.JposConst.*;
 /**
  * IndividualRecognition service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
 public class IndividualRecognitionService extends JposBase implements IndividualRecognitionService116 {
+    private final IndividualRecognitionProperties Data;
     /**
      * Constructor. Stores given property set and device implementation object.
      *
      * @param props  Property set.
      * @param device Device implementation object.
      */
-    public IndividualRecognitionService(JposCommonProperties props, JposDevice device) {
+    public IndividualRecognitionService(IndividualRecognitionProperties props, JposDevice device) {
         super(props, device);
+        Data = props;
     }
 
     /**
@@ -44,26 +48,39 @@ public class IndividualRecognitionService extends JposBase implements Individual
 
     @Override
     public String getCapIndividualList() throws JposException {
-        return null;
+        checkOpened();
+        logGet("CapIndividualList");
+        return Data.CapIndividualList;
     }
 
     @Override
     public String getIndividualIDs() throws JposException {
-        return null;
+        checkOpened();
+        logGet("IndividualIDs");
+        return Data.IndividualIDs;
     }
 
     @Override
     public String getIndividualRecognitionFilter() throws JposException {
-        return null;
+        checkOpened();
+        logGet("IndividualRecognitionFilter");
+        return Data.IndividualRecognitionFilter;
     }
 
     @Override
-    public void setIndividualRecognitionFilter(String s) throws JposException {
-
+    public void setIndividualRecognitionFilter(String individualRecognitionFilter) throws JposException {
+        logPreSet("IndividualRecognitionFilter");
+        checkOpened();
+        check(individualRecognitionFilter == null || individualRecognitionFilter.length() == 0,
+                JPOS_E_ILLEGAL, "No filter specified");
+        IndividualRecognition.individualRecognitionFilter(individualRecognitionFilter);
+        logSet("IndividualRecognitionFilter");
     }
 
     @Override
     public String getIndividualRecognitionInformation() throws JposException {
-        return null;
+        checkOpened();
+        logGet("IndividualRecognitionInformation");
+        return Data.IndividualRecognitionInformation;
     }
 }

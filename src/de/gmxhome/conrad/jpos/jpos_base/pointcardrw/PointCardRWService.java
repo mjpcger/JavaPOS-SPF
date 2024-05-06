@@ -20,23 +20,27 @@ package de.gmxhome.conrad.jpos.jpos_base.pointcardrw;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
-import net.bplaced.conrad.log4jpos.Level;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.PointCardRWConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * PointCardRW service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class PointCardRWService extends JposBase implements PointCardRWService115 {
+public class PointCardRWService extends JposBase implements PointCardRWService116 {
     /**
      * Instance of a class implementing the PointCardRWInterface for point card reader / writer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public PointCardRWInterface PointCardRW;
 
-    private PointCardRWProperties Data;
+    private final PointCardRWProperties Data;
     /**
      * Constructor. Stores given property set and device implementation object.
      *
@@ -74,7 +78,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     public int getCapCardEntranceSensor() throws JposException {
         checkOpened();
         logGet("CapCardEntranceSensor");
-        return Data.CapCardEntranceSensor ? JposConst.JPOS_TRUE : JposConst.JPOS_FALSE;
+        return Data.CapCardEntranceSensor ? JPOS_TRUE : JPOS_FALSE;
     }
 
     @Override
@@ -417,14 +421,14 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     public void setCharacterSet(int code) throws JposException {
         logPreSet("CharacterSet");
         checkEnabled();
-        JposDevice.check(!Data.CapPrint, JposConst.JPOS_E_ILLEGAL, "Printing not supported");
+        check(!Data.CapPrint, JPOS_E_ILLEGAL, "Printing not supported");
         long[] allowed;
         try {
-            allowed = JposDevice.stringArrayToLongArray(Data.CharacterSetList.split(","));
+            allowed = stringArrayToLongArray(Data.CharacterSetList.split(","));
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "CharacterSetList invalid");
+            throw new JposException(JPOS_E_ILLEGAL, "CharacterSetList invalid");
         }
-        JposDevice.checkMember(code, allowed, JposConst.JPOS_E_ILLEGAL, "Invalid character set: " + code);
+        checkMember(code, allowed, JPOS_E_ILLEGAL, "Invalid character set: " + code);
         PointCardRW.characterSet(code);
         logSet("CharacterSet");
     }
@@ -433,12 +437,12 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     public void setLineChars(int chars) throws JposException {
         logPreSet("LineChars");
         checkEnabled();
-        JposDevice.check(!Data.CapPrint, JposConst.JPOS_E_ILLEGAL, "Printing not supported");
+        check(!Data.CapPrint, JPOS_E_ILLEGAL, "Printing not supported");
         long[] allowed;
         try {
-            allowed = JposDevice.stringArrayToLongArray(Data.LineCharsList.split(","));
+            allowed = stringArrayToLongArray(Data.LineCharsList.split(","));
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "LineCharsList invalid");
+            throw new JposException(JPOS_E_ILLEGAL, "LineCharsList invalid");
         }
         for(long val : allowed) {
             if (chars <= val && chars > 0) {
@@ -447,15 +451,15 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
                 return;
             }
         }
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid LineChars: " + chars);
+        throw new JposException(JPOS_E_ILLEGAL, "Invalid LineChars: " + chars);
     }
 
     @Override
     public void setLineHeight(int height) throws JposException {
         logPreSet("LineHeight");
         checkEnabled();
-        JposDevice.check(!Data.CapPrint, JposConst.JPOS_E_ILLEGAL, "Printing not supported");
-        JposDevice.check(height <= 0, JposConst.JPOS_E_ILLEGAL, "Height invalid: " + height);
+        check(!Data.CapPrint, JPOS_E_ILLEGAL, "Printing not supported");
+        check(height <= 0, JPOS_E_ILLEGAL, "Height invalid: " + height);
         PointCardRW.lineHeight(height);
         logSet("LineHeight");
     }
@@ -464,8 +468,8 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     public void setLineSpacing(int spacing) throws JposException {
         logPreSet("LineSpacing");
         checkEnabled();
-        JposDevice.check(!Data.CapPrint, JposConst.JPOS_E_ILLEGAL, "Printing not supported");
-        JposDevice.check(spacing < 0, JposConst.JPOS_E_ILLEGAL, "Spacing invalid: " + spacing);
+        check(!Data.CapPrint, JPOS_E_ILLEGAL, "Printing not supported");
+        check(spacing < 0, JPOS_E_ILLEGAL, "Spacing invalid: " + spacing);
         PointCardRW.lineSpacing(spacing);
         logSet("LineSpacing");
     }
@@ -474,23 +478,18 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     public void setMapCharacterSet(boolean flag) throws JposException {
         logPreSet("MapCharacterSet");
         checkEnabled();
-        JposDevice.check(!Data.CapPrint, JposConst.JPOS_E_ILLEGAL, "Printing not supported");
-        JposDevice.check(!Data.CapMapCharacterSet && flag == true, JposConst.JPOS_E_ILLEGAL, "Mapping character set not supported");
+        check(!Data.CapPrint, JPOS_E_ILLEGAL, "Printing not supported");
+        check(!Data.CapMapCharacterSet && flag, JPOS_E_ILLEGAL, "Mapping character set not supported");
         PointCardRW.mapCharacterSet(flag);
         logSet("MapCharacterSet");
     }
 
     @Override
     public void setMapMode(int mode) throws JposException {
-        long[] valid = {
-                PointCardRWConst.PCRW_MM_DOTS,
-                PointCardRWConst.PCRW_MM_TWIPS,
-                PointCardRWConst.PCRW_MM_ENGLISH,
-                PointCardRWConst.PCRW_MM_METRIC
-        };
+        long[] valid = { PCRW_MM_DOTS, PCRW_MM_TWIPS, PCRW_MM_ENGLISH, PCRW_MM_METRIC };
         logPreSet("MapMode");
         checkEnabled();
-        JposDevice.checkMember(mode, valid, JposConst.JPOS_E_ILLEGAL, "Invalid MapMode value: " + mode);
+        checkMember(mode, valid, JPOS_E_ILLEGAL, "Invalid MapMode value: " + mode);
         PointCardRW.mapMode(mode);
         logSet("MapMode");
     }
@@ -500,7 +499,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
         logPreSet("TracksToRead");
         checkEnabled();
         int invalid = tracks & ~Data.CapTracksToRead;
-        JposDevice.check(invalid != 0, JposConst.JPOS_E_ILLEGAL, "Invalid tracks: " + Integer.toHexString(invalid));
+        check(invalid != 0, JPOS_E_ILLEGAL, "Invalid tracks: " + Integer.toHexString(invalid));
         PointCardRW.tracksToRead(tracks);
         logSet("TracksToRead");
     }
@@ -510,7 +509,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
         logPreSet("TracksToWrite");
         checkEnabled();
         int invalid = tracks & ~Data.CapTracksToWrite;
-        JposDevice.check(invalid != 0, JposConst.JPOS_E_ILLEGAL, "Invalid tracks: " + Integer.toHexString(invalid));
+        check(invalid != 0, JPOS_E_ILLEGAL, "Invalid tracks: " + Integer.toHexString(invalid));
         PointCardRW.tracksToWrite(tracks);
         logSet("TracksToWrite");
     }
@@ -519,7 +518,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     public void setWrite1Data(String trackdata) throws JposException {
         logPreSet("Write1Data");
         checkOpened();
-        JposDevice.check((Data.TracksToWrite & PointCardRWConst.PCRW_TRACK1) == 0, JposConst.JPOS_E_ILLEGAL, "Writing track 1 disabled");
+        check((Data.TracksToWrite & PCRW_TRACK1) == 0, JPOS_E_ILLEGAL, "Writing track 1 disabled");
         PointCardRW.write1Data(trackdata);
         logSet(Data.WriteData, 0, "Write%dData", 1);
     }
@@ -528,7 +527,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     public void setWrite2Data(String trackdata) throws JposException {
         logPreSet("Write2Data");
         checkOpened();
-        JposDevice.check((Data.TracksToWrite & PointCardRWConst.PCRW_TRACK2) == 0, JposConst.JPOS_E_ILLEGAL, "Writing track 2 disabled");
+        check((Data.TracksToWrite & PCRW_TRACK2) == 0, JPOS_E_ILLEGAL, "Writing track 2 disabled");
         PointCardRW.write2Data(trackdata);
         logSet(Data.WriteData, 1, "Write%dData", 2);
     }
@@ -537,7 +536,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     public void setWrite3Data(String trackdata) throws JposException {
         logPreSet("Write3Data");
         checkOpened();
-        JposDevice.check((Data.TracksToWrite & PointCardRWConst.PCRW_TRACK3) == 0, JposConst.JPOS_E_ILLEGAL, "Writing track 3 disabled");
+        check((Data.TracksToWrite & PCRW_TRACK3) == 0, JPOS_E_ILLEGAL, "Writing track 3 disabled");
         PointCardRW.write3Data(trackdata);
         logSet(Data.WriteData, 2, "Write%dData", 3);
     }
@@ -546,7 +545,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     public void setWrite4Data(String trackdata) throws JposException {
         logPreSet("Write4Data");
         checkOpened();
-        JposDevice.check((Data.TracksToWrite & PointCardRWConst.PCRW_TRACK4) == 0, JposConst.JPOS_E_ILLEGAL, "Writing track 4 disabled");
+        check((Data.TracksToWrite & PCRW_TRACK4) == 0, JPOS_E_ILLEGAL, "Writing track 4 disabled");
         PointCardRW.write4Data(trackdata);
         logSet(Data.WriteData, 3, "Write%dData", 4);
     }
@@ -555,7 +554,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     public void setWrite5Data(String trackdata) throws JposException {
         logPreSet("Write5Data");
         checkOpened();
-        JposDevice.check((Data.TracksToWrite & PointCardRWConst.PCRW_TRACK5) == 0, JposConst.JPOS_E_ILLEGAL, "Writing track 5 disabled");
+        check((Data.TracksToWrite & PCRW_TRACK5) == 0, JPOS_E_ILLEGAL, "Writing track 5 disabled");
         PointCardRW.write5Data(trackdata);
         logSet(Data.WriteData, 4, "Write%dData", 5);
     }
@@ -564,27 +563,27 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     public void setWrite6Data(String trackdata) throws JposException {
         logPreSet("Write6Data");
         checkOpened();
-        JposDevice.check((Data.TracksToWrite & PointCardRWConst.PCRW_TRACK6) == 0, JposConst.JPOS_E_ILLEGAL, "Writing track 6 disabled");
+        check((Data.TracksToWrite & PCRW_TRACK6) == 0, JPOS_E_ILLEGAL, "Writing track 6 disabled");
         PointCardRW.write6Data(trackdata);
         logSet(Data.WriteData, 5, "Write%dData", 6);
     }
 
     @Override
     public void beginInsertion(int timeout) throws JposException {
-        logPreCall("BeginInsertion", "" + timeout);
+        logPreCall("BeginInsertion", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Asynchronous output in progress");
-        JposDevice.check(timeout < 1 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(Props.State == JPOS_S_BUSY, JPOS_E_BUSY, "Asynchronous output in progress");
+        check(timeout < 1 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         PointCardRW.beginInsertion(timeout);
         logCall("BeginInsertion");
     }
 
     @Override
     public void beginRemoval(int timeout) throws JposException {
-        logPreCall("BeginRemoval", "" + timeout);
+        logPreCall("BeginRemoval", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Asynchronous output in progress");
-        JposDevice.check(timeout < 1 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(Props.State == JPOS_S_BUSY, JPOS_E_BUSY, "Asynchronous output in progress");
+        check(timeout < 1 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         PointCardRW.beginRemoval(timeout);
         logCall("BeginRemoval");
     }
@@ -593,7 +592,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     public void cleanCard() throws JposException {
         logPreCall("CleanCard");
         checkEnabled();
-        JposDevice.check(!Data.CapCleanCard, JposConst.JPOS_E_ILLEGAL, "Card cleaning not supported");
+        check(!Data.CapCleanCard, JPOS_E_ILLEGAL, "Card cleaning not supported");
         PointCardRW.cleanCard();
         logCall("CleanCard");
     }
@@ -602,14 +601,14 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     public void clearPrintWrite(int kind, int hposition, int vposition, int width, int height) throws JposException {
         logPreCall("ClearPrintWrite", removeOuterArraySpecifier(new Object[]{kind, hposition, vposition, width, height}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Asynchronous output in progress");
-        JposDevice.check(kind < 1 || kind > 3, JposConst.JPOS_E_ILLEGAL, "Invalid kind: " + kind);
+        check(Props.State == JPOS_S_BUSY, JPOS_E_BUSY, "Asynchronous output in progress");
+        check(kind < 1 || kind > 3, JPOS_E_ILLEGAL, "Invalid kind: " + kind);
         if ((kind & 1) != 0) {
-            JposDevice.check(!Data.CapClearPrint, JposConst.JPOS_E_ILLEGAL, "Clearing print area not supported");
-            JposDevice.check(hposition < 0, JposConst.JPOS_E_ILLEGAL, "Invalid horizontal position: " + hposition);
-            JposDevice.check(vposition < 0, JposConst.JPOS_E_ILLEGAL, "Invalid vertical position: " + vposition);
-            JposDevice.check(width < -1, JposConst.JPOS_E_ILLEGAL, "Invalid width: " + width);
-            JposDevice.check(height < -1, JposConst.JPOS_E_ILLEGAL, "Invalid hheight: " + height);
+            check(!Data.CapClearPrint, JPOS_E_ILLEGAL, "Clearing print area not supported");
+            check(hposition < 0, JPOS_E_ILLEGAL, "Invalid horizontal position: " + hposition);
+            check(vposition < 0, JPOS_E_ILLEGAL, "Invalid vertical position: " + vposition);
+            check(width < -1, JPOS_E_ILLEGAL, "Invalid width: " + width);
+            check(height < -1, JPOS_E_ILLEGAL, "Invalid hheight: " + height);
         }
         PointCardRW.clearPrintWrite(kind, hposition, vposition, width, height);
         logCall("ClearPrintWrite");
@@ -633,26 +632,26 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
 
     @Override
     public void rotatePrint(int rotation) throws JposException {
-        long[] allowed = { PointCardRWConst.PCRW_RP_NORMAL, PointCardRWConst.PCRW_RP_RIGHT90, PointCardRWConst.PCRW_RP_LEFT90, PointCardRWConst.PCRW_RP_ROTATE180 };
+        logPreCall("RotatePrint", removeOuterArraySpecifier(new Object[]{rotation}, Device.MaxArrayStringElements));
+        long[] allowed = { PCRW_RP_NORMAL, PCRW_RP_RIGHT90, PCRW_RP_LEFT90, PCRW_RP_ROTATE180 };
         boolean[] correspondingCapability = { true, Data.CapRight90, Data.CapLeft90, Data.CapRotate180 };
-        logPreCall("RotatePrint", "" + rotation);
         checkEnabled();
-        JposDevice.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Asynchronous output in progress");
-        JposDevice.check(!Data.CapPrint, JposConst.JPOS_E_ILLEGAL, "Printing not supported");;
-        JposDevice.checkMember(rotation, allowed, JposConst.JPOS_E_ILLEGAL, "Invalid rotation: " + rotation);
+        check(Props.State == JPOS_S_BUSY, JPOS_E_BUSY, "Asynchronous output in progress");
+        check(!Data.CapPrint, JPOS_E_ILLEGAL, "Printing not supported");;
+        checkMember(rotation, allowed, JPOS_E_ILLEGAL, "Invalid rotation: " + rotation);
         for (int i = 1; i < allowed.length; ++i)
-            JposDevice.check(rotation == allowed[i] && !correspondingCapability[i], JposConst.JPOS_E_ILLEGAL, "Invalid rotation: " + rotation);
+            check(rotation == allowed[i] && !correspondingCapability[i], JPOS_E_ILLEGAL, "Invalid rotation: " + rotation);
         PointCardRW.rotatePrint(rotation);
         logCall("RotatePrint");
     }
 
     @Override
     public void validateData(String data) throws JposException {
+        logPreCall("ValidateData", removeOuterArraySpecifier(new Object[]{data}, Device.MaxArrayStringElements));
         if (data == null)
             data = "";
-        logPreCall("ValidateData", data);
         checkEnabled();
-        JposDevice.check(!Data.CapPrint, JposConst.JPOS_E_FAILURE, "Printing not supported");
+        check(!Data.CapPrint, JPOS_E_FAILURE, "Printing not supported");
         try {
             PointCardRW.validateData(data);
         } catch (JposException e) {
@@ -668,24 +667,24 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     public void printWrite(int kind, int hposition, int vposition, String data) throws JposException {
         logPreCall("PrintWrite", removeOuterArraySpecifier(new Object[]{kind, hposition, vposition, data}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(kind < 1 || kind > 3, JposConst.JPOS_E_ILLEGAL, "Invalid kind: " + kind);
+        check(kind < 1 || kind > 3, JPOS_E_ILLEGAL, "Invalid kind: " + kind);
         if ((kind & 1) != 0) {
-            JposDevice.check(!Data.CapPrint, JposConst.JPOS_E_ILLEGAL, "Printing on card not supported");
-            JposDevice.check(hposition < 0, JposConst.JPOS_E_ILLEGAL, "Invalid horizontal position: " + hposition);
-            JposDevice.check(vposition < 0, JposConst.JPOS_E_ILLEGAL, "Invalid vertical position: " + vposition);
+            check(!Data.CapPrint, JPOS_E_ILLEGAL, "Printing on card not supported");
+            check(hposition < 0, JPOS_E_ILLEGAL, "Invalid horizontal position: " + hposition);
+            check(vposition < 0, JPOS_E_ILLEGAL, "Invalid vertical position: " + vposition);
         }
         if ((kind & 2) != 0) {
-            JposDevice.check((Data.TracksToWrite & ~Data.CapTracksToWrite) != 0, JposConst.JPOS_E_ILLEGAL, "Cannot write invalid tracks");
+            check((Data.TracksToWrite & ~Data.CapTracksToWrite) != 0, JPOS_E_ILLEGAL, "Cannot write invalid tracks");
             Object[] tocheck = {
-                    PointCardRWConst.PCRW_TRACK1, Data.WriteData[0], 1,
-                    PointCardRWConst.PCRW_TRACK2, Data.WriteData[1], 2,
-                    PointCardRWConst.PCRW_TRACK3, Data.WriteData[2], 3,
-                    PointCardRWConst.PCRW_TRACK4, Data.WriteData[3], 4,
-                    PointCardRWConst.PCRW_TRACK5, Data.WriteData[4], 5,
-                    PointCardRWConst.PCRW_TRACK6, Data.WriteData[5], 6
+                    PCRW_TRACK1, Data.WriteData[0], 1,
+                    PCRW_TRACK2, Data.WriteData[1], 2,
+                    PCRW_TRACK3, Data.WriteData[2], 3,
+                    PCRW_TRACK4, Data.WriteData[3], 4,
+                    PCRW_TRACK5, Data.WriteData[4], 5,
+                    PCRW_TRACK6, Data.WriteData[5], 6
             };
             for (int i = 0; i < tocheck.length; i += 3) {
-                JposDevice.check(((int)tocheck[i] & Data.TracksToWrite) != 0 && tocheck[i + 1].equals(""), JposConst.JPOS_E_ILLEGAL, "No data for track " + tocheck[i + 2].toString());
+                check(((int)tocheck[i] & Data.TracksToWrite) != 0 && tocheck[i + 1].equals(""), JPOS_E_ILLEGAL, "No data for track " + tocheck[i + 2].toString());
             }
         }
         if (callNowOrLater(PointCardRW.printWrite(kind, hposition, vposition, data)))
@@ -706,14 +705,6 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
          *                       is possible, with ErrorCode E_FAILURE.
          */
         abstract void validate(PointCardRWService srv) throws JposException;
-        /**
-         * Used to perform additional validation of the print data, if print output occurs. To do this,
-         * simply the corresponding method of the PointCardRWInterface used by the given PointCardRWService will be called.
-         * @param srv     PointCardRWService to be used for additional validation.
-         * @throws JposException If not precisely supported with ErrorCode E_ILLEGAL, if not supported and no workaround
-         *                       is possible, with ErrorCode E_FAILURE.
-         */
-        abstract void validateData(PointCardRWService srv) throws JposException;
     }
 
     /**
@@ -727,7 +718,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
         public String getPrintData() {
             return PrintData;
         }
-        private String PrintData;
+        private final String PrintData;
 
         /**
          * Returns whether PrintData needs mapping.
@@ -739,7 +730,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
         public boolean getServiceIsMapping() {
             return ServiceIsMapping;
         }
-        private boolean ServiceIsMapping;
+        private final boolean ServiceIsMapping;
 
         /**
          * Returns character set to be used for output.
@@ -748,7 +739,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
         public int getCharacterSet() {
             return CharacterSet;
         }
-        private int CharacterSet;
+        private final int CharacterSet;
 
         /**
          * Constructor.
@@ -775,7 +766,6 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
          * @throws JposException If not precisely supported with ErrorCode E_ILLEGAL, if not supported and no workaround
          *                       is possible, with ErrorCode E_FAILURE.
          */
-        @Override
         void validateData(PointCardRWService srv) throws JposException {
             srv.PointCardRW.validateData(this);
         }
@@ -792,7 +782,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
         public int getEsc() {
             return Esc;
         }
-        private int Esc;
+        private final int Esc;
 
         /**
          * Returns value that contains the lower-case characters between value and upper-case character that marks the end
@@ -804,7 +794,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
         public int getSubtype() {
             return Subtype;
         }
-        private int Subtype;
+        private final int Subtype;
 
         /**
          * Returns value in ESC sequence, in any. 0 if no value is present.
@@ -813,7 +803,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
         public int getValue() {
             return Value;
         }
-        private int Value;
+        private final int Value;
 
         /**
          * Specifies whether a positive integer value is part of the escape sequence.
@@ -822,7 +812,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
         public boolean getValuePresent() {
             return ValuePresent;
         }
-        private boolean ValuePresent;
+        private final boolean ValuePresent;
 
         /**
          * Constructor.
@@ -851,7 +841,6 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
          * @throws JposException If not precisely supported with ErrorCode E_ILLEGAL, if not supported and no workaround
          *                       is possible, with ErrorCode E_FAILURE.
          */
-        @Override
         void validateData(PointCardRWService srv) throws JposException {
             srv.PointCardRW.validateData(this);
         }
@@ -904,7 +893,6 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
          * @throws JposException If not precisely supported with ErrorCode E_ILLEGAL, if not supported and no workaround
          *                       is possible, with ErrorCode E_FAILURE.
          */
-        @Override
         void validateData(PointCardRWService srv) throws JposException {
             srv.PointCardRW.validateData(this);
         }
@@ -948,7 +936,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
         @Override
         void validate(PointCardRWService srv) throws JposException {
             int fontcount = srv.Data.FontTypeFaceList.split(",").length;
-            JposDevice.check (TypefaceIndex > fontcount, JposConst.JPOS_E_FAILURE, "Invalid font type face: " + TypefaceIndex);
+            check (TypefaceIndex > fontcount, JPOS_E_FAILURE, "Invalid font type face: " + TypefaceIndex);
             validateData(srv);
         }
 
@@ -960,7 +948,6 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
          * @throws JposException If not precisely supported with ErrorCode E_ILLEGAL, if not supported and no workaround
          *                       is possible, with ErrorCode E_FAILURE.
          */
-        @Override
         void validateData(PointCardRWService srv) throws JposException {
             srv.PointCardRW.validateData(this);
         }
@@ -1020,7 +1007,6 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
             validateData(srv);
         }
 
-        @Override
         void validateData(PointCardRWService srv) throws JposException {
             srv.PointCardRW.validateData(this);
         }
@@ -1053,7 +1039,6 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
             validateData(srv);
         }
 
-        @Override
         void validateData(PointCardRWService srv) throws JposException {
             srv.PointCardRW.validateData(this);
         }
@@ -1117,8 +1102,8 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
 
         @Override
         void validate(PointCardRWService srv) throws JposException {
-            JposDevice.check(Italic && !srv.Data.CapItalic, JposConst.JPOS_E_FAILURE, "Italic printing not supported");
-            JposDevice.check(Bold  && !srv.Data.CapBold, JposConst.JPOS_E_FAILURE, "Bold printing not supported");
+            check(Italic && !srv.Data.CapItalic, JPOS_E_FAILURE, "Italic printing not supported");
+            check(Bold  && !srv.Data.CapBold, JPOS_E_FAILURE, "Bold printing not supported");
             validateData(srv);
         }
 
@@ -1130,7 +1115,6 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
          * @throws JposException If not precisely supported with ErrorCode E_ILLEGAL, if not supported and no workaround
          *                       is possible, with ErrorCode E_FAILURE.
          */
-        @Override
         void validateData(PointCardRWService srv) throws JposException {
             srv.PointCardRW.validateData(this);
         }
@@ -1184,7 +1168,6 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
          * @throws JposException If not precisely supported with ErrorCode E_ILLEGAL, if not supported and no workaround
          *                       is possible, with ErrorCode E_FAILURE.
          */
-        @Override
         void validateData(PointCardRWService srv) throws JposException {
             srv.PointCardRW.validateData(this);
         }
@@ -1237,21 +1220,23 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
         public static PrintDataPart getEscScale(PrintDataPart obj, int type, int subtype, int value, boolean valueispresent) {
             if (type == 'C' && valueispresent) {
                 EscScale esc = new EscScale();
-                switch(subtype) {
-                    case 0:
+                switch (subtype) {
+                    case 0 -> {
                         return getEscScaleForSubtypeZero(obj, value, esc);
-                    case 'h':
+                    }
+                    case 'h' -> {
                         esc.ScaleHorizontal = true;
                         esc.ScaleVertical = false;
                         esc.ScaleValue = value;
-                        break;
-                    case 'v':
+                    }
+                    case 'v' -> {
                         esc.ScaleHorizontal = false;
                         esc.ScaleVertical = true;
                         esc.ScaleValue = value;
-                        break;
-                    default:
+                    }
+                    default -> {
                         return obj;
+                    }
                 }
                 return esc;
             }
@@ -1261,32 +1246,31 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
         private static PrintDataPart getEscScaleForSubtypeZero(PrintDataPart obj, int value, EscScale esc) {
             esc.ScaleValue = 2;
             switch (value) {
-                case 1:
+                case 1 -> {
                     esc.ScaleValue = 1;
                     esc.ScaleHorizontal = esc.ScaleVertical = false;
-                    break;
-                case 2:
+                }
+                case 2 -> {
                     esc.ScaleHorizontal = true;
                     esc.ScaleVertical = false;
-                    break;
-                case 3:
+                }
+                case 3 -> {
                     esc.ScaleHorizontal = false;
                     esc.ScaleVertical = true;
-                    break;
-                case 4:
-                    esc.ScaleHorizontal = esc.ScaleVertical = true;
-                    break;
-                default:
+                }
+                case 4 -> esc.ScaleHorizontal = esc.ScaleVertical = true;
+                default -> {
                     return obj;
+                }
             }
             return esc;
         }
 
         @Override
         void validate(PointCardRWService srv) throws JposException {
-            JposDevice.check(ScaleValue >= 2 && ScaleVertical && ScaleHorizontal && !srv.Data.CapDwideDhigh, JposConst.JPOS_E_FAILURE, "Double size printing not supported");
-            JposDevice.check(ScaleValue >= 2 && ScaleVertical && !srv.Data.CapDhigh, JposConst.JPOS_E_FAILURE, "Double high printing not supported");
-            JposDevice.check(ScaleValue >= 2 && ScaleHorizontal && !srv.Data.CapDwide, JposConst.JPOS_E_FAILURE, "Double wide printing not supported");
+            check(ScaleValue >= 2 && ScaleVertical && ScaleHorizontal && !srv.Data.CapDwideDhigh, JPOS_E_FAILURE, "Double size printing not supported");
+            check(ScaleValue >= 2 && ScaleVertical && !srv.Data.CapDhigh, JPOS_E_FAILURE, "Double high printing not supported");
+            check(ScaleValue >= 2 && ScaleHorizontal && !srv.Data.CapDwide, JPOS_E_FAILURE, "Double wide printing not supported");
             validateData(srv);
         }
 
@@ -1298,7 +1282,6 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
          * @throws JposException If not precisely supported with ErrorCode E_ILLEGAL, if not supported and no workaround
          *                       is possible, with ErrorCode E_FAILURE.
          */
-        @Override
         void validateData(PointCardRWService srv) throws JposException {
             srv.PointCardRW.validateData(this);
         }
@@ -1330,7 +1313,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
      * @return List of objects that describe all parts of data.
      */
     public List<PrintDataPart> outputDataParts(String data) {
-        List<PrintDataPart> out = new ArrayList<PrintDataPart>();
+        List<PrintDataPart> out = new ArrayList<>();
         int index;
         try {
             while ((index = data.indexOf("\33|")) >= 0) {
@@ -1354,7 +1337,6 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
             }
             if (data.length() > 0)
                 outputPrintableParts(data, out);
-            PrintDataPart o = out.get(out.size() - 1);
         } catch (IndexOutOfBoundsException e) {
             out.add(new EscUnknown(0, 0, 0, false));
         }
@@ -1368,7 +1350,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
 
     private String getEscData(String data, int index, int value, int temp) {
         String escdata;
-        if ("E".indexOf(temp) >= 0) {
+        if ("E".indexOf(temp) == 0) {
             escdata = data.substring(index + 1, value + index + 1);
         }
         else {
@@ -1378,14 +1360,14 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
     }
 
     private PrintDataPart getEscObj(int temp, int subtype, int value, String escdata, boolean valueispresent) {
-        PrintDataPart ret = null;
-        boolean notnull = (EscNormalize.getEscNormalize(ret, temp, subtype, valueispresent)) != null ||
-                (ret = EscEmbedded.getEscEmbedded(ret, temp, subtype, escdata)) != null ||
-                (ret = EscFontTypeface.getEscFontTypeface(ret, temp, subtype, value, valueispresent)) != null ||
-                (ret = EscAlignment.getEscAlignment(ret, temp, subtype, valueispresent)) != null ||
-                (ret = EscScale.getEscScale(ret, temp, subtype, value, valueispresent)) != null ||
-                (ret = EscSimple.getEscSimple(ret, temp, subtype, valueispresent)) != null ||
-                (ret = EscUnderline.getEscUnderline(ret, temp, subtype, value, valueispresent)) != null;
+        PrintDataPart ret;
+        boolean notnull = ((ret = EscNormalize.getEscNormalize(null, temp, subtype, valueispresent)) != null ||
+                (ret = EscEmbedded.getEscEmbedded(null, temp, subtype, escdata)) != null ||
+                (ret = EscFontTypeface.getEscFontTypeface(null, temp, subtype, value, valueispresent)) != null ||
+                (ret = EscAlignment.getEscAlignment(null, temp, subtype, valueispresent)) != null ||
+                (ret = EscScale.getEscScale(null, temp, subtype, value, valueispresent)) != null ||
+                (ret = EscSimple.getEscSimple(null, temp, subtype, valueispresent)) != null ||
+                (ret = EscUnderline.getEscUnderline(null, temp, subtype, value, valueispresent)) != null);
         return notnull ? ret : new EscUnknown(temp, subtype, value, valueispresent);
     }
 
@@ -1403,7 +1385,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
      * @throws JposException See UPOS specification of method ValidateData. Error code can be E_ILLEGAL or E_FAILURE.
      */
     public void plausibilityCheckData(List<PrintDataPart> data) throws JposException {
-        Device.check(!Data.CapPrint, JposConst.JPOS_E_FAILURE, "Printing not supported");
+        check(!Data.CapPrint, JPOS_E_FAILURE, "Printing not supported");
         for (PrintDataPart obj : data) {
             obj.validate(this);
         }
@@ -1418,7 +1400,7 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
      *                 name would be Track2.
      */
     public void logGet(Object[] obj, int index, String mask, int modifier) {
-        Device.log(Level.DEBUG, Props.LogicalName + ": " + String.format(mask, modifier) + ": " + obj[index].toString());
+        Device.log(DEBUG, Props.LogicalName + ": " + String.format(mask, modifier) + ": " + obj[index].toString());
     }
 
     /**
@@ -1430,6 +1412,6 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
      *                 name would be Track2.
      */
     public void logSet(Object[] obj, int index, String mask, int modifier) {
-        Device.log(Level.INFO, Props.LogicalName + ": " + String.format(mask, modifier) + " <- " + obj[index].toString());
+        Device.log(INFO, Props.LogicalName + ": " + String.format(mask, modifier) + " <- " + obj[index].toString());
     }
 }

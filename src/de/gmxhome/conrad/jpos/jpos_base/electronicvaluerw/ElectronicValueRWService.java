@@ -21,7 +21,11 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.ElectronicValueRWConst.*;
+import static jpos.JposConst.*;
 
 /**
  * ElectronicValueRW service implementation. For more details about getter, setter and method implementations,
@@ -39,7 +43,7 @@ import java.lang.reflect.Field;
  * These properties will only be used if the service factory passes the jpos entries to the addDevice method.
  * If the deprecated addDevice method is used, the service will not consider these properties.
  */
-public class ElectronicValueRWService extends JposBase implements ElectronicValueRWService115 {
+public class ElectronicValueRWService extends JposBase implements ElectronicValueRWService116 {
     /**
      * Instance of a class implementing the ElectronicValueRWInterface for electronic value reader / writer specific
      * setter and method calls bound
@@ -47,9 +51,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
      */
     public ElectronicValueRWInterface ElectronicValueRW;
 
-    private ElectronicValueRWProperties Data;
-
-    private boolean UseEnumeratedValues, StrongEnumerationCheck;
+    private final ElectronicValueRWProperties Data;
 
     private TransactionAccess TransactionCommand = null;
 
@@ -59,13 +61,12 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
      * @param props  Property set.
      * @param device Device implementation object.
      */
+    @SuppressWarnings("deprecation")
     public ElectronicValueRWService(ElectronicValueRWProperties props, JposDevice device) {
         super(props, device);
-        UseEnumeratedValues = true;
-        StrongEnumerationCheck = true;
         Data = props;
-        Data.Results = Data.TypedResults = new TypeSafeStringMap(UseEnumeratedValues, StrongEnumerationCheck);
-        Data.Parameters = Data.TypedParameters = new TypeSafeStringMap(UseEnumeratedValues, StrongEnumerationCheck);
+        Data.Results = Data.TypedResults = new TypeSafeStringMap(Data.UseEnumeratedValues, Data.StrongEnumerationCheck);
+        Data.Parameters = Data.TypedParameters = Data.TypedResults.emptyClone();
     }
 
     /**
@@ -73,16 +74,14 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
      *
      * @param props  Property set.
      * @param device Device implementation object.
-     * @param useEnumeratedValues   If true, values of enumerated types will be used, otherwise enumeration names.
-     * @param strongEnumerationCheck If true, only predefined values will be accepted for enumerated tags, otherwise any
-     *                               value will be accepted.
+     * @param ignoredUseEnumeratedValues   Ignored. In previous versions, value for Data.UseEnumeratedValues.
+     * @param ignoredStrongEnumerationCheck Ignored. in previous versions, value for Data.StrongEnumerationCheck
      */
-    public ElectronicValueRWService(ElectronicValueRWProperties props, JposDevice device, boolean useEnumeratedValues, boolean strongEnumerationCheck) {
+    @SuppressWarnings("deprecation")
+    public ElectronicValueRWService(ElectronicValueRWProperties props, JposDevice device, boolean ignoredUseEnumeratedValues, boolean ignoredStrongEnumerationCheck) {
         super(props, device);
-        UseEnumeratedValues = useEnumeratedValues;
-        StrongEnumerationCheck = strongEnumerationCheck;
         Data = props;
-        Data.Results = Data.TypedResults = new TypeSafeStringMap(UseEnumeratedValues, StrongEnumerationCheck);
+        Data.Results = Data.TypedResults = new TypeSafeStringMap(Data.UseEnumeratedValues, Data.StrongEnumerationCheck);
         Data.Parameters = Data.TypedParameters = Data.TypedResults.emptyClone();
     }
 
@@ -461,7 +460,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public int getLogStatus() throws JposException {
         logGet("LogStatus");
         checkOpened();
-        JposDevice.check(Data.LogStatus == null, JposConst.JPOS_E_ILLEGAL, "LogStatus not available");
+        check(Data.LogStatus == null, JPOS_E_ILLEGAL, "LogStatus not available");
         return Data.LogStatus;
     }
 
@@ -476,7 +475,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public int getPaymentCondition() throws JposException {
         logGet("PaymentCondition");
         checkOpened();
-        JposDevice.check(Data.PaymentCondition == null, JposConst.JPOS_E_ILLEGAL, "PaymentCondition not available");
+        check(Data.PaymentCondition == null, JPOS_E_ILLEGAL, "PaymentCondition not available");
         return Data.PaymentCondition;
     }
 
@@ -512,7 +511,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public String getReaderWriterServiceList() throws JposException {
         logGet("ReaderWriterServiceList");
         checkOpened();
-        JposDevice.check(Data.ReaderWriterServiceList == null, JposConst.JPOS_E_FAILURE, "Implementation error: ReaderWriterServiceList not initialized");
+        check(Data.ReaderWriterServiceList == null, JPOS_E_FAILURE, "Implementation error: ReaderWriterServiceList not initialized");
         return Data.ReaderWriterServiceList;
     }
 
@@ -601,7 +600,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void setAdditionalSecurityInformation(String s) throws JposException {
         logPreSet("AdditionalSecurityInformation");
         checkOpened();
-        JposDevice.check(!Data.CapAdditionalSecurityInformation, JposConst.JPOS_E_ILLEGAL, "AdditionalSecurityInformation not supported by service");
+        check(!Data.CapAdditionalSecurityInformation, JPOS_E_ILLEGAL, "AdditionalSecurityInformation not supported by service");
         if (s == null)
             s = "";
         checkNoChangedOrClaimed(Data.AdditionalSecurityInformation, s);
@@ -636,7 +635,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
             s = "";
         checkOpened();
         if (s.length() > 0) {
-            JposDevice.check(Data.ReaderWriterServiceList == null, JposConst.JPOS_E_FAILURE, "Implementation error: ReaderWriterServiceList not initialized");
+            check(Data.ReaderWriterServiceList == null, JPOS_E_FAILURE, "Implementation error: ReaderWriterServiceList not initialized");
             String[] services = Data.ReaderWriterServiceList.split(",");
             boolean missing = true;
             for (String service : services) {
@@ -645,7 +644,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
                     break;
                 }
             }
-            JposDevice.check(missing, JposConst.JPOS_E_ILLEGAL, "Service " + s + " not supported");
+            check(missing, JPOS_E_ILLEGAL, "Service " + s + " not supported");
         }
         checkNoChangedOrClaimed(Data.CurrentService, s);
         ElectronicValueRW.currentService(s);
@@ -656,7 +655,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void setDetectionControl(boolean b) throws JposException {
         logPreSet("DetectionControl");
         checkOpened();
-        JposDevice.check((Data.CapDetectionControl & ElectronicValueRWConst.EVRW_CDC_APPLICATIONCONTROL) == 0 && b, JposConst.JPOS_E_ILLEGAL, "Application control for card handling not supported by service");
+        check((Data.CapDetectionControl & EVRW_CDC_APPLICATIONCONTROL) == 0 && b, JPOS_E_ILLEGAL, "Application control for card handling not supported by service");
         checkNoChangedOrClaimed(Data.DetectionControl, b);
         ElectronicValueRW.detectionControl(b);
         logSet("DetectionControl");
@@ -675,15 +674,10 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
 
     @Override
     public void setPaymentMedia(int i) throws JposException {
-        long[] validvalues = {
-                ElectronicValueRWConst.EVRW_MEDIA_UNSPECIFIED,
-                ElectronicValueRWConst.EVRW_MEDIA_CREDIT,
-                ElectronicValueRWConst.EVRW_MEDIA_DEBIT,
-                ElectronicValueRWConst.EVRW_MEDIA_ELECTRONIC_MONEY
-        };
+        long[] validvalues = { EVRW_MEDIA_UNSPECIFIED, EVRW_MEDIA_CREDIT, EVRW_MEDIA_DEBIT, EVRW_MEDIA_ELECTRONIC_MONEY };
         logPreSet("PaymentMedia");
         checkOpened();
-        JposDevice.checkMember(i, validvalues, JposConst.JPOS_E_ILLEGAL, "Invalid PaymentMedia: " + i);
+        checkMember(i, validvalues, JPOS_E_ILLEGAL, "Invalid PaymentMedia: " + i);
         checkNoChangedOrClaimed(Data.PaymentMedia, i);
         ElectronicValueRW.paymentMedia(i);
         logSet("PaymentMedia");
@@ -691,15 +685,10 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
 
     @Override
     public void setPINEntry(int i) throws JposException {
-        long[] validvalues = {
-                ElectronicValueRWConst.EVRW_PIN_ENTRY_NONE,
-                ElectronicValueRWConst.EVRW_PIN_ENTRY_EXTERNAL,
-                ElectronicValueRWConst.EVRW_PIN_ENTRY_INTERNAL,
-                ElectronicValueRWConst.EVRW_PIN_ENTRY_UNKNOWN
-        };
+        long[] validvalues = { EVRW_PIN_ENTRY_NONE, EVRW_PIN_ENTRY_EXTERNAL, EVRW_PIN_ENTRY_INTERNAL, EVRW_PIN_ENTRY_UNKNOWN };
         logPreSet("PINEntry");
         checkOpened();
-        JposDevice.checkMember(i, validvalues, JposConst.JPOS_E_ILLEGAL, "Invalid PINEntry: " + i);
+        checkMember(i, validvalues, JPOS_E_ILLEGAL, "Invalid PINEntry: " + i);
         checkNoChangedOrClaimed(Data.PINEntry, i);
         ElectronicValueRW.PINEntry(i);
         logSet("PINEntry");
@@ -716,15 +705,11 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
 
     @Override
     public void setTrainingModeState(int i) throws JposException {
-        long[] validvalues = {
-                ElectronicValueRWConst.EVRW_TM_FALSE,
-                ElectronicValueRWConst.EVRW_TM_TRUE,
-                ElectronicValueRWConst.EVRW_TM_UNKNOWN
-        };
+        long[] validvalues = { EVRW_TM_FALSE, EVRW_TM_TRUE, EVRW_TM_UNKNOWN };
         logPreSet("TrainingModeState");
         checkOpened();
-        JposDevice.check(!Data.CapTrainingMode && i == ElectronicValueRWConst.EVRW_TM_TRUE, JposConst.JPOS_E_ILLEGAL, "TrainingModeState cannot be set to TM_TRUE");
-        JposDevice.checkMember(i, validvalues, JposConst.JPOS_E_ILLEGAL, "Invalid TrainingModeState: " + i);
+        check(!Data.CapTrainingMode && i == EVRW_TM_TRUE, JPOS_E_ILLEGAL, "TrainingModeState cannot be set to TM_TRUE");
+        checkMember(i, validvalues, JPOS_E_ILLEGAL, "Invalid TrainingModeState: " + i);
         checkNoChangedOrClaimed(Data.TrainingModeState, i);
         ElectronicValueRW.trainingModeState(i);
         logSet("TrainingModeState");
@@ -738,14 +723,14 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
         checkOpened();
         if (s.length() > 0) {
             String[] parts = s.split(":");
-            JposDevice.check(parts.length != 2, JposConst.JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
+            check(parts.length != 2, JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
             int i;
             try {
-                i = Integer.valueOf(parts[1]);
+                i = Integer.parseInt(parts[1]);
             } catch (Exception e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
+                throw new JposException(JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
             }
-            JposDevice.check(i <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
+            check(i <= 0, JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
         }
         checkNoChangedOrClaimed(Data.VoucherID, s);
         ElectronicValueRW.voucherID(s);
@@ -762,14 +747,14 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
             String[] ids = s.split(",");
             for (String id : ids) {
                 String[] parts = id.split(":");
-                JposDevice.check(parts.length != 2, JposConst.JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
+                check(parts.length != 2, JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
                 int i;
                 try {
-                    i = Integer.valueOf(parts[1]);
+                    i = Integer.parseInt(parts[1]);
                 } catch (Exception e) {
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
                 }
-                JposDevice.check(i <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
+                check(i <= 0, JPOS_E_ILLEGAL, "Invalid VoucherID format: " + s);
             }
         }
         checkNoChangedOrClaimed(Data.VoucherIDList, s);
@@ -783,13 +768,13 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
 
     @Override
     public void beginDetection(int type, int timeout) throws JposException {
-        long[] validvalues = { ElectronicValueRWConst.EVRW_BD_ANY, ElectronicValueRWConst.EVRW_BD_SPECIFIC};
+        long[] validvalues = { EVRW_BD_ANY, EVRW_BD_SPECIFIC};
         logPreCall("BeginDetection", removeOuterArraySpecifier(new Object[]{type, timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(Data.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_BUSY, "Device busy");
-        JposDevice.check(!Data.DetectionControl, JposConst.JPOS_E_BUSY, "Card detection by application disabled");
-        JposDevice.checkMember(type, validvalues, JposConst.JPOS_E_ILLEGAL, "Invalid type: " + type);
-        JposDevice.check(timeout != JposConst.JPOS_FOREVER && timeout < 0,JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        check(Data.State != JPOS_S_IDLE, JPOS_E_BUSY, "Device busy");
+        check(!Data.DetectionControl, JPOS_E_BUSY, "Card detection by application disabled");
+        checkMember(type, validvalues, JPOS_E_ILLEGAL, "Invalid type: " + type);
+        check(timeout != JPOS_FOREVER && timeout < 0,JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
         ElectronicValueRW.beginDetection(type, timeout);
         logCall("BeginDetection");
     }
@@ -798,8 +783,8 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void beginRemoval(int timeout) throws JposException {
         logPreCall("BeginRemoval", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(Data.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_BUSY, "Device busy");
-        JposDevice.check(timeout != JposConst.JPOS_FOREVER && timeout < 0,JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        check(Data.State != JPOS_S_IDLE, JPOS_E_BUSY, "Device busy");
+        check(timeout != JPOS_FOREVER && timeout < 0,JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
         ElectronicValueRW.beginRemoval(timeout);
         logCall("BeginRemoval");
     }
@@ -824,7 +809,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void endDetection() throws JposException {
         logPreCall("EndDetection");
         checkEnabled();
-        JposDevice.check(!Data.DetectionControl, JposConst.JPOS_E_BUSY, "Card detection by application disabled");
+        check(!Data.DetectionControl, JPOS_E_BUSY, "Card detection by application disabled");
         ElectronicValueRW.endDetection();
         logCall("EndDetection");
     }
@@ -844,162 +829,49 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
         ElectronicValueRW.enumerateCardServices();
         logCall("EnumerateCardServices");
     }
-    static private Object[] EnumTagsValues = {
-            "AuthenticationStatus", new String[]{
-                    "EVRW_TAG_AS_AUTHENTICATED",
-                    "EVRW_TAG_AS_UNAUTHENTICATED"
-            },
-            "CancelTransactionType", new String[]{
-                    "EVRW_TAG_CTT_CANCEL",
-                    "EVRW_TAG_CTT_CHARGE",
-                    "EVRW_TAG_CTT_RETURN",
-                    "EVRW_TAG_CTT_SALES"
-            },
-            "ChargeMethod", new String[]{
-                    "EVRW_TAG_CM_CASH",
-                    "EVRW_TAG_CM_CREDIT",
-                    "EVRW_TAG_CM_POINT"
-            },
-            "NegativeInformationType", new String[]{
-                    "EVRW_TAG_NIT_ALL",
-                    "EVRW_TAG_NIT_UPDATED"
-            },
+    static private final Object[] EnumTagsValues = {
+            "AuthenticationStatus", new String[]{ "EVRW_TAG_AS_AUTHENTICATED", "EVRW_TAG_AS_UNAUTHENTICATED" },
+            "CancelTransactionType", new String[]{ "EVRW_TAG_CTT_CANCEL", "EVRW_TAG_CTT_CHARGE", "EVRW_TAG_CTT_RETURN", "EVRW_TAG_CTT_SALES" },
+            "ChargeMethod", new String[]{ "EVRW_TAG_CM_CASH", "EVRW_TAG_CM_CREDIT", "EVRW_TAG_CM_POINT" },
+            "NegativeInformationType", new String[]{ "EVRW_TAG_NIT_ALL", "EVRW_TAG_NIT_UPDATED" },
             "PaymentCondition", new String[]{
-                    "EVRW_TAG_PC_INSTALLMENT_1",
-                    "EVRW_TAG_PC_INSTALLMENT_2",
-                    "EVRW_TAG_PC_INSTALLMENT_3",
-                    "EVRW_TAG_PC_BONUS_1",
-                    "EVRW_TAG_PC_BONUS_2",
-                    "EVRW_TAG_PC_BONUS_3",
-                    "EVRW_TAG_PC_BONUS_4",
-                    "EVRW_TAG_PC_BONUS_5",
-                    "EVRW_TAG_PC_BONUS_COMBINATION_1",
-                    "EVRW_TAG_PC_BONUS_COMBINATION_2",
-                    "EVRW_TAG_PC_BONUS_COMBINATION_3",
-                    "EVRW_TAG_PC_BONUS_COMBINATION_4",
-                    "EVRW_TAG_PC_LUMP",
-                    "EVRW_TAG_PC_REVOLVING"
+                    "EVRW_TAG_PC_INSTALLMENT_1", "EVRW_TAG_PC_INSTALLMENT_2", "EVRW_TAG_PC_INSTALLMENT_3",
+                    "EVRW_TAG_PC_BONUS_1", "EVRW_TAG_PC_BONUS_2", "EVRW_TAG_PC_BONUS_3", "EVRW_TAG_PC_BONUS_4", "EVRW_TAG_PC_BONUS_5",
+                    "EVRW_TAG_PC_BONUS_COMBINATION_1", "EVRW_TAG_PC_BONUS_COMBINATION_2", "EVRW_TAG_PC_BONUS_COMBINATION_3", "EVRW_TAG_PC_BONUS_COMBINATION_4",
+                    "EVRW_TAG_PC_LUMP", "EVRW_TAG_PC_REVOLVING"
             },
-            "PaymentMethod", new String[]{
-                    "EVRW_TAG_PM_COMBINED",
-                    "EVRW_TAG_PM_FULL_SETTLEMENT"
-            },
-            "PaymentMethodForPoint", new String[]{
-                    "EVRW_TAG_PMFP_CASH",
-                    "EVRW_TAG_PMFP_CREDIT",
-                    "EVRW_TAG_PMFP_EM",
-                    "EVRW_TAG_PMFP_OTHER"
-            },
-            "ResultOnSettlement", new String[]{
-                    "EVRW_TAG_ROS_NG",
-                    "EVRW_TAG_ROS_OK",
-                    "EVRW_TAG_ROS_UNKNOWN"
-            },
-            "SummaryTermType", new String[]{
-                    "EVRW_TAG_STT_1",
-                    "EVRW_TAG_STT_2",
-                    "EVRW_TAG_STT_3"
-            },
+            "PaymentMethod", new String[]{ "EVRW_TAG_PM_COMBINED", "EVRW_TAG_PM_FULL_SETTLEMENT" },
+            "PaymentMethodForPoint", new String[]{ "EVRW_TAG_PMFP_CASH", "EVRW_TAG_PMFP_CREDIT", "EVRW_TAG_PMFP_EM", "EVRW_TAG_PMFP_OTHER" },
+            "ResultOnSettlement", new String[]{ "EVRW_TAG_ROS_NG", "EVRW_TAG_ROS_OK", "EVRW_TAG_ROS_UNKNOWN" },
+            "SummaryTermType", new String[]{ "EVRW_TAG_STT_1", "EVRW_TAG_STT_2", "EVRW_TAG_STT_3" },
             "TransactionType", new String[]{
-                    "EVRW_TAG_TT_ADD",
-                    "EVRW_TAG_TT_CANCEL_CHARGE",
-                    "EVRW_TAG_TT_CANCEL_RETURN",
-                    "EVRW_TAG_TT_CANCEL_SALES",
-                    "EVRW_TAG_TT_GET_LOG",
-                    "EVRW_TAG_TT_READ",
-                    "EVRW_TAG_TT_RETURN",
-                    "EVRW_TAG_TT_SUBTRACT",
-                    "EVRW_TAG_TT_WRITE",
-                    "EVRW_TAG_TT_COMPLETION",
-                    "EVRW_TAG_TT_PRE_SALES"
+                    "EVRW_TAG_TT_CANCEL_CHARGE", "EVRW_TAG_TT_CANCEL_RETURN", "EVRW_TAG_TT_CANCEL_SALES", "EVRW_TAG_TT_GET_LOG",
+                    "EVRW_TAG_TT_READ", "EVRW_TAG_TT_WRITE", "EVRW_TAG_TT_ADD", "EVRW_TAG_TT_SUBTRACT",
+                    "EVRW_TAG_TT_RETURN", "EVRW_TAG_TT_COMPLETION", "EVRW_TAG_TT_PRE_SALES"
             },
-            "VOIDorRETURN", new int[]{
-                    1,    // Void
-                    2     // Return
-            },
-            "VoidTransactionType", new int[]{
-                    1,    // Cash
-                    2     // Exchanging points
-            }
+            "VOIDorRETURN", new int[]{ 1 /* Void */ , 2 /* Return */ },
+            "VoidTransactionType", new int[]{ 1 /* Cash */ , 2 /* Exchanging points */ }
     };
-    static private String[] DateTimeTags = {
-            "AccessLogLastDateTime",
-            "DateTime",
-            "EndDateTime",
-            "EVRWDataUpdateDateTime",
-            "EVRWDateTime",
-            "ExpirationDate",
-            "KeyExpirationDateTime",
-            "KeyUpdateDateTime",
-            "LastUsedDateTime",
-            "NegativeInformationUpdateDateTime",
-            "POSDateTime",
-            "StartDateTime"
+    static private final String[] DateTimeTags = {
+            "AccessLogLastDateTime", "DateTime", "EndDateTime", "EVRWDataUpdateDateTime", "EVRWDateTime", "ExpirationDate",
+            "KeyExpirationDateTime", "KeyUpdateDateTime", "LastUsedDateTime", "NegativeInformationUpdateDateTime", "POSDateTime", "StartDateTime"
     };
-    static private String[] CurrencyTags = {
-            "Amount",
-            "AmountForPoint",
-            "Balance",
-            "BalanceOfPoint",
-            "ChargeableAmount",
-            "InsufficientAmount",
-            "LastTimeBalance",
-            "OtherAmount",
-            "RequestedAutoChargeAmount",
-            "SettledAmount",
-            "SettledAutoChargeAmount",
-            "SettledOther-Amount",
-            "TaxOthers",
-            "TotalAmountOfAddition",
-            "TotalAmountOfSubtraction",
-            "TotalAmountOfTransaction",
-            "TotalAmountOfUncompletedAddition",
-            "TotalAmountOfUncompletedSubtraction",
-            "TotalAmountOfUncompletedVoid",
-            "TotalAmountOfVoid"
+    static private final String[] CurrencyTags = {
+            "Amount", "AmountForPoint", "Balance", "BalanceOfPoint", "ChargeableAmount", "InsufficientAmount", "LastTimeBalance",
+            "OtherAmount", "RequestedAutoChargeAmount", "SettledAmount", "SettledAutoChargeAmount", "SettledOther-Amount", "TaxOthers",
+            "TotalAmountOfAddition", "TotalAmountOfSubtraction", "TotalAmountOfTransaction", "TotalAmountOfUncompletedAddition",
+            "TotalAmountOfUncompletedSubtraction", "TotalAmountOfUncompletedVoid", "TotalAmountOfVoid"
     };
-    static private String[] BoolTags = {
-            "AutoCharge",
-            "ForceOnlineCheck",
-            "LogCheck",
-            "SignatureFlag",
-            "SoundAssistFlag",
-            "UILCDControl",
-            "UILEDControl",
-            "UISOUNDControl"
+    static private final String[] BoolTags = {
+            "AutoCharge", "ForceOnlineCheck", "LogCheck", "SignatureFlag", "SoundAssistFlag", "UILCDControl", "UILEDControl", "UISOUNDControl"
     };
-    static private String[] NumberTags = {
-            "CardTransactionNumber",
-            "ChargeableCount",
-            "EffectiveDaysOfKey",
-            "EndEVRWTransactionNumber",
-            "EndPOSTransactionNumber",
-            "EVRWID",
-            "EVRWTransactionNumber",
-            "MediumID",
-            "ModuleID",
-            "NumberOfAddition",
-            "NumberOfEVRWTransactionLog",
-            "NumberOfFreeEVRWTransactionLog",
-            "NumberOfRecord",
-            "NumberOfSentEVRWTransactionLog",
-            "NumberOfSubtraction",
-            "NumberOfTransaction",
-            "NumberOfUncompletedAddition",
-            "NumberOfUncompletedSubtraction",
-            "NumberOfUncompletedVoid",
-            "NumberOfVoid",
-            "Point",
-            "POSTransactionNumber",
-            "RegistrableServiceCapacity",
-            "ResponseCode1",
-            "ResponseCode2",
-            "RetryTimeout",
-            "SettledPoint",
-            "SettlementNumber",
-            "StartEVRWTransactionNumber",
-            "StartPOSTransactionNumber",
-            "TouchTimeout"
+    static private final String[] NumberTags = {
+            "CardTransactionNumber", "ChargeableCount", "EffectiveDaysOfKey", "EndEVRWTransactionNumber", "EndPOSTransactionNumber",
+            "EVRWID", "EVRWTransactionNumber", "MediumID", "ModuleID", "NumberOfAddition", "NumberOfEVRWTransactionLog", "NumberOfFreeEVRWTransactionLog",
+            "NumberOfRecord", "NumberOfSentEVRWTransactionLog", "NumberOfSubtraction", "NumberOfTransaction", "NumberOfUncompletedAddition",
+            "NumberOfUncompletedSubtraction", "NumberOfUncompletedVoid", "NumberOfVoid", "Point", "POSTransactionNumber", "RegistrableServiceCapacity",
+            "ResponseCode1", "ResponseCode2", "RetryTimeout", "SettledPoint", "SettlementNumber", "StartEVRWTransactionNumber",
+            "StartPOSTransactionNumber", "TouchTimeout"
     };
 
     static {
@@ -1012,7 +884,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
                     for (int j = 0; j < fields.length; j++)
                         fields[j] = ElectronicValueRWConst.class.getField(valueNames[j]);
                     values = fields;
-                } catch (NoSuchFieldException | SecurityException e) {}
+                } catch (NoSuchFieldException | SecurityException ignored) {}
             }
             TypeSafeStringMap.addTagType((String) EnumTagsValues[i], values);
         }
@@ -1030,8 +902,8 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void retrieveResultInformation(String name, String[] value) throws JposException {
         logPreCall("RetrieveResultInformation", removeOuterArraySpecifier(new Object[]{name}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(name == null || name.length() == 0, JposConst.JPOS_E_ILLEGAL, "No tag specified");
-        JposDevice.check(value == null || value.length != 1, JposConst.JPOS_E_ILLEGAL, "Value not String[1]");
+        check(name == null || name.length() == 0, JPOS_E_ILLEGAL, "No tag specified");
+        check(value == null || value.length != 1, JPOS_E_ILLEGAL, "Value not String[1]");
         if ("SetttledVoucherID".equals(name))
             name = "SettledVoucherID";
         ElectronicValueRW.retrieveResultInformation(name, value);
@@ -1046,8 +918,8 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
         if ("SetttledVoucherID".equals(name))
             name = "SettledVoucherID";
         checkEnabled();
-        JposDevice.check(name == null || name.length() == 0, JposConst.JPOS_E_ILLEGAL, "No tag specified");
-        JposDevice.check(value == null, JposConst.JPOS_E_ILLEGAL, "No value specified");
+        check(name == null || name.length() == 0, JPOS_E_ILLEGAL, "No tag specified");
+        check(value == null, JPOS_E_ILLEGAL, "No value specified");
         ElectronicValueRW.setParameterInformation(name, value);
         logCall("SetParameterInformation");
     }
@@ -1058,36 +930,36 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
 
     @Override
     public void accessDailyLog(int sequenceNumber, int type, int timeout) throws JposException {
-        long[] validvalues = {ElectronicValueRWConst.EVRW_DL_REPORTING, ElectronicValueRWConst.EVRW_DL_SETTLEMENT};
+        long[] validvalues = {EVRW_DL_REPORTING, EVRW_DL_SETTLEMENT};
 
         logPreCall("AccessDailyLog", removeOuterArraySpecifier(new Object[]{sequenceNumber, type, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.checkMember(type, validvalues, JposConst.JPOS_E_ILLEGAL, "Invalid log type: " + type);
-        JposDevice.check((type & ~Data.CapDailyLog) != 0, JposConst.JPOS_E_ILLEGAL, "Invalid log type: " + type);
-        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        checkMember(type, validvalues, JPOS_E_ILLEGAL, "Invalid log type: " + type);
+        check((type & ~Data.CapDailyLog) != 0, JPOS_E_ILLEGAL, "Invalid log type: " + type);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.accessDailyLog(sequenceNumber, type, timeout), "AccessDailyLog");
     }
 
     @Override
     public void accessData(int dataType, int[] data, Object[] obj) throws JposException {
-        long[] validvalues = {ElectronicValueRWConst.EVRW_AD_KEY, ElectronicValueRWConst.EVRW_AD_NEGATIVE_LIST, ElectronicValueRWConst.EVRW_AD_OTHERS};
+        long[] validvalues = {EVRW_AD_KEY, EVRW_AD_NEGATIVE_LIST, EVRW_AD_OTHERS};
 
         logPreCall("AccessData", removeOuterArraySpecifier(new Object[]{dataType, data, obj}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.checkMember(dataType, validvalues, JposConst.JPOS_E_ILLEGAL, "Invalid dataType: " + dataType);
-        JposDevice.check(data == null || data.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid data");
-        JposDevice.check(obj == null || obj.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid obj");
+        checkMember(dataType, validvalues, JPOS_E_ILLEGAL, "Invalid dataType: " + dataType);
+        check(data == null || data.length != 1, JPOS_E_ILLEGAL, "Invalid data");
+        check(obj == null || obj.length != 1, JPOS_E_ILLEGAL, "Invalid obj");
         callIt(ElectronicValueRW.accessData(dataType, data, obj), "AccessData");
     }
 
     @Override
     public void accessLog(int sequenceNumber, int type, int timeout) throws JposException {
-        long[] validvalues = {ElectronicValueRWConst.EVRW_AL_REPORTING, ElectronicValueRWConst.EVRW_AL_SETTLEMENT};
+        long[] validvalues = {EVRW_AL_REPORTING, EVRW_AL_SETTLEMENT};
 
         logPreCall("AccessLog", removeOuterArraySpecifier(new Object[]{sequenceNumber, type, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.checkMember(type, validvalues, JposConst.JPOS_E_ILLEGAL, "Invalid type: " + type);
-        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        checkMember(type, validvalues, JPOS_E_ILLEGAL, "Invalid type: " + type);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.accessLog(sequenceNumber, type, timeout), "AccessLog");
     }
 
@@ -1095,8 +967,8 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void activateEVService(int[] data, Object[] obj) throws JposException {
         logPreCall("ActivateEVService", removeOuterArraySpecifier(new Object[]{data, obj}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(data == null || data.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid data");
-        JposDevice.check(obj == null || obj.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid obj");
+        check(data == null || data.length != 1, JPOS_E_ILLEGAL, "Invalid data");
+        check(obj == null || obj.length != 1, JPOS_E_ILLEGAL, "Invalid obj");
         callIt(ElectronicValueRW.activateEVService(data, obj), "ActivateEVService");
     }
 
@@ -1104,9 +976,9 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void activateService(int[] data, Object[] obj) throws JposException {
         logPreCall("ActivateService", removeOuterArraySpecifier(new Object[]{data, obj}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(!Data.CapActivateService, JposConst.JPOS_E_ILLEGAL, "ActivateService not supported");
-        JposDevice.check(data == null || data.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid data");
-        JposDevice.check(obj == null || obj.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid obj");
+        check(!Data.CapActivateService, JPOS_E_ILLEGAL, "ActivateService not supported");
+        check(data == null || data.length != 1, JPOS_E_ILLEGAL, "Invalid data");
+        check(obj == null || obj.length != 1, JPOS_E_ILLEGAL, "Invalid obj");
         callIt(ElectronicValueRW.activateService(data, obj), "ActivateService");
     }
 
@@ -1114,8 +986,8 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void addValue(int sequenceNumber, int timeout) throws JposException {
         logPreCall("AddValue", removeOuterArraySpecifier(new Object[]{sequenceNumber, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(!Data.CapAddValue, JposConst.JPOS_E_ILLEGAL, "AddValue not supported");
-        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapAddValue, JPOS_E_ILLEGAL, "AddValue not supported");
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.addValue(sequenceNumber, timeout), "AddValue");
     }
 
@@ -1123,10 +995,10 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void authorizeCompletion(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
         logPreCall("AuthorizeCompletion", removeOuterArraySpecifier(new Object[]{sequenceNumber, amount, taxOthers, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(!Data.CapAuthorizeCompletion, JposConst.JPOS_E_ILLEGAL, "AuthorizeCompletion not supported");
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount: " + amount);
-        Device.check(taxOthers < 0, JposConst.JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapAuthorizeCompletion, JPOS_E_ILLEGAL, "AuthorizeCompletion not supported");
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount: " + amount);
+        check(taxOthers < 0, JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.authorizeCompletion(sequenceNumber, amount, taxOthers, timeout), "AuthorizeCompletion");
     }
 
@@ -1134,10 +1006,10 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void authorizePreSales(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
         logPreCall("AuthorizePreSales", removeOuterArraySpecifier(new Object[]{sequenceNumber, amount, taxOthers, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(!Data.CapAuthorizePreSales, JposConst.JPOS_E_ILLEGAL, "AuthorizePreSales not supported");
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount: " + amount);
-        Device.check(taxOthers < 0, JposConst.JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapAuthorizePreSales, JPOS_E_ILLEGAL, "AuthorizePreSales not supported");
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount: " + amount);
+        check(taxOthers < 0, JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.authorizePreSales(sequenceNumber, amount, taxOthers, timeout), "AuthorizePreSales");
     }
 
@@ -1145,10 +1017,10 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void authorizeRefund(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
         logPreCall("AuthorizeRefund", removeOuterArraySpecifier(new Object[]{sequenceNumber, amount, taxOthers, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(!Data.CapAuthorizeRefund, JposConst.JPOS_E_ILLEGAL, "AuthorizeRefund not supported");
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount: " + amount);
-        Device.check(taxOthers < 0, JposConst.JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapAuthorizeRefund, JPOS_E_ILLEGAL, "AuthorizeRefund not supported");
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount: " + amount);
+        check(taxOthers < 0, JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.authorizeRefund(sequenceNumber, amount, taxOthers, timeout), "AuthorizeRefund");
     }
 
@@ -1156,9 +1028,9 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void authorizeSales(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
         logPreCall("AuthorizeSales", removeOuterArraySpecifier(new Object[]{sequenceNumber, amount, taxOthers, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount: " + amount);
-        Device.check(taxOthers < 0, JposConst.JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount: " + amount);
+        check(taxOthers < 0, JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.authorizeSales(sequenceNumber, amount, taxOthers, timeout), "AuthorizeSales");
     }
 
@@ -1166,10 +1038,10 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void authorizeVoid(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
         logPreCall("AuthorizeVoid", removeOuterArraySpecifier(new Object[]{sequenceNumber, amount, taxOthers, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(!Data.CapAuthorizeVoid, JposConst.JPOS_E_ILLEGAL, "AuthorizeVoid not supported");
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount: " + amount);
-        Device.check(taxOthers < 0, JposConst.JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapAuthorizeVoid, JPOS_E_ILLEGAL, "AuthorizeVoid not supported");
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount: " + amount);
+        check(taxOthers < 0, JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.authorizeVoid(sequenceNumber, amount, taxOthers, timeout), "AuthorizeVoid");
     }
 
@@ -1177,10 +1049,10 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void authorizeVoidPreSales(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
         logPreCall("AuthorizeVoidPreSales", removeOuterArraySpecifier(new Object[]{sequenceNumber, amount, taxOthers, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(!Data.CapAuthorizeVoidPreSales, JposConst.JPOS_E_ILLEGAL, "AuthorizeVoidPreSales not supported");
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount: " + amount);
-        Device.check(taxOthers < 0, JposConst.JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapAuthorizeVoidPreSales, JPOS_E_ILLEGAL, "AuthorizeVoidPreSales not supported");
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount: " + amount);
+        check(taxOthers < 0, JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.authorizeVoidPreSales(sequenceNumber, amount, taxOthers, timeout), "AuthorizeVoidPreSales");
     }
 
@@ -1188,8 +1060,8 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void cancelValue(int sequenceNumber, int timeout) throws JposException {
         logPreCall("CancelValue", removeOuterArraySpecifier(new Object[]{sequenceNumber, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(!Data.CapCancelValue, JposConst.JPOS_E_ILLEGAL, "CancelValue not supported");
-        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapCancelValue, JPOS_E_ILLEGAL, "CancelValue not supported");
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.cancelValue(sequenceNumber, timeout), "CancelValue");
     }
 
@@ -1197,9 +1069,9 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void cashDeposit(int sequenceNumber, long amount, int timeout) throws JposException {
         logPreCall("CashDeposit", removeOuterArraySpecifier(new Object[]{sequenceNumber, amount, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(!Data.CapCashDeposit, JposConst.JPOS_E_ILLEGAL, "CashDeposit not supported");
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount: " + amount);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapCashDeposit, JPOS_E_ILLEGAL, "CashDeposit not supported");
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount: " + amount);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.cashDeposit(sequenceNumber, amount, timeout), "CashDeposit");
     }
 
@@ -1207,8 +1079,8 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void checkCard(int sequenceNumber, int timeout) throws JposException {
         logPreCall("CheckCard", removeOuterArraySpecifier(new Object[]{sequenceNumber, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(!Data.CapCheckCard, JposConst.JPOS_E_ILLEGAL, "CheckCard not supported");
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapCheckCard, JPOS_E_ILLEGAL, "CheckCard not supported");
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.checkCard(sequenceNumber, timeout), "CheckCard");
     }
 
@@ -1216,7 +1088,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void checkServiceRegistrationToMedium(int sequenceNumber, int timeout) throws JposException {
         logPreCall("CheckServiceRegistrationToMedium", removeOuterArraySpecifier(new Object[]{sequenceNumber, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.checkServiceRegistrationToMedium(sequenceNumber, timeout), "CheckServiceRegistrationToMedium");
     }
 
@@ -1224,8 +1096,8 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void closeDailyEVService(int[] data, Object[] obj) throws JposException {
         logPreCall("CloseDailyEVService", removeOuterArraySpecifier(new Object[]{data, obj}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(data == null || data.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid data");
-        JposDevice.check(obj == null || obj.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid obj");
+        check(data == null || data.length != 1, JPOS_E_ILLEGAL, "Invalid data");
+        check(obj == null || obj.length != 1, JPOS_E_ILLEGAL, "Invalid obj");
         callIt(ElectronicValueRW.closeDailyEVService(data, obj), "CloseDailyEVService");
     }
 
@@ -1233,8 +1105,8 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void deactivateEVService(int[] data, Object[] obj) throws JposException {
         logPreCall("DeactivateEVService", removeOuterArraySpecifier(new Object[]{data, obj}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(data == null || data.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid data");
-        JposDevice.check(obj == null || obj.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid obj");
+        check(data == null || data.length != 1, JPOS_E_ILLEGAL, "Invalid data");
+        check(obj == null || obj.length != 1, JPOS_E_ILLEGAL, "Invalid obj");
         callIt(ElectronicValueRW.deactivateEVService(data, obj), "DeactivateEVService");
     }
 
@@ -1242,7 +1114,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void lockTerminal() throws JposException {
         logPreCall("LockTerminal");
         checkBusy();
-        Device.check(!Data.CapLockTerminal, JposConst.JPOS_E_ILLEGAL, "LockTerminal not supported");
+        check(!Data.CapLockTerminal, JPOS_E_ILLEGAL, "LockTerminal not supported");
         callIt(ElectronicValueRW.lockTerminal(), "LockTerminal");
     }
 
@@ -1250,8 +1122,8 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void openDailyEVService(int[] data, Object[] obj) throws JposException {
         logPreCall("UpdateKey", removeOuterArraySpecifier(new Object[]{data, obj}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(data == null || data.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid data");
-        JposDevice.check(obj == null || obj.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid obj");
+        check(data == null || data.length != 1, JPOS_E_ILLEGAL, "Invalid data");
+        check(obj == null || obj.length != 1, JPOS_E_ILLEGAL, "Invalid obj");
         callIt(ElectronicValueRW.updateKey(data, obj), "UpdateKey");
     }
 
@@ -1259,7 +1131,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void queryLastSuccessfulTransactionResult() throws JposException {
         logPreCall("QueryLastSuccessfulTransactionResult");
         checkEnabled();
-        JposDevice.check(!Data.CapSubtractValue, JposConst.JPOS_E_ILLEGAL, "CancelValue not supported");
+        check(!Data.CapSubtractValue, JPOS_E_ILLEGAL, "CancelValue not supported");
         callIt(ElectronicValueRW.queryLastSuccessfulTransactionResult(), "QueryLastSuccessfulTransactionResult");
     }
 
@@ -1267,7 +1139,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void readValue(int sequenceNumber, int timeout) throws JposException {
         logPreCall("ReadValue", removeOuterArraySpecifier(new Object[]{sequenceNumber, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.readValue(sequenceNumber, timeout), "ReadValue");
     }
 
@@ -1275,7 +1147,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void registerServiceToMedium(int sequenceNumber, int timeout) throws JposException {
         logPreCall("RegisterServiceToMedium", removeOuterArraySpecifier(new Object[]{sequenceNumber, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.registerServiceToMedium(sequenceNumber, timeout), "RegisterServiceToMedium");
     }
 
@@ -1283,21 +1155,21 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void subtractValue(int sequenceNumber, int timeout) throws JposException {
         logPreCall("SubtractValue", removeOuterArraySpecifier(new Object[]{sequenceNumber, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(!Data.CapSubtractValue, JposConst.JPOS_E_ILLEGAL, "CancelValue not supported");
-        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapSubtractValue, JPOS_E_ILLEGAL, "CancelValue not supported");
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.subtractValue(sequenceNumber, timeout), "SubtractValue");
     }
 
     @Override
     public void transactionAccess(int control) throws JposException {
-        long[] validvalues = {ElectronicValueRWConst.EVRW_TA_TRANSACTION, ElectronicValueRWConst.EVRW_TA_NORMAL};
+        long[] validvalues = {EVRW_TA_TRANSACTION, EVRW_TA_NORMAL};
 
         logPreCall("TransactionAccess", removeOuterArraySpecifier(new Object[]{control}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(!Data.CapTransaction, JposConst.JPOS_E_ILLEGAL, "TransactionAccess not supported");
-        JposDevice.checkMember(control, validvalues, JposConst.JPOS_E_ILLEGAL, "Invalid control value: " + control);
-        JposDevice.check(control == ElectronicValueRWConst.EVRW_TA_TRANSACTION && TransactionCommand != null, JposConst.JPOS_E_ILLEGAL, "Starting transaction within transaction not supported");
-        JposDevice.check(control == ElectronicValueRWConst.EVRW_TA_NORMAL && TransactionCommand == null, JposConst.JPOS_E_ILLEGAL, "Ending transaction from outside a transaction not possible");
+        check(!Data.CapTransaction, JPOS_E_ILLEGAL, "TransactionAccess not supported");
+        checkMember(control, validvalues, JPOS_E_ILLEGAL, "Invalid control value: " + control);
+        check(control == EVRW_TA_TRANSACTION && TransactionCommand != null, JPOS_E_ILLEGAL, "Starting transaction within transaction not supported");
+        check(control == EVRW_TA_NORMAL && TransactionCommand == null, JPOS_E_ILLEGAL, "Ending transaction from outside a transaction not possible");
         TransactionAccess command = ElectronicValueRW.transactionAccess(control);
         if (TransactionCommand == null) {
             TransactionCommand = command;
@@ -1311,7 +1183,7 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void unlockTerminal() throws JposException {
         logPreCall("UnlockTerminal");
         checkBusy();
-        Device.check(!Data.CapUnlockTerminal, JposConst.JPOS_E_ILLEGAL, "UnlockTerminal not supported");
+        check(!Data.CapUnlockTerminal, JPOS_E_ILLEGAL, "UnlockTerminal not supported");
         callIt(ElectronicValueRW.unlockTerminal(), "UnlockTerminal");
     }
 
@@ -1319,19 +1191,19 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void unregisterServiceToMedium(int sequenceNumber, int timeout) throws JposException {
         logPreCall("UnregisterServiceToMedium", removeOuterArraySpecifier(new Object[]{sequenceNumber, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.unregisterServiceToMedium(sequenceNumber, timeout), "UnregisterServiceToMedium");
     }
 
     @Override
     public void updateData(int dataType, int[] data, Object[] obj) throws JposException {
-        long[] validvalues = {ElectronicValueRWConst.EVRW_AD_KEY, ElectronicValueRWConst.EVRW_AD_NEGATIVE_LIST, ElectronicValueRWConst.EVRW_AD_OTHERS};
+        long[] validvalues = {EVRW_AD_KEY, EVRW_AD_NEGATIVE_LIST, EVRW_AD_OTHERS};
 
         logPreCall("UpdateData", removeOuterArraySpecifier(new Object[]{dataType, data, obj}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.checkMember(dataType, validvalues, JposConst.JPOS_E_ILLEGAL, "Invalid dataType: " + dataType);
-        JposDevice.check(data == null || data.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid data");
-        JposDevice.check(obj == null || obj.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid obj");
+        checkMember(dataType, validvalues, JPOS_E_ILLEGAL, "Invalid dataType: " + dataType);
+        check(data == null || data.length != 1, JPOS_E_ILLEGAL, "Invalid data");
+        check(obj == null || obj.length != 1, JPOS_E_ILLEGAL, "Invalid obj");
         callIt(ElectronicValueRW.updateData(dataType, data, obj), "UpdateData");
     }
 
@@ -1339,8 +1211,8 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void updateKey(int[] data, Object[] obj) throws JposException {
         logPreCall("UpdateKey", removeOuterArraySpecifier(new Object[]{data, obj}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(data == null || data.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid data");
-        JposDevice.check(obj == null || obj.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid obj");
+        check(data == null || data.length != 1, JPOS_E_ILLEGAL, "Invalid data");
+        check(obj == null || obj.length != 1, JPOS_E_ILLEGAL, "Invalid obj");
         callIt(ElectronicValueRW.updateKey(data, obj), "UpdateKey");
     }
 
@@ -1348,8 +1220,8 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     public void writeValue(int sequenceNumber, int timeout) throws JposException {
         logPreCall("WriteValue", removeOuterArraySpecifier(new Object[]{sequenceNumber, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        JposDevice.check(!Data.CapWriteValue, JposConst.JPOS_E_ILLEGAL, "WriteValue not supported");
-        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapWriteValue, JPOS_E_ILLEGAL, "WriteValue not supported");
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(ElectronicValueRW.writeValue(sequenceNumber, timeout), "WriteValue");
     }
 

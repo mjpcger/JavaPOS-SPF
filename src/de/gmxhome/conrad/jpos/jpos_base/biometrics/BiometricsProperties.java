@@ -18,13 +18,15 @@
 package de.gmxhome.conrad.jpos.jpos_base.biometrics;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import jpos.BiometricsConst;
-import jpos.JposConst;
 import jpos.JposException;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposBaseDevice.*;
+import static jpos.BiometricsConst.*;
+import static jpos.JposConst.*;
 
 /**
  * Class containing the biometrics specific properties, their default values and default implementations of
@@ -54,19 +56,19 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
      * UPOS property CapSensorColor. Default: CSC_MONO. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapSensorColor = BiometricsConst.BIO_CSC_MONO;
+    public int CapSensorColor = BIO_CSC_MONO;
 
     /**
      * UPOS property CapSensorOrientation. Default: CSO_NORMAL. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapSensorOrientation = BiometricsConst.BIO_CSO_NORMAL;
+    public int CapSensorOrientation = BIO_CSO_NORMAL;
 
     /**
      * Default value of CapSensorType property. Default: CST_PASSWORD. Should be updated
      * before calling initOnEnable the first time.
      */
-    public int CapSensorTypeDef = BiometricsConst.BIO_CST_PASSWORD;
+    public int CapSensorTypeDef = BIO_CST_PASSWORD;
 
     /**
      * UPOS property CapSensorType. Default: null. Must be overwritten
@@ -124,7 +126,7 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
      * by objects derived from JposDevice within the changeDefaults method, must be overwritten if CapSensorColor
      * does not contain CSC_MONO.
      */
-    public int SensorColor = BiometricsConst.BIO_SC_MONO;
+    public int SensorColor = BIO_SC_MONO;
 
     /**
      * UPOS property SensorHeight. Default: null. Must be overwritten
@@ -137,7 +139,7 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
      * before calling initOnClaim the first time.  Must be overwritten if CapSensorOrientation
      * does not contain CSO_NORMAL.
      */
-    public int SensorOrientationDef = BiometricsConst.BIO_SO_NORMAL;
+    public int SensorOrientationDef = BIO_SO_NORMAL;
 
     /**
      * UPOS property SensorOrientation.
@@ -193,18 +195,8 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
      * @return      true if value is valid, false otherwise.
      */
     boolean validateSensorOrientation(int value) {
-        int[] validValues = {
-                BiometricsConst.BIO_SO_NORMAL,
-                BiometricsConst.BIO_SO_RIGHT,
-                BiometricsConst.BIO_SO_INVERTED,
-                BiometricsConst.BIO_SO_LEFT
-        };
-        int[] correspondingCaptureBits = {
-                BiometricsConst.BIO_CSO_NORMAL,
-                BiometricsConst.BIO_CSO_RIGHT,
-                BiometricsConst.BIO_CSO_INVERTED,
-                BiometricsConst.BIO_CSO_LEFT
-        };
+        int[] validValues = { BIO_SO_NORMAL, BIO_SO_RIGHT, BIO_SO_INVERTED, BIO_SO_LEFT };
+        int[] correspondingCaptureBits = { BIO_CSO_NORMAL, BIO_CSO_RIGHT, BIO_CSO_INVERTED, BIO_CSO_LEFT };
         for (int i = 0; i < validValues.length; i++) {
             if (value == validValues[i]) {
                 return (CapSensorOrientation & correspondingCaptureBits[i]) != 0;
@@ -232,34 +224,14 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
      */
     boolean validateSensorType(int value) {
         int[] validValues = {
-                BiometricsConst.BIO_ST_FACIAL_FEATURES,
-                BiometricsConst.BIO_ST_VOICE,
-                BiometricsConst.BIO_ST_FINGERPRINT,
-                BiometricsConst.BIO_ST_IRIS,
-                BiometricsConst.BIO_ST_RETINA,
-                BiometricsConst.BIO_ST_HAND_GEOMETRY,
-                BiometricsConst.BIO_ST_SIGNATURE_DYNAMICS,
-                BiometricsConst.BIO_ST_KEYSTROKE_DYNAMICS,
-                BiometricsConst.BIO_ST_LIP_MOVEMENT,
-                BiometricsConst.BIO_ST_THERMAL_FACE_IMAGE,
-                BiometricsConst.BIO_ST_THERMAL_HAND_IMAGE,
-                BiometricsConst.BIO_ST_GAIT,
-                BiometricsConst.BIO_ST_PASSWORD
+                BIO_ST_FACIAL_FEATURES, BIO_ST_VOICE, BIO_ST_FINGERPRINT, BIO_ST_IRIS, BIO_ST_RETINA,
+                BIO_ST_HAND_GEOMETRY, BIO_ST_SIGNATURE_DYNAMICS, BIO_ST_KEYSTROKE_DYNAMICS, BIO_ST_LIP_MOVEMENT,
+                BIO_ST_THERMAL_FACE_IMAGE, BIO_ST_THERMAL_HAND_IMAGE, BIO_ST_GAIT, BIO_ST_PASSWORD
         };
         int[] correspondingCaptureBits = {
-                BiometricsConst.BIO_CST_FACIAL_FEATURES,
-                BiometricsConst.BIO_CST_VOICE,
-                BiometricsConst.BIO_CST_FINGERPRINT,
-                BiometricsConst.BIO_CST_IRIS,
-                BiometricsConst.BIO_CST_RETINA,
-                BiometricsConst.BIO_CST_HAND_GEOMETRY,
-                BiometricsConst.BIO_CST_SIGNATURE_DYNAMICS,
-                BiometricsConst.BIO_CST_KEYSTROKE_DYNAMICS,
-                BiometricsConst.BIO_CST_LIP_MOVEMENT,
-                BiometricsConst.BIO_CST_THERMAL_FACE_IMAGE,
-                BiometricsConst.BIO_CST_THERMAL_HAND_IMAGE,
-                BiometricsConst.BIO_CST_GAIT,
-                BiometricsConst.BIO_CST_PASSWORD
+                BIO_CST_FACIAL_FEATURES, BIO_CST_VOICE, BIO_CST_FINGERPRINT, BIO_CST_IRIS, BIO_CST_RETINA,
+                BIO_CST_HAND_GEOMETRY, BIO_CST_SIGNATURE_DYNAMICS, BIO_CST_KEYSTROKE_DYNAMICS, BIO_CST_LIP_MOVEMENT,
+                BIO_CST_THERMAL_FACE_IMAGE, BIO_CST_THERMAL_HAND_IMAGE, BIO_CST_GAIT, BIO_CST_PASSWORD
         };
         for (int i = 0; i < validValues.length; i++) {
             if (value == validValues[i]) {
@@ -273,29 +245,17 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
      * Validation of SensorColor property. Checks whether a given value is allowed due to the value of
      * capability CapSensorColor.
      * @param value SensorColor value to be checked
-     * @return      true if value is valid, false otherwise.
+     * @return      false if value is valid, true otherwise.
      */
     boolean validateSensorColor(int value) {
-        int[] validValues = {
-                BiometricsConst.BIO_SC_MONO,
-                BiometricsConst.BIO_SC_GRAYSCALE,
-                BiometricsConst.BIO_SC_16,
-                BiometricsConst.BIO_SC_256,
-                BiometricsConst.BIO_SC_FULL
-        };
-        int[] correspondingCaptureBits = {
-                BiometricsConst.BIO_CSC_MONO,
-                BiometricsConst.BIO_CSC_GRAYSCALE,
-                BiometricsConst.BIO_CSC_16,
-                BiometricsConst.BIO_CSC_256,
-                BiometricsConst.BIO_CSC_FULL
-        };
+        int[] validValues = { BIO_SC_MONO, BIO_SC_GRAYSCALE, BIO_SC_16, BIO_SC_256, BIO_SC_FULL };
+        int[] correspondingCaptureBits = { BIO_CSC_MONO, BIO_CSC_GRAYSCALE, BIO_CSC_16, BIO_CSC_256, BIO_CSC_FULL };
         for (int i = 0; i < validValues.length; i++) {
             if (value == validValues[i]) {
-                return (CapSensorColor & correspondingCaptureBits[i]) != 0;
+                return (CapSensorColor & correspondingCaptureBits[i]) == 0;
             }
         }
-        return false;
+        return true;
     }
 
     @Override
@@ -365,34 +325,27 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
 
     @Override
     public void checkFARorFRRLimit(int limit, String name) throws JposException {
-        Device.checkRange(limit, 0, 100, JposConst.JPOS_E_ILLEGAL, name + " out of range: " + limit);
+        checkRange(limit, 0, 100, JPOS_E_ILLEGAL, name + " out of range: " + limit);
     }
 
     @Override
     public boolean checkBIRPurpose(byte[] bir, Boolean verify) {
-        switch (new BiometricInformationRecord(bir).getPurpose()) {
-            case BiometricInformationRecord.PURPOSE_ENROLL:
-                return true;
-            case BiometricInformationRecord.PURPOSE_ENROLL_FOR_VERIFICATION:
-                if (verify != null && verify)
-                    return true;
-                break;
-            case BiometricInformationRecord.PURPOSE_ENROLL_FOR_IDENTIFICATION:
-                if (verify != null && !verify)
-                    return true;
-        }
-        return false;
+        if (bir == null)
+            return false;
+        return switch (new BiometricInformationRecord(bir).getPurpose()) {
+            case BiometricInformationRecord.PURPOSE_ENROLL -> true;
+            case BiometricInformationRecord.PURPOSE_ENROLL_FOR_VERIFICATION -> verify != null && verify;
+            case BiometricInformationRecord.PURPOSE_ENROLL_FOR_IDENTIFICATION -> verify != null && !verify;
+            default -> false;
+        };
     }
 
     @Override
     public boolean isDataEmpty(byte[] data, boolean isBIR) {
         if (data == null || Arrays.equals(data, Arrays.copyOf(new byte[0], data.length)))
             return true;
-        if (isBIR && (data.length < BiometricInformationRecord.BiometricDataBlockOffset ||
-            new BiometricInformationRecord(data).getLength()  == BiometricInformationRecord.BiometricDataBlockOffset)) {
-            return true;
-        }
-        return false;
+        return isBIR && (data.length < BiometricInformationRecord.BiometricDataBlockOffset ||
+                new BiometricInformationRecord(data).getLength() == BiometricInformationRecord.BiometricDataBlockOffset);
     }
 
     /**
@@ -408,7 +361,7 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
          * @param bir Byte array representing the BIR.
          */
         public BiometricInformationRecord(byte[] bir) {
-            TheBIR = Arrays.copyOf(bir, bir.length < BiometricDataBlockOffset ? BiometricDataBlockOffset : bir.length);
+            TheBIR = Arrays.copyOf(bir, Math.max(bir.length, BiometricDataBlockOffset));
             wrapBuffer();
         }
 
@@ -420,7 +373,7 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
             wrapBuffer();
             try {
                 setLength(BiometricDataBlockOffset);
-            } catch (JposException e) {}
+            } catch (JposException ignored) {}
         }
 
         private void wrapBuffer() {
@@ -498,7 +451,7 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
          */
         public void setLength(int length) throws JposException {
             if (length < BiometricDataBlockOffset)
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Insufficient BIR length");
+                throw new JposException(JPOS_E_FAILURE, "Insufficient BIR length");
             Buffer.putInt(LengthOffset, length);
         }
 
@@ -516,8 +469,8 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
          * @throws JposException If version is out of range.
          */
         public void setHeaderVersion(int version) throws JposException {
-            if ((version & ~0xff) != 0 && version < Byte.MIN_VALUE)
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Header Version out of range: " + version);
+            if (version < Byte.MIN_VALUE)
+                throw new JposException(JPOS_E_FAILURE, "Header Version out of range: " + version);
             TheBIR[HeaderVersionOffset] = (byte)(version & 0xff);
         }
 
@@ -559,8 +512,8 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
          * @throws JposException If birDataType is out of range.
          */
         public void setBIRDataType(int birDataType) throws JposException {
-            if ((birDataType & ~0xff) != 0 && birDataType < Byte.MIN_VALUE)
-                throw new JposException(JposConst.JPOS_E_FAILURE, "BIR Data Type out of range: " + birDataType);
+            if (birDataType < Byte.MIN_VALUE)
+                throw new JposException(JPOS_E_FAILURE, "BIR Data Type out of range: " + birDataType);
             TheBIR[BIRDataTypeOffset] = (byte)(birDataType & 0xff);
         }
 
@@ -578,8 +531,8 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
          * @throws     JposException if owner is out of range.
          */
         public void setFormatIDOwner(int owner) throws JposException {
-            if ((owner & ~((1 << Short.SIZE) - 1)) != 0 && owner < Short.MIN_VALUE)
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Format ID component Owner out of range: " + owner);
+            if (owner < Short.MIN_VALUE)
+                throw new JposException(JPOS_E_FAILURE, "Format ID component Owner out of range: " + owner);
             Buffer.putShort(FormatIDOwnerOffset, (short) owner);
         }
 
@@ -597,8 +550,8 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
          * @throws     JposException if type is out of range.
          */
         public void setFormatIDType(int type) throws JposException {
-            if ((type & ~((1 << Short.SIZE) - 1)) != 0 && type < Short.MIN_VALUE)
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Format ID component Type out of range: " + type);
+            if (type < Short.MIN_VALUE)
+                throw new JposException(JPOS_E_FAILURE, "Format ID component Type out of range: " + type);
             Buffer.putShort(FormatIDTypeOffset, (short)type);
         }
 
@@ -628,7 +581,7 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
          */
         public void setQuality(int quality) throws JposException {
             if (quality < Byte.MIN_VALUE || quality > (1 << Byte.SIZE))
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Quality out of range: " + quality);
+                throw new JposException(JPOS_E_FAILURE, "Quality out of range: " + quality);
             TheBIR[QualityOffset] = (byte)(quality & 0xff);
         }
 
@@ -676,8 +629,8 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
          * @throws JposException If purpose is out of range.
          */
         public void setPurpose(int purpose) throws JposException {
-            if ((purpose & ~0xff) != 0 && purpose < Byte.MIN_VALUE)
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Purpose out of range: " + purpose);
+            if (purpose < Byte.MIN_VALUE)
+                throw new JposException(JPOS_E_FAILURE, "Purpose out of range: " + purpose);
             TheBIR[PurposeOffset] = (byte)(purpose & 0xff);
         }
 
@@ -789,7 +742,7 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
             wrapBuffer();
             try {
                 setLength(TheBIR.length);
-            } catch (JposException e) {}
+            } catch (JposException ignored) {}
         }
 
         /**

@@ -34,7 +34,7 @@ public class PrintNormal extends OutputPrintRequest {
         return Station;
     }
 
-    private int Station;
+    private final int Station;
 
     /**
      * POSPrinter method PrintNormal parameter data, converted to a List&lt;Object&gt; with POSPrinterService method outputDataParts.
@@ -44,7 +44,7 @@ public class PrintNormal extends OutputPrintRequest {
         return Data;
     }
 
-    private List<POSPrinterService.PrintDataPart> Data;
+    private final List<POSPrinterService.PrintDataPart> Data;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -57,7 +57,7 @@ public class PrintNormal extends OutputPrintRequest {
     public PrintNormal(JposCommonProperties props, int station, String data) {
         super(props);
         Station = station;
-        Data = data == null ? new ArrayList<POSPrinterService.PrintDataPart>() : ((POSPrinterService)props.EventSource).outputDataParts(data);
+        Data = data == null ? new ArrayList<>() : ((POSPrinterService)props.EventSource).outputDataParts(data);
     }
 
     @Override

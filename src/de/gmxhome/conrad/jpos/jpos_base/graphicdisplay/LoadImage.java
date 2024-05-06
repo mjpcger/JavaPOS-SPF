@@ -17,9 +17,8 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.graphicdisplay;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
 
 /**
  * Output request executor for GraphicDisplay method LoadImage.
@@ -30,9 +29,10 @@ public class LoadImage extends JposOutputRequest {
      * @param props     Property set of device service.
      * @param fileName  The file name of the image to be loaded.
      */
-    public LoadImage(JposCommonProperties props, String fileName) {
+    public LoadImage(GraphicDisplayProperties props, String fileName) {
         super(props);
         FileName = fileName;
+        ImageType = props.ImageType;
     }
 
     /**
@@ -42,7 +42,7 @@ public class LoadImage extends JposOutputRequest {
     public String getImageType() {
         return ImageType;
     }
-    private String ImageType;
+    private final String ImageType;
 
     /**
      * Returns contents of fileName parameter
@@ -51,7 +51,7 @@ public class LoadImage extends JposOutputRequest {
     public String getFileName() {
         return FileName;
     }
-    private String FileName;
+    private final String FileName;
 
     @Override
     public void invoke() throws JposException {

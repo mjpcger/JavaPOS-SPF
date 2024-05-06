@@ -22,6 +22,9 @@ import de.gmxhome.conrad.jpos.jpos_base.JposDeviceFactory;
 import jpos.*;
 import jpos.config.JposEntry;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * General part of ElectronicValueRW factory for JPOS devices using this framework.
  */
@@ -36,15 +39,7 @@ public class Factory extends JposDeviceFactory {
      */
     @Deprecated
     public ElectronicValueRWService addDevice(int index, JposDevice dev) throws JposException {
-        ElectronicValueRWProperties props = dev.getElectronicValueRWProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getElectronicValueRWProperties()");
-        ElectronicValueRWService service = (ElectronicValueRWService) (props.EventSource = new ElectronicValueRWService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedElectronicValueRW;
-        dev.changeDefaults(props);
-        props.addProperties(dev.ElectronicValueRWs);
-        service.DeviceInterface = service.ElectronicValueRW = props;
-        return service;
+        return addDevice(index, dev, CurrentEntry);
     }
 
     /**
@@ -58,14 +53,8 @@ public class Factory extends JposDeviceFactory {
      */
     public ElectronicValueRWService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         ElectronicValueRWProperties props = dev.getElectronicValueRWProperties(index);
-        Object o = entry.getPropertyValue("UseEnumeratedValues");
-        boolean useValues = o != null ? Boolean.parseBoolean(o.toString()) : true;
-        o = entry.getPropertyValue("StrongEnumerationCheck");
-        boolean strong = o != null ? Boolean.parseBoolean(o.toString()) : true;
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getElectronicValueRWProperties()");
-        ElectronicValueRWService service = (ElectronicValueRWService) (props.EventSource = new ElectronicValueRWService(props, dev, useValues, strong));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedElectronicValueRW;
+        validateJposConfiguration(props, dev, dev.ClaimedElectronicValueRW, entry);
+        ElectronicValueRWService service = (ElectronicValueRWService)(props.EventSource = new ElectronicValueRWService(props, dev));
         dev.changeDefaults(props);
         props.addProperties(dev.ElectronicValueRWs);
         service.DeviceInterface = service.ElectronicValueRW = props;

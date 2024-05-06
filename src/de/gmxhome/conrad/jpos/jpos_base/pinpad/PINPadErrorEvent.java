@@ -18,7 +18,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.pinpad;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.JposConst;
+
+import static jpos.JposConst.*;
 
 /**
  * Error event implementation for PINPad devices. For compatibility to previous version only.
@@ -32,7 +33,7 @@ public class PINPadErrorEvent extends JposErrorEvent {
      * @param extended  ErrorCodeExtended, see UPOS specification, chapter Common Properties, Methods, and Events - Events - ErrorEvent.
      */
     public PINPadErrorEvent(JposBase source, int errorcode, int extended) {
-        super(source, errorcode, extended, JposConst.JPOS_EL_INPUT);
+        super(source, errorcode, extended, JPOS_EL_INPUT);
     }
 
     /**
@@ -44,6 +45,6 @@ public class PINPadErrorEvent extends JposErrorEvent {
      * @param message   Error message from exception.
      */
     public PINPadErrorEvent(JposBase source, int errorcode, int extended, String message) {
-        super(source, errorcode, extended, JposConst.JPOS_EL_INPUT, message);
+        super(source, errorcode, extended, JPOS_EL_INPUT, message);
     }
 }

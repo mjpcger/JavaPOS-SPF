@@ -21,18 +21,22 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.CoinAcceptorConst.*;
+import static jpos.JposConst.*;
+
 /**
  * CoinAcceptor service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class CoinAcceptorService extends JposBase implements CoinAcceptorService115 {
+public class CoinAcceptorService extends JposBase implements CoinAcceptorService116 {
     /**
      * Instance of a class implementing the CoinAcceptorInterface for coin acceptor specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public CoinAcceptorInterface CoinAcceptorInterface;
 
-    private CoinAcceptorProperties Data;
+    private final CoinAcceptorProperties Data;
 
     /**
      * Constructor. Stores given property set and device implementation object.
@@ -132,7 +136,7 @@ public class CoinAcceptorService extends JposBase implements CoinAcceptorService
     @Override
     public int getFullStatus() throws JposException {
         checkEnabled();
-        Device.check(Data.FullStatus == null, JposConst.JPOS_E_FAILURE, "Not initialized: FullStatus");
+        check(Data.FullStatus == null, JPOS_E_FAILURE, "Not initialized: FullStatus");
         logGet("FullStatus");
         return Data.FullStatus;
     }
@@ -151,7 +155,7 @@ public class CoinAcceptorService extends JposBase implements CoinAcceptorService
             s = "";
         checkOpened();
         String[] allowed = Data.DepositCodeList.split(",");
-        Device.check(!JposDevice.member(s, allowed), JposConst.JPOS_E_ILLEGAL, "Currency code " + s + " not in { " + Data.DepositCodeList + "}");
+        check(!member(s, allowed), JPOS_E_ILLEGAL, "Currency code " + s + " not in { " + Data.DepositCodeList + "}");
         checkNoChangedOrClaimed(Data.CurrencyCode, s);
         CoinAcceptorInterface.currencyCode(s);
         logSet("CurrencyCode");
@@ -161,26 +165,26 @@ public class CoinAcceptorService extends JposBase implements CoinAcceptorService
     public void setRealTimeDataEnabled(boolean b) throws JposException {
         logPreSet("RealTimeDataEnabled");
         checkEnabled();
-        Device.check(!Data.CapRealTimeData && b, JposConst.JPOS_E_ILLEGAL, "Device does not support RealTimeData");
+        check(!Data.CapRealTimeData && b, JPOS_E_ILLEGAL, "Device does not support RealTimeData");
         CoinAcceptorInterface.realTimeDataEnabled(b);
         logSet("RealTimeDataEnabled");
     }
 
     @Override
     public void adjustCashCounts(String cashCounts) throws JposException {
-        logPreCall("AdjustCashCounts", cashCounts == null ? "null" : "" + cashCounts);
+        logPreCall("AdjustCashCounts", removeOuterArraySpecifier(new Object[]{cashCounts}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(cashCounts == null, JposConst.JPOS_E_ILLEGAL, "Cash counts null");
-        String cashCount[] = cashCounts.split(",");
-        Device.check(cashCount.length == 0, JposConst.JPOS_E_ILLEGAL, "No cash counts");
+        check(cashCounts == null, JPOS_E_ILLEGAL, "Cash counts null");
+        String[] cashCount = cashCounts.split(",");
+        check(cashCount.length == 0, JPOS_E_ILLEGAL, "No cash counts");
         for (String entry : cashCount) {
-            String values[] = entry.split(":");
-            Device.check(values.length != 2, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
+            String[] values = entry.split(":");
+            check(values.length != 2, JPOS_E_ILLEGAL, "Bad format of cash count");
             try {
-                Device.check(Integer.parseInt(values[0]) <= 0 || Integer.parseInt(values[1]) < 0, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
+                check(Integer.parseInt(values[0]) <= 0 || Integer.parseInt(values[1]) < 0, JPOS_E_ILLEGAL, "Bad format of cash count");
             }
             catch (NumberFormatException e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Non-integer cash count component", e);
+                throw new JposException(JPOS_E_ILLEGAL, "Non-integer cash count component", e);
             }
         }
         CoinAcceptorInterface.adjustCashCounts(cashCounts);
@@ -191,19 +195,19 @@ public class CoinAcceptorService extends JposBase implements CoinAcceptorService
     public void beginDeposit() throws JposException {
         logPreCall("BeginDeposit");
         checkEnabled();
-        Device.check(Data.DepositStatus != CoinAcceptorConst.CACC_STATUS_DEPOSIT_END, JposConst.JPOS_E_ILLEGAL,
-                (Data.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Just in deposit operation");
+        check(Data.DepositStatus != CACC_STATUS_DEPOSIT_END, JPOS_E_ILLEGAL,
+                (Data.DepositStatus == CACC_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Just in deposit operation");
         CoinAcceptorInterface.beginDeposit();
         logCall("BeginDeposit");
     }
 
     @Override
     public void endDeposit(int success) throws JposException {
-        logPreCall("EndDeposit", "" + success);
+        logPreCall("EndDeposit", removeOuterArraySpecifier(new Object[]{success}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(Data.DepositStatus != CoinAcceptorConst.CACC_STATUS_DEPOSIT_COUNT, JposConst.JPOS_E_ILLEGAL,
-                (Data.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Operation not fixed");
-        Device.check(success != CoinAcceptorConst.CACC_DEPOSIT_COMPLETE, JposConst.JPOS_E_ILLEGAL, "Invalid success code: " + success);
+        check(Data.DepositStatus != CACC_STATUS_DEPOSIT_COUNT, JPOS_E_ILLEGAL,
+                (Data.DepositStatus == CACC_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Operation not fixed");
+        check(success != CACC_DEPOSIT_COMPLETE, JPOS_E_ILLEGAL, "Invalid success code: " + success);
         CoinAcceptorInterface.endDeposit(success);
         logCall("EndDeposit");
     }
@@ -212,22 +216,22 @@ public class CoinAcceptorService extends JposBase implements CoinAcceptorService
     public void fixDeposit() throws JposException {
         logPreCall("FixDeposit");
         checkEnabled();
-        Device.check(Data.DepositStatus != CoinAcceptorConst.CACC_STATUS_DEPOSIT_START, JposConst.JPOS_E_ILLEGAL,
-                (Data.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_JAM ? "Jam condition" :
-                        (Data.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_END ? "Operation not started" : "Operation just fixed")));
+        check(Data.DepositStatus != CACC_STATUS_DEPOSIT_START, JPOS_E_ILLEGAL,
+                (Data.DepositStatus == CACC_STATUS_DEPOSIT_JAM ? "Jam condition" :
+                        (Data.DepositStatus == CACC_STATUS_DEPOSIT_END ? "Operation not started" : "Operation just fixed")));
         CoinAcceptorInterface.fixDeposit();
         logCall("FixDeposit");
     }
 
     @Override
     public void pauseDeposit(int control) throws JposException {
-        logPreCall("PauseDeposit");
+        logPreCall("PauseDeposit", removeOuterArraySpecifier(new Object[]{control}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapPauseDeposit, JposConst.JPOS_E_ILLEGAL, "PauseDeposit not supported");
-        Device.check(control == CoinAcceptorConst.CACC_DEPOSIT_PAUSE && Data.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_END,
-                JposConst.JPOS_E_ILLEGAL, "No pending deposit operation");
-        long allowed[] = { CoinAcceptorConst.CACC_DEPOSIT_PAUSE, CoinAcceptorConst.CACC_DEPOSIT_RESTART };
-        Device.checkMember(control, allowed, JposConst.JPOS_E_ILLEGAL, "Illegal parameter value");
+        check(!Data.CapPauseDeposit, JPOS_E_ILLEGAL, "PauseDeposit not supported");
+        check(control == CACC_DEPOSIT_PAUSE && Data.DepositStatus == CACC_STATUS_DEPOSIT_END,
+                JPOS_E_ILLEGAL, "No pending deposit operation");
+        long[] allowed = { CACC_DEPOSIT_PAUSE, CACC_DEPOSIT_RESTART };
+        checkMember(control, allowed, JPOS_E_ILLEGAL, "Illegal parameter value");
         CoinAcceptorInterface.pauseDeposit(control);
         logCall("PauseDeposit");
     }
@@ -236,15 +240,11 @@ public class CoinAcceptorService extends JposBase implements CoinAcceptorService
     public void readCashCounts(String[] cashCounts, boolean[] discrepancy) throws JposException {
         logPreCall("ReadCashCounts");
         checkEnabled();
-        Device.check(cashCounts == null, JposConst.JPOS_E_ILLEGAL, "cashCounts null");
-        Device.check(cashCounts.length != 1, JposConst.JPOS_E_ILLEGAL, "cashCounts: Invalid array size");
-        Device.check(discrepancy == null, JposConst.JPOS_E_ILLEGAL, "discrepancy null");
-        Device.check(discrepancy.length != 1, JposConst.JPOS_E_ILLEGAL, "discrepancy: Invalid array size");
+        check(cashCounts == null, JPOS_E_ILLEGAL, "cashCounts null");
+        check(cashCounts.length != 1, JPOS_E_ILLEGAL, "cashCounts: Invalid array size");
+        check(discrepancy == null, JPOS_E_ILLEGAL, "discrepancy null");
+        check(discrepancy.length != 1, JPOS_E_ILLEGAL, "discrepancy: Invalid array size");
         CoinAcceptorInterface.readCashCounts(cashCounts, discrepancy);
-        try {
-            logCall("ReadCashCounts", "{ " + cashCounts[0] + " }, " + discrepancy[0]);
-        } catch (NullPointerException e) {
-            throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid result for " + (cashCounts[0] == null ? "cashCounts" : "discrepancy"), e);
-        }
+        logCall("ReadCashCounts", removeOuterArraySpecifier(new Object[]{cashCounts[0], discrepancy[0]}, Device.MaxArrayStringElements));
     }
 }

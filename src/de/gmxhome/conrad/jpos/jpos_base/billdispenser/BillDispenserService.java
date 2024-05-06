@@ -21,18 +21,21 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * BillDispenser service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class BillDispenserService extends JposBase implements BillDispenserService115 {
+public class BillDispenserService extends JposBase implements BillDispenserService116 {
     /**
      * Instance of a class implementing the BillDispenserInterface for bill dispenser specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public BillDispenserInterface BillDispenserInterface;
 
-    private BillDispenserProperties Data;
+    private final BillDispenserProperties Data;
 
     /**
      * Constructor. Stores given property set and device implementation object.
@@ -125,7 +128,7 @@ public class BillDispenserService extends JposBase implements BillDispenserServi
     @Override
     public int getDeviceStatus() throws JposException {
         checkEnabled();
-        Device.check(Data.DeviceStatus == null, JposConst.JPOS_E_FAILURE, "Not initialized: DeviceStatus");
+        check(Data.DeviceStatus == null, JPOS_E_FAILURE, "Not initialized: DeviceStatus");
         logGet("DeviceStatus");
         return Data.DeviceStatus;
     }
@@ -144,7 +147,7 @@ public class BillDispenserService extends JposBase implements BillDispenserServi
             s = "";
         checkOpened();
         String[] allowed = Data.CurrencyCodeList.split(",");
-        Device.check(!JposDevice.member(s, allowed), JposConst.JPOS_E_ILLEGAL, "Currency code " + s + " not in { " + Data.CurrencyCodeList + "}");
+        check(!member(s, allowed), JPOS_E_ILLEGAL, "Currency code " + s + " not in { " + Data.CurrencyCodeList + "}");
         checkNoChangedOrClaimed(Data.CurrencyCode, s);
         BillDispenserInterface.currencyCode(s);
         logSet("CurrencyCode");
@@ -154,27 +157,27 @@ public class BillDispenserService extends JposBase implements BillDispenserServi
     public void setCurrentExit(int i) throws JposException {
         logPreSet("CurrentExit");
         checkEnabled();
-        Device.check(i < 1 || i > Data.DeviceExits, JposConst.JPOS_E_ILLEGAL, "CurrentExit out of range: " + i);
+        check(i < 1 || i > Data.DeviceExits, JPOS_E_ILLEGAL, "CurrentExit out of range: " + i);
         BillDispenserInterface.currentExit(i);
         logSet("CurrentExit");
     }
 
     @Override
     public void adjustCashCounts(String cashCounts) throws JposException {
-        logPreCall("AdjustCashCounts", cashCounts == null ? "null" : "" + cashCounts);
+        logPreCall("AdjustCashCounts", removeOuterArraySpecifier(new Object[]{cashCounts}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(cashCounts == null, JposConst.JPOS_E_ILLEGAL, "Cash counts null");
-        Device.check(cashCounts.length() == 0 || cashCounts.charAt(0) != ';', JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
-        String cashCount[] = cashCounts.substring(1).split(",");
-        Device.check(cashCount.length == 0, JposConst.JPOS_E_ILLEGAL, "No cash counts");
+        check(cashCounts == null, JPOS_E_ILLEGAL, "Cash counts null");
+        check(cashCounts.length() == 0 || cashCounts.charAt(0) != ';', JPOS_E_ILLEGAL, "Bad format of cash count");
+        String[] cashCount = cashCounts.substring(1).split(",");
+        check(cashCount.length == 0, JPOS_E_ILLEGAL, "No cash counts");
         for (String entry : cashCount) {
-            String values[] = entry.split(":");
-            Device.check(values.length != 2, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
+            String[] values = entry.split(":");
+            check(values.length != 2, JPOS_E_ILLEGAL, "Bad format of cash count");
             try {
-                Device.check(Integer.parseInt(values[0]) <= 0 || Integer.parseInt(values[1]) < 0, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
+                check(Integer.parseInt(values[0]) <= 0 || Integer.parseInt(values[1]) < 0, JPOS_E_ILLEGAL, "Bad format of cash count");
             }
             catch (NumberFormatException e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Non-integer cash count component", e);
+                throw new JposException(JPOS_E_ILLEGAL, "Non-integer cash count component", e);
             }
         }
         BillDispenserInterface.adjustCashCounts(cashCounts);
@@ -183,21 +186,21 @@ public class BillDispenserService extends JposBase implements BillDispenserServi
 
     @Override
     public void dispenseCash(String cashCounts) throws JposException {
-        logPreCall("DispenseCash", cashCounts == null ? "null" : "" + cashCounts);
+        logPreCall("DispenseCash", removeOuterArraySpecifier(new Object[]{cashCounts}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Device is busy");
-        Device.check(cashCounts == null, JposConst.JPOS_E_ILLEGAL, "Cash counts null");
-        Device.check(cashCounts.length() == 0 || cashCounts.charAt(0) != ';', JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
-        String cashCount[] = cashCounts.substring(1).split(",");
-        Device.check(cashCount.length == 0, JposConst.JPOS_E_ILLEGAL, "No cash counts");
+        check(Props.State == JPOS_S_BUSY, JPOS_E_BUSY, "Device is busy");
+        check(cashCounts == null, JPOS_E_ILLEGAL, "Cash counts null");
+        check(cashCounts.length() == 0 || cashCounts.charAt(0) != ';', JPOS_E_ILLEGAL, "Bad format of cash count");
+        String[] cashCount = cashCounts.substring(1).split(",");
+        check(cashCount.length == 0, JPOS_E_ILLEGAL, "No cash counts");
         for (String entry : cashCount) {
-            String values[] = entry.split(":");
-            Device.check(values.length != 2, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
+            String[] values = entry.split(":");
+            check(values.length != 2, JPOS_E_ILLEGAL, "Bad format of cash count");
             try {
-                Device.check(Integer.parseInt(values[0]) <= 0 || Integer.parseInt(values[1]) < 0, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
+                check(Integer.parseInt(values[0]) <= 0 || Integer.parseInt(values[1]) < 0, JPOS_E_ILLEGAL, "Bad format of cash count");
             }
             catch (NumberFormatException e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Non-integer cash count component", e);
+                throw new JposException(JPOS_E_ILLEGAL, "Non-integer cash count component", e);
             }
         }
         if (callNowOrLater(BillDispenserInterface.dispenseCash(cashCounts)))
@@ -210,15 +213,11 @@ public class BillDispenserService extends JposBase implements BillDispenserServi
     public void readCashCounts(String[] cashCounts, boolean[] discrepancy) throws JposException {
         logPreCall("ReadCashCounts");
         checkEnabled();
-        Device.check(cashCounts == null, JposConst.JPOS_E_ILLEGAL, "cashCounts null");
-        Device.check(cashCounts.length != 1, JposConst.JPOS_E_ILLEGAL, "cashCounts: Invalid array size");
-        Device.check(discrepancy == null, JposConst.JPOS_E_ILLEGAL, "discrepancy null");
-        Device.check(discrepancy.length != 1, JposConst.JPOS_E_ILLEGAL, "discrepancy: Invalid array size");
+        check(cashCounts == null, JPOS_E_ILLEGAL, "cashCounts null");
+        check(cashCounts.length != 1, JPOS_E_ILLEGAL, "cashCounts: Invalid array size");
+        check(discrepancy == null, JPOS_E_ILLEGAL, "discrepancy null");
+        check(discrepancy.length != 1, JPOS_E_ILLEGAL, "discrepancy: Invalid array size");
         BillDispenserInterface.readCashCounts(cashCounts, discrepancy);
-        try {
-            logCall("ReadCashCounts", "{ " + cashCounts[0] + " }, " + discrepancy[0]);
-        } catch (NullPointerException e) {
-            throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid result for " + (cashCounts[0] == null ? "cashCounts" : "discrepancy"), e);
-        }
+        logCall("ReadCashCounts", removeOuterArraySpecifier(new Object[]{cashCounts[0], discrepancy[0]}, Device.MaxArrayStringElements));
     }
 }

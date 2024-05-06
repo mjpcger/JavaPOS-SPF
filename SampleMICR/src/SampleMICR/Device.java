@@ -18,11 +18,12 @@ package SampleMICR;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.micr.*;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.MICRConst;
+import jpos.*;
 import jpos.config.JposEntry;
-import net.bplaced.conrad.log4jpos.Level;
+
+import static jpos.JposConst.*;
+import static jpos.MICRConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * Base of a JposDevice based implementation of JavaPOS MICR device service implementation for the sample device
@@ -47,7 +48,11 @@ import net.bplaced.conrad.log4jpos.Level;
 public class Device extends JposDevice implements Runnable {
     private int OwnPort = 0;
     private int CharacterTimeout = 20;
-    private int MinClaimTimeout = 200;
+
+    /**
+     * Minimum claim timeout, as configured in jpos.xml.
+     */
+    int MinClaimTimeout = 200;
     private String SubstituteCharacters = "tao-";
 
     /**
@@ -69,12 +74,12 @@ public class Device extends JposDevice implements Runnable {
      * Current power state of the device. For the sample device, the values SUE_POWER_OFF_OFFLINE and SUE_POWER_ONLINE
      * are supported.
      */
-    int Offline = JposConst.JPOS_SUE_POWER_OFF_OFFLINE;
+    int Offline = JPOS_SUE_POWER_OFF_OFFLINE;
 
     /**
      * Communication handler thread object.
      */
-    Thread CommandProcessor;
+    ThreadHandler CommandProcessor;
 
     /**
      * Synchronization object used to wait for the specified poll delay. Will be signalled to abort the wait whenever
@@ -92,7 +97,7 @@ public class Device extends JposDevice implements Runnable {
         mICRInit(1);
         PhysicalDeviceDescription = "MICR simulator";
         PhysicalDeviceName = "MICR Simulator";
-        CapPowerReporting = JposConst.JPOS_PR_STANDARD;
+        CapPowerReporting = JPOS_PR_STANDARD;
     }
 
     @Override
@@ -102,28 +107,28 @@ public class Device extends JposDevice implements Runnable {
             Object o;
             if ((o = entry.getPropertyValue("OwnPort")) != null) {
                 if ((OwnPort = Integer.parseInt(o.toString())) < 0 || OwnPort >= 0xffff)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid source port.");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid source port.");
             }
             if ((o = entry.getPropertyValue("CharacterTimeout")) != null) {
                 if ((CharacterTimeout = Integer.parseInt(o.toString())) <= 0)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid character timeout: " + CharacterTimeout);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid character timeout: " + CharacterTimeout);
             }
             if ((o = entry.getPropertyValue("MinClaimTimeout")) != null) {
                 if ((MinClaimTimeout = Integer.parseInt(o.toString())) < 0)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid minimum claim timeout: " + MinClaimTimeout);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid minimum claim timeout: " + MinClaimTimeout);
             }
             if ((o = entry.getPropertyValue("PollDelay")) != null) {
                 if ((PollDelay = Integer.parseInt(o.toString())) <= 0)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid poll delay: " + PollDelay);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid poll delay: " + PollDelay);
             }
             if ((o = entry.getPropertyValue("SubstituteCharacters")) != null) {
                 if ((SubstituteCharacters = o.toString()).length() != 4)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid substitute characters: " + SubstituteCharacters);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid substitute characters: " + SubstituteCharacters);
             }
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property", e);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property", e);
         }
     }
 
@@ -133,7 +138,7 @@ public class Device extends JposDevice implements Runnable {
         props.DeviceServiceVersion += 1;
         props.CapValidationDevice = false;
         props.DeviceServiceDescription = "MICR service for smple MICR simulator";
-        CapPowerReporting = JposConst.JPOS_PR_STANDARD;
+        CapPowerReporting = JPOS_PR_STANDARD;
     }
 
     /**
@@ -144,8 +149,8 @@ public class Device extends JposDevice implements Runnable {
     JposException initPort() {
         try {
             ((TcpClientIOProcessor) (Target = new TcpClientIOProcessor(this, ID))).setParam(OwnPort, PollDelay);
-            Target.open(Offline == JposConst.JPOS_SUE_POWER_OFF_OFFLINE);
-            Offline = JposConst.JPOS_SUE_POWER_ONLINE;
+            Target.open(Offline == JPOS_SUE_POWER_OFF_OFFLINE);
+            Offline = JPOS_SUE_POWER_ONLINE;
         } catch (JposException e) {
             Target = null;
             return e;
@@ -158,6 +163,7 @@ public class Device extends JposDevice implements Runnable {
      *
      * @return In case of an IO error, the corresponding exception. Otherwise null
      */
+    @SuppressWarnings("UnusedReturnValue")
     JposException closePort() {
         JposException e = null;
         if (Target != null) {
@@ -179,6 +185,7 @@ public class Device extends JposDevice implements Runnable {
      * @param command Command to be sent. Must be "I" (Insert cheque) or "R" (Release cheque )
      * @return true on success, false if I/O error occurred.
      */
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     synchronized boolean sendCommand(String command) {
         if (connectionOffline())
             return false;
@@ -187,9 +194,9 @@ public class Device extends JposDevice implements Runnable {
             Target.write(request);
             return true;
         } catch (JposException e) {
-            log(Level.TRACE, ID + ": IO error: " + e.getMessage());
+            log(TRACE, ID + ": IO error: " + e.getMessage());
         }
-        Offline = JposConst.JPOS_SUE_POWER_OFF_OFFLINE;
+        Offline = JPOS_SUE_POWER_OFF_OFFLINE;
         closePort();
         return false;
     }
@@ -202,7 +209,7 @@ public class Device extends JposDevice implements Runnable {
         if (Target == null) {
             JposException e = initPort();
             if (e != null) {
-                Offline = JposConst.JPOS_SUE_POWER_OFF_OFFLINE;
+                Offline = JPOS_SUE_POWER_OFF_OFFLINE;
                 return true;
             }
         }
@@ -215,9 +222,10 @@ public class Device extends JposDevice implements Runnable {
      *
      * @return MICR data on success, empty string in case of a timeout condition, null in case of I/O error.
      */
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     private String recvData() {
         UniqueIOProcessor proc;
-        String resp = "";
+        StringBuilder resp = new StringBuilder();
         synchronized (this) {
             if (connectionOffline())
                 return null;
@@ -230,10 +238,10 @@ public class Device extends JposDevice implements Runnable {
                 if (part.length == 0)
                     return "";
                 if (part[0] == '\n')
-                    return resp;
-                resp = resp + new String(part);
+                    return resp.toString();
+                resp.append(new String(part));
             } catch (JposException e) {
-                Offline = JposConst.JPOS_SUE_POWER_OFF_OFFLINE;
+                Offline = JPOS_SUE_POWER_OFF_OFFLINE;
                 closePort();
                 return null;
             }
@@ -249,7 +257,7 @@ public class Device extends JposDevice implements Runnable {
         while (!ToBeFinished) {
             String data = recvData();
             if (props.DeviceEnabled) {
-                if ((props.PowerState == JposConst.JPOS_PS_ONLINE) != (Offline == JposConst.JPOS_SUE_POWER_ONLINE)) {
+                if ((props.PowerState == JPOS_PS_ONLINE) != (Offline == JPOS_SUE_POWER_ONLINE)) {
                     try {
                         handleEvent(new JposStatusUpdateEvent(props.EventSource, Offline));
                     } catch (JposException e) {
@@ -267,12 +275,11 @@ public class Device extends JposDevice implements Runnable {
 
     private String[] strip(String[] parts) {
         String[] res;
-        int start;
-        for (start = 0; start < parts.length && parts[start].length() == 0; start++)
-            ;
+        int start = 0;
+        while (start < parts.length && parts[start].length() == 0)
+            start++;
         res = new String[parts.length - start];
-        for (int i = parts.length - 1; i >= start; i--)
-            res[i - start] = parts[i];
+        if (parts.length - start >= 0) System.arraycopy(parts, start, res, 0, parts.length - start);
         return res;
     }
 
@@ -288,15 +295,15 @@ public class Device extends JposDevice implements Runnable {
                 value[i][j] = strip(subpart[i][j].split(" "));
             }
         }
-        Data[] props = new Data[1];
+        Data[] props = {null};
         boolean error;
         error = getJposMICRData(data, parts, subpart, value, props);
         try {
             if (error) {
                 if (props[0] == null)
-                    handleEvent(new MICRErrorEvent(service, JposConst.JPOS_E_EXTENDED, MICRConst.JPOS_EMICR_NODATA, new Data("", "", "", MICRConst.MICR_CT_UNKNOWN, MICRConst.MICR_CC_UNKNOWN, "", "", "", "")));
+                    handleEvent(new MICRErrorEvent(service, JPOS_E_EXTENDED, JPOS_EMICR_NODATA, new Data("", "", "", MICR_CT_UNKNOWN, MICR_CC_UNKNOWN, "", "", "", "")));
                 else
-                    handleEvent(new MICRErrorEvent(service, JposConst.JPOS_E_EXTENDED, MICRConst.JPOS_EMICR_BADSIZE, props[0]));
+                    handleEvent(new MICRErrorEvent(service, JPOS_E_EXTENDED, JPOS_EMICR_BADSIZE, props[0]));
             }
             else
                 handleEvent(new MICRDataEvent(service, 0, props[0]));
@@ -305,6 +312,7 @@ public class Device extends JposDevice implements Runnable {
         }
     }
 
+    @SuppressWarnings("AssignmentUsedAsCondition")
     private boolean getJposMICRData(String data, String[] parts, String[][] subpart, String[][][] value, Data[] props) {
         boolean error;
         String serial, account, transit, bank;
@@ -332,7 +340,7 @@ public class Device extends JposDevice implements Runnable {
                 serial = "";
                 error = true;
             }
-            props[0] = new Data(account,"", bank, MICRConst.MICR_CT_UNKNOWN, MICRConst.MICR_CC_UNKNOWN, "", data, serial, transit);
+            props[0] = new Data(account,"", bank, MICR_CT_UNKNOWN, MICR_CC_UNKNOWN, "", data, serial, transit);
         }
         return error;
     }

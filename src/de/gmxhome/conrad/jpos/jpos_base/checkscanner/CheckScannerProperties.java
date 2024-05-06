@@ -17,11 +17,12 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.checkscanner;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposBaseDevice;
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import jpos.CheckScannerConst;
-import jpos.JposConst;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.CheckScannerConst.*;
+import static jpos.JposConst.*;
 
 /**
  * Class containing the check scanner specific properties, their default values and default implementations of
@@ -188,7 +189,7 @@ public class CheckScannerProperties extends JposCommonProperties implements Chec
     /**
      * UPOS property ImageData. Default: A zero-length byte array.
      */
-    public byte[] ImageData = new byte[0];
+    public byte[] ImageData = {};
 
     /**
      * UPOS property ImageFormat. Default: null. If CapImageFormat specifies more than one format, it must be overwritten
@@ -219,7 +220,7 @@ public class CheckScannerProperties extends JposCommonProperties implements Chec
      * by objects derived from JposDevice within the changeDefaults or checkProperties method.
      * If overwritten, DocumentHeight and DocumentWidth must be given in the corresponding units.
      */
-    public int MapMode = CheckScannerConst.CHK_MM_ENGLISH;
+    public int MapMode = CHK_MM_ENGLISH;
 
     /**
      * UPOS property MaxCropAreas. Default: null. Must be overwritten
@@ -270,17 +271,12 @@ public class CheckScannerProperties extends JposCommonProperties implements Chec
     @Override
     public boolean initOnFirstEnable() {
         if (!super.initOnFirstEnable()) {
-            Contrast = CapAutoContrast ? CheckScannerConst.CHK_AUTOMATIC_CONTRAST : (ContrastDef == null ? 50 : ContrastDef);
-            if (MapMode != CheckScannerConst.CHK_MM_ENGLISH) {
-                long[][] mappings = {
-                        {CheckScannerConst.CHK_MM_METRIC, 2540},    // 2540 * 0.01 mm = 1 inch
-                        {CheckScannerConst.CHK_MM_TWIPS, 1440},     // 1440 * 1 twips = 1 inch
-                        {CheckScannerConst.CHK_MM_DOTS, Quality}
-                };
-                for (long[] mapping : mappings) {
+            Contrast = CapAutoContrast ? CHK_AUTOMATIC_CONTRAST : (ContrastDef == null ? 50 : ContrastDef);
+            if (MapMode != CHK_MM_ENGLISH) {
+                for (int[] mapping : getMM_Factors()) {
                     if (MapMode == mapping[0]) {
-                        DocumentWidth = (int)((DocumentWidth * 1000 + 500) / mapping[1]);
-                        DocumentHeight = (int)((DocumentHeight * 1000 + 500) / mapping[1]);
+                        DocumentWidth = (int)((DocumentWidth * 1000L + 500) / mapping[1]);
+                        DocumentHeight = (int)((DocumentHeight * 1000L + 500) / mapping[1]);
                     }
                 }
             }
@@ -298,19 +294,12 @@ public class CheckScannerProperties extends JposCommonProperties implements Chec
     @Override
     public void checkMandatoryProperties() throws JposException {
         int[][] colors = {
-                {CheckScannerConst.CHK_CCL_MONO, CheckScannerConst.CHK_CL_MONO},
-                {CheckScannerConst.CHK_CCL_GRAYSCALE, CheckScannerConst.CHK_CL_GRAYSCALE},
-                {CheckScannerConst.CHK_CCL_16, CheckScannerConst.CHK_CL_16},
-                {CheckScannerConst.CHK_CCL_256, CheckScannerConst.CHK_CL_256},
-                {CheckScannerConst.CHK_CCL_FULL, CheckScannerConst.CHK_CL_FULL}
-
+                {CHK_CCL_MONO, CHK_CL_MONO}, {CHK_CCL_GRAYSCALE, CHK_CL_GRAYSCALE}, {CHK_CCL_16, CHK_CL_16},
+                {CHK_CCL_256, CHK_CL_256}, {CHK_CCL_FULL, CHK_CL_FULL}
         };
         int[][] formats = {
-                {CheckScannerConst.CHK_CIF_NATIVE, CheckScannerConst.CHK_IF_NATIVE},
-                {CheckScannerConst.CHK_CIF_TIFF, CheckScannerConst.CHK_IF_TIFF},
-                {CheckScannerConst.CHK_CIF_BMP, CheckScannerConst.CHK_IF_BMP},
-                {CheckScannerConst.CHK_CIF_JPEG, CheckScannerConst.CHK_IF_JPEG},
-                {CheckScannerConst.CHK_CIF_GIF, CheckScannerConst.CHK_IF_GIF}
+                {CHK_CIF_NATIVE, CHK_IF_NATIVE}, {CHK_CIF_TIFF, CHK_IF_TIFF}, {CHK_CIF_BMP, CHK_IF_BMP},
+                {CHK_CIF_JPEG, CHK_IF_JPEG}, {CHK_CIF_GIF, CHK_IF_GIF}
         };
         if (Color == null) {
             for (int[] color : colors) {
@@ -319,14 +308,14 @@ public class CheckScannerProperties extends JposCommonProperties implements Chec
                     break;
                 }
             }
-            Device.check(Color == null, JposConst.JPOS_E_NOSERVICE, "Color property not specified");
+            check(Color == null, JPOS_E_NOSERVICE, "Color property not specified");
         }
         if (ConcurrentMICR == null) {
-            Device.check(CapConcurrentMICR && CapMICRDevice, JposConst.JPOS_E_NOSERVICE, "ConcurrentMICR property not specified");
+            check(CapConcurrentMICR && CapMICRDevice, JPOS_E_NOSERVICE, "ConcurrentMICR property not specified");
             ConcurrentMICR = false;
         }
-        Device.check(DocumentHeightDef == null, JposConst.JPOS_E_NOSERVICE, "DocumentHeight default not specified");
-        Device.check(DocumentWidthDef == null, JposConst.JPOS_E_NOSERVICE, "DocumentWidth default not specified");
+        check(DocumentHeightDef == null, JPOS_E_NOSERVICE, "DocumentHeight default not specified");
+        check(DocumentWidthDef == null, JPOS_E_NOSERVICE, "DocumentWidth default not specified");
         DocumentWidth = DocumentWidthDef;
         DocumentHeight = DocumentHeightDef;
         if (ImageFormat == null) {
@@ -335,25 +324,25 @@ public class CheckScannerProperties extends JposCommonProperties implements Chec
                     ImageFormat = format[1];
                 }
             }
-            Device.check(ImageFormat == null, JposConst.JPOS_E_NOSERVICE, "ImageFormat property not specified");
+            check(ImageFormat == null, JPOS_E_NOSERVICE, "ImageFormat property not specified");
         }
         if (MaxCropAreas == null) {
-            Device.check(CapDefineCropArea, JposConst.JPOS_E_NOSERVICE, "MaxCropAreas property not specified");
+            check(CapDefineCropArea, JPOS_E_NOSERVICE, "MaxCropAreas property not specified");
             MaxCropAreas = 0;
         }
         try {
             long[] qualities = JposBaseDevice.stringArrayToLongArray(QualityList.split(","));
             if (Quality == null) {
-                Device.check(qualities.length != 1, JposConst.JPOS_E_NOSERVICE, "Quality property not specified");
+                check(qualities.length != 1, JPOS_E_NOSERVICE, "Quality property not specified");
                 Quality = (int) qualities[0];
             }
         } catch (NullPointerException e) {
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "QualityList property not specified");
+            throw new JposException(JPOS_E_NOSERVICE, "QualityList property not specified");
         } catch (NumberFormatException e) {
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "QualityList property is invalid: " + QualityList);
+            throw new JposException(JPOS_E_NOSERVICE, "QualityList property is invalid: " + QualityList);
         }
         if (RemainingImagesEstimate == null) {
-            Device.check(CapStoreImageFiles, JposConst.JPOS_E_NOSERVICE, "RemainingImagesEstimate property not specified");
+            check(CapStoreImageFiles, JPOS_E_NOSERVICE, "RemainingImagesEstimate property not specified");
             RemainingImagesEstimate = 0;
         }
     }
@@ -408,13 +397,7 @@ public class CheckScannerProperties extends JposCommonProperties implements Chec
      * @return Array containing value pairs for MM_DOTS, MM_TWIPS, MM_ENGLISH and MM_METRIC.
      */
     public int[][] getMM_Factors() {
-        int[][] mm_Factors = {
-                {CheckScannerConst.CHK_MM_DOTS, Quality},
-                {CheckScannerConst.CHK_MM_TWIPS, 1440},
-                {CheckScannerConst.CHK_MM_ENGLISH, 1000},
-                {CheckScannerConst.CHK_MM_METRIC, 2540},
-        };
-        return mm_Factors;
+        return new int[][]{ {CHK_MM_DOTS, Quality}, {CHK_MM_TWIPS, 1440}, {CHK_MM_ENGLISH, 1000}, {CHK_MM_METRIC, 2540} };
     }
 
     /**
@@ -458,7 +441,7 @@ public class CheckScannerProperties extends JposCommonProperties implements Chec
 
     @Override
     public void quality(int quality) throws JposException {
-        if (MapMode == CheckScannerConst.CHK_MM_DOTS) {
+        if (MapMode == CHK_MM_DOTS) {
             DocumentWidth = (int)((DocumentWidth * quality + (Quality >> 1)) / Quality);
             EventSource.logSet("DocumentWidth");
             DocumentHeight = (int)((DocumentHeight * quality + (Quality >> 1)) / Quality);

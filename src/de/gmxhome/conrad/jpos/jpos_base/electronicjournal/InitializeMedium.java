@@ -31,7 +31,7 @@ public class InitializeMedium extends JposOutputRequest {
         return MediumID;
     }
 
-    private String MediumID;
+    private final String MediumID;
 
     /**
      * Constructor. Stores given parameters for later use.

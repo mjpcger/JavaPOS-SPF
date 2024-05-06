@@ -33,7 +33,7 @@ public class WriteTagID extends RFIDRequest {
         return Arrays.copyOf(DestID, DestID.length);
     }
 
-    private byte[] DestID;
+    private final byte[] DestID;
 
     /**
      * Constructor, stores given parameters for later use of WriteData operation.

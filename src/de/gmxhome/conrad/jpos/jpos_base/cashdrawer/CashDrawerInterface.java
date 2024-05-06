@@ -39,8 +39,9 @@ public interface CashDrawerInterface extends JposBaseInterface {
 
     /**
      * Final part of WaitForDrawerClose method. Can be overwritten in derived class, if necessary.
-     * The parameters beepTimeout, beepDuration, beepFrequency and beepDelay will not be used by
-     * this method because beeping will be performed directly by the service.
+     * Since the CashDrawerService class performs beeping directly via the underlaying standardized
+     * sound system via javax.sound, the parameters beepTimeout, beepDuration, beepFrequency and beepDelay
+     * will not be forwarded to the final part.<br>
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
@@ -49,8 +50,11 @@ public interface CashDrawerInterface extends JposBaseInterface {
      *         method are positive or FOREVER,</li>
      *     <li>The parameter beepFrequency is between 10 and 24000.</li>
      * </ul>
-     * If the deprecated waitForDrawerClose method (which must handle beeping itself) shall be used,
-     * this method must throw a JposException with ErrorCode = 0.
+     * since the parameters beepTimeout, beepFrequency, beepDuration and beepDelay will not be passed to
+     * this method because sound generation will be performed via the sound system, it must simply wait
+     * the drawer state changes to closed and return immediately after that change.<br>
+     * Keep also in mind that the beep duration should be at least 1/8 seconds (125 milliseconds) to ensure
+     * that it can be heard, values above 1/4 second (250 milliseconds) are recommended.
      *
      * @throws JposException If an error occurs.
      */

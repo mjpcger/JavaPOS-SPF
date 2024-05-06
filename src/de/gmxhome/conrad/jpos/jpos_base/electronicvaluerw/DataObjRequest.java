@@ -29,14 +29,14 @@ public class DataObjRequest extends OutputRequest {
      * invoke method.
      */
     public int Data;
-    private int[] DataArray;
+    private final int[] DataArray;
 
     /**
      * Mutual obj parameter (any vendor specific data object). Original obj array will be updated after return of
      * invoke method.
      */
     public Object Obj;
-    private Object[] ObjArray;
+    private final Object[] ObjArray;
 
     /**
      * Constructor. Stores given parameters for later use.

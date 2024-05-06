@@ -20,6 +20,9 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.config.JposEntry;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * General part of CashDrawer factory for JPOS devices using this framework.
  */
@@ -34,16 +37,7 @@ public class Factory extends JposDeviceFactory {
      */
     @Deprecated
     public CashDrawerService addDevice(int index, JposDevice dev) throws JposException {
-        CashDrawerProperties drw = dev.getCashDrawerProperties(index);
-        CashDrawerService service;
-        JposDevice.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCashDrawerProperties()");
-        service = (CashDrawerService) (drw.EventSource = new CashDrawerService(drw, dev));
-        drw.Device = dev;
-        drw.Claiming = dev.ClaimedCashDrawer;
-        dev.changeDefaults(drw);
-        drw.addProperties(dev.CashDrawers);
-        service.DeviceInterface = service.CashDrawerInterface = drw;
-        return service;
+        return addDevice(index, dev, CurrentEntry);
     }
 
     /**
@@ -56,7 +50,12 @@ public class Factory extends JposDeviceFactory {
      * @throws JposException If property set could not be retrieved.
      */
     public CashDrawerService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
-        // As long as DrawerBeepVolume has not been removed, entry will not be used (works via dev.DrawerBeepVolume).
-        return addDevice(index, dev);
+        CashDrawerProperties drw = dev.getCashDrawerProperties(index);
+        validateJposConfiguration(drw, dev, dev.ClaimedCashDrawer, entry);
+        CashDrawerService service = (CashDrawerService) (drw.EventSource = new CashDrawerService(drw, dev));
+        dev.changeDefaults(drw);
+        drw.addProperties(dev.CashDrawers);
+        service.DeviceInterface = service.CashDrawerInterface = drw;
+        return service;
     }
 }

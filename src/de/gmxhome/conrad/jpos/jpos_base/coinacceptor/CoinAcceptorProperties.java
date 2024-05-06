@@ -18,10 +18,9 @@
 package de.gmxhome.conrad.jpos.jpos_base.coinacceptor;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import jpos.CoinAcceptorConst;
-import jpos.CoinDispenser;
-import jpos.CoinDispenserConst;
 import jpos.JposException;
+
+import static jpos.CoinAcceptorConst.*;
 
 /**
  * Class containing the coin acceptor specific properties, their default values and default implementations of
@@ -97,13 +96,13 @@ public class CoinAcceptorProperties extends JposCommonProperties implements Coin
     /**
      * UPOS property DepositStatus.
      */
-    public int DepositStatus = CoinAcceptorConst.CACC_STATUS_DEPOSIT_END;
+    public int DepositStatus = CACC_STATUS_DEPOSIT_END;
 
     /**
      * Default value of DepositStatus property. Default: STATUS_DEPOSIT_END. Should be updated
      * before calling initOnEnable the first time.
      */
-    public int DepositStatusDef = CoinAcceptorConst.CACC_STATUS_DEPOSIT_END;
+    public int DepositStatusDef = CACC_STATUS_DEPOSIT_END;
 
     /**
      * UPOS property FullStatus.
@@ -161,7 +160,7 @@ public class CoinAcceptorProperties extends JposCommonProperties implements Coin
      */
     @Override
     public void beginDeposit() throws JposException {
-        DepositStatus = CoinAcceptorConst.CACC_STATUS_DEPOSIT_START;
+        DepositStatus = CACC_STATUS_DEPOSIT_START;
         EventSource.logSet("DepositStatus");
     }
 
@@ -171,7 +170,7 @@ public class CoinAcceptorProperties extends JposCommonProperties implements Coin
      */
     @Override
     public void endDeposit(int success) throws JposException {
-        DepositStatus = CoinAcceptorConst.CACC_STATUS_DEPOSIT_END;
+        DepositStatus = CACC_STATUS_DEPOSIT_END;
         EventSource.logSet("DepositStatus");
     }
 
@@ -181,7 +180,7 @@ public class CoinAcceptorProperties extends JposCommonProperties implements Coin
      */
     @Override
     public void fixDeposit() throws JposException {
-        DepositStatus = CoinAcceptorConst.CACC_STATUS_DEPOSIT_COUNT;
+        DepositStatus = CACC_STATUS_DEPOSIT_COUNT;
         EventSource.logSet("DepositStatus");
     }
 

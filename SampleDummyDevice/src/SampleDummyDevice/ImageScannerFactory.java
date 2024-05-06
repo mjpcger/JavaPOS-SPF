@@ -17,14 +17,13 @@
 
 package SampleDummyDevice;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.imagescanner.Factory;
-import de.gmxhome.conrad.jpos.jpos_base.imagescanner.ImageScannerService;
-import jpos.JposConst;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import de.gmxhome.conrad.jpos.jpos_base.imagescanner.*;
+import jpos.*;
 import jpos.config.JposEntry;
-import jpos.loader.JposServiceInstance;
-import jpos.loader.JposServiceInstanceFactory;
+import jpos.loader.*;
+
+import static jpos.JposConst.*;
 
 /**
  * Factory class for sample ImageScanner device implementation
@@ -43,22 +42,22 @@ public class ImageScannerFactory extends Factory implements JposServiceInstanceF
                     if (create) {
                         dev = new Device("SampleImageScanner");
                     } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: SampleImageScanner");
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: SampleImageScanner");
                     else {
                         dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
-                    ImageScannerService srv = addDevice(0, dev);
+                    ImageScannerService srv = addDevice(0, dev, jposEntry);
                     if (create)
                         putDevice("SampleImageScanner", dev);
                     return srv;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

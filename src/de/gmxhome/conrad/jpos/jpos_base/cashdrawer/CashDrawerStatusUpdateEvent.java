@@ -17,7 +17,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.cashdrawer;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.*;
+
+import static jpos.CashDrawerConst.*;
 
 /**
  * Status update event implementation for CashDrawer devices.
@@ -44,30 +45,22 @@ public class CashDrawerStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         CashDrawerProperties props = (CashDrawerProperties)getPropertySet();
         switch (getStatus()) {
-            case CashDrawerConst.CASH_SUE_DRAWERCLOSED:
-                props.DrawerOpened = false;
+            case CASH_SUE_DRAWERCLOSED, CASH_SUE_DRAWEROPEN -> {
+                props.DrawerOpened = getStatus() == CASH_SUE_DRAWEROPEN;
                 props.signalWaiter();
                 return true;
-            case CashDrawerConst.CASH_SUE_DRAWEROPEN:
-                props.DrawerOpened = true;
-                props.signalWaiter();
-                return true;
+            }
         }
         return false;
     }
 
     @Override
     public boolean checkStatusCorresponds() {
-        if (super.checkStatusCorresponds())
-            return true;
         CashDrawerProperties props = (CashDrawerProperties)getPropertySet();
-        switch (getStatus()) {
-            case CashDrawerConst.CASH_SUE_DRAWERCLOSED:
-                return props.DrawerOpened == false;
-            case CashDrawerConst.CASH_SUE_DRAWEROPEN:
-                return props.DrawerOpened == true;
-        }
-        return false;
+        return super.checkStatusCorresponds() || switch (getStatus()) {
+            case CASH_SUE_DRAWERCLOSED, CASH_SUE_DRAWEROPEN -> props.DrawerOpened == (getStatus() == CASH_SUE_DRAWEROPEN);
+            default -> false;
+        };
     }
 
     @Override
@@ -86,14 +79,10 @@ public class CashDrawerStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        if (ret.length() > 0)
-            return ret;
-        switch (getStatus()) {
-            case CashDrawerConst.CASH_SUE_DRAWERCLOSED:
-                return "CashDrawer Closed";
-            case CashDrawerConst.CASH_SUE_DRAWEROPEN:
-                return "CashDrawer Opened";
-        }
-        return "Unknown Status Change: " + getStatus();
+        return ret.length() > 0 ? ret : switch (getStatus()) {
+            case CASH_SUE_DRAWERCLOSED -> "CashDrawer Closed";
+            case CASH_SUE_DRAWEROPEN -> "CashDrawer Opened";
+            default -> "Unknown Status Change: " + getStatus();
+        };
     }
 }

@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.toneindicator;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.ToneIndicatorConst.*;
+
 /**
  * Class containing the tone indicator specific properties, their default values and default implementations of
  * ToneIndicatorInterface.
@@ -107,7 +109,7 @@ public class ToneIndicatorProperties extends JposCommonProperties implements Ton
     public boolean initOnFirstEnable() {
         if (!super.initOnFirstEnable()) {
             InterToneWait = 0;
-            MelodyType = ToneIndicatorConst.TONE_MT_NONE;
+            MelodyType = TONE_MT_NONE;
             MelodyVolume = 100;
             Tone1Duration = 0;
             Tone1Pitch = 0;

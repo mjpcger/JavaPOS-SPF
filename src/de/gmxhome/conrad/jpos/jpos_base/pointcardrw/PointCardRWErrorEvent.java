@@ -19,27 +19,26 @@ package de.gmxhome.conrad.jpos.jpos_base.pointcardrw;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposBase;
 import de.gmxhome.conrad.jpos.jpos_base.JposErrorEvent;
-import jpos.JposConst;
-import jpos.PointCardRW;
 
 import java.util.Arrays;
 
-public class PointCardRWErrorEvent extends JposErrorEvent {
+import static jpos.JposConst.*;
 
+public class PointCardRWErrorEvent extends JposErrorEvent {
     /**
      * Array containing 6 Strings with track data. Empty strings if a track has not been read.
      */
-    public String[] Tracks= null;
+    public final String[] Tracks;
 
     /**
      * Array containing the state values of the 6 tracks to be stored in ReadState1 and ReadState2.
      */
-    public Integer[] State = null;
+    public final Integer[] State;
 
     /**
      * Array containing the length in bytes of the 6 tracks to be stored i RecvLength1 and RecvLength2.
      */
-    public Integer[] Length = null;
+    public final Integer[] Length;
 
     /**
      * Constructor. Parameters passed to base class unchanged. For input error events, contains tracks read.
@@ -52,7 +51,7 @@ public class PointCardRWErrorEvent extends JposErrorEvent {
      *                    not specified, length will be computed from the string lengths stored in tracks.
      */
     public PointCardRWErrorEvent(JposBase source, int errorcode, int extended, String[] tracks, Integer[]... statelength) {
-        super(source, errorcode, extended, JposConst.JPOS_EL_INPUT);
+        super(source, errorcode, extended, JPOS_EL_INPUT);
         PointCardRWProperties props = (PointCardRWProperties) source.Props;
         Tracks = Arrays.copyOf(tracks, props.TrackData.length);
         State = Arrays.copyOf(statelength[0], Tracks.length);
@@ -75,15 +74,16 @@ public class PointCardRWErrorEvent extends JposErrorEvent {
      * @param state     Status for written tracks, one value per track. null for unmodified tracks.
      */
     public PointCardRWErrorEvent(JposBase source, int errorcode, int extended, String message, Integer[]state) {
-        super(source, errorcode, extended, JposConst.JPOS_EL_OUTPUT, message);
+        super(source, errorcode, extended, JPOS_EL_OUTPUT, message);
         PointCardRWProperties props = (PointCardRWProperties) source.Props;
         State = Arrays.copyOf(state, props.WriteData.length);
+        Tracks = null;
+        Length = null;
     }
 
     @Override
     public void setErrorProperties() {
         PointCardRWProperties props = (PointCardRWProperties) getPropertySet();
-        boolean unchanged;
         Integer[] val;
         if (Tracks != null && Length != null) {
             String[] previoustracks = props.TrackData;

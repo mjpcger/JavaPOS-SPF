@@ -25,17 +25,17 @@ public class FiscalPrinterException extends JposException {
     /**
      * Error station. In case of asynchronous processing, this value will be passed to the ErrorStation property.
      */
-    public int Station;
+    public final int Station;
 
     /**
      * Error level. In case of asynchronous processing, this value will be passed to the ErrorLevel property.
      */
-    public int Level;
+    public final int Level;
 
     /**
      * Error state. In case of asynchronous processing, this value will be passed to the ErrorState property.
      */
-    public int State;
+    public final int State;
 
     /**
      * Creates printer specific exception.

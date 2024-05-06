@@ -23,9 +23,9 @@ import java.util.Arrays;
  * Helper class for RFIDScanner tag data.
  */
 public class RFIDScannerTagData {
-    private byte[] TagID = null;
-    private int TagProtocol = 0;
-    private byte[] TagUserData = null;
+    private final byte[] TagID;
+    private final int TagProtocol;
+    private final byte[] TagUserData;
 
     public byte[] getTagID() {
         return Arrays.copyOf(TagID, TagID.length);

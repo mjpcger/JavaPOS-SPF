@@ -18,6 +18,10 @@ package de.gmxhome.conrad.jpos.jpos_base.bumpbar;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of Bump Bar factory for JPOS devices using this framework.
@@ -28,19 +32,30 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults.
      * @param index BumpBar  property set index.
      * @param dev BumpBar implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return BumpBarService object.
      * @throws JposException If property set could not be retrieved.
      */
-    public BumpBarService addDevice(int index, JposDevice dev) throws JposException {
-        BumpBarService service;
+    public BumpBarService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         BumpBarProperties props = dev.getBumpBarProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBumpBarProperties()");
-        service = (BumpBarService) (props.EventSource = new BumpBarService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedBumpBar;
+        validateJposConfiguration(props, dev, dev.ClaimedBumpBar, entry);
+        BumpBarService service = (BumpBarService) (props.EventSource = new BumpBarService(props, dev));
         dev.changeDefaults(props);
         props.addProperties(dev.BumpBars);
         service.DeviceInterface = service.BumpBarInterface = props;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index BumpBar  property set index.
+     * @param dev BumpBar implementation instance derived from JposDevice to be used by the service.
+     * @return BumpBarService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public BumpBarService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

@@ -17,9 +17,10 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.rfidscanner;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import jpos.JposConst;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
+
+import static jpos.JposConst.*;
 
 /**
  * Input request executor for RFIDScanner method ReadTags and StartReadTags.
@@ -39,7 +40,7 @@ public class StartReadTags extends ReadTags {
      * @param password   Authorized key for reader that might be required.
      */
     public StartReadTags(JposCommonProperties props, int cmd, byte[] filterID, byte[] filtermask, int start, int length, byte[] password) {
-        super(props, cmd, filterID, filtermask, start, length, JposConst.JPOS_FOREVER, password);
+        super(props, cmd, filterID, filtermask, start, length, JPOS_FOREVER, password);
     }
 
     @Override

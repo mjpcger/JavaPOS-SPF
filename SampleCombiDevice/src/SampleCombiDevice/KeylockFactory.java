@@ -18,11 +18,13 @@ package SampleCombiDevice;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.keylock.*;
-import jpos.JposConst;
 import jpos.JposException;
 import jpos.config.JposEntry;
 import jpos.loader.JposServiceInstance;
 import jpos.loader.JposServiceInstanceFactory;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposBaseDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * Factory class for combined device sample keylock implementation
@@ -43,24 +45,24 @@ public class KeylockFactory extends Factory implements JposServiceInstanceFactor
                     if (create) {
                         dev = new Device(port);
                     } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: " + port);
                     else {
                         dev = (Device) any;
                     }
-                    dev.checkRange(index, 0, dev.Keylocks.length - 1, JposConst.JPOS_E_ILLEGAL, "Keylock index out of range");
+                    checkRange(index, 0, dev.Keylocks.length - 1, JPOS_E_ILLEGAL, "Keylock index out of range");
                     dev.checkProperties(jposEntry);
-                    JposServiceInstance lock = addDevice(index, dev);
+                    JposServiceInstance lock = addDevice(index, dev, jposEntry);
                     if (create) {
                         putDevice(port, dev);
                     }
                     return lock;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

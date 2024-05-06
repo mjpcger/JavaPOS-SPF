@@ -25,12 +25,20 @@ import de.gmxhome.conrad.jpos.jpos_base.motionsensor.*;
 import de.gmxhome.conrad.jpos.jpos_base.signaturecapture.*;
 import jpos.*;
 import jpos.config.JposEntry;
-import net.bplaced.conrad.log4jpos.Level;
 
-import javax.swing.*;
 import java.awt.Point;
 import java.io.IOException;
 import java.util.Arrays;
+
+import static de.gmxhome.conrad.jpos.jpos_base.SerialIOProcessor.*;
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static javax.swing.JOptionPane.*;
+import static jpos.GateConst.*;
+import static jpos.ItemDispenserConst.*;
+import static jpos.JposConst.*;
+import static jpos.LightsConst.*;
+import static jpos.MotionSensorConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * JposDevice based implementation of JavaPOS Gate, ItemDispenser, Lights, MotionSensor and SignatureCapture device
@@ -40,7 +48,7 @@ import java.util.Arrays;
  * <p>Here a full list of all device specific properties that can be changed via jpos.xml:
  * <ul>
  *     <li>Baudrate: Baud rate of the communication device. Must be one of the baud rate constants specified in the
- *     SerialIOProcessor class. Default: 9600 (SerialIOProcessor.BAUDRATE_9600).
+ *     SerialIOProcessor class. Default: 9600 (BAUDRATE_9600).
  *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
  *     <li>CharacterTimeout: Positive integer value, specifying the maximum delay between bytes that belong to the same
  *     frame. Default value: 10 milliseconds.</li>
@@ -60,7 +68,7 @@ import java.util.Arrays;
  *     simulator. Default: 0 (for random port number selected by operating system).
  *     <br>This property may only be set if the communication with the device shall be made via TCP.</li>
  *     <li>Parity: Parity of each data unit. Must be one of the parity constants specified in the
- *     SerialIOProcessor class. Default: 0 (SerialIOProcessor.PARITY_NONE).
+ *     SerialIOProcessor class. Default: 0 (PARITY_NONE).
  *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
  *     <li>PollDelay: Minimum time between status requests, in milliseconds. Status requests will be used to monitor the
  *     device state. Default: 300.</li>
@@ -77,13 +85,14 @@ import java.util.Arrays;
  *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
  * </ul>
  */
+@SuppressWarnings("unused")
 public class Device extends JposDevice implements Runnable {
-    private int Baudrate = SerialIOProcessor.BAUDRATE_9600;
-    private int Databits = SerialIOProcessor.DATABITS_8;
-    private int Stopbits = SerialIOProcessor.STOPBITS_2;
-    private int Parity = SerialIOProcessor.PARITY_NONE;
+    private int Baudrate = BAUDRATE_9600;
+    private int Databits = DATABITS_8;
+    private int Stopbits = STOPBITS_2;
+    private int Parity = PARITY_NONE;
     private Integer OwnPort = null;
-    private int LoggingType = UniqueIOProcessor.LoggingTypeEscapeString;
+    private int LoggingType = LoggingTypeEscapeString;
     private int RequestTimeout = 500;
     private int CharacterTimeout = 10;
     private int PollDelay = 300;
@@ -110,41 +119,42 @@ public class Device extends JposDevice implements Runnable {
         signatureCaptureInit(1);
         PhysicalDeviceDescription = "Combined special device simulator for virtual COM ports and TCP";
         PhysicalDeviceName = "Combined Special Device Simulator";
-        CapPowerReporting = JposConst.JPOS_PR_ADVANCED;
+        CapPowerReporting = JPOS_PR_ADVANCED;
     }
 
     @Override
+    @SuppressWarnings("resource")
     public void checkProperties(JposEntry entry) throws JposException {
         super.checkProperties(entry);
         try {
             new TcpClientIOProcessor(this, ID);
             OwnPort = 0;
-        } catch (JposException e) {}
+        } catch (JposException ignored) {}
         try {
             Object o;
             if ((o = entry.getPropertyValue("Baudrate")) != null) {
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Baudrate");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Baudrate");
                 Baudrate = Integer.parseInt(o.toString());
             }
             if ((o = entry.getPropertyValue("Databits")) != null) {
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Databits");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Databits");
                 Databits = Integer.parseInt(o.toString());
             }
             if ((o = entry.getPropertyValue("Stopbits")) != null) {
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Stopbits");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Stopbits");
                 Stopbits = Integer.parseInt(o.toString());
             }
             if ((o = entry.getPropertyValue("Parity")) != null) {
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Parity");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Parity");
                 Parity = Integer.parseInt(o.toString());
             }
             if ((o = entry.getPropertyValue("OwnPort")) != null) {
                 if (OwnPort == null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: OwnPort");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: OwnPort");
                 int port = Integer.parseInt(o.toString());
                 if (port < 0 || port > 0xffff)
                     throw new IOException("Invalid TCP port: " + o.toString());
@@ -153,12 +163,9 @@ public class Device extends JposDevice implements Runnable {
             if ((o = entry.getPropertyValue("LoggingType")) != null) {
                 int type = Integer.parseInt(o.toString());
                 switch (type) {
-                    default:
-                        throw new IOException("Unsupported logging type: " + o.toString());
-                    case UniqueIOProcessor.LoggingTypeEscapeString:
-                    case UniqueIOProcessor.LoggingTypeHexString:
-                    case UniqueIOProcessor.LoggingTypeNoLogging:
-                        LoggingType = type;
+                    default -> throw new IOException("Unsupported logging type: " + o.toString());
+                    case LoggingTypeEscapeString, LoggingTypeHexString, LoggingTypeNoLogging ->
+                            LoggingType = type;
                 }
             }
             if ((o = entry.getPropertyValue("RequestTimeout")) != null)
@@ -175,11 +182,11 @@ public class Device extends JposDevice implements Runnable {
                 MotionActivityTimeout = Integer.parseInt(o.toString());
             if ((o = entry.getPropertyValue("UsbToSerial")) != null) {
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: UsbToSerial");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: UsbToSerial");
                 UsbToSerial = Boolean.parseBoolean(o.toString());
             }
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property", e);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property", e);
         }
     }
 
@@ -194,12 +201,14 @@ public class Device extends JposDevice implements Runnable {
      * Device control thread, polls device states and handles status changes.
      */
     @Override
+    @SuppressWarnings({"resource", "ThrowableInstanceNeverThrown"})
     public void run() {
         String[] commands = {"idR", "gS", "msS"};   // Status requests for item dispenser, gate and motion sensor
-        int newgatestate = 0, newmotionsensorstate = 0, newitemdispenderstate[] = new int[10];
+        int newgatestate = 0, newmotionsensorstate = 0;
+        int[] newitemdispenderstate = new int[10];
         prepareStatusWaitingObjects();
         int retry = 0;
-        for (int index = 0; !ToBeFinished; index = (index + 1) % commands.length) {
+        for (int index = 0; !StateWatcher.ToBeFinished; index = (index + 1) % commands.length) {
             retry++;
             try {
                 String resp = sendrecv(commands[index]);
@@ -273,21 +282,21 @@ public class Device extends JposDevice implements Runnable {
         }
     }
 
-    private int PowerOff = JposConst.JPOS_PS_UNKNOWN;
+    private int PowerOff = JPOS_PS_UNKNOWN;
 
     private void handleStates(int newgatestate, int newmotionsensorstate, int[] newitemdispenderstate) {
         if (newgatestate == -1) { // offline
-            if (PowerOff != JposConst.JPOS_PS_OFF_OFFLINE) {
-                PowerOff = UsbToSerial ? (Off ? JposConst.JPOS_PS_OFF : JposConst.JPOS_PS_OFFLINE) : JposConst.JPOS_PS_OFF_OFFLINE;
+            if (PowerOff != JPOS_PS_OFF_OFFLINE) {
+                PowerOff = UsbToSerial ? (Off ? JPOS_PS_OFF : JPOS_PS_OFFLINE) : JPOS_PS_OFF_OFFLINE;
                 GateState = MotionSensorState = -1;
                 ItemDispenserStates = new int[0];
-                firePowerStateEvent(JposConst.JPOS_SUE_POWER_OFF_OFFLINE);
+                firePowerStateEvent(JPOS_SUE_POWER_OFF_OFFLINE);
             }
         }
         else {
-            if (PowerOff != JposConst.JPOS_PS_ONLINE) {
-                PowerOff = JposConst.JPOS_PS_ONLINE;
-                firePowerStateEvent(JposConst.JPOS_SUE_POWER_ONLINE);
+            if (PowerOff != JPOS_PS_ONLINE) {
+                PowerOff = JPOS_PS_ONLINE;
+                firePowerStateEvent(JPOS_SUE_POWER_ONLINE);
             }
             fireGateStateEvent(newgatestate);
             fireMotionSensorState(newmotionsensorstate);
@@ -295,7 +304,7 @@ public class Device extends JposDevice implements Runnable {
         }
     }
 
-    private int DispenserState = JposConst.JPOS_SUE_POWER_OFF_OFFLINE;
+    private int DispenserState = JPOS_SUE_POWER_OFF_OFFLINE;
 
     private void fireItemDispenserState(int[] newitemdispenserstate) {
         boolean changed = newitemdispenserstate.length != ItemDispenserStates.length;
@@ -308,15 +317,15 @@ public class Device extends JposDevice implements Runnable {
                 if (val < minimum)
                     minimum = val;
             }
-            int state = minimum == 0 ? ItemDispenserConst.ITEM_SUE_EMPTY :
-                    (minimum < DispenserNearEndCount ? ItemDispenserConst.ITEM_SUE_NEAREMPTY : ItemDispenserConst.ITEM_SUE_OK);
+            int state = minimum == 0 ? ITEM_SUE_EMPTY :
+                    (minimum < DispenserNearEndCount ? ITEM_SUE_NEAREMPTY : ITEM_SUE_OK);
             if (state != DispenserState) {
                 DispenserState = state;
                 JposCommonProperties props = getClaimingInstance(ClaimedItemDispenser, 0);
                 if (props != null) {
                     try {
                         handleEvent(new ItemDispenserStatusUpdateEvent(props.EventSource, state));
-                    } catch (JposException e) {}
+                    } catch (JposException ignored) {}
                 }
             }
         }
@@ -348,9 +357,9 @@ public class Device extends JposDevice implements Runnable {
             JposCommonProperties props = getPropertySetInstance(MotionSensors, 0, 0);
             if (props != null) {
                 try {
-                    int[] states = {MotionSensorConst.MOTION_M_ABSENT, MotionSensorConst.MOTION_M_PRESENT};
+                    int[] states = {MOTION_M_ABSENT, MOTION_M_PRESENT};
                     handleEvent(new SampleMotionSensorStatusUpdateEvent(props.EventSource, states[MotionSensorState]));
-                } catch (JposException e) {}
+                } catch (JposException ignored) {}
                 if (MotionSensorState == 1)
                     signalStatusWaits(MotionSensors[0]);
             }
@@ -365,9 +374,9 @@ public class Device extends JposDevice implements Runnable {
             JposCommonProperties props = getPropertySetInstance(Gates, 0, 0);
             if (props != null) {
                 try {
-                    int[] states = {GateConst.GATE_SUE_CLOSED, GateConst.GATE_SUE_OPEN, GateConst.GATE_SUE_BLOCKED};
+                    int[] states = {GATE_SUE_CLOSED, GATE_SUE_OPEN, GATE_SUE_BLOCKED};
                     handleEvent(new GateStatusUpdateEvent(props.EventSource, states[GateState]));
-                } catch (JposException e) {}
+                } catch (JposException ignored) {}
                 signalStatusWaits(Gates[0]);
             }
         }
@@ -385,7 +394,7 @@ public class Device extends JposDevice implements Runnable {
             if (set != null) {
                 try {
                     handleEvent(new JposStatusUpdateEvent(set.EventSource, state));
-                } catch (JposException e) {}
+                } catch (JposException ignored) {}
                 signalStatusWaits(MotionSensors[0]);
                 signalStatusWaits(Gates[0]);
             }
@@ -401,8 +410,8 @@ public class Device extends JposDevice implements Runnable {
         super.changeDefaults(props);
         props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Lights service for combined special device simulator";
-        props.CapColor = LightsConst.LGT_COLOR_PRIMARY|LightsConst.LGT_COLOR_CUSTOM1|LightsConst.LGT_COLOR_CUSTOM2|
-                LightsConst.LGT_COLOR_CUSTOM3|LightsConst.LGT_COLOR_CUSTOM4|LightsConst.LGT_COLOR_CUSTOM5;
+        props.CapColor = LGT_COLOR_PRIMARY|LGT_COLOR_CUSTOM1|LGT_COLOR_CUSTOM2|
+                LGT_COLOR_CUSTOM3|LGT_COLOR_CUSTOM4|LGT_COLOR_CUSTOM5;
         props.MaxLights = 5;
     }
 
@@ -443,22 +452,20 @@ public class Device extends JposDevice implements Runnable {
 
     private UniqueIOProcessor Stream = null;
     private boolean InIOError = false;
-    private boolean ToBeFinished = false;
     private SyncObject PollWaiter;
-    private Thread StateWatcher;
+    private ThreadHandler StateWatcher;
     private JposCommonProperties StartPollingWaiter = null;
 
     // Method to start communication
+    @SuppressWarnings("UnusedReturnValue")
     private int startPolling(JposCommonProperties props) {
         synchronized (OpenCount) {
             if (OpenCount[0] == 0) {
-                ToBeFinished = false;
                 PollWaiter = new SyncObject();
                 (StartPollingWaiter = props).attachWaiter();
-                (StateWatcher = new Thread(this)).start();
-                StateWatcher.setName(ID + "/StatusUpdater");
+                (StateWatcher = new ThreadHandler(ID + "/StatusUpdater",this)).start();
                 OpenCount[0] = 1;
-                props.waitWaiter(MaxRetry * RequestTimeout * 3);
+                props.waitWaiter((long)MaxRetry * RequestTimeout * 3);
                 props.releaseWaiter();
             }
             else
@@ -468,17 +475,13 @@ public class Device extends JposDevice implements Runnable {
     }
 
     // Method to stop communication
+    @SuppressWarnings({"UnusedReturnValue", "ThrowableInstanceNeverThrown"})
     private int stopPolling() {
         synchronized(OpenCount) {
             if (OpenCount[0] == 1) {
-                ToBeFinished = true;
+                StateWatcher.ToBeFinished = true;
                 PollWaiter.signal();
-                while (true) {
-                    try {
-                        StateWatcher.join();
-                        break;
-                    } catch (InterruptedException e) {}
-                }
+                StateWatcher.waitFinished();
                 StartPollingWaiter = null;
                 closePort();
             }
@@ -488,7 +491,7 @@ public class Device extends JposDevice implements Runnable {
         }
     }
 
-    private int[] OpenCount = { 0 };
+    private final int[] OpenCount = { 0 };
 
     private synchronized int changeOpenCount(int value) {
         OpenCount[0] += value;
@@ -511,6 +514,7 @@ public class Device extends JposDevice implements Runnable {
         return e;
     }
 
+    @SuppressWarnings("resource")
     private JposException initPort() {
         try {
             if (OwnPort == null) {
@@ -539,6 +543,7 @@ public class Device extends JposDevice implements Runnable {
      * @param command Command to be executed.
      * @return Response from device, null in error case
      */
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     private synchronized String sendrecv(String command) {
         if (Stream == null) {
             JposException e = initPort();
@@ -550,14 +555,14 @@ public class Device extends JposDevice implements Runnable {
             String response = sendFrameRetrieveResponse(command);
             if (response != null) return response;
         } catch (Exception e) {
-            log(Level.TRACE, ID + ": IO error: " + e.getMessage());
+            log(TRACE, ID + ": IO error: " + e.getMessage());
             JposException ee = closePort();
             InIOError = true;
         }
         return null;
     }
 
-    private String SignatureState = null;
+    private final String SignatureState = null;
 
     // Communication method, sends command, retrieves response (and asynchronously incoming status messages)
     private String sendFrameRetrieveResponse(String command) throws JposException {
@@ -573,13 +578,13 @@ public class Device extends JposDevice implements Runnable {
         return null;
     }
 
-    private String[] ResponseTypes = {"scA", "scS", "scX", "scB", "lS", "gO", "gS", "ms", "idA", "idD", "idR"};
+    private final String[] ResponseTypes = {"scA", "scS", "scX", "scB", "lS", "gO", "gS", "ms", "idA", "idD", "idR"};
 
     // Valid response must start with returned byte sequence. Returns null for unknown command
     private String getResponseType(String command) {
         String type = null;
         for (String resptype : ResponseTypes) {
-            if (resptype.length() <= command.length() && command.substring(0, resptype.length()).equals(resptype)) {
+            if (command.startsWith(resptype)) {
                 type = resptype;
                 break;
             }
@@ -608,8 +613,8 @@ public class Device extends JposDevice implements Runnable {
 
     private int GateState = 0;
     private int MotionSensorState = 0;
-    private byte[] RawData = new byte[0];
-    private Point[] PointArray = new Point[0];
+    private byte[] RawData = {};
+    private Point[] PointArray = {};
     private int RetryCount = 0;
 
     // Handle status information from device
@@ -647,9 +652,10 @@ public class Device extends JposDevice implements Runnable {
     }
 
     // Retrieve signature raw data
+    @SuppressWarnings("AssignmentUsedAsCondition")
     private synchronized boolean retrieveSignatureData() throws JposException {
-        String rawdata = "";
-        Point[] pointarray = new Point[0];
+        StringBuilder rawdata = new StringBuilder();
+        Point[] pointarray = {};
         int retry = 0;
         boolean ended = true;
         for (int block = 1; true; block++) {
@@ -657,6 +663,7 @@ public class Device extends JposDevice implements Runnable {
                 String req = String.format("scB%05d", block);
                 String resp = sendrecv(req);
                 try {
+                    assert resp != null;    // possible NullPointerException will be caught
                     if (req.equals(resp.substring(0, req.length())) && (resp.length() - req.length()) % 6 == 0) {
                         Point[] blockpoints = new Point[(resp.length() - req.length()) / 6];
                         for (int i = 0, basepos = req.length(); i < blockpoints.length; i++, basepos += 6) {
@@ -665,17 +672,17 @@ public class Device extends JposDevice implements Runnable {
                             if (ended = (blockpoints[i].x == -1 && blockpoints[i].y == -1))
                                 blockpoints[i].x = blockpoints[i].y = 0xffff;
                         }
-                        rawdata += resp.substring(req.length());
+                        rawdata.append(resp.substring(req.length()));
                         pointarray = Arrays.copyOf(pointarray, pointarray.length + blockpoints.length);
                         System.arraycopy(blockpoints, 0, pointarray, pointarray.length - blockpoints.length, blockpoints.length);
                         if (blockpoints.length != 50 && ended) {
-                            RawData = rawdata.getBytes();
+                            RawData = rawdata.toString().getBytes();
                             PointArray = pointarray;
                             return true;
                         }
                         break;  // next block
                     }
-                } catch (Exception e) {}
+                } catch (Exception ignored) {}
             }
             if (retry == MaxRetry)
                 break;
@@ -685,32 +692,33 @@ public class Device extends JposDevice implements Runnable {
 
     // Common CheckHealth implementation: props: property set, level:  from specific CheckHealth, request: request to
     //      be sent, expectedResponseLen: expected length of valid response
-    private void commonCheckHealth(JposCommonProperties props, int level, String request, int expectedResponseLen) {
-        String howstr = level == JposConst.JPOS_CH_INTERNAL ? "Internal" : (level == JposConst.JPOS_CH_EXTERNAL ? "External" : "Interactive");
+    @SuppressWarnings("AssignmentUsedAsCondition")
+    private void commonCheckHealth(JposCommonProperties props, int level) {
+        String howstr = level == JPOS_CH_INTERNAL ? "Internal" : (level == JPOS_CH_EXTERNAL ? "External" : "Interactive");
         if (ItemDispenserStates.length == 0) {
             props.CheckHealthText = howstr + " CheckHealth: FAILED: Communication error";
             return;
         }
         boolean interactive;
-        if (interactive = (level == JposConst.JPOS_CH_INTERACTIVE))
-            synchronizedMessageBox("Press OK to start health test.", "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
-        String resp = sendrecv(request);
-        if (resp != null && resp.length() == expectedResponseLen) {
+        if (interactive = (level == JPOS_CH_INTERACTIVE))
+            synchronizedMessageBox("Press OK to start health test.", "CheckHealth", INFORMATION_MESSAGE);
+        String resp = sendrecv("lS17");
+        if (resp != null && resp.length() == 4) {
             props.CheckHealthText = howstr + " CheckHealth: OK";
         } else if (resp == null) {
             props.CheckHealthText = howstr + " CheckHealth: FAILED: No valid response";
-        } else if (resp.length() > request.length()) {
-            props.CheckHealthText = howstr + " CheckHealth: FAILED: Error from device: " + resp.substring(request.length());
+        } else if (resp.length() > "lS17".length()) {
+            props.CheckHealthText = howstr + " CheckHealth: FAILED: Error from device: " + resp.substring("lS17".length());
         } else {
             props.CheckHealthText = howstr + " CheckHealth: FAILED: Unspecific error from device";
         }
         if (interactive)
-            synchronizedMessageBox("CheckHealth result:\n" + props.CheckHealthText, "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+            synchronizedMessageBox("CheckHealth result:\n" + props.CheckHealthText, "CheckHealth", INFORMATION_MESSAGE);
     }
 
     // Common method for setting power state on enable in a specific property set
     private void setPowerStateOnEnable(JposCommonProperties props) throws JposException {
-        handleEvent(new JposStatusUpdateEvent(props.EventSource, ItemDispenserStates.length == 0 ? JposConst.JPOS_SUE_POWER_OFF_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE));
+        handleEvent(new JposStatusUpdateEvent(props.EventSource, ItemDispenserStates.length == 0 ? JPOS_SUE_POWER_OFF_OFFLINE : JPOS_SUE_POWER_ONLINE));
     }
 
     /*
@@ -729,16 +737,16 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public void initOnOpen() {
             super.initOnOpen();
-            CapPowerReporting = UsbToSerial ? JposConst.JPOS_PR_ADVANCED : JposConst.JPOS_PR_STANDARD;
+            CapPowerReporting = UsbToSerial ? JPOS_PR_ADVANCED : JPOS_PR_STANDARD;
         }
 
         @Override
         public void initOnEnable(boolean enable) {
             if (enable) {
                 if (ItemDispenserStates.length == 0)
-                    GateStatus = GateConst.GATE_GS_MALFUNCTION;
+                    GateStatus = GATE_GS_MALFUNCTION;
                 else
-                    GateStatus = new int[]{GateConst.GATE_GS_CLOSED, GateConst.GATE_GS_OPEN, GateConst.GATE_GS_BLOCKED, GateConst.GATE_GS_BLOCKED}[GateState];
+                    GateStatus = new int[]{GATE_GS_CLOSED, GATE_GS_OPEN, GATE_GS_BLOCKED, GATE_GS_BLOCKED}[GateState];
             }
         }
 
@@ -752,9 +760,9 @@ public class Device extends JposDevice implements Runnable {
             if (enable) {
                 if (!Claimed) {
                     startPolling(this);
-                    if (ItemDispenserStates.length == 0 && PowerNotify == JposConst.JPOS_PN_DISABLED) {
+                    if (ItemDispenserStates.length == 0 && PowerNotify == JPOS_PN_DISABLED) {
                         stopPolling();
-                        throw new JposException(InIOError ? JposConst.JPOS_E_OFFLINE : JposConst.JPOS_E_FAILURE, "Communication with device disrupted");
+                        throw new JposException(InIOError ? JPOS_E_OFFLINE : JPOS_E_FAILURE, "Communication with device disrupted");
                     }
                 }
             } else {
@@ -768,9 +776,9 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public void claim(int timeout) throws JposException {
             startPolling(this);
-            if (ItemDispenserStates.length == 0 && PowerNotify == JposConst.JPOS_PN_DISABLED) {
+            if (ItemDispenserStates.length == 0 && PowerNotify == JPOS_PN_DISABLED) {
                 stopPolling();
-                throw new JposException(InIOError ? JposConst.JPOS_E_OFFLINE : JposConst.JPOS_E_FAILURE, "Communication with device disrupted");
+                throw new JposException(InIOError ? JPOS_E_OFFLINE : JPOS_E_FAILURE, "Communication with device disrupted");
             }
             super.claim(timeout);
         }
@@ -783,43 +791,43 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void checkHealth(int level) throws JposException {
-            commonCheckHealth(this, level, "lS17", 4);
+            commonCheckHealth(this, level);
         }
 
         @Override
         public void openGate() throws JposException {
             String resp = sendrecv("gO");
             if (!"gO".equals(resp)) {
-                check(resp == null || resp.length() < 2 || !resp.substring(0, 2).equals("gO"), JposConst.JPOS_E_OFFLINE, "Communication error");
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Gate error: " + resp.substring(2));
+                check(resp == null || !resp.startsWith("gO"), JPOS_E_OFFLINE, "Communication error");
+                throw new JposException(JPOS_E_FAILURE, "Gate error: " + resp.substring(2));
             }
             attachWaiter();
             PollWaiter.signal();
-            waitWaiter((RequestTimeout + CharacterTimeout) * MaxRetry);
+            waitWaiter((long)(RequestTimeout + CharacterTimeout) * MaxRetry);
             releaseWaiter();
-            check(GateStatus != GateConst.GATE_GS_OPEN, JposConst.JPOS_E_FAILURE, "Open gate failed");
+            check(GateStatus != GATE_GS_OPEN, JPOS_E_FAILURE, "Open gate failed");
         }
 
         @Override
         public void waitForGateClose(int timeout) throws JposException {
             attachWaiter();
             long starttime = System.currentTimeMillis();
-            while (GateStatus == GateConst.GATE_GS_OPEN && ItemDispenserStates.length > 0) {
+            while (GateStatus == GATE_GS_OPEN && ItemDispenserStates.length > 0) {
                 long realtimeout;
-                if (timeout == JposConst.JPOS_FOREVER)
-                    realtimeout = SyncObject.INFINITE;
+                if (timeout == JPOS_FOREVER)
+                    realtimeout = INFINITE;
                 else if ((realtimeout = timeout - System.currentTimeMillis() + starttime) < 0)
                     break;
                 waitWaiter(realtimeout);
             }
             releaseWaiter();
-            if (GateStatus == GateConst.GATE_GS_CLOSED) {
+            if (GateStatus == GATE_GS_CLOSED) {
                 super.waitForGateClose(timeout);
                 return;
             }
-            check(timeout != JposConst.JPOS_FOREVER && System.currentTimeMillis() - starttime > timeout, JposConst.JPOS_E_TIMEOUT, "WaitForGateClose timed out");
-            check(ItemDispenserStates.length == 0, JposConst.JPOS_E_OFFLINE, "Device is off or offline");
-            check(GateStatus != GateConst.GATE_GS_OPEN, JposConst.JPOS_E_FAILURE, "Gate is blocked");
+            check(timeout != JPOS_FOREVER && System.currentTimeMillis() - starttime > timeout, JPOS_E_TIMEOUT, "WaitForGateClose timed out");
+            check(ItemDispenserStates.length == 0, JPOS_E_OFFLINE, "Device is off or offline");
+            check(GateStatus != GATE_GS_OPEN, JPOS_E_FAILURE, "Gate is blocked");
         }
     }
 
@@ -839,9 +847,9 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public void claim(int timeout) throws JposException {
             startPolling(this);
-            if (ItemDispenserStates.length == 0 && PowerNotify == JposConst.JPOS_PN_DISABLED) {
+            if (ItemDispenserStates.length == 0 && PowerNotify == JPOS_PN_DISABLED) {
                 stopPolling();
-                throw new JposException(InIOError ? JposConst.JPOS_E_OFFLINE : JposConst.JPOS_E_FAILURE, "Communication with device disrupted");
+                throw new JposException(InIOError ? JPOS_E_OFFLINE : JPOS_E_FAILURE, "Communication with device disrupted");
             }
             super.claim(timeout);
         }
@@ -856,7 +864,7 @@ public class Device extends JposDevice implements Runnable {
         public void initOnOpen() {
             super.initOnOpen();
             CapNearEmptySensor = DispenserNearEndCount > 1;
-            CapPowerReporting = UsbToSerial ? JposConst.JPOS_PR_ADVANCED : JposConst.JPOS_PR_STANDARD;
+            CapPowerReporting = UsbToSerial ? JPOS_PR_ADVANCED : JPOS_PR_STANDARD;
         }
 
         @Override
@@ -873,33 +881,33 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void checkHealth(int level) throws JposException {
-            commonCheckHealth(this, level, "lS17", 4);
+            commonCheckHealth(this, level);
         }
 
         @Override
         public void adjustItemCount(int itemCount, int slotNumber) throws JposException {
-            check(ItemDispenserStates.length != 10, JposConst.JPOS_E_OFFLINE, "Device not accessible");
-            check(itemCount < ItemDispenserStates[slotNumber - 1], JposConst.JPOS_E_ILLEGAL, "Add negative item count not supported");
+            check(ItemDispenserStates.length != 10, JPOS_E_OFFLINE, "Device not accessible");
+            check(itemCount < ItemDispenserStates[slotNumber - 1], JPOS_E_ILLEGAL, "Add negative item count not supported");
             int add = itemCount - ItemDispenserStates[slotNumber - 1];
             if (add > 0) {
                 String request = String.format("idA%1d%02d", slotNumber - 1, add);
                 String resp = sendrecv(request);
-                check(resp == null || resp.length() < request.length(), JposConst.JPOS_E_NOSERVICE, "Communication error");
-                check(!resp.equals(request) && resp.substring(0, request.length()).equals(request), JposConst.JPOS_E_ILLEGAL, "Error from device: " + resp.substring(request.length()));
-                check(!resp.equals(request), JposConst.JPOS_E_FAILURE, "Communication error");
+                check(resp == null || resp.length() < request.length(), JPOS_E_NOSERVICE, "Communication error");
+                check(!resp.equals(request) && resp.startsWith(request), JPOS_E_ILLEGAL, "Error from device: " + resp.substring(request.length()));
+                check(!resp.equals(request), JPOS_E_FAILURE, "Communication error");
             }
         }
 
         @Override
         public void dispenseItem(int[] numItem, int slotNumber) throws JposException {
             int currentItems = ItemDispenserStates[slotNumber - 1];
-            check(ItemDispenserStates.length != 10, JposConst.JPOS_E_OFFLINE, "Device not accessible");
-            check(numItem[0] > currentItems, JposConst.JPOS_E_ILLEGAL, "Not enough items in slot " + slotNumber);
+            check(ItemDispenserStates.length != 10, JPOS_E_OFFLINE, "Device not accessible");
+            check(numItem[0] > currentItems, JPOS_E_ILLEGAL, "Not enough items in slot " + slotNumber);
             String request = String.format("idD%1d%02d", slotNumber - 1, numItem[0]);
             String resp = sendrecv(request);
-            check(resp == null || resp.length() < request.length(), JposConst.JPOS_E_NOSERVICE, "Communication error");
-            check(!resp.equals(request) && resp.substring(0, request.length()).equals(request), JposConst.JPOS_E_ILLEGAL, "Error from device: " + resp.substring(request.length()));
-            check(!resp.equals(request), JposConst.JPOS_E_FAILURE, "Communication error");
+            check(resp == null || resp.length() < request.length(), JPOS_E_NOSERVICE, "Communication error");
+            check(!resp.equals(request) && resp.startsWith(request), JPOS_E_ILLEGAL, "Error from device: " + resp.substring(request.length()));
+            check(!resp.equals(request), JPOS_E_FAILURE, "Communication error");
             numItem[0] = currentItems - numItem[0];
         }
 
@@ -907,12 +915,12 @@ public class Device extends JposDevice implements Runnable {
         public void readItemCount(int[] itemCount, int slotNumber) throws JposException {
             String request = "idR";
             String resp = sendrecv(request);
-            check (resp == null || resp.length() != request.length() + 20, JposConst.JPOS_E_NOSERVICE, "Communication error");
+            check (resp == null || resp.length() != request.length() + 20, JPOS_E_NOSERVICE, "Communication error");
             int slotindex = request.length() + (slotNumber - 1) * 2;
             try {
                 itemCount[0] = Integer.parseInt(resp.substring(slotindex, slotindex + 2));
             } catch (NumberFormatException e) {
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Bad count for slot " + slotNumber + ": " + resp.substring(slotindex, slotindex + 2), e);
+                throw new JposException(JPOS_E_FAILURE, "Bad count for slot " + slotNumber + ": " + resp.substring(slotindex, slotindex + 2), e);
             }
         }
     }
@@ -933,15 +941,15 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public void initOnOpen() {
             super.initOnOpen();
-            CapPowerReporting = UsbToSerial ? JposConst.JPOS_PR_ADVANCED : JposConst.JPOS_PR_STANDARD;
+            CapPowerReporting = UsbToSerial ? JPOS_PR_ADVANCED : JPOS_PR_STANDARD;
         }
 
         @Override
         public void claim(int timeout) throws JposException {
             startPolling(this);
-            if (ItemDispenserStates.length == 0 && PowerNotify == JposConst.JPOS_PN_DISABLED) {
+            if (ItemDispenserStates.length == 0 && PowerNotify == JPOS_PN_DISABLED) {
                 stopPolling();
-                throw new JposException(InIOError ? JposConst.JPOS_E_OFFLINE : JposConst.JPOS_E_FAILURE, "Communication with device disrupted");
+                throw new JposException(InIOError ? JPOS_E_OFFLINE : JPOS_E_FAILURE, "Communication with device disrupted");
             }
             super.claim(timeout);
         }
@@ -959,19 +967,19 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void checkHealth(int level) throws JposException {
-            commonCheckHealth(this, level, "lS17", 4);
+            commonCheckHealth(this, level);
         }
 
         @Override
         public void switchOff(int lightNumber) throws JposException {
             String request = "lS" + lightNumber + "0";
             String resp = sendrecv(request);
-            check(!request.equals(resp), JposConst.JPOS_E_FAILURE, "Communication error");
+            check(!request.equals(resp), JPOS_E_FAILURE, "Communication error");
         }
 
-        private int[] colors = {
-                LightsConst.LGT_COLOR_CUSTOM1, LightsConst.LGT_COLOR_PRIMARY, LightsConst.LGT_ALARM_CUSTOM2,
-                LightsConst.LGT_COLOR_CUSTOM3, LightsConst.LGT_COLOR_CUSTOM5, LightsConst.LGT_COLOR_CUSTOM4
+        private final int[] colors = {
+                LGT_COLOR_CUSTOM1, LGT_COLOR_PRIMARY, LGT_ALARM_CUSTOM2,
+                LGT_COLOR_CUSTOM3, LGT_COLOR_CUSTOM5, LGT_COLOR_CUSTOM4
         };
 
         @Override
@@ -980,11 +988,11 @@ public class Device extends JposDevice implements Runnable {
                 if (color == colors[i]) {
                     String request = "lS" + lightNumber + (i + 1);
                     String resp = sendrecv(request);
-                    check(!request.equals(resp), JposConst.JPOS_E_FAILURE, "Communication error");
+                    check(!request.equals(resp), JPOS_E_FAILURE, "Communication error");
                     return;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid color: " + color);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid color: " + color);
         }
 
         @Override
@@ -999,13 +1007,13 @@ public class Device extends JposDevice implements Runnable {
             boolean[] lights = new boolean[MaxLights];
             String[] numbers = lightNumbers.split(",");
             Arrays.fill(lights, false);
-            for (int i = 0; i < numbers.length; i++)
-                lights[Integer.parseInt(numbers[i]) - 1] = true;
+            for (String number : numbers)
+                lights[Integer.parseInt(number) - 1] = true;
             for (int i = 1; i <= lights.length; i++) {
                 if (lights[i - 1]) {
                     String request = "lS" + i + colorstr;
                     String resp = sendrecv(request);
-                    check(!request.equals(resp), JposConst.JPOS_E_FAILURE, "Communication error");
+                    check(!request.equals(resp), JPOS_E_FAILURE, "Communication error");
                 }
             }
         }
@@ -1027,7 +1035,7 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public void initOnOpen() {
             super.initOnOpen();
-            CapPowerReporting = UsbToSerial ? JposConst.JPOS_PR_ADVANCED : JposConst.JPOS_PR_STANDARD;
+            CapPowerReporting = UsbToSerial ? JPOS_PR_ADVANCED : JPOS_PR_STANDARD;
         }
 
         @Override
@@ -1045,9 +1053,9 @@ public class Device extends JposDevice implements Runnable {
         public void deviceEnabled(boolean enable) throws JposException {
             if (enable) {
                 startPolling(this);
-                if (ItemDispenserStates.length == 0 && PowerNotify == JposConst.JPOS_PN_DISABLED) {
+                if (ItemDispenserStates.length == 0 && PowerNotify == JPOS_PN_DISABLED) {
                     stopPolling();
-                    throw new JposException(InIOError ? JposConst.JPOS_E_OFFLINE : JposConst.JPOS_E_FAILURE, "Communication with device disrupted");
+                    throw new JposException(InIOError ? JPOS_E_OFFLINE : JPOS_E_FAILURE, "Communication with device disrupted");
                 }
             } else {
                 stopPolling();
@@ -1058,7 +1066,7 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void checkHealth(int level) throws JposException {
-            commonCheckHealth(this, level, "lS17", 4);
+            commonCheckHealth(this, level);
         }
 
         @Override
@@ -1067,8 +1075,8 @@ public class Device extends JposDevice implements Runnable {
             long starttime = System.currentTimeMillis();
             while (!Motion && ItemDispenserStates.length > 0) {
                 long realtimeout;
-                if (timeout == JposConst.JPOS_FOREVER)
-                    realtimeout = SyncObject.INFINITE;
+                if (timeout == JPOS_FOREVER)
+                    realtimeout = INFINITE;
                 else if ((realtimeout = timeout - System.currentTimeMillis() + starttime) < 0)
                     break;
                 waitWaiter(realtimeout);
@@ -1078,8 +1086,8 @@ public class Device extends JposDevice implements Runnable {
                 super.waitForMotion(timeout);
                 return;
             }
-            check(timeout != JposConst.JPOS_FOREVER && System.currentTimeMillis() - starttime > timeout, JposConst.JPOS_E_TIMEOUT, "WaitForMotion timed out");
-            check(ItemDispenserStates.length == 0, JposConst.JPOS_E_OFFLINE, "Device is off or offline");
+            check(timeout != JPOS_FOREVER && System.currentTimeMillis() - starttime > timeout, JPOS_E_TIMEOUT, "WaitForMotion timed out");
+            check(ItemDispenserStates.length == 0, JPOS_E_OFFLINE, "Device is off or offline");
         }
     }
 
@@ -1099,15 +1107,15 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public void initOnOpen() {
             super.initOnOpen();
-            CapPowerReporting = UsbToSerial ? JposConst.JPOS_PR_ADVANCED : JposConst.JPOS_PR_STANDARD;
+            CapPowerReporting = UsbToSerial ? JPOS_PR_ADVANCED : JPOS_PR_STANDARD;
         }
 
         @Override
         public void claim(int timeout) throws JposException {
             startPolling(this);
-            if (ItemDispenserStates.length == 0 && PowerNotify == JposConst.JPOS_PN_DISABLED) {
+            if (ItemDispenserStates.length == 0 && PowerNotify == JPOS_PN_DISABLED) {
                 stopPolling();
-                throw new JposException(InIOError ? JposConst.JPOS_E_OFFLINE : JposConst.JPOS_E_FAILURE, "Communication with device disrupted");
+                throw new JposException(InIOError ? JPOS_E_OFFLINE : JPOS_E_FAILURE, "Communication with device disrupted");
             }
             super.claim(timeout);
         }
@@ -1136,10 +1144,10 @@ public class Device extends JposDevice implements Runnable {
             if (enable) {
                 String req = "scA";
                 String resp = sendrecv(req);
-                if (!req.equals(resp) && PowerNotify == JposConst.JPOS_PN_DISABLED) {
-                    check(InIOError, JposConst.JPOS_E_OFFLINE, "Device not online");
-                    check(resp == null || resp.length() < req.length() || !resp.substring(0, req.length()).equals(req), JposConst.JPOS_E_NOSERVICE, "Communication with device disrupted");
-                    throw new JposException(JposConst.JPOS_E_FAILURE, "Device error: " + resp.substring(req.length()));
+                if (!req.equals(resp) && PowerNotify == JPOS_PN_DISABLED) {
+                    check(InIOError, JPOS_E_OFFLINE, "Device not online");
+                    check(resp == null || !resp.startsWith(req), JPOS_E_NOSERVICE, "Communication with device disrupted");
+                    throw new JposException(JPOS_E_FAILURE, "Device error: " + resp.substring(req.length()));
                 }
             }
             super.deviceEnabled(enable);
@@ -1147,7 +1155,7 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void checkHealth(int level) throws JposException {
-            commonCheckHealth(this, level, "lS17", 4);
+            commonCheckHealth(this, level);
         }
 
         @Override
@@ -1161,11 +1169,11 @@ public class Device extends JposDevice implements Runnable {
         public void beginCapture(String formName) throws JposException {
             String req = "scS";
             String resp = sendrecv(req);
-            if (!req.equals(resp) && PowerNotify == JposConst.JPOS_PN_DISABLED) {
-                check(InIOError, JposConst.JPOS_E_OFFLINE, "Device not online");
-                check(resp == null || resp.length() < req.length() || !resp.substring(0, req.length()).equals(req), JposConst.JPOS_E_NOSERVICE, "Communication with device disrupted");
-                check(resp.substring(req.length()).equals("InProgress"), JposConst.JPOS_E_ILLEGAL, "Signature capture in progress");
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Device error: " + resp.substring(req.length()));
+            if (!req.equals(resp) && PowerNotify == JPOS_PN_DISABLED) {
+                check(InIOError, JPOS_E_OFFLINE, "Device not online");
+                check(resp == null || !resp.startsWith(req), JPOS_E_NOSERVICE, "Communication with device disrupted");
+                check(resp.substring(req.length()).equals("InProgress"), JPOS_E_ILLEGAL, "Signature capture in progress");
+                throw new JposException(JPOS_E_FAILURE, "Device error: " + resp.substring(req.length()));
             }
         }
 
@@ -1173,15 +1181,15 @@ public class Device extends JposDevice implements Runnable {
         public void endCapture() throws JposException {
             String req = "scX";
             String resp = sendrecv(req);
-            if ((resp.equals(req) || resp.equals(req + "Disabled")) && retrieveSignatureData()) {
+            if ((req.equals(resp) || (req + "Disabled").equals(resp)) && retrieveSignatureData()) {
                 RawData = Device.this.RawData;
                 PointArray = Device.this.PointArray;
                 return;
             }
-            check(resp.equals(req + "Disabled"), JposConst.JPOS_E_ILLEGAL, "Signature capture not in progress");
-            check(InIOError || resp == null, JposConst.JPOS_E_OFFLINE, "Device not online");
-            check(resp.substring(0, req.length()).equals(req), JposConst.JPOS_E_FAILURE, "Device error: " + resp.substring(req.length()));
-            check(!resp.substring(0, req.length()).equals(req), JposConst.JPOS_E_NOSERVICE, "Communication with device disrupted");
+            check((req + "Disabled").equals(resp), JPOS_E_ILLEGAL, "Signature capture not in progress");
+            check(InIOError || resp == null, JPOS_E_OFFLINE, "Device not online");
+            check(resp.startsWith(req), JPOS_E_FAILURE, "Device error: " + resp.substring(req.length()));
+            check(!resp.startsWith(req), JPOS_E_NOSERVICE, "Communication with device disrupted");
         }
     }
 }

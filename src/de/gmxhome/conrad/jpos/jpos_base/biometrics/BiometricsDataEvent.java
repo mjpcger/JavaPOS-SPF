@@ -17,11 +17,12 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.biometrics;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposBase;
-import de.gmxhome.conrad.jpos.jpos_base.JposDataEvent;
-import jpos.BiometricsConst;
+import de.gmxhome.conrad.jpos.jpos_base.*;
 
-import java.util.Arrays;
+import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.BiometricsConst.*;
 
 /**
  * Data event implementation for Biometric devices.
@@ -30,12 +31,12 @@ public class BiometricsDataEvent extends JposDataEvent {
     /**
      * New contents for property BIR. For details, see UPOS specification.
      */
-    public byte[] BIR;
+    public final byte[] BIR;
 
     /**
      * New contents for property RawSensorData. For details, see UPOS specification.
      */
-    public byte[] RawSensorData;
+    public final byte[] RawSensorData;
 
     /**
      * Constructor. Parameters passed to base class unchanged.
@@ -70,8 +71,8 @@ public class BiometricsDataEvent extends JposDataEvent {
     @Override
     public String toLogString() {
         String ret;
-        if (getPropertySet().Device.member(getStatus(), new long[]{BiometricsConst.BIO_DATA_ENROLL, BiometricsConst.BIO_DATA_VERIFY}))
-            ret = "Status: " + (getStatus() == BiometricsConst.BIO_DATA_ENROLL ? "DATA_ENROLL" : "DATA_VERIFY");
+        if (member(getStatus(), new long[]{BIO_DATA_ENROLL, BIO_DATA_VERIFY}))
+            ret = "Status: " + (getStatus() == BIO_DATA_ENROLL ? "DATA_ENROLL" : "DATA_VERIFY");
         else
             ret = super.toLogString();
         return ret;

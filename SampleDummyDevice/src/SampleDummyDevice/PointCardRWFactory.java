@@ -23,6 +23,8 @@ import jpos.*;
 import jpos.config.JposEntry;
 import jpos.loader.*;
 
+import static jpos.JposConst.*;
+
 /**
  * Factory class for sample PointCardRW device implementation
  */
@@ -40,22 +42,22 @@ public class PointCardRWFactory extends Factory implements JposServiceInstanceFa
                     if (create) {
                         dev = new PointCardRWDevice("SamplePointCardRW");
                     } else if (!(any instanceof PointCardRWDevice))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: SamplePointCardRW");
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: SamplePointCardRW");
                     else {
                         dev = (PointCardRWDevice) any;
                     }
                     dev.checkProperties(jposEntry);
-                    PointCardRWService srv = addDevice(0, dev);
+                    PointCardRWService srv = addDevice(0, dev, jposEntry);
                     if (create)
                         putDevice("SamplePointCardRW", dev);
                     return srv;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

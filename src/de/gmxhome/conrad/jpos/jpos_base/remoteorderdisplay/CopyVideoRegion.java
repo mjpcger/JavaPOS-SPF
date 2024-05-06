@@ -18,6 +18,8 @@ package de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay;
 
 import jpos.*;
 
+import static jpos.JposConst.*;
+
 /**
  * Output request executor for RemoteOrderDisplay method CopyVideoRegion.
  */
@@ -30,7 +32,7 @@ public class CopyVideoRegion extends AreaBase {
     public int getTargetRow() {
         return TargetRow;
     }
-    private int TargetRow;
+    private final int TargetRow;
 
     /**
      * Retrieves parameter targetColumn of remote order display method. See UPOS specification of the specific method for further
@@ -40,7 +42,7 @@ public class CopyVideoRegion extends AreaBase {
     public int getTargetColumn() {
         return TargetColumn;
     }
-    private int TargetColumn;
+    private final int TargetColumn;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -67,7 +69,7 @@ public class CopyVideoRegion extends AreaBase {
             checkUnitsOnline();
             checkAreaValid();
             int errorunits = svc.validateCoordinates(getUnits(), getTargetRow() + getHeight() - 1, getTargetColumn() + getWidth() - 1);
-            svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits, EndSync != null);
+            svc.check(errorunits != 0, errorunits, JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits, EndSync != null);
         }
         svc.RemoteOrderDisplayInterface.copyVideoRegion(this);
     }

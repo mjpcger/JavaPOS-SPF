@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.linedisplay;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.LineDisplayConst.*;
+
 /**
  * Class containing the display specific properties, their default values and default implementations of
  * LineDisplayInterface.
@@ -53,7 +55,7 @@ public class    LineDisplayProperties extends JposCommonProperties implements Li
      * UPOS property CapCursorType. Default: DISP_CCT_NONE. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapCursorType = LineDisplayConst.DISP_CCT_NONE;
+    public int CapCursorType = DISP_CCT_NONE;
 
     /**
      * UPOS property CapCustomGlyph. Default: false. Can be overwritten
@@ -65,19 +67,19 @@ public class    LineDisplayProperties extends JposCommonProperties implements Li
      * UPOS property CapReadBack. Default: DISP_CRB_NONE. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapReadBack = LineDisplayConst.DISP_CRB_NONE;
+    public int CapReadBack = DISP_CRB_NONE;
 
     /**
      * UPOS property CapReverse. Default: DISP_CR_NONE. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapReverse = LineDisplayConst.DISP_CR_NONE;
+    public int CapReverse = DISP_CR_NONE;
 
     /**
      * UPOS property CapBlink. Default: DISP_CB_NOBLINK. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapBlink = LineDisplayConst.DISP_CB_NOBLINK;
+    public int CapBlink = DISP_CB_NOBLINK;
 
     /**
      * UPOS property CapBrightness. Default: false. Can be overwritten
@@ -89,7 +91,7 @@ public class    LineDisplayProperties extends JposCommonProperties implements Li
      * UPOS property CapCharacterSet. Default: DISP_CCS_ASCII. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapCharacterSet = LineDisplayConst.DISP_CCS_ASCII;
+    public int CapCharacterSet = DISP_CCS_ASCII;
 
     /**
      * UPOS property CapDescriptors. Default: false. Can be overwritten
@@ -152,13 +154,13 @@ public class    LineDisplayProperties extends JposCommonProperties implements Li
      * UPOS property BlinkRate. Default: DISP_CCT_NONE. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int BlinkRate = LineDisplayConst.DISP_CCT_NONE;
+    public int BlinkRate = DISP_CCT_NONE;
 
     /**
      * UPOS property CursorType. Default: DISP_CT_NONE. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CursorType = LineDisplayConst.DISP_CT_NONE;
+    public int CursorType = DISP_CT_NONE;
 
     /**
      * UPOS property CustomGlyphList. Default: "". Can be overwritten
@@ -182,7 +184,7 @@ public class    LineDisplayProperties extends JposCommonProperties implements Li
      * Default value of CharacterSet property. Default: DISP_CS_ASCII. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CharacterSetDef = LineDisplayConst.DISP_CS_ASCII;
+    public int CharacterSetDef = DISP_CS_ASCII;
 
     /**
      * UPOS property CharacterSet.
@@ -258,7 +260,7 @@ public class    LineDisplayProperties extends JposCommonProperties implements Li
      * UPOS property MarqueeFormat. Default: DISP_MF_WALK. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int MarqueeFormat = LineDisplayConst.DISP_MF_WALK;
+    public int MarqueeFormat = DISP_MF_WALK;
 
     /**
      * UPOS property MarqueeRepeatWait.
@@ -292,7 +294,7 @@ public class    LineDisplayProperties extends JposCommonProperties implements Li
     @Override
     public void initOnOpen() {
         super.initOnOpen();
-        MarqueeType = LineDisplayConst.DISP_MT_NONE;
+        MarqueeType = DISP_MT_NONE;
         CurrentWindow = 0;
         CursorColumn = 0;
         CursorRow = 0;
@@ -422,10 +424,10 @@ public class    LineDisplayProperties extends JposCommonProperties implements Li
         Rows = windowHeight;
         Columns = windowWidth;
         CursorRow = CursorColumn = 0;
-        CursorType = LineDisplayConst.DISP_CT_NONE;
+        CursorType = DISP_CT_NONE;
         CursorUpdate = true;
-        MarqueeType = LineDisplayConst.DISP_MT_NONE;
-        MarqueeFormat = LineDisplayConst.DISP_MF_WALK;
+        MarqueeType = DISP_MT_NONE;
+        MarqueeFormat = DISP_MF_WALK;
         MarqueeUnitWait = MarqueeRepeatWait = InterCharacterWait = 0;
     }
 

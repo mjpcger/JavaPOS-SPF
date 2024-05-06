@@ -21,6 +21,9 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.config.JposEntry;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * General part of VoiceRecognition factory for JPOS devices using this framework.
  */
@@ -36,10 +39,8 @@ public class Factory extends JposDeviceFactory {
      */
     public VoiceRecognitionService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         VoiceRecognitionProperties props = dev.getVoiceRecognitionProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getVoiceRecognitionProperties()");
+        validateJposConfiguration(props, dev, dev.ClaimedVoiceRecognition, entry);
         VoiceRecognitionService service = (VoiceRecognitionService) (props.EventSource = new VoiceRecognitionService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedVoiceRecognition;
         dev.changeDefaults(props);
         props.addProperties(dev.VoiceRecognitions);
         service.DeviceInterface = service.VoiceRecognition = props;

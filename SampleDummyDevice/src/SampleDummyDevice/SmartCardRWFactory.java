@@ -17,14 +17,13 @@
 
 package SampleDummyDevice;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.smartcardrw.Factory;
-import de.gmxhome.conrad.jpos.jpos_base.smartcardrw.SmartCardRWService;
-import jpos.JposConst;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import de.gmxhome.conrad.jpos.jpos_base.smartcardrw.*;
+import jpos.*;
 import jpos.config.JposEntry;
-import jpos.loader.JposServiceInstance;
-import jpos.loader.JposServiceInstanceFactory;
+import jpos.loader.*;
+
+import static jpos.JposConst.*;
 
 /**
  * Factory class for sample SmartCardRW device implementation
@@ -43,22 +42,22 @@ public class SmartCardRWFactory extends Factory implements JposServiceInstanceFa
                     if (create) {
                         dev = new SCRWDevice("SampleSmartCardRW");
                     } else if (!(any instanceof SCRWDevice))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: SampleSmartCardRW");
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: SampleSmartCardRW");
                     else {
                         dev = (SCRWDevice) any;
                     }
                     dev.checkProperties(jposEntry);
-                    SmartCardRWService srv = addDevice(0, dev);
+                    SmartCardRWService srv = addDevice(0, dev, jposEntry);
                     if (create)
                         putDevice("SampleSmartCardRW", dev);
                     return srv;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

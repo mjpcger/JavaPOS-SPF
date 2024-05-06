@@ -17,9 +17,13 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.pinpad;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.JposDeviceFactory;
+import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.PINPadConst.*;
 
 /**
  * General part of PINPad factory for JPOS devices using this framework.
@@ -30,23 +34,34 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults.
      * @param index PINPad  property set index.
      * @param dev PINPad implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return PINPadService object.
      * @throws JposException If property set could not be retrieved.
      */
-    public PINPadService addDevice(int index, JposDevice dev) throws JposException {
-        long[] noPrompt = { PINPadConst.PPAD_DISP_UNRESTRICTED, PINPadConst.PPAD_DISP_NONE };
-        PINPadService service;
+    public PINPadService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
+        long[] noPrompt = { PPAD_DISP_UNRESTRICTED, PPAD_DISP_NONE };
         PINPadProperties props = dev.getPINPadProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getPINPadProperties()");
-        service = (PINPadService) (props.EventSource = new PINPadService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedPINPad;
+        validateJposConfiguration(props, dev, dev.ClaimedPINPad, entry);
+        PINPadService service = (PINPadService) (props.EventSource = new PINPadService(props, dev));
         dev.changeDefaults(props);
-        JposDevice.check(props.MaximumPINLength == null, JposConst.JPOS_E_FAILURE, "No default for MaximumPINLength");
-        JposDevice.check(props.MinimumPINLength == null, JposConst.JPOS_E_FAILURE, "No default for MinimumPINLength");
-        JposDevice.check(props.Prompt == null && !dev.member(props.CapDisplay, noPrompt), JposConst.JPOS_E_FAILURE, "No default for Prompt");
+        check(props.MaximumPINLength == null, JPOS_E_NOSERVICE, "No default for MaximumPINLength");
+        check(props.MinimumPINLength == null, JPOS_E_NOSERVICE, "No default for MinimumPINLength");
+        check(props.Prompt == null && !member(props.CapDisplay, noPrompt), JPOS_E_NOSERVICE, "No default for Prompt");
         props.addProperties(dev.PINPads);
         service.DeviceInterface = service.PINPad = props;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index PINPad  property set index.
+     * @param dev PINPad implementation instance derived from JposDevice to be used by the service.
+     * @return PINPadService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public PINPadService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

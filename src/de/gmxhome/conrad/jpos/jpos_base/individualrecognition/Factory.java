@@ -21,6 +21,9 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.config.JposEntry;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * General part of IndividualRecognition factory for JPOS devices using this framework.
  */
@@ -36,11 +39,11 @@ public class Factory extends JposDeviceFactory {
      */
     public IndividualRecognitionService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         IndividualRecognitionProperties props = dev.getIndividualRecognitionProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getIndividualRecognitionProperties()");
+        validateJposConfiguration(props, dev, dev.ClaimedIndividualRecognition, entry);
         IndividualRecognitionService service = (IndividualRecognitionService) (props.EventSource = new IndividualRecognitionService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedIndividualRecognition;
         dev.changeDefaults(props);
+        check(props.CapIndividualList == null || props.CapIndividualList.length() == 0, JPOS_E_NOSERVICE, "CapIndividualList nust not be empty");
+        check(props.IndividualRecognitionFilter == null || props.IndividualRecognitionFilter.length() == 0, JPOS_E_NOSERVICE, "IndividualRecognitionFilter nust not be empty");
         props.addProperties(dev.IndividualRecognitions);
         service.DeviceInterface = service.IndividualRecognition = props;
         return service;

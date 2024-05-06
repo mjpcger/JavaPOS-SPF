@@ -20,6 +20,7 @@ package de.gmxhome.conrad.jpos.jpos_base.signaturecapture;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 
 import java.awt.*;
+import java.util.Arrays;
 
 /**
  * Data event implementation for SignatureCapture devices.
@@ -28,12 +29,12 @@ public class SignatureCaptureDataEvent extends JposDataEvent {
     /**
      * Holds the RawData property value to be stored before firing the event.
      */
-    byte[] RawData;
+    final byte[] RawData;
 
     /**
      * Holds the PointArray property value to be stored before firing the event.
      */
-    Point[] PointArray;
+    final Point[] PointArray;
 
     /**
      * Constructor. Parameters passed to base class unchanged.
@@ -44,23 +45,20 @@ public class SignatureCaptureDataEvent extends JposDataEvent {
      */
     public SignatureCaptureDataEvent(JposBase source, int state, byte[] rawData, Point[] pointArray) {
         super(source, state);
-        RawData = rawData;
-        PointArray = pointArray;
+        if (state == 0) {
+            RawData = new byte[0];
+            PointArray = new Point[0];
+        } else {
+            RawData = rawData != null ? Arrays.copyOf(rawData, rawData.length) : new byte[0];
+            PointArray = pointArray != null ? Arrays.copyOf(pointArray, pointArray.length) : new Point[0];
+        }
     }
 
     @Override
     public void setDataProperties() {
         super.setDataProperties();
         SignatureCaptureProperties dev = (SignatureCaptureProperties) getPropertySet();
-        if (getStatus() != 0) {
-            dev.RawData = RawData;
-            dev.PointArray = PointArray;
-        }
-        else {
-            dev.RawData = new byte[0];
-            dev.PointArray = new Point[0];
-        }
-        dev.EventSource.logSet("RawData");
-        dev.EventSource.logSet("PointArray");
+        dev.RawData = RawData;
+        dev.PointArray = PointArray;
     }
 }

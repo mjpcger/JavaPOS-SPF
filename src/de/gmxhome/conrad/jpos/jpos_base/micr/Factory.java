@@ -18,6 +18,10 @@ package de.gmxhome.conrad.jpos.jpos_base.micr;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of MICR factory for JPOS devices using this framework.
@@ -28,18 +32,30 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults.
      * @param index MICR  property set index.
      * @param dev MICR implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return MICRService object.
      * @throws JposException If property set could not be retrieved.
      */
-    public MICRService addDevice(int index, JposDevice dev) throws JposException {
+    public MICRService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         MICRProperties props = dev.getMICRProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getMICRProperties()");
+        validateJposConfiguration(props, dev, dev.ClaimedMICR, entry);
         MICRService service = (MICRService)(props.EventSource = new MICRService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedMICR;
         dev.changeDefaults(props);
         props.addProperties(dev.MICRs);
         service.DeviceInterface = service.MICRInterface = props;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index MICR  property set index.
+     * @param dev MICR implementation instance derived from JposDevice to be used by the service.
+     * @return MICRService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public MICRService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

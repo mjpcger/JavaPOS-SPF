@@ -46,7 +46,7 @@ public class PlayVideo extends JposOutputRequest {
     public String getVideoType() {
         return VideoType;
     }
-    private String VideoType;
+    private final String VideoType;
 
     /**
      * Returns contents of fileName parameter
@@ -55,7 +55,7 @@ public class PlayVideo extends JposOutputRequest {
     public String getFileName() {
         return FileName;
     }
-    private String FileName;
+    private final String FileName;
 
     /**
      * Returns contents of loop parameter
@@ -64,7 +64,7 @@ public class PlayVideo extends JposOutputRequest {
     public boolean getLoop() {
         return Loop;
     }
-    private boolean Loop;
+    private final boolean Loop;
 
     @Override
     public void invoke() throws JposException {

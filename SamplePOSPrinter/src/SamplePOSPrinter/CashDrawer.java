@@ -21,16 +21,16 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.*;
 import jpos.*;
 
-import javax.swing.*;
-import java.awt.*;
-
-import static de.gmxhome.conrad.jpos.jpos_base.JposBaseDevice.check;
+import static SamplePOSPrinter.Device.*;
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static javax.swing.JOptionPane.*;
+import static jpos.JposConst.*;
 
 /**
  * Class implementing the CashDrawerInterface for the sample pos printer.
  */
 class CashDrawer extends CashDrawerProperties {
-    private SamplePOSPrinter.Device Dev;
+    private final SamplePOSPrinter.Device Dev;
 
     /**
      * Constructor. Gets instance of Device to be used as communication object. Device index for
@@ -60,8 +60,8 @@ class CashDrawer extends CashDrawerProperties {
     @Override
     public void open() throws JposException {
         initOnOpen();
-        Dev.startCommunication((int) SyncObject.INFINITE);
-        State = JposConst.JPOS_S_IDLE;
+        Dev.startCommunication((int) INFINITE);
+        State = JPOS_S_IDLE;
     }
 
     @Override
@@ -74,17 +74,17 @@ class CashDrawer extends CashDrawerProperties {
     public void checkHealth(int level) throws JposException {
         String healthError = "";
 
-        if (level == JposConst.JPOS_CH_INTERACTIVE) {
-            Dev.synchronizedMessageBox("Press OK to start health test.", "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+        if (level == JPOS_CH_INTERACTIVE) {
+            synchronizedMessageBox("Press OK to start health test.", "CheckHealth", INFORMATION_MESSAGE);
         }
         try {
-            if (level != JposConst.JPOS_CH_INTERNAL) {
-                if (level == JposConst.JPOS_CH_INTERACTIVE) {
+            if (level != JPOS_CH_INTERNAL) {
+                if (level == JPOS_CH_INTERACTIVE) {
                     healthError = "Interactive CheckHealth: ";
                     ((CashDrawerService)EventSource).openDrawer();
                     if (DrawerOpened) {
                         healthError += "Opened ";
-                        Dev.synchronizedMessageBox("Close drawer and Press OK to stop health test.", "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+                        synchronizedMessageBox("Close drawer and Press OK to stop health test.", "CheckHealth", INFORMATION_MESSAGE);
                         healthError += DrawerOpened ? "Failed " : "Closed ";
                     }
                     else
@@ -109,14 +109,14 @@ class CashDrawer extends CashDrawerProperties {
 
     @Override
     public void openDrawer() throws JposException {
-        Dev.check(!Dev.Online, JposConst.JPOS_E_ILLEGAL, "CashDrawer not accessible");
+        check(!Dev.Online, JPOS_E_ILLEGAL, "CashDrawer not accessible");
         if (!Dev.DrawerOpen) {
             attachWaiter();
             try {
-                Dev.sendCommand(Dev.CmdDrawerOpen);
+                Dev.sendCommand(CmdDrawerOpen);
                 Dev.PollWaiter.signal();
                 waitWaiter(Dev.RequestTimeout);
-                Dev.check(DrawerOpened != Dev.DrawerOpen, JposConst.JPOS_E_FAILURE, "Open drawer failed");
+                check(DrawerOpened != Dev.DrawerOpen, JPOS_E_FAILURE, "Open drawer failed");
             } finally {
                 releaseWaiter();
             }
@@ -129,10 +129,10 @@ class CashDrawer extends CashDrawerProperties {
         attachWaiter();
         try {
             while (Dev.DrawerOpen && Dev.Online && DeviceEnabled) {
-                waitWaiter(SyncObject.INFINITE);
+                waitWaiter(INFINITE);
             }
-            Dev.check(!Dev.Online, JposConst.JPOS_E_OFFLINE, "Device offline");
-            Dev.check(!DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device not enabled");
+            JposBaseDevice.check(!Dev.Online, JPOS_E_OFFLINE, "Device offline");
+            JposBaseDevice.check(!DeviceEnabled, JPOS_E_ILLEGAL, "Device not enabled");
         } finally {
             releaseWaiter();
         }

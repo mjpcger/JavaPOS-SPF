@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.lights;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.LightsConst.*;
+
 /**
  * Class containing the lights specific properties, their default values and default implementations of
  * LightsInterface.
@@ -29,7 +31,7 @@ public class LightsProperties extends JposCommonProperties implements LightsInte
      * UPOS property CapAlarm. Default: ALARM_NOALARM. Can be overwritten by objects derived from JposDevice within
      * the changeDefaults method.
      */
-    public int CapAlarm = LightsConst.LGT_ALARM_NOALARM;
+    public int CapAlarm = LGT_ALARM_NOALARM;
 
     /**
      * UPOS property CapBlink. Default: false. Can be overwritten by objects derived from JposDevice within the
@@ -41,7 +43,7 @@ public class LightsProperties extends JposCommonProperties implements LightsInte
      * UPOS property CapColor. Default: COLOR_PRIMARY. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int CapColor = LightsConst.LGT_COLOR_PRIMARY;
+    public int CapColor = LGT_COLOR_PRIMARY;
 
     /**
      * UPOS property MaxLights. Default: 1. Can be overwritten by objects derived from JposDevice within the
@@ -53,7 +55,7 @@ public class LightsProperties extends JposCommonProperties implements LightsInte
      * UPOS property CapPattern. Default: LGT_PATTERN_NOPATTERN. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int CapPattern = LightsConst.LGT_PATTERN_NOPATTERN;
+    public int CapPattern = LGT_PATTERN_NOPATTERN;
 
     /**
      * Constructor.
@@ -62,7 +64,6 @@ public class LightsProperties extends JposCommonProperties implements LightsInte
      */
     protected LightsProperties(int dev) {
         super(dev);
-        DeviceServiceVersion = 1016000;
         ExclusiveUse = ExclusiveYes;
         FlagWhenIdleStatusValue = -1;   // To avoid FlagWhenIdle handling for CASH_SUE_DRAWERCLOSED
     }

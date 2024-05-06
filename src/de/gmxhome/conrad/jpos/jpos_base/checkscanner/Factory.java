@@ -20,6 +20,10 @@ package de.gmxhome.conrad.jpos.jpos_base.checkscanner;
 import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
 import de.gmxhome.conrad.jpos.jpos_base.JposDeviceFactory;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of CheckScanner factory for JPOS devices using this framework.
@@ -30,19 +34,30 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults.
      * @param index CheckScanner  property set index.
      * @param dev CheckScanner implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return CheckScannerService object.
      * @throws JposException If property set could not be retrieved.
      */
-    public CheckScannerService addDevice(int index, JposDevice dev) throws JposException {
-        CheckScannerService service;
+    public CheckScannerService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         CheckScannerProperties props = dev.getCheckScannerProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getCheckScannerProperties()");
-        service = (CheckScannerService) (props.EventSource = new CheckScannerService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedCheckScanner;
+        validateJposConfiguration(props, dev, dev.ClaimedCheckScanner, entry);
+        CheckScannerService service = (CheckScannerService) (props.EventSource = new CheckScannerService(props, dev));
         dev.changeDefaults(props);
         props.addProperties(dev.CheckScanners);
         service.DeviceInterface = service.CheckScanner = props;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index CheckScanner  property set index.
+     * @param dev CheckScanner implementation instance derived from JposDevice to be used by the service.
+     * @return CheckScannerService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public CheckScannerService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

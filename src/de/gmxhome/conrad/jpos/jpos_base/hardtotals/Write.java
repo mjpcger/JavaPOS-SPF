@@ -32,7 +32,7 @@ public class Write extends ChangeRequest {
     public byte[] getData() {
         return Data;
     }
-    private byte[] Data;
+    private final byte[] Data;
 
     /**
      * HardTotals method Write parameter offset, see UPOS specification.
@@ -41,7 +41,7 @@ public class Write extends ChangeRequest {
     public int getOffset() {
         return Offset;
     }
-    private int Offset;
+    private final int Offset;
 
     /**
      * HardTotals method Write parameter count, see UPOS specification.
@@ -50,7 +50,7 @@ public class Write extends ChangeRequest {
     public int getCount() {
         return Count;
     }
-    private int Count;
+    private final int Count;
 
     /**
      * Constructor, stores given parameters for later use of Write operation.

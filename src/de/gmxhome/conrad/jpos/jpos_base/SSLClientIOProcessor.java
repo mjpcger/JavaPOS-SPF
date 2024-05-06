@@ -18,10 +18,11 @@
 package de.gmxhome.conrad.jpos.jpos_base;
 
 import jpos.*;
-import net.bplaced.conrad.log4jpos.*;
 import javax.net.ssl.*;
-import java.io.*;
 import java.net.*;
+
+import static jpos.JposConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * Class to process SSL/TLS client communication. Includes functionality for automatic
@@ -29,7 +30,7 @@ import java.net.*;
  * and uses the Javax classes <i>SSLSocket</i> and <i>SSLSocketFactory</i>.
  */
 public class SSLClientIOProcessor extends TcpClientIOProcessor {
-    private SSLSocketFactory Factory;
+    private final SSLSocketFactory Factory;
 
     /**
      * Stores JposDevice and tcp address of derived IO processors. The device will
@@ -50,11 +51,11 @@ public class SSLClientIOProcessor extends TcpClientIOProcessor {
     }
 
     @Override
+    @SuppressWarnings("resource")
     public void open(boolean noErrorLog) throws JposException {
-
         if (Sock != null) {
-            Dev.log(Level.ERROR, LoggingPrefix + "Open error: Socket just connected");
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, "Socket just connected");
+            Dev.log(ERROR, LoggingPrefix + "Open error: Socket just connected");
+            throw new JposException(JPOS_E_ILLEGAL, IOProcessorError, "Socket just connected");
         }
         try {
             Sock = new Socket();
@@ -63,18 +64,18 @@ public class SSLClientIOProcessor extends TcpClientIOProcessor {
             Sock.connect(new InetSocketAddress(TargetIP, TargetPort), ConnectTimeout);
             Sock = Factory.createSocket(Sock, TargetIP.getHostAddress(), TargetPort, true);
             ((SSLSocket) Sock).startHandshake();
-            // Special UniquiIOProcessor, only used for logging because super.super.open(...) does not work.
+            // Special UniqueIOProcessor, only used for logging because super.super.open(...) does not work.
             new UniqueIOProcessor(Dev, Port).open(noErrorLog);
         } catch (Exception e) {
             if (Sock != null) {
                 try {
                     Sock.close();
-                } catch (Exception ex) {}
+                } catch (Exception ignored) {}
                 Sock = null;
             }
             if (noErrorLog)
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, e.getMessage(), e);
-            logerror("Open", JposConst.JPOS_E_ILLEGAL, e);
+                throw new JposException(JPOS_E_ILLEGAL, IOProcessorError, e.getMessage(), e);
+            logerror("Open", JPOS_E_ILLEGAL, e);
         }
     }
 }

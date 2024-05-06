@@ -20,20 +20,24 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
-import java.util.Arrays;
+import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.MSRConst.*;
 
 /**
  * MSR service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class MSRService extends JposBase implements MSRService115 {
+public class MSRService extends JposBase implements MSRService116 {
     /**
      * Instance of a class implementing the MSRInterface for magnetic stripe reader specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public MSRInterface MSRInterface;
 
-    private MSRProperties Data;
+    private final MSRProperties Data;
 
     /**
      * Constructor. Stores given property set and device implementation object.
@@ -76,7 +80,7 @@ public class MSRService extends JposBase implements MSRService115 {
 
     @Override
     public int getCapWritableTracks() throws JposException {
-        Device.check(Props.State == JposConst.JPOS_S_CLOSED, JposConst.JPOS_E_CLOSED, "Device not opened");
+        check(Props.State == JPOS_S_CLOSED, JPOS_E_CLOSED, "Device not opened");
         logGet("CapWritableTracks");
         return Data.CapWritableTracks;
     }
@@ -162,7 +166,7 @@ public class MSRService extends JposBase implements MSRService115 {
     public void setDataEncryptionAlgorithm(int i) throws JposException {
         logPreSet("DataEncryptionAlgorithm");
         checkEnabled();
-        Device.check((Data.CapDataEncryption & i) != i, JposConst.JPOS_E_ILLEGAL, "Invalid data encryption: " + i);
+        check((Data.CapDataEncryption & i) != i, JPOS_E_ILLEGAL, "Invalid data encryption: " + i);
         MSRInterface.dataEncryptionAlgorithm(i);
         logSet("DataEncryptionAlgorithm");
     }
@@ -250,7 +254,7 @@ public class MSRService extends JposBase implements MSRService115 {
         if (s == null)
             s = "";
         checkOpened();
-        Device.check(!Device.member(s, Data.CardTypeList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid card type: "+ s);
+        check(!member(s, Data.CardTypeList.split(",")), JPOS_E_ILLEGAL, "Invalid card type: "+ s);
         checkNoChangedOrClaimed(Data.WriteCardType, s);
         MSRInterface.writeCardType(s);
         logSet("WriteCardType");
@@ -274,7 +278,7 @@ public class MSRService extends JposBase implements MSRService115 {
     public void setTracksToWrite(int i) throws JposException {
         logPreSet("TracksToWrite");
         checkOpened();
-        Device.check((Data.CapWritableTracks & i) != i, JposConst.JPOS_E_ILLEGAL, "Invalid track selection: " + i);
+        check((Data.CapWritableTracks & i) != i, JPOS_E_ILLEGAL, "Invalid track selection: " + i);
         checkNoChangedOrClaimed(Data.TracksToWrite, i);
         MSRInterface.tracksToWrite(i);
         logSet("TracksToWrite");
@@ -298,7 +302,7 @@ public class MSRService extends JposBase implements MSRService115 {
     public void setTransmitSentinels(boolean b) throws JposException {
         logPreSet("TransmitSentinels");
         checkOpened();
-        Device.check(!Data.CapTransmitSentinels && b, JposConst.JPOS_E_ILLEGAL, "Sentinel transmission not supported");
+        check(!Data.CapTransmitSentinels && b, JPOS_E_ILLEGAL, "Sentinel transmission not supported");
         checkNoChangedOrClaimed(Data.TransmitSentinels, b);
         MSRInterface.transmitSentinels(b);
         logSet("TransmitSentinels");
@@ -338,7 +342,7 @@ public class MSRService extends JposBase implements MSRService115 {
     public void setErrorReportingType(int i) throws JposException {
         logPreSet("ErrorReportingType");
         checkOpened();
-        Device.checkMember(i, new long[]{MSRConst.MSR_ERT_CARD, MSRConst.MSR_ERT_TRACK}, JposConst.JPOS_E_ILLEGAL, "Invalid error reporting: " + i);
+        checkMember(i, new long[]{MSR_ERT_CARD, MSR_ERT_TRACK}, JPOS_E_ILLEGAL, "Invalid error reporting: " + i);
         checkNoChangedOrClaimed(Data.ErrorReportingType, i);
         MSRInterface.errorReportingType(i);
         logSet("ErrorReportingType");
@@ -455,7 +459,7 @@ public class MSRService extends JposBase implements MSRService115 {
     public void setTracksToRead(int i) throws JposException {
         logPreSet("TracksToRead");
         checkOpened();
-        Device.check((MSRConst.MSR_TR_1_2_3_4 & i) != i, JposConst.JPOS_E_ILLEGAL, "Invalid track selection: " + i);
+        check((MSR_TR_1_2_3_4 & i) != i, JPOS_E_ILLEGAL, "Invalid track selection: " + i);
         checkNoChangedOrClaimed(Data.TracksToRead, i);
         MSRInterface.tracksToRead(i);
         logSet("TracksToRead");
@@ -468,18 +472,18 @@ public class MSRService extends JposBase implements MSRService115 {
 
     @Override
     public void authenticateDevice(byte[] response) throws JposException {
-        logPreCall("AuthenticateDevice", "" + response);
+        logPreCall("AuthenticateDevice", removeOuterArraySpecifier(new Object[]{response}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(Data.CapDeviceAuthentication == MSRConst.MSR_DA_NOT_SUPPORTED, JposConst.JPOS_E_ILLEGAL, "Authentication not supported");
+        check(Data.CapDeviceAuthentication == MSR_DA_NOT_SUPPORTED, JPOS_E_ILLEGAL, "Authentication not supported");
         MSRInterface.authenticateDevice(response);
         logCall("AuthenticateDevice");
     }
 
     @Override
     public void deauthenticateDevice(byte[] response) throws JposException {
-        logPreCall("DeauthenticateDevice", "" + response);
+        logPreCall("DeauthenticateDevice", removeOuterArraySpecifier(new Object[]{response}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(Data.CapDeviceAuthentication == MSRConst.MSR_DA_NOT_SUPPORTED, JposConst.JPOS_E_ILLEGAL, "Authentication not supported");
+        check(Data.CapDeviceAuthentication == MSR_DA_NOT_SUPPORTED, JPOS_E_ILLEGAL, "Authentication not supported");
         MSRInterface.deauthenticateDevice(response);
         logCall("DeauthenticateDevice");
     }
@@ -488,21 +492,21 @@ public class MSRService extends JposBase implements MSRService115 {
     public void retrieveCardProperty(String name, String[] value) throws JposException {
         logPreCall("RetrieveCardProperty", name + ", ...");
         checkEnabled();
-        Device.check(!Device.member(name, Data.CardPropertyList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid card property: " + name);
-        Device.check(Data.CapDeviceAuthentication == MSRConst.MSR_DA_NOT_SUPPORTED, JposConst.JPOS_E_ILLEGAL, "Authentication not supported");
-        Device.check(value == null || value.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid value array");
+        check(!member(name, Data.CardPropertyList.split(",")), JPOS_E_ILLEGAL, "Invalid card property: " + name);
+        check(Data.CapDeviceAuthentication == MSR_DA_NOT_SUPPORTED, JPOS_E_ILLEGAL, "Authentication not supported");
+        check(value == null || value.length != 1, JPOS_E_ILLEGAL, "Invalid value array");
         MSRInterface.retrieveCardProperty(name, value);
         logCall("RetrieveCardProperty", name + ", " + value[0]);
     }
 
     @Override
     public void retrieveDeviceAuthenticationData(byte[][] challenge) throws JposException {
-        logPreCall("RetrieveDeviceAuthenticationData", "" + challenge[0]);
+        logPreCall("RetrieveDeviceAuthenticationData", removeOuterArraySpecifier(new Object[]{challenge}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(Data.CapDeviceAuthentication == MSRConst.MSR_DA_NOT_SUPPORTED, JposConst.JPOS_E_ILLEGAL, "Authentication not supported");
-        Device.check(challenge == null || challenge.length != 1, JposConst.JPOS_E_ILLEGAL, "Invalid challenge array");
+        check(Data.CapDeviceAuthentication == MSR_DA_NOT_SUPPORTED, JPOS_E_ILLEGAL, "Authentication not supported");
+        check(challenge == null || challenge.length != 1, JPOS_E_ILLEGAL, "Invalid challenge array");
         MSRInterface.retrieveDeviceAuthenticationData(challenge);
-        logCall("RetrieveDeviceAuthenticationData", "" + challenge[0]);
+        logCall("RetrieveDeviceAuthenticationData", removeOuterArraySpecifier(new Object[]{challenge[0]}, Device.MaxArrayStringElements));
     }
 
     @Override
@@ -514,28 +518,25 @@ public class MSRService extends JposBase implements MSRService115 {
     public void updateKey(String key, String keyName) throws JposException {
         logPreCall("UpdateKey", key + ", " + keyName);
         checkEnabled();
-        Device.check(Data.CapDeviceAuthentication == MSRConst.MSR_DA_NOT_SUPPORTED, JposConst.JPOS_E_ILLEGAL, "Authentication not supported");
+        check(Data.CapDeviceAuthentication == MSR_DA_NOT_SUPPORTED, JPOS_E_ILLEGAL, "Authentication not supported");
         MSRInterface.updateKey(key, keyName);
         logCall("UpdateKey");
     }
 
     @Override
     public void writeTracks(byte[][] data, int timeout) throws JposException {
-        String trackdata = "";
-        for (byte[] track : data) {
-            Device.check(data == null, JposConst.JPOS_E_ILLEGAL, "Illegal track");
-            trackdata = trackdata + ", " + track;
-        }
-        logPreCall("WriteTracks", "{" + trackdata.substring(1) + " }, " + timeout);
+        logPreCall("WriteTracks", removeOuterArraySpecifier(new Object[]{data, timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(Data.CapWritableTracks == MSRConst.MSR_TR_NONE, JposConst.JPOS_E_ILLEGAL, "Write tracks not supported");
-        Device.check(Data.TracksToWrite == MSRConst.MSR_TR_NONE, JposConst.JPOS_E_FAILURE, "Selected tracks cannot be written: " + Data.TracksToWrite);
-        int[] trackspec = new int[]{MSRConst.MSR_TR_1, MSRConst.MSR_TR_2, MSRConst.MSR_TR_3, MSRConst.MSR_TR_4};
+        check(Data.CapWritableTracks == MSR_TR_NONE, JPOS_E_ILLEGAL, "Write tracks not supported");
+        check(Data.TracksToWrite == MSR_TR_NONE, JPOS_E_FAILURE, "Selected tracks cannot be written: " + Data.TracksToWrite);
+        check(data == null || data.length != 4, JPOS_E_ILLEGAL, "Invalid track data");
+        int[] trackspec = {MSR_TR_1, MSR_TR_2, MSR_TR_3, MSR_TR_4};
         for (int checkindex = 0; checkindex < trackspec.length; checkindex++) {
+            check(data[checkindex] == null, JPOS_E_ILLEGAL, "Invalid track data");
             if ((trackspec[checkindex] & Data.TracksToWrite) == 0) {
-                Device.check(data[checkindex].length > 0, JposConst.JPOS_E_ILLEGAL, "Trackdata specified for non-writable track " + (checkindex + 1));
+                check(data[checkindex].length > 0, JPOS_E_ILLEGAL, "Trackdata specified for non-writable track " + (checkindex + 1));
             } else {
-                Device.check(data[checkindex].length > Data.EncodingMaxLength, JposConst.JPOS_E_ILLEGAL, "Data too long for track " + (checkindex + 1));
+                check(data[checkindex].length > Data.EncodingMaxLength, JPOS_E_ILLEGAL, "Data too long for track " + (checkindex + 1));
             }
         }
         MSRInterface.writeTracks(data, timeout);

@@ -21,18 +21,22 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.CashChangerConst.*;
+import static jpos.JposConst.*;
+
 /**
  * CashChanger service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class CashChangerService extends JposBase implements CashChangerService115 {
+public class CashChangerService extends JposBase implements CashChangerService116 {
     /**
      * Instance of a class implementing the CashChangerInterface for cash changer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public CashChangerInterface CashChangerInterface;
 
-    private CashChangerProperties Data;
+    private final CashChangerProperties Data;
 
     /**
      * Constructor. Stores given property set and device implementation object.
@@ -202,7 +206,7 @@ public class CashChangerService extends JposBase implements CashChangerService11
     @Override
     public int getDepositStatus() throws JposException {
         checkEnabled();
-        Device.check(Data.DepositStatus == null, JposConst.JPOS_E_FAILURE, "Not initialized: DepositStatus");
+        check(Data.DepositStatus == null, JPOS_E_FAILURE, "Not initialized: DepositStatus");
         logGet("DepositStatus");
         return Data.DepositStatus;
     }
@@ -217,7 +221,7 @@ public class CashChangerService extends JposBase implements CashChangerService11
     @Override
     public int getDeviceStatus() throws JposException {
         checkEnabled();
-        Device.check(Data.DeviceStatus == null, JposConst.JPOS_E_FAILURE, "Not initialized: DeviceStatus");
+        check(Data.DeviceStatus == null, JPOS_E_FAILURE, "Not initialized: DeviceStatus");
         logGet("DeviceStatus");
         return Data.DeviceStatus;
     }
@@ -232,7 +236,7 @@ public class CashChangerService extends JposBase implements CashChangerService11
     @Override
     public int getFullStatus() throws JposException {
         checkEnabled();
-        Device.check(Data.FullStatus == null, JposConst.JPOS_E_FAILURE, "Not initialized: FullStatus");
+        check(Data.FullStatus == null, JPOS_E_FAILURE, "Not initialized: FullStatus");
         logGet("FullStatus");
         return Data.FullStatus;
     }
@@ -265,7 +269,7 @@ public class CashChangerService extends JposBase implements CashChangerService11
             s = "";
         checkOpened();
         String[] allowed = Data.CurrencyCodeList.split(",");
-        Device.check(!JposDevice.member(s, allowed), JposConst.JPOS_E_ILLEGAL, "Currency code " + s + " not in { " + Data.CurrencyCodeList + "}");
+        check(!member(s, allowed), JPOS_E_ILLEGAL, "Currency code " + s + " not in { " + Data.CurrencyCodeList + "}");
         checkNoChangedOrClaimed(Data.CurrencyCode, s);
         CashChangerInterface.currencyCode(s);
         logSet("CurrencyCode");
@@ -275,7 +279,7 @@ public class CashChangerService extends JposBase implements CashChangerService11
     public void setCurrentExit(int i) throws JposException {
         logPreSet("CurrentExit");
         checkEnabled();
-        Device.check(i < 1 || i > Data.DeviceExits, JposConst.JPOS_E_ILLEGAL, "CurrentExit out of range: " + i);
+        check(i < 1 || i > Data.DeviceExits, JPOS_E_ILLEGAL, "CurrentExit out of range: " + i);
         CashChangerInterface.currentExit(i);
         logSet("CurrentExit");
     }
@@ -284,9 +288,9 @@ public class CashChangerService extends JposBase implements CashChangerService11
     public void setCurrentService(int i) throws JposException {
         logPreSet("CurrentService");
         checkEnabled();
-        Device.check(i < 0 || i > Data.ServiceCount, JposConst.JPOS_E_ILLEGAL, "CurrentService out of range: " + i);
+        check(i < 0 || i > Data.ServiceCount, JPOS_E_ILLEGAL, "CurrentService out of range: " + i);
         long[] allowed = {Data.ServiceIndex & 0xff, (Data.ServiceIndex >> 8) & 0xff, (Data.ServiceIndex >> 16) & 0xff, (Data.ServiceIndex >> 24) & 0xff};
-        Device.check(i > 0 && !Device.member(i, allowed), JposConst.JPOS_E_ILLEGAL, "Unsupported service index: " + i);
+        check(i > 0 && !member(i, allowed), JPOS_E_ILLEGAL, "Unsupported service index: " + i);
         CashChangerInterface.currentService(i);
         logSet("CurrentService");
     }
@@ -295,35 +299,35 @@ public class CashChangerService extends JposBase implements CashChangerService11
     public void setRealTimeDataEnabled(boolean b) throws JposException {
         logPreSet("RealTimeDataEnabled");
         checkEnabled();
-        Device.check(!Data.CapRealTimeData && b, JposConst.JPOS_E_ILLEGAL, "Device does not support RealTimeData");
+        check(!Data.CapRealTimeData && b, JPOS_E_ILLEGAL, "Device does not support RealTimeData");
         CashChangerInterface.realTimeDataEnabled(b);
         logSet("RealTimeDataEnabled");
     }
 
     @Override
     public void adjustCashCounts(String cashCounts) throws JposException {
-        logPreCall("AdjustCashCounts", cashCounts == null ? "null" : "" + cashCounts);
+        logPreCall("AdjustCashCounts", removeOuterArraySpecifier(new Object[]{cashCounts}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(cashCounts == null, JposConst.JPOS_E_ILLEGAL, "Cash counts null");
-        String cashCountPart[] = cashCounts.split(";");
-        Device.check(((cashCountPart.length - 1) & ~1) != 0, JposConst.JPOS_E_ILLEGAL, "Bad format of cash counts");
+        check(cashCounts == null, JPOS_E_ILLEGAL, "Cash counts null");
+        String[] cashCountPart = cashCounts.split(";");
+        check(((cashCountPart.length - 1) & ~1) != 0, JPOS_E_ILLEGAL, "Bad format of cash counts");
         boolean nocounts = true;
         for (String parts : cashCountPart) {
             if (!parts.equals("")) {
                 nocounts = false;
-                String cashCount[] = parts.split(",");
+                String[] cashCount = parts.split(",");
                 for (String entry : cashCount) {
-                    String values[] = entry.split(":");
-                    Device.check(values.length != 2, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
+                    String[] values = entry.split(":");
+                    check(values.length != 2, JPOS_E_ILLEGAL, "Bad format of cash count");
                     try {
-                        Device.check(Integer.parseInt(values[0]) <= 0 || Integer.parseInt(values[1]) < 0, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
+                        check(Integer.parseInt(values[0]) <= 0 || Integer.parseInt(values[1]) < 0, JPOS_E_ILLEGAL, "Bad format of cash count");
                     } catch (NumberFormatException e) {
-                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Non-integer cash count component", e);
+                        throw new JposException(JPOS_E_ILLEGAL, "Non-integer cash count component", e);
                     }
                 }
             }
         }
-        Device.check(nocounts, JposConst.JPOS_E_ILLEGAL, "No cash counts");
+        check(nocounts, JPOS_E_ILLEGAL, "No cash counts");
         CashChangerInterface.adjustCashCounts(cashCounts);
         logCall("AdjustCashCounts");
     }
@@ -332,24 +336,20 @@ public class CashChangerService extends JposBase implements CashChangerService11
     public void beginDeposit() throws JposException {
         logPreCall("BeginDeposit");
         checkEnabled();
-        Device.check(Data.DepositStatus != CashChangerConst.CHAN_STATUS_DEPOSIT_END, JposConst.JPOS_E_ILLEGAL,
-                (Data.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Just in deposit operation");
+        check(Data.DepositStatus != CHAN_STATUS_DEPOSIT_END, JPOS_E_ILLEGAL,
+                (Data.DepositStatus == CHAN_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Just in deposit operation");
         CashChangerInterface.beginDeposit();
         logCall("BeginDeposit");
     }
 
     @Override
     public void endDeposit(int success) throws JposException {
-        logPreCall("EndDeposit", "" + success);
-        long[] validsuccess = {
-                CashChangerConst.CHAN_DEPOSIT_CHANGE,
-                CashChangerConst.CHAN_DEPOSIT_NOCHANGE,
-                CashChangerConst.CHAN_DEPOSIT_REPAY
-        };
+        logPreCall("EndDeposit", removeOuterArraySpecifier(new Object[]{success}, Device.MaxArrayStringElements));
+        long[] validsuccess = { CHAN_DEPOSIT_CHANGE, CHAN_DEPOSIT_NOCHANGE, CHAN_DEPOSIT_REPAY };
         checkEnabled();
-        Device.check(Data.DepositStatus != CashChangerConst.CHAN_STATUS_DEPOSIT_COUNT, JposConst.JPOS_E_ILLEGAL,
-                (Data.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Operation not fixed");
-        Device.checkMember(success, validsuccess, JposConst.JPOS_E_ILLEGAL, "Invalid success code: " + success);
+        check(Data.DepositStatus != CHAN_STATUS_DEPOSIT_COUNT, JPOS_E_ILLEGAL,
+                (Data.DepositStatus == CHAN_STATUS_DEPOSIT_JAM) ? "Jam condition" : "Operation not fixed");
+        checkMember(success, validsuccess, JPOS_E_ILLEGAL, "Invalid success code: " + success);
         CashChangerInterface.endDeposit(success);
         logCall("EndDeposit");
     }
@@ -358,50 +358,50 @@ public class CashChangerService extends JposBase implements CashChangerService11
     public void fixDeposit() throws JposException {
         logPreCall("FixDeposit");
         checkEnabled();
-        Device.check(Data.DepositStatus != CashChangerConst.CHAN_STATUS_DEPOSIT_START, JposConst.JPOS_E_ILLEGAL,
-                (Data.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_JAM ? "Jam condition" :
-                        (Data.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_END ? "Operation not started" : "Operation just fixed")));
+        check(Data.DepositStatus != CHAN_STATUS_DEPOSIT_START, JPOS_E_ILLEGAL,
+                (Data.DepositStatus == CHAN_STATUS_DEPOSIT_JAM ? "Jam condition" :
+                        (Data.DepositStatus == CHAN_STATUS_DEPOSIT_END ? "Operation not started" : "Operation just fixed")));
         CashChangerInterface.fixDeposit();
         logCall("FixDeposit");
     }
 
     @Override
     public void pauseDeposit(int control) throws JposException {
-        logPreCall("PauseDeposit");
+        logPreCall("PauseDeposit", removeOuterArraySpecifier(new Object[]{control}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapPauseDeposit, JposConst.JPOS_E_ILLEGAL, "PauseDeposit not supported");
-        Device.check(control == CashChangerConst.CHAN_DEPOSIT_PAUSE && Data.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_END,
-                JposConst.JPOS_E_ILLEGAL, "No pending deposit operation");
-        long allowed[] = {CashChangerConst.CHAN_DEPOSIT_PAUSE, CashChangerConst.CHAN_DEPOSIT_RESTART };
-        Device.checkMember(control, allowed, JposConst.JPOS_E_ILLEGAL, "Illegal parameter value");
+        check(!Data.CapPauseDeposit, JPOS_E_ILLEGAL, "PauseDeposit not supported");
+        check(control == CHAN_DEPOSIT_PAUSE && Data.DepositStatus == CHAN_STATUS_DEPOSIT_END,
+                JPOS_E_ILLEGAL, "No pending deposit operation");
+        long[] allowed = {CHAN_DEPOSIT_PAUSE, CHAN_DEPOSIT_RESTART };
+        checkMember(control, allowed, JPOS_E_ILLEGAL, "Illegal parameter value");
         CashChangerInterface.pauseDeposit(control);
         logCall("PauseDeposit");
     }
 
     @Override
     public void dispenseCash(String cashCounts) throws JposException {
-        logPreCall("DispenseCash", cashCounts == null ? "null" : "" + cashCounts);
+        logPreCall("DispenseCash", removeOuterArraySpecifier(new Object[]{cashCounts}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(cashCounts == null, JposConst.JPOS_E_ILLEGAL, "Cash counts null");
-        String cashCountPart[] = cashCounts.split(";");
-        Device.check(((cashCountPart.length - 1) & ~1) != 0, JposConst.JPOS_E_ILLEGAL, "Bad format of cash counts");
+        check(cashCounts == null, JPOS_E_ILLEGAL, "Cash counts null");
+        String[] cashCountPart = cashCounts.split(";");
+        check(((cashCountPart.length - 1) & ~1) != 0, JPOS_E_ILLEGAL, "Bad format of cash counts");
         boolean nocounts = true;
         for (String parts : cashCountPart) {
             if (!parts.equals("")) {
                 nocounts = false;
-                String cashCount[] = parts.split(",");
+                String[] cashCount = parts.split(",");
                 for (String entry : cashCount) {
-                    String values[] = entry.split(":");
-                    Device.check(values.length != 2, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
+                    String[] values = entry.split(":");
+                    check(values.length != 2, JPOS_E_ILLEGAL, "Bad format of cash count");
                     try {
-                        Device.check(Integer.parseInt(values[0]) <= 0 || Integer.parseInt(values[1]) < 0, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
+                        check(Integer.parseInt(values[0]) <= 0 || Integer.parseInt(values[1]) < 0, JPOS_E_ILLEGAL, "Bad format of cash count");
                     } catch (NumberFormatException e) {
-                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Non-integer cash count component", e);
+                        throw new JposException(JPOS_E_ILLEGAL, "Non-integer cash count component", e);
                     }
                 }
             }
         }
-        Device.check(nocounts, JposConst.JPOS_E_ILLEGAL, "No cash counts");
+        check(nocounts, JPOS_E_ILLEGAL, "No cash counts");
         if (callNowOrLater(CashChangerInterface.dispenseCash(cashCounts)))
             logAsyncCall("DispenseCash");
         else
@@ -410,9 +410,9 @@ public class CashChangerService extends JposBase implements CashChangerService11
 
     @Override
     public void dispenseChange(int amount) throws JposException {
-        logPreCall("DispenseChange", "" + amount);
+        logPreCall("DispenseChange", removeOuterArraySpecifier(new Object[]{amount}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount");
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount");
         if (callNowOrLater(CashChangerInterface.dispenseChange(amount)))
             logAsyncCall("DispenseChange");
         else
@@ -423,15 +423,11 @@ public class CashChangerService extends JposBase implements CashChangerService11
     public void readCashCounts(String[] cashCounts, boolean[] discrepancy) throws JposException {
         logPreCall("ReadCashCounts");
         checkEnabled();
-        Device.check(cashCounts == null, JposConst.JPOS_E_ILLEGAL, "cashCounts null");
-        Device.check(cashCounts.length != 1, JposConst.JPOS_E_ILLEGAL, "cashCounts: Invalid array size");
-        Device.check(discrepancy == null, JposConst.JPOS_E_ILLEGAL, "discrepancy null");
-        Device.check(discrepancy.length != 1, JposConst.JPOS_E_ILLEGAL, "discrepancy: Invalid array size");
+        check(cashCounts == null, JPOS_E_ILLEGAL, "cashCounts null");
+        check(cashCounts.length != 1, JPOS_E_ILLEGAL, "cashCounts: Invalid array size");
+        check(discrepancy == null, JPOS_E_ILLEGAL, "discrepancy null");
+        check(discrepancy.length != 1, JPOS_E_ILLEGAL, "discrepancy: Invalid array size");
         CashChangerInterface.readCashCounts(cashCounts, discrepancy);
-        try {
-            logCall("ReadCashCounts", "{ " + cashCounts[0] + " }, " + discrepancy[0]);
-        } catch (NullPointerException e) {
-            throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid result for " + (cashCounts[0] == null ? "cashCounts" : "discrepancy"), e);
-        }
+        logCall("ReadCashCounts", removeOuterArraySpecifier(new Object[]{cashCounts[0], discrepancy[0]}, Device.MaxArrayStringElements));
     }
 }

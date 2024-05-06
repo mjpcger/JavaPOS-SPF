@@ -50,7 +50,6 @@ public class DeviceMonitorProperties extends JposCommonProperties implements Dev
      */
     protected DeviceMonitorProperties(int dev) {
         super(dev);
-        DeviceServiceVersion = 1016000;
     }
 
     @Override

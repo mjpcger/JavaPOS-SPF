@@ -20,18 +20,20 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static jpos.JposConst.*;
+
 /**
  * MICR service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class MICRService extends JposBase implements MICRService115 {
+public class MICRService extends JposBase implements MICRService116 {
     /**
      * Instance of a class implementing the MICRInterface for magnetic ink character recognition reader specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public MICRInterface MICRInterface;
 
-    private MICRProperties Data;
+    private final MICRProperties Data;
 
     /**
      * Constructor. Stores given property set and device implementation object.
@@ -118,10 +120,10 @@ public class MICRService extends JposBase implements MICRService115 {
 
     @Override
     public void beginInsertion(int timeout) throws JposException {
-        logPreCall("BeginInsertion", "" + timeout);
+        logPreCall("BeginInsertion", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabled();
         MICRInterface.checkBusy();
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
         MICRInterface.beginInsertion(timeout);
         Data.InsertionMode = true;
         logCall("BeginInsertion");
@@ -129,10 +131,10 @@ public class MICRService extends JposBase implements MICRService115 {
 
     @Override
     public void beginRemoval(int timeout) throws JposException {
-        logPreCall("BeginRemoval", "" + timeout);
+        logPreCall("BeginRemoval", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabled();
         MICRInterface.checkBusy();
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
         MICRInterface.beginRemoval(timeout);
         Data.RemovalMode = true;
         logCall("BeginRemoval");
@@ -142,8 +144,8 @@ public class MICRService extends JposBase implements MICRService115 {
     public void endInsertion() throws JposException {
         logPreCall("EndInsertion");
         checkEnabled();
-        Device.check(!Data.InsertionMode, JposConst.JPOS_E_ILLEGAL, "Not in insertion mode");
-        Device.check(Props.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_BUSY, "Output in progress or error detected");
+        check(!Data.InsertionMode, JPOS_E_ILLEGAL, "Not in insertion mode");
+        check(Props.State != JPOS_S_IDLE, JPOS_E_BUSY, "Output in progress or error detected");
         Data.InsertionMode = false;
         MICRInterface.endInsertion();
         logCall("EndInsertion");
@@ -153,8 +155,8 @@ public class MICRService extends JposBase implements MICRService115 {
     public void endRemoval() throws JposException {
         logPreCall("EndRemoval");
         checkEnabled();
-        Device.check(!Data.RemovalMode, JposConst.JPOS_E_ILLEGAL, "Not in removal mode");
-        Device.check(Props.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_BUSY, "Output in progress or error detected");
+        check(!Data.RemovalMode, JPOS_E_ILLEGAL, "Not in removal mode");
+        check(Props.State != JPOS_S_IDLE, JPOS_E_BUSY, "Output in progress or error detected");
         Data.RemovalMode = false;
         MICRInterface.endRemoval();
         logCall("EndRemoval");

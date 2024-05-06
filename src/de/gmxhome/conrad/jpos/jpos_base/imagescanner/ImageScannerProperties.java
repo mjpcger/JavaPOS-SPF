@@ -17,10 +17,11 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.imagescanner;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import jpos.ImageScannerConst;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.ImageScannerConst.*;
 
 /**
  * Class containing the image scanner specific properties, their default values and default implementations of
@@ -117,12 +118,12 @@ public class ImageScannerProperties extends JposCommonProperties implements Imag
     /**
      * UPOS property ImageMode. Default: STILL_ONLY.
      */
-    public int ImageMode = ImageScannerConst.IMG_STILL_ONLY;
+    public int ImageMode = IMG_STILL_ONLY;
 
     /**
      * UPOS property ImageQuality. Default: QUAL_HIGH.
      */
-    public int ImageQuality = ImageScannerConst.IMG_QUAL_HIGH;
+    public int ImageQuality = IMG_QUAL_HIGH;
 
     /**
      * UPOS property ImageType. Default: null.
@@ -151,7 +152,6 @@ public class ImageScannerProperties extends JposCommonProperties implements Imag
      */
     protected ImageScannerProperties(int dev) {
         super(dev);
-        ExclusiveUse = ExclusiveYes;
     }
 
     @Override
@@ -187,11 +187,11 @@ public class ImageScannerProperties extends JposCommonProperties implements Imag
         }
     }
 
-    private long VideoModes[] = {ImageScannerConst.IMG_VIDEO_DECODE, ImageScannerConst.IMG_VIDEO_STILL, ImageScannerConst.IMG_ALL};
+    private final long[] VideoModes = {IMG_VIDEO_DECODE, IMG_VIDEO_STILL, IMG_ALL};
 
     @Override
     public void autoDisable(boolean enable) throws JposException {
-        AutoDisable = JposDevice.member(ImageMode, VideoModes) ? false : (StoredAutoDisable = enable);
+        AutoDisable = !member(ImageMode, VideoModes) && (StoredAutoDisable = enable);
     }
 
     @Override
@@ -206,7 +206,7 @@ public class ImageScannerProperties extends JposCommonProperties implements Imag
 
     @Override
     public void imageMode(int imageMode) throws JposException {
-        AutoDisable = JposDevice.member(ImageMode = imageMode, VideoModes) ? false : StoredAutoDisable;
+        AutoDisable = !member(ImageMode = imageMode, VideoModes) && StoredAutoDisable;
     }
 
     @Override

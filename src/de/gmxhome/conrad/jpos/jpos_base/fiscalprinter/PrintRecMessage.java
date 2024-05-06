@@ -18,11 +18,14 @@ package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
 
 import jpos.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.FiscalPrinterConst.*;
+
 /**
  * Output request executor for FiscalPrinter method PrintRecMessage.
  */
 public class PrintRecMessage extends OutputRequest {
-    private int MessageType;
+    private final int MessageType;
 
     /**
      * FiscalPrinter property MessageType at time of validation, see UPOS specification.
@@ -32,7 +35,7 @@ public class PrintRecMessage extends OutputRequest {
         return MessageType;
     }
 
-    private String Message;
+    private final String Message;
 
     /**
      * FiscalPrinter method PrintRecMessage parameter message, see UPOS specification.
@@ -58,7 +61,7 @@ public class PrintRecMessage extends OutputRequest {
         FiscalPrinterService svc = (FiscalPrinterService)Props.EventSource;
         if (EndSync == null) {
             svc.checkCoverPaper(svc.getFiscalStation());
-            Device.checkext(getMessage().length() > ((FiscalPrinterProperties)Props).MessageLength, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_DESCRIPTION, "Message too long");
+            checkext(getMessage().length() > ((FiscalPrinterProperties)Props).MessageLength, JPOS_EFPTR_BAD_ITEM_DESCRIPTION, "Message too long");
         }
         svc.FiscalPrinterInterface.printRecMessage(this);
         super.invoke();

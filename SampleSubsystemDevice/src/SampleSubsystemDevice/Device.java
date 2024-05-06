@@ -18,21 +18,18 @@
 package SampleSubsystemDevice;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import de.gmxhome.conrad.jpos.jpos_base.bumpbar.BumpBarProperties;
-import de.gmxhome.conrad.jpos.jpos_base.bumpbar.BumpBarService;
+import de.gmxhome.conrad.jpos.jpos_base.bumpbar.*;
 import de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay.*;
-import jpos.BumpBarConst;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.RemoteOrderDisplayConst;
+import jpos.*;
 import jpos.config.JposEntry;
-import net.bplaced.conrad.log4jpos.Level;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static SampleSubsystemDevice.DisplayContents.*;
+import static jpos.BumpBarConst.*;
+import static jpos.JposConst.*;
+import static jpos.RemoteOrderDisplayConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * JposDevice based implementation of JavaPOS BumpBar and RemoteOrderDisplay device service implementations for the
@@ -67,13 +64,13 @@ import static SampleSubsystemDevice.DisplayContents.*;
  * units online are equal.
  * <p>Here a full list of all device specific properties that can be changed via jpos.xml:
  * <ul>
- *     <li>BackgroundIntensity: Background intensity, must be 0 or <i>RemoteOrderDisplayConst.ROD_ATTR_INTENSITY</i>
- *     (8). Default: <i>RemoteOrderDisplayConst.ROD_ATTR_INTENSITY</i>.</li>
+ *     <li>BackgroundIntensity: Background intensity, must be 0 or <i>ROD_ATTR_INTENSITY</i>
+ *     (8). Default: <i>ROD_ATTR_INTENSITY</i>.</li>
  *     <li>CharacterTimeout: Positive integer value, specifying the maximum delay between bytes that belong to the same
  *     frame. Default value: 50 milliseconds.</li>
  *     <li>ClientPort: Integer value between 0 and 65535 specifying the TCP port used for communication with the device
  *     simulator. Default: 0 (for random port number selected by operating system).</li>
- *     <li>CursorColor: Color and insensity of the cursor. Default: <i>RemoteOrderDisplayConst.ROD_ATTR_FG_BLACK</i> (0). Can
+ *     <li>CursorColor: Color and insensity of the cursor. Default: <i>ROD_ATTR_FG_BLACK</i> (0). Can
  *     be set to any value between 0 and 15.</li>
  *     <li>MinClaimTimeout: Minimum timeout in milliseconds used by method Claim to ensure correct working. Must be a
  *     positive value. If this value is too small, Claim might throw a JposException even if everything is OK if the
@@ -85,10 +82,11 @@ import static SampleSubsystemDevice.DisplayContents.*;
  *     first byte of its response. Default: 1000.</li>
  * </ul>
  */
+@SuppressWarnings("unused")
 public class Device extends JposDevice implements Runnable {
     /**
      * Extended error code that has not yet defined within the JavaPOS framework. The value (200) must be replaced by
-     * RemoteOrderDisplayConst.JPOS_EROD_NOUNITS when this constant will be defined in future.
+     * JPOS_EROD_NOUNITS when this constant will be defined in future.
      */
     public final static int JPOS_EROD_NOUNITS = 200;
 
@@ -104,17 +102,16 @@ public class Device extends JposDevice implements Runnable {
     private final static int MAX_UNITS = 5;     // Simulator supports up to 5 displays
     private final static int MAX_LINES = 20;    // Simulator supports up to 20 lines per unit
     private final static int MAX_COLUMNS = 25;  // Simulator supports up to 25 characters per line for each unit
-    private DisplayContents Display = new DisplayContents();
+    private final DisplayContents Display = new DisplayContents();
     // colors are the same as specified by UPOS, plus intensity, resulting in 16 colors, where only 8 colors are allowed
     // for background (configurable intensity).
-    private int BackgroundIntensity = RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
-    private int CursorColor = RemoteOrderDisplayConst.ROD_ATTR_FG_BLACK;
+    private int BackgroundIntensity = ROD_ATTR_INTENSITY;
+    private int CursorColor = ROD_ATTR_FG_BLACK;
     // Communication properties
     private TcpClientIOProcessor OutStream = null;
-    private Thread StateWatcher;
-    private List<SyncObject> WaitInitialized = new ArrayList<SyncObject>();
-    private SyncObject WaitClockData = new SyncObject();
-    private boolean ToBeFinished;
+    private ThreadHandler StateWatcher;
+    private final List<SyncObject> WaitInitialized = new ArrayList<>();
+    private final SyncObject WaitClockData = new SyncObject();
     private boolean InIOError = false;
     private int Online = 0;
     private int UnitOnline = 0;
@@ -143,7 +140,7 @@ public class Device extends JposDevice implements Runnable {
         bumpBarInit(1);
         PhysicalDeviceDescription = "Coin Dispenser Simulator for TCP";
         PhysicalDeviceName = "Coin Dispenser Simulator";
-        CapPowerReporting = JposConst.JPOS_PR_STANDARD;
+        CapPowerReporting = JPOS_PR_STANDARD;
 
     }
 
@@ -163,11 +160,11 @@ public class Device extends JposDevice implements Runnable {
             if ((o = entry.getPropertyValue("MinClaimTimeout")) != null && (value = Integer.parseInt(o.toString())) >= 0)
                 MinClaimTimeout = value;
             if ((o = entry.getPropertyValue("BackgroundIntensity")) != null)
-                BackgroundIntensity = Boolean.parseBoolean(o.toString()) ? RemoteOrderDisplayConst.ROD_ATTR_INTENSITY : 0;
+                BackgroundIntensity = Boolean.parseBoolean(o.toString()) ? ROD_ATTR_INTENSITY : 0;
             if ((o = entry.getPropertyValue("CursorColor")) != null && (value = Integer.parseInt(o.toString())) >= 0 && value <= 0xf)
                 CursorColor = value;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property", e);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property", e);
         }
     }
 
@@ -177,12 +174,12 @@ public class Device extends JposDevice implements Runnable {
         props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "RemoteOrderDisplay service for subsystem device simulator";
         props.CapTone = false;
-        props.CharacterSetDef = RemoteOrderDisplayConst.ROD_CS_UNICODE;
+        props.CharacterSetDef = ROD_CS_UNICODE;
         props.SystemClocksDef = UNITCOUNT;
         props.SystemVideoSaveBuffersDef = UNITCOUNT * BUFFERIDLIMIT;
         props.VideoModeDef = 1;
         props.VideoModesListDef = "1:20x25x16C";
-        props.EventTypeDef = RemoteOrderDisplayConst.ROD_DE_TOUCH_UP|RemoteOrderDisplayConst.ROD_DE_TOUCH_DOWN;
+        props.EventTypeDef = ROD_DE_TOUCH_UP|ROD_DE_TOUCH_DOWN;
         props.TimeoutDef = RequestTimeout;
     }
 
@@ -197,18 +194,17 @@ public class Device extends JposDevice implements Runnable {
 
     /**
      * Closes the port
-     * @param doFlush Specifies whether the output stream shall be flushed befor close.
+     *
      * @return In case of an IO error, the corresponding exception. Otherwise null
      */
-    private JposException closePort(boolean doFlush) {
+    @SuppressWarnings("UnusedReturnValue")
+    private JposException closePort() {
         JposException e = null;
         if (OutStream != null) {
             for (int i = 0; i < 2; i++) {
                 try {
                     switch (i) {
                         case 0:
-                            if (doFlush)
-                                OutStream.flush();
                             i++;
                         case 1:
                             OutStream.close();
@@ -239,11 +235,11 @@ public class Device extends JposDevice implements Runnable {
         return null;
     }
 
-    private Integer OpenCount = 0;
+    private final Integer[] OpenCount = {0};
 
     private synchronized int changeOpenCount(int value) {
-        OpenCount += value;
-        return OpenCount;
+        OpenCount[0] += value;
+        return OpenCount[0];
     }
 
     /**
@@ -251,17 +247,17 @@ public class Device extends JposDevice implements Runnable {
      * @param timeout Timeout to wait until method fails
      * @return true if communication could be started, false if timeout occurred.
      */
+    @SuppressWarnings("AssignmentUsedAsCondition")
     boolean startCommunication(int timeout) {
         SyncObject initsync = new SyncObject();
         boolean wait = true;
         if (changeOpenCount(1) == 1) {
             synchronized (OpenCount) {
-                ToBeFinished = false;
                 synchronized(WaitInitialized) {
                     WaitInitialized.add(initsync);
                 }
                 UnitOnline = 0;
-                (StateWatcher = new Thread(this)).start();
+                (StateWatcher = new ThreadHandler("SubsystemDeviceStateWatcher", this)).start();
             }
         }
         else {
@@ -285,17 +281,13 @@ public class Device extends JposDevice implements Runnable {
     /**
      * Decrements open count. If decremented to 0, stops communication handler.
      */
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     void stopCommunication() {
         if (changeOpenCount(-1) == 0) {
             synchronized (OpenCount) {
-                ToBeFinished = true;
-                closePort(false);
-                while (ToBeFinished) {
-                    try {
-                        StateWatcher.join();
-                    } catch (Exception e) {}
-                    break;
-                }
+                StateWatcher.ToBeFinished = true;
+                closePort();
+                StateWatcher.waitFinished();
                 StateWatcher = null;
                 InIOError = false;
             }
@@ -307,6 +299,7 @@ public class Device extends JposDevice implements Runnable {
      * @param command Command data to be sent, without final ETX.
      * @return JposException in error case, null if no error occurred.
      */
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     synchronized protected JposException sendCommand(String command) {
         if (OutStream == null) {
             JposException e = initPort();
@@ -319,8 +312,8 @@ public class Device extends JposDevice implements Runnable {
             OutStream.write(request);
             return null;
         } catch (JposException e) {
-            log(Level.TRACE, ID + ": IO error: " + e.getMessage());
-            closePort(false);
+            log(TRACE, ID + ": IO error: " + e.getMessage());
+            closePort();
             InIOError = true;
             return e;
         }
@@ -332,7 +325,7 @@ public class Device extends JposDevice implements Runnable {
      */
     @Override
     public void run() {
-        while (!ToBeFinished) {
+        while (!StateWatcher.ToBeFinished) {
             TcpClientIOProcessor instream;
             synchronized(this) {
                 instream = getDisplayControllerStream();
@@ -361,14 +354,14 @@ public class Device extends JposDevice implements Runnable {
                         JposCommonProperties[] props = { getClaimingInstance(ClaimedRemoteOrderDisplay, 0), getClaimingInstance(ClaimedBumpBar, 0) };
                         for (JposCommonProperties subsys : props) {
                             if (subsys != null) {
-                                log(Level.DEBUG, subsys.LogicalName + ": Insufficient input: " + new String(data));
+                                log(DEBUG, subsys.LogicalName + ": Insufficient input: " + new String(data));
                                 break;
                             }
                         }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    log(Level.TRACE, ID + ": IO error: " + e.getMessage());
+                    log(TRACE, ID + ": IO error: " + e.getMessage());
                     handeSocketError();
                 }
             }
@@ -378,9 +371,10 @@ public class Device extends JposDevice implements Runnable {
         }
     }
 
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     private void handeSocketError() {
         synchronized (this) {
-            closePort(false);
+            closePort();
             InIOError = true;
         }
         JposCommonProperties[] subsys = { getClaimingInstance(ClaimedRemoteOrderDisplay, 0), getClaimingInstance(ClaimedBumpBar, 0) };
@@ -397,7 +391,7 @@ public class Device extends JposDevice implements Runnable {
                         }
                         props.EventSource.logSet("UnitsOnline");
                     }
-                    handleEvent(new UnitStatusUpdateEvent(props.EventSource, JposConst.JPOS_PS_OFF_OFFLINE, UnitOnline));
+                    handleEvent(new UnitStatusUpdateEvent(props.EventSource, JPOS_PS_OFF_OFFLINE, UnitOnline));
                 } catch (JposException e1) {
                     e1.printStackTrace();
                 }
@@ -433,7 +427,7 @@ public class Device extends JposDevice implements Runnable {
             SampleBumpBarAccessor bump = (SampleBumpBarAccessor)getClaimingInstance(ClaimedBumpBar, 0);
             if (bump != null) {
                 key = bump.LogicalKeyCodes[unitidx][key];
-                handleEvent(new UnitDataEvent(bump.EventSource, (key << 16) + BumpBarConst.BB_DE_KEY, unit));
+                handleEvent(new UnitDataEvent(bump.EventSource, (key << 16) + BB_DE_KEY, unit));
             }
             data = null;
         }
@@ -449,10 +443,10 @@ public class Device extends JposDevice implements Runnable {
             // Generate data event
             int col = Integer.parseInt(new String(data).substring(3, 5)) - 1;
             int row = Integer.parseInt(new String(data).substring(5, 7)) - 1;
-            int type = data[2] == UpCmd ? RemoteOrderDisplayConst.ROD_DE_TOUCH_UP : RemoteOrderDisplayConst.ROD_DE_TOUCH_DOWN;
+            int type = data[2] == UpCmd ? ROD_DE_TOUCH_UP : ROD_DE_TOUCH_DOWN;
             RemoteOrderDisplayProperties disp = (RemoteOrderDisplayProperties)getClaimingInstance(ClaimedRemoteOrderDisplay, 0);
-            if (disp != null && ((disp.EventType & RemoteOrderDisplayConst.ROD_DE_TOUCH_UP) != 0 && data[2] == UpCmd ||
-                    (disp.EventType & RemoteOrderDisplayConst.ROD_DE_TOUCH_DOWN) != 0 && data[2] == DownCmd)) {
+            if (disp != null && ((disp.EventType & ROD_DE_TOUCH_UP) != 0 && data[2] == UpCmd ||
+                    (disp.EventType & ROD_DE_TOUCH_DOWN) != 0 && data[2] == DownCmd)) {
                 handleEvent(new UnitDataEvent(disp.EventSource, (((row << 8) + col) << 16) + type, unit));
             }
             data = null;
@@ -495,8 +489,7 @@ public class Device extends JposDevice implements Runnable {
             if (subsys != null) {
                 if (datum == '1') {
                     UnitOnline |= unit;
-                    if (subsys instanceof RemoteOrderDisplayProperties) {
-                        RemoteOrderDisplayProperties disp = (RemoteOrderDisplayProperties) subsys;
+                    if (subsys instanceof RemoteOrderDisplayProperties disp) {
                         disp.Unit[unitidx].Clocks = 1;
                         disp.Unit[unitidx].CapTouch = true;
                         disp.Unit[unitidx].VideoModesList = disp.VideoModesListDef;
@@ -510,10 +503,10 @@ public class Device extends JposDevice implements Runnable {
                     UnitOnline &= ~unit;
                 if (subsys.DeviceEnabled) {
                     int oldUnitsOnline = subsys.UnitsOnline;
-                    int status = JposConst.JPOS_PS_OFF_OFFLINE;
+                    int status = JPOS_PS_OFF_OFFLINE;
                     if (datum == '1') {
                         subsys.UnitsOnline |= unit;
-                        status = JposConst.JPOS_PS_ONLINE;
+                        status = JPOS_PS_ONLINE;
                     } else {
                         Display.Unit[unitidx].CursorActive = false;
                         subsys.UnitsOnline &= ~unit;
@@ -541,7 +534,7 @@ public class Device extends JposDevice implements Runnable {
      * <br>- Tone (CapTone is always false).
      */
     class SampleBumpBarAccessor extends BumpBarProperties {
-        private int[][] LogicalKeyCodes = new int[32][];
+        private final int[][] LogicalKeyCodes = new int[32][];
 
         /**
          * Creates the bump bar accessor instance.
@@ -560,13 +553,13 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void claim(int timeout) throws JposException {
-            if (timeout != JposConst.JPOS_FOREVER && timeout < MinClaimTimeout)
+            if (timeout != JPOS_FOREVER && timeout < MinClaimTimeout)
                 timeout = MinClaimTimeout;
             super.claim(timeout);
             boolean initialized = startCommunication(timeout);
             if (!initialized || InIOError) {
                 release();
-                throw new JposException(JposConst.JPOS_E_NOHARDWARE, "Bump bar controller not detected");
+                throw new JposException(JPOS_E_NOHARDWARE, "Bump bar controller not detected");
             }
         }
 
@@ -578,7 +571,7 @@ public class Device extends JposDevice implements Runnable {
                     UnitsOnline = UnitOnline;
                     EventSource.logSet("UnitsOnline");
                     if (UnitOnline != 0) {
-                        handleEvent(new UnitStatusUpdateEvent(EventSource, JposConst.JPOS_PS_ONLINE, UnitOnline));
+                        handleEvent(new UnitStatusUpdateEvent(EventSource, JPOS_PS_ONLINE, UnitOnline));
                     }
                 }
             }
@@ -590,16 +583,16 @@ public class Device extends JposDevice implements Runnable {
             int nowonline = ~UnitsOnline & UnitOnline;
             UnitsOnline = UnitOnline;
             if (nowoffline != 0)
-                handleEvent(new UnitStatusUpdateEvent(EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE, nowoffline));
+                handleEvent(new UnitStatusUpdateEvent(EventSource, JPOS_SUE_POWER_OFF_OFFLINE, nowoffline));
             if (nowonline != 0)
-                handleEvent(new UnitStatusUpdateEvent(EventSource, JposConst.JPOS_SUE_POWER_ONLINE, nowonline));
+                handleEvent(new UnitStatusUpdateEvent(EventSource, JPOS_SUE_POWER_ONLINE, nowonline));
         }
 
         @Override
         public void release() throws JposException {
             stopCommunication();
             Online = UnitOnline = 0;
-            PowerState = JposConst.JPOS_PS_UNKNOWN;
+            PowerState = JPOS_PS_UNKNOWN;
             EventSource.logSet("PowerState");
             UnitsOnline = 0;
             EventSource.logSet("UnitsOnline");
@@ -608,7 +601,7 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void setKeyTranslation(int units, int scanCode, int logicalKey) throws JposException {
-            Service.check(scanCode < 1 || scanCode > 8, units, JposConst.JPOS_E_ILLEGAL, 0, "Unsupported scan code: " + scanCode);
+            Service.check(scanCode < 1 || scanCode > 8, units, JPOS_E_ILLEGAL, 0, "Unsupported scan code: " + scanCode);
             synchronized (LogicalKeyCodes) {
                 for (int i = 0; units != 0; i++) {
                     if ((units & (1 << i)) != 0) {
@@ -655,13 +648,13 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void claim(int timeout) throws JposException {
-            if (timeout != JposConst.JPOS_FOREVER && timeout < MinClaimTimeout)
+            if (timeout != JPOS_FOREVER && timeout < MinClaimTimeout)
                 timeout = MinClaimTimeout;
             super.claim(timeout);
             boolean initialized = startCommunication(timeout);
             if (!initialized || InIOError) {
                 release();
-                throw new JposException(JposConst.JPOS_E_NOHARDWARE, "Remote order display controller not detected");
+                throw new JposException(JPOS_E_NOHARDWARE, "Remote order display controller not detected");
             }
         }
 
@@ -673,7 +666,7 @@ public class Device extends JposDevice implements Runnable {
                     UnitsOnline = UnitOnline;
                     EventSource.logSet("UnitsOnline");
                     if (UnitOnline != 0) {
-                        handleEvent(new UnitStatusUpdateEvent(EventSource, JposConst.JPOS_PS_ONLINE, UnitOnline));
+                        handleEvent(new UnitStatusUpdateEvent(EventSource, JPOS_PS_ONLINE, UnitOnline));
                     }
                 }
             }
@@ -685,16 +678,16 @@ public class Device extends JposDevice implements Runnable {
             int nowonline = ~UnitsOnline & UnitOnline;
             UnitsOnline = UnitOnline;
             if (nowoffline != 0)
-                handleEvent(new UnitStatusUpdateEvent(EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE, nowoffline));
+                handleEvent(new UnitStatusUpdateEvent(EventSource, JPOS_SUE_POWER_OFF_OFFLINE, nowoffline));
             if (nowonline != 0)
-                handleEvent(new UnitStatusUpdateEvent(EventSource, JposConst.JPOS_SUE_POWER_ONLINE, nowonline));
+                handleEvent(new UnitStatusUpdateEvent(EventSource, JPOS_SUE_POWER_ONLINE, nowonline));
         }
 
         @Override
         public void release() throws JposException {
             stopCommunication();
             Online = UnitOnline = 0;
-            PowerState = JposConst.JPOS_PS_UNKNOWN;
+            PowerState = JPOS_PS_UNKNOWN;
             EventSource.logSet("PowerState");
             UnitsOnline = 0;
             EventSource.logSet("UnitsOnline");
@@ -703,12 +696,12 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void checkHealth(int level) throws JposException {
-            String what = level == JposConst.JPOS_CH_INTERNAL ? "Internal" : (level == JposConst.JPOS_CH_EXTERNAL ? "External" : "Interactive");
-            Service.check(CurrentUnitID == 0, 0, JposConst.JPOS_E_EXTENDED, JPOS_EROD_NOUNITS, "Unit ID not set");
-            Service.check((CurrentUnitID & UnitsOnline) == 0, CurrentUnitID, JposConst.JPOS_E_FAILURE, 0, "Unit " + CurrentUnitID + " offline");
+            String what = level == JPOS_CH_INTERNAL ? "Internal" : (level == JPOS_CH_EXTERNAL ? "External" : "Interactive");
+            Service.check(CurrentUnitID == 0, 0, JPOS_E_EXTENDED, JPOS_EROD_NOUNITS, "Unit ID not set");
+            Service.check((CurrentUnitID & UnitsOnline) == 0, CurrentUnitID, JPOS_E_FAILURE, 0, "Unit " + CurrentUnitID + " offline");
             try {
-                if (level != JposConst.JPOS_CH_INTERNAL) {
-                    ((RemoteOrderDisplayService)Service).displayData(CurrentUnitID, 0, 0, RemoteOrderDisplayConst.ROD_ATTR_BG_GRAY | RemoteOrderDisplayConst.ROD_ATTR_FG_BLACK, "CheckHealth OK");
+                if (level != JPOS_CH_INTERNAL) {
+                    ((RemoteOrderDisplayService)Service).displayData(CurrentUnitID, 0, 0, ROD_ATTR_BG_GRAY | ROD_ATTR_FG_BLACK, "CheckHealth OK");
                     CheckHealthText = what + " CheckHealth: OK";
                 } else
                     CheckHealthText = "Internal CheckHealth: OK";
@@ -722,19 +715,18 @@ public class Device extends JposDevice implements Runnable {
         public void clearVideo(ClearVideo request) throws JposException {
             int color = ((request.getAttributes() >> 4) & 7) | BackgroundIntensity;
             int units = request.getUnits();
-            boolean synchrone = request.EndSync != null;
             for (int i = 0; i < Display.Unit.length; i++) {
                 if ((units & (1 << i)) != 0) {
-                    sendCheckCommand(request, String.format("%02dRC%02d%02d%02d%02d%02d%1d", i + 1, 1, 1, Display.Unit[i].Attribute[1].length, Display.Unit[i].Attribute.length, color, 1, synchrone));
+                    sendCheckCommand(request, String.format("%02dRC%02d%02d%02d%02d%02d%1d", i + 1, 1, 1, Display.Unit[i].Attribute[1].length, Display.Unit[i].Attribute.length, color, 1));
                     for (int l = 0; l < Display.Unit[i].Attribute.length; l++) {
                         for (int c = 0; c < Display.Unit[i].Attribute[l].length; c++) {
                             Display.Unit[i].Attribute[l][c].BackgroundColor = color;
                             Display.Unit[i].Attribute[l][c].ForegroundColor = color;
                             Display.Unit[i].Attribute[l][c].Value = ' ';
-                            Display.Unit[i].Attribute[l][c].LeftBorderColor = Display.NOT_PRESENT;
-                            Display.Unit[i].Attribute[l][c].TopBorderColor = Display.NOT_PRESENT;
-                            Display.Unit[i].Attribute[l][c].RightBorderColor = Display.NOT_PRESENT;
-                            Display.Unit[i].Attribute[l][c].BottomBorderColor = Display.NOT_PRESENT;
+                            Display.Unit[i].Attribute[l][c].LeftBorderColor = NOT_PRESENT;
+                            Display.Unit[i].Attribute[l][c].TopBorderColor = NOT_PRESENT;
+                            Display.Unit[i].Attribute[l][c].RightBorderColor = NOT_PRESENT;
+                            Display.Unit[i].Attribute[l][c].BottomBorderColor = NOT_PRESENT;
                         }
                     }
                     Display.Unit[i].SaveBuffer[0] = null;
@@ -744,7 +736,7 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public ClearVideoRegion clearVideoRegion(int units, int row, int column, int height, int width, int attribute) throws JposException {
-            Service.check(column + width > COLUMNCOUNT || row + height > LINECOUNT, units, JposConst.JPOS_E_ILLEGAL, 0, "Region out of range");
+            Service.check(column + width > COLUMNCOUNT || row + height > LINECOUNT, units, JPOS_E_ILLEGAL, 0, "Region out of range");
             return super.clearVideoRegion(units, row, column, height, width, attribute);
         }
 
@@ -759,7 +751,7 @@ public class Device extends JposDevice implements Runnable {
                     if (clockInRegion && (request.getColumn() + request.getWidth() <= Display.Unit[i].ClockColumn || Display.Unit[i].ClockColumn + Display.Unit[i].SaveBuffer[0][0].length <= request.getColumn()))
                         clockInRegion = false;
                     if (clockInRegion && Display.Unit[i].ClockSuspendTick == 0) {
-                        while (WaitClockData.suspend(0)) ;
+                        WaitClockData.reset();
                         sendCheckCommand(units, String.format("%02dST%02d%02d%1d%d", i + 1, 0, 0, 0, 0), synchrone);
                         WaitClockData.suspend(RequestTimeout);
                     }
@@ -773,10 +765,10 @@ public class Device extends JposDevice implements Runnable {
                             Display.Unit[i].Attribute[l][c].BackgroundColor = color;
                             Display.Unit[i].Attribute[l][c].ForegroundColor = color;
                             Display.Unit[i].Attribute[l][c].Value = ' ';
-                            Display.Unit[i].Attribute[l][c].LeftBorderColor = Display.NOT_PRESENT;
-                            Display.Unit[i].Attribute[l][c].TopBorderColor = Display.NOT_PRESENT;
-                            Display.Unit[i].Attribute[l][c].RightBorderColor = Display.NOT_PRESENT;
-                            Display.Unit[i].Attribute[l][c].BottomBorderColor = Display.NOT_PRESENT;
+                            Display.Unit[i].Attribute[l][c].LeftBorderColor = NOT_PRESENT;
+                            Display.Unit[i].Attribute[l][c].TopBorderColor = NOT_PRESENT;
+                            Display.Unit[i].Attribute[l][c].RightBorderColor = NOT_PRESENT;
+                            Display.Unit[i].Attribute[l][c].BottomBorderColor = NOT_PRESENT;
                         }
                     }
                 }
@@ -784,8 +776,9 @@ public class Device extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings("SynchronizeOnNonFinalField")
         public void freeVideoRegion(int units, int bufferId) throws JposException {
-            Service.check(bufferId > BUFFERIDLIMIT, units, JposConst.JPOS_E_ILLEGAL, 0, "Invalid buffer id " + bufferId);
+            Service.check(bufferId > BUFFERIDLIMIT, units, JPOS_E_ILLEGAL, 0, "Invalid buffer id " + bufferId);
             for (int i = 0; i < Display.Unit.length; i++) {
                 if ((units & (1 << i)) != 0) {
                     synchronized (Display.Unit[i].SaveBuffer) {
@@ -796,6 +789,7 @@ public class Device extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings({"SynchronizeOnNonFinalField"})
         public void restoreVideoRegion(RestoreVideoRegion request) throws JposException {
             int noregion = 0;
             int outofrange = 0;
@@ -816,15 +810,16 @@ public class Device extends JposDevice implements Runnable {
                     }
                 }
             }
-            Service.check(noregion != 0, noregion, JposConst.JPOS_E_EXTENDED, RemoteOrderDisplayConst.JPOS_EROD_NOREGION, "No region saved for buffer ID " + request.getBufferId() + " for units " + Integer.toString(noregion, 0x10), request.EndSync != null);
-            Service.check(outofrange != 0, outofrange, JposConst.JPOS_E_ILLEGAL, 0, "Target Region out of range for units " + Integer.toString(outofrange, 0x10), request.EndSync != null);
+            Service.check(noregion != 0, noregion, JPOS_E_EXTENDED, JPOS_EROD_NOREGION, "No region saved for buffer ID " + request.getBufferId() + " for units " + Integer.toString(noregion, 0x10), request.EndSync != null);
+            Service.check(outofrange != 0, outofrange, JPOS_E_ILLEGAL, 0, "Target Region out of range for units " + Integer.toString(outofrange, 0x10), request.EndSync != null);
             for (int i = 0; i < Display.Unit.length; i++) {
                 if ((request.getUnits() & (1 << i)) != 0) {
                     CharAttributes[][] range;
                     synchronized (Display.Unit[i].SaveBuffer) {
                         range = Display.Unit[i].SaveBuffer[request.getBufferId()];
                     }
-                    Service.check(range == null, 1 << i, JposConst.JPOS_E_EXTENDED, RemoteOrderDisplayConst.JPOS_EROD_NOREGION, "No region saved for buffer ID " + request.getBufferId() + " for unit " + Integer.toString(1 << i, 0x10), request.EndSync != null);
+                    Service.check(range == null, 1 << i, JPOS_E_EXTENDED, JPOS_EROD_NOREGION, "No region saved for buffer ID " + request.getBufferId() + " for unit " + Integer.toString(1 << i, 0x10), request.EndSync != null);
+                    assert range != null;
                     updateRegion(request, i, range, request.getTargetRow(), request.getTargetColumn(), false);
                 }
             }
@@ -832,8 +827,8 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public SaveVideoRegion saveVideoRegion(int units, int row, int column, int height, int width, int bufferId) throws JposException {
-            Service.check(column + width > COLUMNCOUNT || row + height > LINECOUNT, units, JposConst.JPOS_E_ILLEGAL, 0, "Source Region out of range");
-            Service.check(bufferId > BUFFERIDLIMIT, units, JposConst.JPOS_E_ILLEGAL, 0, "Invalid buffer id " + bufferId);
+            Service.check(column + width > COLUMNCOUNT || row + height > LINECOUNT, units, JPOS_E_ILLEGAL, 0, "Source Region out of range");
+            Service.check(bufferId > BUFFERIDLIMIT, units, JPOS_E_ILLEGAL, 0, "Invalid buffer id " + bufferId);
             return super.saveVideoRegion(units, row, column, height, width, bufferId);
         }
 
@@ -849,8 +844,8 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public CopyVideoRegion copyVideoRegion(int units, int row, int column, int height, int width, int targetRow, int targetColumn) throws JposException {
-            Service.check(column + width > COLUMNCOUNT || row + height > LINECOUNT, units, JposConst.JPOS_E_ILLEGAL, 0, "Source Region out of range");
-            Service.check(targetColumn + width > COLUMNCOUNT || targetRow + height > LINECOUNT, units, JposConst.JPOS_E_ILLEGAL, 0, "Target Region out of range");
+            Service.check(column + width > COLUMNCOUNT || row + height > LINECOUNT, units, JPOS_E_ILLEGAL, 0, "Source Region out of range");
+            Service.check(targetColumn + width > COLUMNCOUNT || targetRow + height > LINECOUNT, units, JPOS_E_ILLEGAL, 0, "Target Region out of range");
             return super.copyVideoRegion(units, row, column, height, width, targetRow, targetColumn);
         }
 
@@ -868,7 +863,7 @@ public class Device extends JposDevice implements Runnable {
         private void updateRegion(UnitOutputRequest request, int u, DisplayContents.CharAttributes[][] range, int targetRow, int targetColumn, boolean clock) throws JposException {
             for (int l = 0; l < range.length; l++) {
                 for (int c = 0; c < range[l].length; c++) {
-                    String s = "";
+                    StringBuilder s = new StringBuilder();
                     for (int cc = c; cc < range[l].length; cc++) {
                         if (range[l][c].ForegroundColor != range[l][cc].ForegroundColor ||
                                 range[l][c].BackgroundColor != range[l][cc].BackgroundColor ||
@@ -878,11 +873,11 @@ public class Device extends JposDevice implements Runnable {
                         }
                         drawLeftLinePart(request, u, range[l][cc], targetRow, targetColumn, l, cc, clock);
                         drawRightLinePart(request, u, range[l][cc], targetRow, targetColumn, l, cc, clock);
-                        s += String.valueOf(range[l][cc].Value);
+                        s.append(String.valueOf(range[l][cc].Value));
                     }
-                    displayTextPart(request, u, range[l][c], targetRow + l, targetColumn + c, s, clock);
-                    drawTopLinePart(request, u, range[l][c], targetRow, targetColumn, l, c, s, clock);
-                    drawBottomLinePart(request, u, range[l][c], targetRow, targetColumn, l, c, s, clock);
+                    displayTextPart(request, u, range[l][c], targetRow + l, targetColumn + c, s.toString(), clock);
+                    drawTopLinePart(request, u, range[l][c], targetRow, targetColumn, l, c, s.toString(), clock);
+                    drawBottomLinePart(request, u, range[l][c], targetRow, targetColumn, l, c, s.toString(), clock);
                     c += s.length() - 1;
                 }
             }
@@ -1003,7 +998,7 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public DrawBox drawBox(int units, int row, int column, int height, int width, int attribute, int bordertype) throws JposException {
-            Service.check(column + width > COLUMNCOUNT || row + height > LINECOUNT, units, JposConst.JPOS_E_ILLEGAL, 0, "Region out of range");
+            Service.check(column + width > COLUMNCOUNT || row + height > LINECOUNT, units, JPOS_E_ILLEGAL, 0, "Region out of range");
             return super.drawBox(units, row, column, height, width, attribute, bordertype);
         }
 
@@ -1029,7 +1024,7 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public UpdateVideoRegionAttribute updateVideoRegionAttribute(int units, int function, int row, int column, int height, int width, int attribute) throws JposException {
-            Service.check(column + width > COLUMNCOUNT || row + height > LINECOUNT, units, JposConst.JPOS_E_ILLEGAL, 0, "Region out of range");
+            Service.check(column + width > COLUMNCOUNT || row + height > LINECOUNT, units, JPOS_E_ILLEGAL, 0, "Region out of range");
             return super.updateVideoRegionAttribute(units, function, row, column, height, width, attribute);
         }
 
@@ -1040,30 +1035,23 @@ public class Device extends JposDevice implements Runnable {
                 if ((units & (1 << u)) != 0) {
                     DisplayContents.CharAttributes[][] range = getRange(u, request.getRow(), request.getColumn(), request.getWidth(), request.getHeight());
                     switch (request.getFunction()) {
-                        case RemoteOrderDisplayConst.ROD_UA_SET: {
+                        case ROD_UA_SET -> {
                             setAttributes(request, range);
-                            break;
                         }
-                        case RemoteOrderDisplayConst.ROD_UA_INTENSITY_ON: {
+                        case ROD_UA_INTENSITY_ON -> {
                             switchIntensityOn(range);
-                            break;
                         }
-                        case RemoteOrderDisplayConst.ROD_UA_INTENSITY_OFF: {
+                        case ROD_UA_INTENSITY_OFF -> {
                             switchIntensityOff(range);
-                            break;
                         }
-                        case RemoteOrderDisplayConst.ROD_UA_REVERSE_OFF:
-                        case RemoteOrderDisplayConst.ROD_UA_REVERSE_ON: {
+                        case ROD_UA_REVERSE_OFF, ROD_UA_REVERSE_ON -> {
                             doReverseVideo(range);
-                            break;
                         }
-                        case RemoteOrderDisplayConst.ROD_UA_BLINK_ON: {
+                        case ROD_UA_BLINK_ON -> {
                             switchBlinkingOn(range);
-                            break;
                         }
-                        case RemoteOrderDisplayConst.ROD_UA_BLINK_OFF: {
+                        case ROD_UA_BLINK_OFF -> {
                             swichtBlinkingOff(range);
-                            break;
                         }
                     }
                     updateRegion(request, u, range, request.getRow(), request.getColumn(), false);
@@ -1093,15 +1081,15 @@ public class Device extends JposDevice implements Runnable {
         private void switchIntensityOn(DisplayContents.CharAttributes[][] range) {
             for (DisplayContents.CharAttributes[] line : range) {
                 for (DisplayContents.CharAttributes column : line) {
-                    column.ForegroundColor |= RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
+                    column.ForegroundColor |= ROD_ATTR_INTENSITY;
                     if (column.LeftBorderColor != NOT_PRESENT)
-                        column.LeftBorderColor |= RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
+                        column.LeftBorderColor |= ROD_ATTR_INTENSITY;
                     if (column.TopBorderColor != NOT_PRESENT)
-                        column.TopBorderColor |= RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
+                        column.TopBorderColor |= ROD_ATTR_INTENSITY;
                     if (column.RightBorderColor != NOT_PRESENT)
-                        column.RightBorderColor |= RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
+                        column.RightBorderColor |= ROD_ATTR_INTENSITY;
                     if (column.BottomBorderColor != NOT_PRESENT)
-                        column.BottomBorderColor |= RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
+                        column.BottomBorderColor |= ROD_ATTR_INTENSITY;
                 }
             }
         }
@@ -1109,15 +1097,15 @@ public class Device extends JposDevice implements Runnable {
         private void switchIntensityOff(DisplayContents.CharAttributes[][] range) {
             for (DisplayContents.CharAttributes[] line : range) {
                 for (DisplayContents.CharAttributes column : line) {
-                    column.ForegroundColor &= ~RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
+                    column.ForegroundColor &= ~ROD_ATTR_INTENSITY;
                     if (column.LeftBorderColor != NOT_PRESENT)
-                        column.LeftBorderColor &= ~RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
+                        column.LeftBorderColor &= ~ROD_ATTR_INTENSITY;
                     if (column.TopBorderColor != NOT_PRESENT)
-                        column.TopBorderColor &= ~RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
+                        column.TopBorderColor &= ~ROD_ATTR_INTENSITY;
                     if (column.RightBorderColor != NOT_PRESENT)
-                        column.RightBorderColor &= ~RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
+                        column.RightBorderColor &= ~ROD_ATTR_INTENSITY;
                     if (column.BottomBorderColor != NOT_PRESENT)
-                        column.BottomBorderColor &= ~RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
+                        column.BottomBorderColor &= ~ROD_ATTR_INTENSITY;
                 }
             }
         }
@@ -1183,25 +1171,20 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public void controlClock(int units, int function, int clockid, int hour, int minute, int second, int row, int column, int attribute, int mode) throws JposException {
             switch (function) {
-                case RemoteOrderDisplayConst.ROD_CLK_START: {
+                case ROD_CLK_START -> {
                     startClock(units, hour, minute, second, row, column, attribute, mode);
-                    break;
                 }
-                case RemoteOrderDisplayConst.ROD_CLK_STOP: {
+                case ROD_CLK_STOP -> {
                     stopClock(units);
-                    break;
                 }
-                case RemoteOrderDisplayConst.ROD_CLK_PAUSE: {
+                case ROD_CLK_PAUSE -> {
                     pauseClock(units);
-                    break;
                 }
-                case RemoteOrderDisplayConst.ROD_CLK_RESUME: {
+                case ROD_CLK_RESUME -> {
                     resumeClock(units);
-                    break;
                 }
-                case RemoteOrderDisplayConst.ROD_CLK_MOVE: {
+                case ROD_CLK_MOVE -> {
                     moveClock(units, row, column);
-                    break;
                 }
             }
         }
@@ -1211,21 +1194,21 @@ public class Device extends JposDevice implements Runnable {
             int type = 0;
             String time = "";
             switch (mode) {
-                case RemoteOrderDisplayConst.ROD_CLK_SHORT:
+                case ROD_CLK_SHORT:
                     time = String.format("%1d:%02d", minute, second);
                     break;
-                case RemoteOrderDisplayConst.ROD_CLK_NORMAL:
+                case ROD_CLK_NORMAL:
                     time = String.format("%02d:%02d", minute, second);
                     type = 1;
                     break;
-                case RemoteOrderDisplayConst.ROD_CLK_24_LONG:
+                case ROD_CLK_24_LONG:
                     type = 1;
-                case RemoteOrderDisplayConst.ROD_CLK_12_LONG:
+                case ROD_CLK_12_LONG:
                     type += 2;
                     time = String.format("%02d:%02d:%02d", hour, minute, second);
                     break;
             }
-            Service.check(time.length() + column > COLUMNCOUNT, units, JposConst.JPOS_E_ILLEGAL, 0, "Clock out of range");
+            Service.check(time.length() + column > COLUMNCOUNT, units, JPOS_E_ILLEGAL, 0, "Clock out of range");
             int fgcolor = attribute & 0xf;
             int bgcolor = ((attribute >> 4) & 7) | BackgroundIntensity;
             int blinking = attribute >> 7;
@@ -1249,7 +1232,7 @@ public class Device extends JposDevice implements Runnable {
         private void checkClockActive(int units) throws JposException {
             for (int u = 0; u < Display.Unit.length; u++) {
                 if ((units & (1 << u)) != 0) {
-                    Service.check(Display.Unit[u].SaveBuffer[0] != null, units, JposConst.JPOS_E_BUSY, 0, "Clock running");
+                    Service.check(Display.Unit[u].SaveBuffer[0] != null, units, JPOS_E_BUSY, 0, "Clock running");
                 }
             }
         }
@@ -1257,7 +1240,7 @@ public class Device extends JposDevice implements Runnable {
         private void checkClockInactive(int units) throws JposException {
             for (int u = 0; u < Display.Unit.length; u++) {
                 if ((units & (1 << u)) != 0) {
-                    Service.check(Display.Unit[u].SaveBuffer[0] == null, units, JposConst.JPOS_E_EXTENDED, RemoteOrderDisplayConst.JPOS_EROD_BADCLK, "Clock not started");
+                    Service.check(Display.Unit[u].SaveBuffer[0] == null, units, JPOS_E_EXTENDED, JPOS_EROD_BADCLK, "Clock not started");
                 }
             }
         }
@@ -1267,13 +1250,11 @@ public class Device extends JposDevice implements Runnable {
             for (int u = 0; u < Display.Unit.length; u++) {
                 if ((units & (1 << u)) != 0) {
                     if (Display.Unit[u].ClockSuspendTick == 0) {
-                        while (WaitClockData.suspend(0)) ;
+                        WaitClockData.reset();
                         sendCheckCommand(units, String.format("%02dST%02d%02d%1d%d", u + 1, 0, 0, 0, 0));
                         WaitClockData.suspend(RequestTimeout);
                     }
-                    for (int i = 0; i < Display.Unit[u].SaveBuffer.length; i++) {
-                        Display.Unit[u].Attribute[Display.Unit[u].ClockRow][Display.Unit[u].ClockColumn + i] = Display.Unit[u].SaveBuffer[0][0][i];
-                    }
+                    System.arraycopy(Display.Unit[u].SaveBuffer[0][0], 0, Display.Unit[u].Attribute[Display.Unit[u].ClockRow], Display.Unit[u].ClockColumn, Display.Unit[u].SaveBuffer.length);
                     Display.Unit[u].ClockSuspendTick = 0;
                     Display.Unit[u].ClockType = -1;
                     Display.Unit[u].SaveBuffer[0] = null;
@@ -1286,7 +1267,7 @@ public class Device extends JposDevice implements Runnable {
             for (int u = 0; u < Display.Unit.length; u++) {
                 if ((units & (1 << u)) != 0) {
                     if (Display.Unit[u].ClockSuspendTick == 0) {
-                        while (WaitClockData.suspend(0)) ;
+                        WaitClockData.reset();
                         sendCheckCommand(units, String.format("%02dST%02d%02d%1d%d", u + 1, 0, 0, 0, 0));
                         WaitClockData.suspend(RequestTimeout);
                     }
@@ -1316,7 +1297,7 @@ public class Device extends JposDevice implements Runnable {
                     if ((notstarted |= Display.Unit[u].SaveBuffer[0] == null ? 1 << u : 0) == 0) {
                         if ((offrange |= column + Display.Unit[u].SaveBuffer[0][0].length > COLUMNCOUNT ? 1 << u : 0) == 0 ) {
                             if (Display.Unit[u].ClockSuspendTick == 0) {
-                                while (WaitClockData.suspend(0)) ;
+                                WaitClockData.reset();
                                 if (sendCommand(String.format("%02dST%02d%02d%1d%d", u + 1, 0, 0, 0, 0)) == null) {
                                     WaitClockData.suspend(RequestTimeout);
                                     gettimeerror |= Display.Unit[u].SaveBuffer[0] == null ? 1 << u : 0;
@@ -1330,9 +1311,9 @@ public class Device extends JposDevice implements Runnable {
                     }
                 }
             }
-            Service.check(notstarted != 0, notstarted, JposConst.JPOS_E_EXTENDED, RemoteOrderDisplayConst.JPOS_EROD_BADCLK, "Clock not started");
-            Service.check(offrange != 0, offrange, JposConst.JPOS_E_ILLEGAL, 0, "Target position out of range");
-            Service.check(gettimeerror != 0, gettimeerror, JposConst.JPOS_E_FAILURE, 0, "Clock not accessible");
+            Service.check(notstarted != 0, notstarted, JPOS_E_EXTENDED, JPOS_EROD_BADCLK, "Clock not started");
+            Service.check(offrange != 0, offrange, JPOS_E_ILLEGAL, 0, "Target position out of range");
+            Service.check(gettimeerror != 0, gettimeerror, JPOS_E_FAILURE, 0, "Clock not accessible");
             for (int u = 0; u < Display.Unit.length; u++) {
                 if ((units & (1 << u)) != 0) {
                     int sourceRow = Display.Unit[u].ClockRow;
@@ -1353,7 +1334,7 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void resetVideo(int units) throws JposException {
-            Service.check((units & ~UnitOnline) != 0, units & ~UnitOnline, JposConst.JPOS_E_OFFLINE, 0, "Units offline");
+            Service.check((units & ~UnitOnline) != 0, units & ~UnitOnline, JPOS_E_OFFLINE, 0, "Units offline");
             for (int i = 0; i < Display.Unit.length; i++) {
                 if ((units & (1 << i)) != 0) {
                     sendCheckCommand(units, String.format("%02dVC", i + 1));
@@ -1382,12 +1363,12 @@ public class Device extends JposDevice implements Runnable {
             for (int i = 0; i < Display.Unit.length; i++) {
                 if ((units & (1 << i)) != 0) {
                     if (Display.Unit[i].CursorActive) {
-                        if (function == RemoteOrderDisplayConst.ROD_CRS_OFF) {
+                        if (function == ROD_CRS_OFF) {
                             sendCheckCommand(1 << i, String.format("%02dSC%02d%02d%02d", i + 1, 0, 0, CursorColor));
                             Display.Unit[i].CursorActive = false;
                         }
                     } else {
-                        if (function != RemoteOrderDisplayConst.ROD_CRS_OFF) {
+                        if (function != ROD_CRS_OFF) {
                             sendCheckCommand(1 << i, String.format("%02dSC%02d%02d%02d", i + 1, Display.Unit[i].CursorRow + 1, Display.Unit[i].CursorColumn + 1, CursorColor));
                             Display.Unit[i].CursorActive = true;
                         }

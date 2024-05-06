@@ -34,7 +34,7 @@ public class PrintTwoNormal extends OutputPrintRequest {
         return Station;
     }
 
-    private int Station;
+    private final int Station;
 
     /**
      * POSPrinter method PrintTwoNormal parameter data1, converted to a List&lt;Object&gt; with POSPrinterService method outputDataParts.
@@ -44,7 +44,7 @@ public class PrintTwoNormal extends OutputPrintRequest {
         return Data1;
     }
 
-    private List<POSPrinterService.PrintDataPart> Data1;
+    private final List<POSPrinterService.PrintDataPart> Data1;
 
     /**
      * POSPrinter method PrintTwoNormal parameter data2, converted to a List&lt;Object&gt; with POSPrinterService method outputDataParts.
@@ -54,7 +54,7 @@ public class PrintTwoNormal extends OutputPrintRequest {
         return Data2;
     }
 
-    private List<POSPrinterService.PrintDataPart> Data2;
+    private final List<POSPrinterService.PrintDataPart> Data2;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -72,8 +72,8 @@ public class PrintTwoNormal extends OutputPrintRequest {
     public PrintTwoNormal(JposCommonProperties props, int station, String data1, String data2) {
         super(props);
         Station = station;
-        Data1 = data1 == null ? new ArrayList<POSPrinterService.PrintDataPart>() : ((POSPrinterService)props.EventSource).outputDataParts(data1);
-        Data2 = data2 == null ? new ArrayList<POSPrinterService.PrintDataPart>() : ((POSPrinterService)props.EventSource).outputDataParts(data2);
+        Data1 = data1 == null ? new ArrayList<>() : ((POSPrinterService)props.EventSource).outputDataParts(data1);
+        Data2 = data2 == null ? new ArrayList<>() : ((POSPrinterService)props.EventSource).outputDataParts(data2);
     }
 
     @Override

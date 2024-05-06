@@ -20,18 +20,20 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static jpos.JposConst.*;
+
 /**
  * MotionSensor service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class MotionSensorService extends JposBase implements MotionSensorService115 {
+public class MotionSensorService extends JposBase implements MotionSensorService116 {
     /**
      * Instance of a class implementing the MotionSensorInterface for motion sensor specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public MotionSensorInterface MotionSensorInterface;
 
-    private MotionSensorProperties Data;
+    private final MotionSensorProperties Data;
 
     /**
      * Constructor. Stores property set and device implementation object.
@@ -62,16 +64,16 @@ public class MotionSensorService extends JposBase implements MotionSensorService
     public void setTimeout(int timeout) throws JposException {
         logPreSet("Timeout");
         checkEnabled();
-        Device.check(timeout <= 0, JposConst.JPOS_E_ILLEGAL, "Motion timeout must be > 0");
+        check(timeout <= 0, JPOS_E_ILLEGAL, "Motion timeout must be > 0");
         MotionSensorInterface.timeout(timeout);
         logSet("Timeout");
     }
 
     @Override
     public void waitForMotion(int timeout) throws JposException {
-        logPreCall("waitForMotion", "" + timeout);
+        logPreCall("waitForMotion", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_CLOSED, "Negative timeout");
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_CLOSED, "Negative timeout");
         MotionSensorInterface.waitForMotion(timeout);
         logCall("waitForMotion");
     }

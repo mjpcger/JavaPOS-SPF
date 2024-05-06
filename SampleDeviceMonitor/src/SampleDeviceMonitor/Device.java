@@ -25,6 +25,11 @@ import java.math.*;
 import java.nio.file.*;
 import java.util.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static java.math.RoundingMode.*;
+import static jpos.DeviceMonitorConst.*;
+import static jpos.JposConst.*;
+
 /**
  * JposDevice based implementation of JavaPOS DeviceMonitor device service implementation for the mass storage devices.
  */
@@ -34,7 +39,7 @@ public class Device extends JposDevice {
         deviceMonitorInit(1);
         PhysicalDeviceDescription = "Device Monitor For Mass Storage Devices";
         PhysicalDeviceName = "Mass Storage Device Monitor";
-        CapPowerReporting = JposConst.JPOS_PR_NONE;
+        CapPowerReporting = JPOS_PR_NONE;
     }
 
     @Override
@@ -53,6 +58,7 @@ public class Device extends JposDevice {
         Map<String, FileStore> Stores = new HashMap<>();
         MyProperties() {
             super(0);
+            StringBuilder list = new StringBuilder();
             for (FileStore store : FileSystems.getDefault().getFileStores()) {
                 String name = store.name().replaceAll("[:,]", "");
                 if (name.length() > 0) {
@@ -63,22 +69,22 @@ public class Device extends JposDevice {
                         Stores.put(name = key, store);
                         break;
                     }
-                    DeviceList = DeviceList == null ? name : DeviceList + "," + name;
-                    DeviceList += ":Mass Storage:Percent Free:10000000";
+                    list.append(",").append(name).append(":Mass Storage:Percent Free:10000000");
                 }
             }
+            DeviceList = list.length() > 1 ? list.substring(1) : "";
         }
 
         @Override
         public void getDeviceValue(String deviceID, int[] pValue) throws JposException {
             FileStore fs = Stores.get(deviceID);
-            check(fs == null, JposConst.JPOS_E_ILLEGAL, "Invalid device ID: " + deviceID);
+            check(fs == null, JPOS_E_ILLEGAL, "Invalid device ID: " + deviceID);
             try {
                 BigDecimal capacity = new BigDecimal(fs.getTotalSpace());
                 BigDecimal free = new BigDecimal(fs.getUsableSpace());
-                pValue[0] = free.movePointRight(9).divide(capacity, RoundingMode.HALF_EVEN).intValue();
+                pValue[0] = free.movePointRight(9).divide(capacity, HALF_EVEN).intValue();
             } catch (Exception e) {
-                throw new JposException(JposConst.JPOS_E_FAILURE, e.getMessage(), e);
+                throw new JposException(JPOS_E_FAILURE, e.getMessage(), e);
             }
         }
 
@@ -114,46 +120,44 @@ public class Device extends JposDevice {
                             break;      // Termination condition
                     }
                     now = System.currentTimeMillis();
-                    if (waittime != SyncObject.INFINITE) {
+                    if (waittime != INFINITE) {
                         if (nextcheck - now <= 0) {
                             try {
                                 BigDecimal capacity = new BigDecimal(Storage.getTotalSpace());
                                 BigDecimal free = new BigDecimal(Storage.getUsableSpace());
-                                int value = free.movePointRight(9).divide(capacity, RoundingMode.HALF_EVEN).intValue();
+                                int value = free.movePointRight(9).divide(capacity, HALF_EVEN).intValue();
                                 JposDataEvent ev = new DeviceMonitorDataEvent(EventSource, 0, ID, value);
                                 switch (mode) {
-                                    case DeviceMonitorConst.DMON_MMODE_UPDATE:
+                                    case DMON_MMODE_UPDATE -> {
                                         if (oldvalue == null || oldvalue != value)
                                             handleEvent(ev);
-                                        break;
-                                    case DeviceMonitorConst.DMON_MMODE_STRADDLED:
+                                    }
+                                    case DMON_MMODE_STRADDLED -> {
                                         if (oldvalue != null) {
                                             if ((oldvalue > upper) != (value > upper))
                                                 handleEvent(ev);
                                         }
-                                        break;
-                                    case DeviceMonitorConst.DMON_MMODE_HIGH:
+                                    }
+                                    case DMON_MMODE_HIGH -> {
                                         if (value >= upper)
                                             handleEvent(ev);
-                                        break;
-                                    case DeviceMonitorConst.DMON_MMODE_LOW:
+                                    }
+                                    case DMON_MMODE_LOW -> {
                                         if (value <= upper)
                                             handleEvent(ev);
-                                        break;
-                                    case DeviceMonitorConst.DMON_MMODE_WITHIN:
+                                    }
+                                    case DMON_MMODE_WITHIN -> {
                                         if (value <= upper && value >= lower)
                                             handleEvent(ev);
-                                        break;
-                                    case DeviceMonitorConst.DMON_MMODE_OUTSIDE:
+                                    }
+                                    case DMON_MMODE_OUTSIDE -> {
                                         if (value > upper || value < lower)
                                             handleEvent(ev);
-                                        break;
-                                    case DeviceMonitorConst.DMON_MMODE_POLLING:
-                                        handleEvent(ev);
+                                    }
+                                    case DMON_MMODE_POLLING -> handleEvent(ev);
                                 }
                                 oldvalue = value;
-                            } catch (Exception e) {
-                            }
+                            } catch (Exception ignored) {}
                             nextcheck = System.currentTimeMillis() + waittime;
                         } else {
                             waittime = nextcheck - now;
@@ -164,12 +168,12 @@ public class Device extends JposDevice {
             }
         }
 
-        private Map<String, DeviceWatcher> Watchers = new HashMap<>();
+        private final Map<String, DeviceWatcher> Watchers = new HashMap<>();
 
         @Override
         public void addMonitoringDevice(String deviceID, int monitoringMode, int boundary, int subBoundary, int intervalTime) throws JposException {
-            long[] checkvals = { DeviceMonitorConst.DMON_MMODE_UPDATE, DeviceMonitorConst.DMON_MMODE_POLLING };
-            check(member(monitoringMode, checkvals) && boundary > 1000000000, JposConst.JPOS_E_ILLEGAL, "Boundary too high: " + boundary);
+            long[] checkvals = { DMON_MMODE_UPDATE, DMON_MMODE_POLLING };
+            check(member(monitoringMode, checkvals) && boundary > 1000000000, JPOS_E_ILLEGAL, "Boundary too high: " + boundary);
             boolean starting = false;
             synchronized (Watchers) {
                 DeviceWatcher current;
@@ -188,7 +192,7 @@ public class Device extends JposDevice {
                 }
             }
             if (starting)
-                handleEvent(new DeviceMonitorStatusUpdateEvent(EventSource, DeviceMonitorConst.DMON_SUE_START_MONITORING));
+                handleEvent(new DeviceMonitorStatusUpdateEvent(EventSource, DMON_SUE_START_MONITORING));
         }
 
         @Override
@@ -200,7 +204,7 @@ public class Device extends JposDevice {
                 }
                 Watchers.clear();
             }
-            handleEvent(new DeviceMonitorStatusUpdateEvent(EventSource, DeviceMonitorConst.DMON_SUE_STOP_MONITORING));
+            handleEvent(new DeviceMonitorStatusUpdateEvent(EventSource, DMON_SUE_STOP_MONITORING));
         }
 
         @Override
@@ -216,7 +220,7 @@ public class Device extends JposDevice {
                 }
             }
             if (last)
-                handleEvent(new DeviceMonitorStatusUpdateEvent(EventSource, DeviceMonitorConst.DMON_SUE_STOP_MONITORING));
+                handleEvent(new DeviceMonitorStatusUpdateEvent(EventSource, DMON_SUE_STOP_MONITORING));
         }
 
         @Override
@@ -224,7 +228,7 @@ public class Device extends JposDevice {
             if (!flag) {
                 synchronized (Watchers) {
                     for (DeviceWatcher current : Watchers.values()) {
-                        current.WaitingTime = SyncObject.INFINITE;
+                        current.WaitingTime = INFINITE;
                         current.Waiting.signal();
                     }
                 }

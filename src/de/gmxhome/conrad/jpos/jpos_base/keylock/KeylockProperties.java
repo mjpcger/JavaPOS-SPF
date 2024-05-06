@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.keylock;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.KeylockConst.*;
+
 /**
  * Class containing the keylock specific properties, their default values and default implementations of
  * KeylockInterface.
@@ -29,17 +31,17 @@ public class KeylockProperties extends JposCommonProperties implements KeylockIn
      * UPOS property CapKeylockType. Default: KT_STANDARD. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapKeylockType = KeylockConst.LOCK_KT_STANDARD;
+    public int CapKeylockType = LOCK_KT_STANDARD;
     /**
      * Default value of ElectronicKeyValue property. Default: Zero-length byte array. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public byte[] ElectronicKeyValueDef = new byte[0];
+    public byte[] ElectronicKeyValueDef = {};
     /**
      * Default value of KeyPosition property. Default: KP_ANY. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int KeyPositionDef = KeylockConst.LOCK_KP_ANY;
+    public int KeyPositionDef = LOCK_KP_ANY;
     /**
      * UPOS property PositionCount. Default: 0. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
@@ -72,7 +74,7 @@ public class KeylockProperties extends JposCommonProperties implements KeylockIn
     @Override
     public void initOnEnable(boolean enable) {
         if (enable) {
-            super.initOnEnable(enable);
+            super.initOnEnable(true);
             ElectronicKeyValue = ElectronicKeyValueDef;
             KeyPosition = KeyPositionDef;
         }

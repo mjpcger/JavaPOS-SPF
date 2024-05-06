@@ -19,7 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.checkscanner;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposBase;
 import de.gmxhome.conrad.jpos.jpos_base.JposStatusUpdateEvent;
-import jpos.CheckScannerConst;
+
+import static jpos.CheckScannerConst.*;
 
 /**
  * Status update event implementation for CheckScanner devices.
@@ -37,24 +38,13 @@ public class CheckScannerStatusUpdateEvent extends JposStatusUpdateEvent {
 
     @Override
     public boolean checkStatusCorresponds() {
-        if (super.checkStatusCorresponds())
-            return true;
-        switch (getStatus()) {
-            case CheckScannerConst.CHK_SUE_SCANCOMPLETE:
-                return true;
-        }
-        return false;
+        return super.checkStatusCorresponds() || getStatus() == CHK_SUE_SCANCOMPLETE;
     }
 
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        if (ret.length() > 0)
-            return ret;
-        switch (getStatus()) {
-            case CheckScannerConst.CHK_SUE_SCANCOMPLETE:
-                return "CheckScanner scan complete";
-        }
-        return "Unknown CheckScanner Status Change: " + getStatus();
+        return ret.length() > 0 ? ret:
+                (getStatus() == CHK_SUE_SCANCOMPLETE ? "CheckScanner scan complete" : "Unknown CheckScanner Status Change: " + getStatus());
     }
 }

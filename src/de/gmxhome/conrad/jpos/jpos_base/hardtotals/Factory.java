@@ -17,12 +17,14 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.hardtotals;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.JposDeviceFactory;
+import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of HardTotals factory for JPOS devices using this framework.
@@ -47,7 +49,34 @@ public class Factory extends JposDeviceFactory {
      * by a file handle <i>handle</i> as follows:<br>
      *     Factory.ClaimedHardTotals.get(Device)[Index].get(<i>handle</i>)
      */
-    static Map<JposDevice, Map<Integer,HardTotalsProperties>[]> ClaimedHardTotals = new HashMap();
+    static final Map<JposDevice, Map<Integer,HardTotalsProperties>[]> ClaimedHardTotals = new HashMap<>();
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index HardTotals  property set index.
+     * @param dev HardTotals implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
+     * @return HardTotalsService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    public HardTotalsService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
+        HardTotalsProperties props = dev.getHardTotalsProperties(index);
+        validateJposConfiguration(props, dev, dev.ClaimedHardTotals, entry);
+        HardTotalsService service = (HardTotalsService) (props.EventSource = new HardTotalsService(props, dev));
+        dev.changeDefaults(props);
+        props.addProperties(dev.HardTotalss);
+        synchronized (ClaimedHardTotals) {
+            if (!ClaimedHardTotals.containsKey(dev)) {
+                HashMap<Integer, HardTotalsProperties>[] map = getArrayOf(dev.HardTotalss.length);
+                for (int i = 0; i < map.length; i++)
+                    map[i] = new HashMap<>();
+                ClaimedHardTotals.put(dev, map);
+            }
+        }
+        service.DeviceInterface = service.HardTotals = props;
+        return service;
+    }
 
     /**
      * Perform basic initialization of given device and property set. Links property
@@ -57,24 +86,8 @@ public class Factory extends JposDeviceFactory {
      * @return HardTotalsService object.
      * @throws JposException If property set could not be retrieved.
      */
+    @Deprecated
     public HardTotalsService addDevice(int index, JposDevice dev) throws JposException {
-        HardTotalsService service;
-        HardTotalsProperties props = dev.getHardTotalsProperties(index);
-        dev.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getHardTotalsProperties()");
-        service = (HardTotalsService) (props.EventSource = new HardTotalsService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedHardTotals;
-        dev.changeDefaults(props);
-        props.addProperties(dev.HardTotalss);
-        synchronized (ClaimedHardTotals) {
-            if (!ClaimedHardTotals.containsKey(dev)) {
-                HashMap<Integer, HardTotalsProperties>[] map = new HashMap[dev.HardTotalss.length];
-                for (int i = 0; i < map.length; i++)
-                    map[i] = new HashMap<Integer, HardTotalsProperties>();
-                ClaimedHardTotals.put(dev, map);
-            }
-        }
-        service.DeviceInterface = service.HardTotals = props;
-        return service;
+        return addDevice(index, dev, CurrentEntry);
     }
 }

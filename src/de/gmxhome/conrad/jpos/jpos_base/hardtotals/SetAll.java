@@ -30,7 +30,7 @@ public class SetAll extends ChangeRequest {
     public byte getValue() {
         return Value;
     }
-    private byte Value = 0;
+    private final byte Value;
 
     /**
      * Constructor, stores given parameters for later use of SetAll operation.

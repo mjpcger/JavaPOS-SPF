@@ -25,15 +25,15 @@ public class ScannerDataEvent extends JposDataEvent {
     /**
      * Holds the ScanData property value to be stored before firing the event.
      */
-    byte[] Data;
+    final byte[] Data;
     /**
      * Holds the ScanDataLabel property value to be stored before firing the event.
      */
-    byte[] Label;
+    final byte[] Label;
     /**
      * Holds the ScanDataType property value to be stored before firing the event.
      */
-    int Type;
+    final int Type;
 
     /**
      * Constructor. Parameters passed to base class unchanged.

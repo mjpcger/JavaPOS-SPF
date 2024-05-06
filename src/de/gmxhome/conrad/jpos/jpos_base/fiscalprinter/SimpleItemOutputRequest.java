@@ -20,7 +20,7 @@ package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
  * Output request base for FiscalPrinter methods that use description, amount and vatinfo arguments.
  */
 class SimpleItemOutputRequest extends SimpleAmountOutputRequest {
-    private String Description;
+    private final String Description;
 
     /**
      * FiscalPrinter method parameter description, see specific method.
@@ -30,7 +30,7 @@ class SimpleItemOutputRequest extends SimpleAmountOutputRequest {
         return Description;
     }
 
-    private int VatInfo;
+    private final int VatInfo;
 
     /**
      * FiscalPrinter method parameter vatInfo, see specific method.

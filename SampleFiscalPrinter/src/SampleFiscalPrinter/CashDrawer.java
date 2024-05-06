@@ -20,15 +20,17 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.*;
 import jpos.*;
 
-import javax.swing.*;
-
 import static SampleFiscalPrinter.Device.*;
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static javax.swing.JOptionPane.*;
+import static jpos.CashDrawerConst.*;
+import static jpos.JposConst.*;
 
 /**
  * Class implementing the CashDrawerInterface for the sample fiscal printer.
  */
 class CashDrawer extends CashDrawerProperties implements StatusUpdater {
-    private SampleFiscalPrinter.Device Dev;
+    private final SampleFiscalPrinter.Device Dev;
 
     /**
      * Constructor. Gets instance of Device to be used as communication object. Device index
@@ -58,35 +60,30 @@ class CashDrawer extends CashDrawerProperties implements StatusUpdater {
     public void checkHealth(int level) throws JposException {
         String healthError = "";
 
-        if (level == JposConst.JPOS_CH_INTERNAL) {
+        if (level == JPOS_CH_INTERNAL) {
             CheckHealthText = "Internal CheckHealth: OK";
             return;
         }
-        if (level == JposConst.JPOS_CH_INTERACTIVE) {
-            Dev.synchronizedMessageBox("Press OK to start health test.", "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+        if (level == JPOS_CH_INTERACTIVE) {
+            synchronizedMessageBox("Press OK to start health test.", "CheckHealth", INFORMATION_MESSAGE);
         }
         try {
-            if (level != JposConst.JPOS_CH_INTERNAL) {
-                if (level == JposConst.JPOS_CH_INTERACTIVE) {
-                    healthError = "Interactive CheckHealth: ";
-                    ((CashDrawerService)EventSource).openDrawer();
-                    if (DrawerOpened) {
-                        healthError += "Opened ";
-                        Dev.synchronizedMessageBox("Close drawer and Press OK to stop health test.", "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
-                        healthError += DrawerOpened ? "Failed " : "Closed ";
-                    }
-                    else
-                        healthError += "Failed ";
-                } else {
-                    healthError = "External CheckHealth: ";
-                    ((CashDrawerService)EventSource).openDrawer();
+            if (level == JPOS_CH_INTERACTIVE) {
+                healthError = "Interactive CheckHealth: ";
+                ((CashDrawerService) EventSource).openDrawer();
+                if (DrawerOpened) {
                     healthError += "Opened ";
-                    ((CashDrawerService)EventSource).waitForDrawerClose(5000, 500, 450, 200);
-                    healthError += "Closed ";
-                }
+                    synchronizedMessageBox("Close drawer and Press OK to stop health test.", "CheckHealth", INFORMATION_MESSAGE);
+                    healthError += DrawerOpened ? "Failed " : "Closed ";
+                } else
+                    healthError += "Failed ";
+            } else {
+                healthError = "External CheckHealth: ";
+                ((CashDrawerService) EventSource).openDrawer();
+                healthError += "Opened ";
+                ((CashDrawerService) EventSource).waitForDrawerClose(5000, 500, 450, 200);
+                healthError += "Closed ";
             }
-            else
-                healthError = "Internal CheckHealth: ";
         } catch (JposException e) {
             healthError += "Failed ";
         }
@@ -101,14 +98,14 @@ class CashDrawer extends CashDrawerProperties implements StatusUpdater {
         attachWaiter();
         try {
             String[] resp = Dev.sendrecv(new String[]{"openDrawer"});
-            Dev.check(resp == null || resp.length < 1, JposConst.JPOS_E_FAILURE, "Communication error");
-            Dev.check(resp[0].charAt(0) != SUCCESS, JposConst.JPOS_E_FAILURE, resp.length != 3 ? "Unknown printer error" : "Error " + resp[1] + " [" + resp[2] + "]");
+            check(resp == null || resp.length < 1, JPOS_E_FAILURE, "Communication error");
+            check(resp[0].charAt(0) != SUCCESS, JPOS_E_FAILURE, resp.length != 3 ? "Unknown printer error" : "Error " + resp[1] + " [" + resp[2] + "]");
             char[] actstate = Dev.getCurrentState();
             if (actstate.length > DRAWER && actstate[DRAWER] != OPENED)
-                waitWaiter(Dev.RequestTimeout * Dev.MaxRetry);
+                waitWaiter((long)Dev.RequestTimeout * Dev.MaxRetry);
             actstate = Dev.getCurrentState();
-            Dev.check(actstate.length <= DRAWER, JposConst.JPOS_E_OFFLINE, "Device offline");
-            Dev.check(actstate[DRAWER] != OPENED, JposConst.JPOS_E_FAILURE, "Could not open the drawer");
+            check(actstate.length <= DRAWER, JPOS_E_OFFLINE, "Device offline");
+            check(actstate[DRAWER] != OPENED, JPOS_E_FAILURE, "Could not open the drawer");
         } finally {
             releaseWaiter();
         }
@@ -120,24 +117,24 @@ class CashDrawer extends CashDrawerProperties implements StatusUpdater {
         char[] actstate;
 
         while ((actstate = Dev.getCurrentState()).length > DRAWER && actstate[DRAWER] != CLOSED && DeviceEnabled) {
-            waitWaiter(SyncObject.INFINITE);
+            waitWaiter(INFINITE);
         }
         releaseWaiter();
-        check((actstate = Dev.getCurrentState()).length <= DRAWER, JposConst.JPOS_E_OFFLINE, "Device offline");
-        check(!DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device not enabled");
+        check((actstate = Dev.getCurrentState()).length <= DRAWER, JPOS_E_OFFLINE, "Device offline");
+        check(!DeviceEnabled, JPOS_E_ILLEGAL, "Device not enabled");
         super.waitForDrawerClose();
     }
 
     @Override
     public void updateState(boolean notused) {
         char[] state = Dev.getCurrentState();
-        if (PowerNotify == JposConst.JPOS_PN_ENABLED) {
-            int value = state.length <= DRAWER ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
+        if (PowerNotify == JPOS_PN_ENABLED) {
+            int value = state.length <= DRAWER ? JPOS_PS_OFF_OFFLINE : JPOS_PS_ONLINE;
             new JposStatusUpdateEvent(EventSource, value).setAndCheckStatusProperties();
             Dev.signalStatusWaits(Dev.CashDrawers[0]);
         }
-        if (state.length > DRAWER) {
-            int value = state.length >= DRAWER && state[DRAWER] == OPENED ? CashDrawerConst.CASH_SUE_DRAWEROPEN : CashDrawerConst.CASH_SUE_DRAWERCLOSED;
+        if (state.length >= DRAWER) {
+            int value = state.length > DRAWER && state[DRAWER] == OPENED ? CASH_SUE_DRAWEROPEN : CASH_SUE_DRAWERCLOSED;
             new CashDrawerStatusUpdateEvent(EventSource, value).setAndCheckStatusProperties();
         }
     }

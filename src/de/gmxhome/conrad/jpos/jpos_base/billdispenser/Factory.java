@@ -19,6 +19,10 @@ package de.gmxhome.conrad.jpos.jpos_base.billdispenser;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of BillDispenser factory for JPOS devices using this framework.
@@ -32,18 +36,29 @@ public class Factory extends JposDeviceFactory {
      * @return BillDispenserService object.
      * @throws JposException If property set could not be retrieved.
      */
+    @Deprecated
     public BillDispenserService addDevice(int index, JposDevice dev) throws JposException {
-        BillDispenserService service;
+        return addDevice(index, dev, CurrentEntry);
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index BillDispenser  property set index.
+     * @param dev BillDispenser implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
+     * @return BillDispenserService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    public BillDispenserService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         BillDispenserProperties props = dev.getBillDispenserProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBillDispenserProperties()");
-        service = (BillDispenserService) (props.EventSource = new BillDispenserService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedBillDispenser;
+        validateJposConfiguration(props, dev, dev.ClaimedBillDispenser, entry);
+        BillDispenserService service = (BillDispenserService) (props.EventSource = new BillDispenserService(props, dev));
         dev.changeDefaults(props);
-        JposDevice.check(props.CurrencyCode == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCode property");
-        JposDevice.check(props.CurrencyCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCashList property");
-        JposDevice.check(props.CurrencyCodeList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of CurrencyCodeList property");
-        JposDevice.check(props.ExitCashList == null, JposConst.JPOS_E_FAILURE, "Missing initialization of ExitCashList property");
+        check(props.CurrencyCode == null, JPOS_E_NOSERVICE, "Missing initialization of CurrencyCode property");
+        check(props.CurrencyCashList == null, JPOS_E_NOSERVICE, "Missing initialization of CurrencyCashList property");
+        check(props.CurrencyCodeList == null, JPOS_E_NOSERVICE, "Missing initialization of CurrencyCodeList property");
+        check(props.ExitCashList == null, JPOS_E_NOSERVICE, "Missing initialization of ExitCashList property");
         props.addProperties(dev.BillDispensers);
         service.DeviceInterface = service.BillDispenserInterface = props;
         return service;

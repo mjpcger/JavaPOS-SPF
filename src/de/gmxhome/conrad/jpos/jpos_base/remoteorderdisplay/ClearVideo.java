@@ -31,7 +31,7 @@ public class ClearVideo extends UnitOutputRequest {
     public int getAttributes() {
         return Attributes;
     }
-    private int Attributes;
+    private final int Attributes;
 
     /**
      * Constructor. Stores given parameters for later use.

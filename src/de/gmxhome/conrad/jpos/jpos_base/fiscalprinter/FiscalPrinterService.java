@@ -20,12 +20,13 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
-import java.math.BigDecimal;
-import java.text.ParsePosition;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.math.*;
+import java.text.*;
+import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.FiscalPrinterConst.*;
+import static jpos.JposConst.*;
 
 /**
  * FiscalPrinter service implementation. For more details about getter, setter and method implementations,
@@ -41,19 +42,17 @@ import java.util.Map;
  * This property will only be used if the service factory passes the jpos entries to the addDevice method.
  * If the deprecated addDevice method is used, the service will not consider this property.
  */
-public class FiscalPrinterService extends JposBase implements FiscalPrinterService115 {
+public class FiscalPrinterService extends JposBase implements FiscalPrinterService116 {
     /**
      * Instance of a class implementing the FiscalPrinterInterface for fiscal printer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public FiscalPrinterInterface FiscalPrinterInterface;
 
-    private FiscalPrinterProperties Data;
-
-    private boolean CurrencyStringWithDecimalPoint;
+    private final FiscalPrinterProperties Data;
 
     private void checkBusySync() throws JposException {
-        Device.check(Data.State == JposConst.JPOS_S_BUSY && !Data.AsyncMode, JposConst.JPOS_E_BUSY, "Output in progress");
+        check(Data.State == JPOS_S_BUSY && !Data.AsyncMode, JPOS_E_BUSY, "Output in progress");
     }
 
     private long truncUnusedDecimals(long amount) {
@@ -67,9 +66,9 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
      * @return  Stations to be checked, FiscalReceiptStation combined with journal station.
      */
     int getFiscalStation() {
-        return Data.FiscalReceiptStation == FiscalPrinterConst.FPTR_RS_RECEIPT ?
-                FiscalPrinterConst.FPTR_S_JOURNAL_RECEIPT :
-                FiscalPrinterConst.FPTR_S_SLIP | FiscalPrinterConst.FPTR_S_JOURNAL;
+        return Data.FiscalReceiptStation == FPTR_RS_RECEIPT ?
+                FPTR_S_JOURNAL_RECEIPT :
+                FPTR_S_SLIP | FPTR_S_JOURNAL;
     }
 
     private void callIt(OutputRequest request, String methodName) throws JposException {
@@ -89,7 +88,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
      */
     public void checkReserved(String text, String valuename) throws JposException {
         int index = (" " + text.replaceAll("\u00A0", " ") + " ").indexOf(" " + Data.ReservedWord + " ");
-        Device.checkext(Data.CapReservedWord && !Data.ReservedWord.equals("") && index >= 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_DESCRIPTION, valuename + " contains reserved word");
+        checkext(Data.CapReservedWord && !Data.ReservedWord.equals("") && index >= 0, JPOS_EFPTR_BAD_ITEM_DESCRIPTION, valuename + " contains reserved word");
     }
 
     /**
@@ -116,7 +115,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public Number stringToCurrency(String value, String name, boolean percent) throws JposException {
         Number retval;
         if (value.equals("")) {
-            retval = percent ? 0 : 0l;
+            retval = percent ? 0 : 0L;
         }
         else if (percent) {
             try {
@@ -128,17 +127,17 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
                 try {
                     retval = new BigDecimal(value).scaleByPowerOfTen(4).intValueExact();
                 } catch(NumberFormatException | ArithmeticException e) {
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, 0, "Invalid " + name + ": " + value);
+                    throw new JposException(JPOS_E_ILLEGAL, 0, "Invalid " + name + ": " + value);
                 }
             }
         } else {
             try {
-                if (CurrencyStringWithDecimalPoint) {
+                if (Data.CurrencyStringWithDecimalPoint) {
                     retval = new BigDecimal(value).scaleByPowerOfTen(4).longValueExact();
                 } else
                     retval = Long.parseLong(value);
             } catch (NumberFormatException | ArithmeticException e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, 0, "Invalid " + name + ": " + value);
+                throw new JposException(JPOS_E_ILLEGAL, 0, "Invalid " + name + ": " + value);
             }
         }
         return retval;
@@ -151,7 +150,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
      */
     public void ifSyncCheckBusyCoverPaper(int station) throws JposException {
         if (!Data.AsyncMode) {
-            Device.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Device is busy");
+            check(Props.State == JPOS_S_BUSY, JPOS_E_BUSY, "Device is busy");
             checkCoverPaper(station);
         }
     }
@@ -162,15 +161,15 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
      * @throws JposException If AsyncMode is false and device busy, cover open or paper not present.
      */
     public void checkCoverPaper(int station) throws JposException {
-        Device.checkext(Data.CapCoverSensor && Data.CoverOpen, FiscalPrinterConst.JPOS_EFPTR_COVER_OPEN, "Device cover open");
-        if ((station & FiscalPrinterConst.FPTR_S_SLIP) != 0) {
-            Device.checkext(Data.CapSlpEmptySensor && Data.SlpEmpty, FiscalPrinterConst.JPOS_EFPTR_SLP_EMPTY, "No slip paper");
+        checkext(Data.CapCoverSensor && Data.CoverOpen, JPOS_EFPTR_COVER_OPEN, "Device cover open");
+        if ((station & FPTR_S_SLIP) != 0) {
+            checkext(Data.CapSlpEmptySensor && Data.SlpEmpty, JPOS_EFPTR_SLP_EMPTY, "No slip paper");
         }
-        if ((station & FiscalPrinterConst.FPTR_S_RECEIPT) != 0) {
-            Device.checkext(Data.CapRecEmptySensor && Data.RecEmpty, FiscalPrinterConst.JPOS_EFPTR_REC_EMPTY, "No receipt paper");
+        if ((station & FPTR_S_RECEIPT) != 0) {
+            checkext(Data.CapRecEmptySensor && Data.RecEmpty, JPOS_EFPTR_REC_EMPTY, "No receipt paper");
         }
-        if ((station & FiscalPrinterConst.FPTR_S_JOURNAL) != 0) {
-            Device.checkext(Data.CapJrnEmptySensor && Data.JrnEmpty, FiscalPrinterConst.JPOS_EFPTR_JRN_EMPTY, "No journal paper");
+        if ((station & FPTR_S_JOURNAL) != 0) {
+            checkext(Data.CapJrnEmptySensor && Data.JrnEmpty, JPOS_EFPTR_JRN_EMPTY, "No journal paper");
         }
     }
 
@@ -189,7 +188,6 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
      */
     public FiscalPrinterService(FiscalPrinterProperties props, JposDevice device) {
         super(props, device);
-        CurrencyStringWithDecimalPoint = true;
         Data = props;
     }
 
@@ -197,12 +195,11 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
      * Constructor. Stores given property set and device implementation object.
      *
      * @param props  Property set.
-     * @param currencyStringWithDecimalPoint Specifies how currenty to string conversion works.
+     * @param ignored Will not be used. Previous versions specified the value of Data.CurrencyStringWithDecimalPoint here.
      * @param device Device implementation object.
      */
-    public FiscalPrinterService(FiscalPrinterProperties props, JposDevice device, boolean currencyStringWithDecimalPoint) {
+    public FiscalPrinterService(FiscalPrinterProperties props, JposDevice device, boolean ignored) {
         super(props, device);
-        CurrencyStringWithDecimalPoint = currencyStringWithDecimalPoint;
         Data = props;
     }
 
@@ -228,7 +225,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void setAdditionalHeader(String s) throws JposException {
         logPreSet("AdditionalHeader");
         checkEnabled();
-        Device.check(!Data.CapAdditionalHeader, JposConst.JPOS_E_ILLEGAL, "Invalid property 'AdditionalHeader'");
+        check(!Data.CapAdditionalHeader, JPOS_E_ILLEGAL, "Invalid property 'AdditionalHeader'");
         FiscalPrinterInterface.additionalHeader(s);
         logSet("AdditionalHeader");
     }
@@ -244,7 +241,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void setAdditionalTrailer(String trailer) throws JposException {
         logPreSet("AdditionalTrailer");
         checkEnabled();
-        Device.check(!Data.CapAdditionalTrailer, JposConst.JPOS_E_ILLEGAL, "Invalid property 'AdditionalTrailer'");
+        check(!Data.CapAdditionalTrailer, JPOS_E_ILLEGAL, "Invalid property 'AdditionalTrailer'");
         FiscalPrinterInterface.additionalTrailer(trailer);
         logSet("AdditionalTrailer");
     }
@@ -666,7 +663,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         if (changeDue == null)
             changeDue = "";
         checkOpened();
-        Device.check(!Data.CapChangeDue, JposConst.JPOS_E_ILLEGAL, "Invalid property 'ChangeDue'");
+        check(!Data.CapChangeDue, JPOS_E_ILLEGAL, "Invalid property 'ChangeDue'");
         checkNoChangedOrClaimed(Data.ChangeDue, changeDue);
         FiscalPrinterInterface.changeDue(changeDue);
         logSet("ChangeDue");
@@ -683,7 +680,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void setCheckTotal(boolean check) throws JposException {
         logPreSet("CheckTotal");
         checkOpened();
-        Device.check(!Data.CapCheckTotal, JposConst.JPOS_E_ILLEGAL, "Invalid property 'CheckTotal'");
+        check(!Data.CapCheckTotal, JPOS_E_ILLEGAL, "Invalid property 'CheckTotal'");
         checkNoChangedOrClaimed(Data.CheckTotal, check);
         FiscalPrinterInterface.checkTotal(check);
         logSet("CheckTotal");
@@ -698,15 +695,11 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void setContractorId(int id) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_CID_FIRST,
-                FiscalPrinterConst.FPTR_CID_SECOND,
-                FiscalPrinterConst.FPTR_CID_SINGLE
-        };
+        long[] allowed = { FPTR_CID_FIRST, FPTR_CID_SECOND, FPTR_CID_SINGLE };
         logPreSet("ContractorId");
         checkOpened();
-        Device.check(!Data.CapMultiContractor, JposConst.JPOS_E_ILLEGAL, "Changing 'ContractorId' invalid");
-        Device.checkMember(id, allowed,JposConst.JPOS_E_ILLEGAL, "Invalid contractor ID: " + id);
+        check(!Data.CapMultiContractor, JPOS_E_ILLEGAL, "Changing 'ContractorId' invalid");
+        checkMember(id, allowed,JPOS_E_ILLEGAL, "Invalid contractor ID: " + id);
         checkNoChangedOrClaimed(Data.ContractorId, id);
         FiscalPrinterInterface.contractorId(id);
         logSet("ContractorId");
@@ -735,19 +728,13 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void setDateType(int type) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_DT_CONF,
-                FiscalPrinterConst.FPTR_DT_EOD,
-                FiscalPrinterConst.FPTR_DT_RESET,
-                FiscalPrinterConst.FPTR_DT_RTC,
-                FiscalPrinterConst.FPTR_DT_VAT,
-                FiscalPrinterConst.FPTR_DT_START,
-                FiscalPrinterConst.FPTR_DT_TICKET_START,
-                FiscalPrinterConst.FPTR_DT_TICKET_END
+        long[] allowed = {
+                FPTR_DT_CONF, FPTR_DT_EOD, FPTR_DT_RESET, FPTR_DT_RTC, FPTR_DT_VAT, FPTR_DT_START,
+                FPTR_DT_TICKET_START, FPTR_DT_TICKET_END
         };
         logPreSet("DateType");
         checkOpened();
-        Device.checkMember(type, allowed, JposConst.JPOS_E_ILLEGAL, "Illegal date specifier: " + type);
+        checkMember(type, allowed, JPOS_E_ILLEGAL, "Illegal date specifier: " + type);
         checkNoChangedOrClaimed(Data.DateType, type);
         FiscalPrinterInterface.dateType(type);
         logSet("DateType");
@@ -778,7 +765,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void setDuplicateReceipt(boolean yes) throws JposException {
         logPreSet("DuplicateReceipt");
         checkOpened();
-        Device.check(!Data.CapDuplicateReceipt, JposConst.JPOS_E_ILLEGAL, "Changing 'DuplicateReceipt' invalid");
+        check(!Data.CapDuplicateReceipt, JPOS_E_ILLEGAL, "Changing 'DuplicateReceipt' invalid");
         checkNoChangedOrClaimed(Data.DuplicateReceipt, yes);
         FiscalPrinterInterface.duplicateReceipt(yes);
         logSet("DuplicateReceipt");
@@ -828,16 +815,13 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void setFiscalReceiptStation(int station) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RS_RECEIPT,
-                Data.CapFiscalReceiptStation ? FiscalPrinterConst.FPTR_RS_SLIP : FiscalPrinterConst.FPTR_RS_RECEIPT
-        };
+        long[] allowed = { FPTR_RS_RECEIPT, Data.CapFiscalReceiptStation ? FPTR_RS_SLIP : FPTR_RS_RECEIPT };
         logPreSet("FiscalReceiptStation");
         checkOpened();
-        Device.checkMember(station, allowed, JposConst.JPOS_E_ILLEGAL, "Invalid station: " + station);
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR && Data.PrinterState != FiscalPrinterConst.FPTR_PS_LOCKED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Neither locked nor in monitor state");
-        Device.check(station == FiscalPrinterConst.FPTR_RS_SLIP && !Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "No slip station");
-        Device.check(station == FiscalPrinterConst.FPTR_RS_RECEIPT && !Data.CapRecPresent, JposConst.JPOS_E_ILLEGAL, "No receipt station");
+        checkMember(station, allowed, JPOS_E_ILLEGAL, "Invalid station: " + station);
+        checkext(Data.PrinterState != FPTR_PS_MONITOR && Data.PrinterState != FPTR_PS_LOCKED, JPOS_EFPTR_WRONG_STATE, "Neither locked nor in monitor state");
+        check(station == FPTR_RS_SLIP && !Data.CapSlpPresent, JPOS_E_ILLEGAL, "No slip station");
+        check(station == FPTR_RS_RECEIPT && !Data.CapRecPresent, JPOS_E_ILLEGAL, "No receipt station");
         checkNoChangedOrClaimed(Data.FiscalReceiptStation, station);
         FiscalPrinterInterface.fiscalReceiptStation(station);
         logSet("FiscalReceiptStation");
@@ -852,20 +836,15 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void setFiscalReceiptType(int type) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_CASH_IN,
-                FiscalPrinterConst.FPTR_RT_CASH_OUT,
-                FiscalPrinterConst.FPTR_RT_GENERIC,
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
+        long[] allowed = {
+                FPTR_RT_CASH_IN, FPTR_RT_CASH_OUT, FPTR_RT_GENERIC, FPTR_RT_SALES, FPTR_RT_SERVICE,
+                FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND
         };
         logPreSet("FiscalReceiptType");
         checkOpened();
-        Device.check(!Data.CapFiscalReceiptType, JposConst.JPOS_E_ILLEGAL, "Invalid property 'FiscalReceiptType'");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in monitor state");
-        Device.checkMember(type, allowed, JposConst.JPOS_E_ILLEGAL, "Invalid receipt type: " + type);
+        check(!Data.CapFiscalReceiptType, JPOS_E_ILLEGAL, "Invalid property 'FiscalReceiptType'");
+        checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Not in monitor state");
+        checkMember(type, allowed, JPOS_E_ILLEGAL, "Invalid receipt type: " + type);
         checkNoChangedOrClaimed(Data.FiscalReceiptType, type);
         FiscalPrinterInterface.fiscalReceiptType(type);
         logSet("FiscalReceiptType");
@@ -916,61 +895,23 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void setMessageType(int type) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_MT_ADVANCE,
-                FiscalPrinterConst.FPTR_MT_ADVANCE_PAID,
-                FiscalPrinterConst.FPTR_MT_AMOUNT_TO_BE_PAID,
-                FiscalPrinterConst.FPTR_MT_AMOUNT_TO_BE_PAID_BACK,
-                FiscalPrinterConst.FPTR_MT_CARD,
-                FiscalPrinterConst.FPTR_MT_CARD_NUMBER,
-                FiscalPrinterConst.FPTR_MT_CARD_TYPE,
-                FiscalPrinterConst.FPTR_MT_CASH,
-                FiscalPrinterConst.FPTR_MT_CASHIER,
-                FiscalPrinterConst.FPTR_MT_CASH_REGISTER_NUMBER,
-                FiscalPrinterConst.FPTR_MT_CHANGE,
-                FiscalPrinterConst.FPTR_MT_CHEQUE,
-                FiscalPrinterConst.FPTR_MT_CLIENT_NUMBER,
-                FiscalPrinterConst.FPTR_MT_CLIENT_SIGNATURE,
-                FiscalPrinterConst.FPTR_MT_COUNTER_STATE,
-                FiscalPrinterConst.FPTR_MT_CREDIT_CARD,
-                FiscalPrinterConst.FPTR_MT_CURRENCY,
-                FiscalPrinterConst.FPTR_MT_CURRENCY_VALUE,
-                FiscalPrinterConst.FPTR_MT_DEPOSIT,
-                FiscalPrinterConst.FPTR_MT_DEPOSIT_RETURNED,
-                FiscalPrinterConst.FPTR_MT_DOT_LINE,
-                FiscalPrinterConst.FPTR_MT_DRIVER_NUMB,
-                FiscalPrinterConst.FPTR_MT_EMPTY_LINE,
-                FiscalPrinterConst.FPTR_MT_FREE_TEXT,
-                FiscalPrinterConst.FPTR_MT_FREE_TEXT_WITH_DAY_LIMIT,
-                FiscalPrinterConst.FPTR_MT_GIVEN_DISCOUNT,
-                FiscalPrinterConst.FPTR_MT_LOCAL_CREDIT,
-                FiscalPrinterConst.FPTR_MT_MILEAGE_KM,
-                FiscalPrinterConst.FPTR_MT_NOTE,
-                FiscalPrinterConst.FPTR_MT_PAID,
-                FiscalPrinterConst.FPTR_MT_PAY_IN,
-                FiscalPrinterConst.FPTR_MT_POINT_GRANTED,
-                FiscalPrinterConst.FPTR_MT_POINTS_BONUS,
-                FiscalPrinterConst.FPTR_MT_POINTS_RECEIPT,
-                FiscalPrinterConst.FPTR_MT_POINTS_TOTAL,
-                FiscalPrinterConst.FPTR_MT_PROFITED,
-                FiscalPrinterConst.FPTR_MT_RATE,
-                FiscalPrinterConst.FPTR_MT_REGISTER_NUMB,
-                FiscalPrinterConst.FPTR_MT_SHIFT_NUMBER,
-                FiscalPrinterConst.FPTR_MT_STATE_OF_AN_ACCOUNT,
-                FiscalPrinterConst.FPTR_MT_SUBSCRIPTION,
-                FiscalPrinterConst.FPTR_MT_TABLE,
-                FiscalPrinterConst.FPTR_MT_THANK_YOU_FOR_LOYALTY,
-                FiscalPrinterConst.FPTR_MT_TRANSACTION_NUMB,
-                FiscalPrinterConst.FPTR_MT_VALID_TO,
-                FiscalPrinterConst.FPTR_MT_VOUCHER,
-                FiscalPrinterConst.FPTR_MT_VOUCHER_PAID,
-                FiscalPrinterConst.FPTR_MT_VOUCHER_VALUE,
-                FiscalPrinterConst.FPTR_MT_WITH_DISCOUNT,
-                FiscalPrinterConst.FPTR_MT_WITHOUT_UPLIFT
+        long[] allowed = {
+                FPTR_MT_ADVANCE, FPTR_MT_ADVANCE_PAID, FPTR_MT_AMOUNT_TO_BE_PAID, FPTR_MT_AMOUNT_TO_BE_PAID_BACK,
+                FPTR_MT_CARD, FPTR_MT_CARD_NUMBER, FPTR_MT_CARD_TYPE, FPTR_MT_CASH, FPTR_MT_CASHIER,
+                FPTR_MT_CASH_REGISTER_NUMBER, FPTR_MT_CHANGE, FPTR_MT_CHEQUE, FPTR_MT_CLIENT_NUMBER,
+                FPTR_MT_CLIENT_SIGNATURE, FPTR_MT_COUNTER_STATE, FPTR_MT_CREDIT_CARD, FPTR_MT_CURRENCY,
+                FPTR_MT_CURRENCY_VALUE, FPTR_MT_DEPOSIT, FPTR_MT_DEPOSIT_RETURNED, FPTR_MT_DOT_LINE,
+                FPTR_MT_DRIVER_NUMB, FPTR_MT_EMPTY_LINE, FPTR_MT_FREE_TEXT, FPTR_MT_FREE_TEXT_WITH_DAY_LIMIT,
+                FPTR_MT_GIVEN_DISCOUNT, FPTR_MT_LOCAL_CREDIT, FPTR_MT_MILEAGE_KM, FPTR_MT_NOTE, FPTR_MT_PAID,
+                FPTR_MT_PAY_IN, FPTR_MT_POINT_GRANTED, FPTR_MT_POINTS_BONUS, FPTR_MT_POINTS_RECEIPT,
+                FPTR_MT_POINTS_TOTAL, FPTR_MT_PROFITED, FPTR_MT_RATE, FPTR_MT_REGISTER_NUMB, FPTR_MT_SHIFT_NUMBER,
+                FPTR_MT_STATE_OF_AN_ACCOUNT, FPTR_MT_SUBSCRIPTION, FPTR_MT_TABLE, FPTR_MT_THANK_YOU_FOR_LOYALTY,
+                FPTR_MT_TRANSACTION_NUMB, FPTR_MT_VALID_TO, FPTR_MT_VOUCHER, FPTR_MT_VOUCHER_PAID,
+                FPTR_MT_VOUCHER_VALUE, FPTR_MT_WITH_DISCOUNT, FPTR_MT_WITHOUT_UPLIFT
         };
         logPreSet("MessageType");
         checkOpened();
-        Device.checkMember(type, allowed, JposConst.JPOS_E_ILLEGAL, "Invalid message type: " + type);
+        checkMember(type, allowed, JPOS_E_ILLEGAL, "Invalid message type: " + type);
         checkNoChangedOrClaimed(Data.MessageType, type);
         FiscalPrinterInterface.messageType(type);
         logSet("MessageType");
@@ -1006,14 +947,11 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void setPostLine(String text) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT,
-                FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT_TOTAL
-        };
+        long[] allowed = { FPTR_PS_FISCAL_RECEIPT, FPTR_PS_FISCAL_RECEIPT_TOTAL };
         logPreSet("PostLine");
         checkEnabled();
-        Device.check(!Data.CapPostPreLine, JposConst.JPOS_E_ILLEGAL, "Post lines not supported");
-        Device.checkext(!Device.member(Data.PrinterState, allowed), FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in receipt or receipt total state");
+        check(!Data.CapPostPreLine, JPOS_E_ILLEGAL, "Post lines not supported");
+        checkext(!member(Data.PrinterState, allowed), JPOS_EFPTR_WRONG_STATE, "Not in receipt or receipt total state");
         FiscalPrinterInterface.postLine(text == null ? "" : text);
         logSet("PostLine");
     }
@@ -1036,8 +974,8 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void setPreLine(String text) throws JposException {
         logPreSet("PreLine");
         checkEnabled();
-        Device.check(!Data.CapPostPreLine, JposConst.JPOS_E_ILLEGAL, "Pre lines not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in receipt state");
+        check(!Data.CapPostPreLine, JPOS_E_ILLEGAL, "Pre lines not supported");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in receipt state");
         FiscalPrinterInterface.preLine(text == null ? "" : text);
         logSet("PreLine");
     }
@@ -1114,15 +1052,12 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void setSlipSelection(int type) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_SS_FULL_LENGTH,
-                FiscalPrinterConst.FPTR_SS_VALIDATION
-        };
+        long[] allowed = { FPTR_SS_FULL_LENGTH, FPTR_SS_VALIDATION };
         logPreSet("SlipSelection");
         checkEnabled();
-        Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "Slip station not supported");
-        Device.checkMember(type, allowed, JposConst.JPOS_E_ILLEGAL, "Invalid document type: " + type);
-        Device.check(type == FiscalPrinterConst.FPTR_SS_VALIDATION && !Data.CapSlpValidation, JposConst.JPOS_E_ILLEGAL, "Validation not supported");
+        check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "Slip station not supported");
+        checkMember(type, allowed, JPOS_E_ILLEGAL, "Invalid document type: " + type);
+        check(type == FPTR_SS_VALIDATION && !Data.CapSlpValidation, JPOS_E_ILLEGAL, "Validation not supported");
         FiscalPrinterInterface.slipSelection(type);
         logSet("SlipSelection");
     }
@@ -1136,16 +1071,11 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void setTotalizerType(int type) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_TT_DOCUMENT,
-                FiscalPrinterConst.FPTR_TT_DAY,
-                FiscalPrinterConst.FPTR_TT_RECEIPT,
-                FiscalPrinterConst.FPTR_TT_GRAND
-        };
+        long[] allowed = { FPTR_TT_DOCUMENT, FPTR_TT_DAY, FPTR_TT_RECEIPT, FPTR_TT_GRAND };
         logPreSet("TotalizerType");
         checkEnabled();
-        Device.check(!Data.CapTotalizerType, JposConst.JPOS_E_ILLEGAL, "Invalid property 'TotalizerType'");
-        Device.checkMember(type, allowed, JposConst.JPOS_E_ILLEGAL, "Invalid totalizer type: " + type);
+        check(!Data.CapTotalizerType, JPOS_E_ILLEGAL, "Invalid property 'TotalizerType'");
+        checkMember(type, allowed, JPOS_E_ILLEGAL, "Invalid totalizer type: " + type);
         FiscalPrinterInterface.totalizerType(type);
         logSet("TotalizerType");
     }
@@ -1163,38 +1093,33 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void beginFiscalDocument(int documentAmount) throws JposException {
-        logPreCall("BeginFiscalDocument", "" + documentAmount);
+        logPreCall("BeginFiscalDocument", removeOuterArraySpecifier(new Object[]{documentAmount}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapSlpPresent || !Data.CapSlpFiscalDocument, JposConst.JPOS_E_ILLEGAL, "Fiscal document printing not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Cannot change to fiscal document state");
+        check(!Data.CapSlpPresent || !Data.CapSlpFiscalDocument, JPOS_E_ILLEGAL, "Fiscal document printing not supported");
+        checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Cannot change to fiscal document state");
         FiscalPrinterInterface.beginFiscalDocument(documentAmount);
         logCall("BeginFiscalDocument");
     }
 
     @Override
     public void beginFiscalReceipt(boolean printHeader) throws JposException {
-        logPreCall("BeginFiscalReceipt", "" + printHeader);
+        logPreCall("BeginFiscalReceipt", removeOuterArraySpecifier(new Object[]{printHeader}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Cannot change to fiscal receipt state");
+        checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Cannot change to fiscal receipt state");
         FiscalPrinterInterface.beginFiscalReceipt(printHeader);
         logCall("BeginFiscalReceipt");
     }
 
     @Override
     public void beginFixedOutput(int station, int documentType) throws JposException {
-        logPreCall("BeginFixedOutput", "" + station + ", " + documentType);
+        logPreCall("BeginFixedOutput", removeOuterArraySpecifier(new Object[]{station, documentType}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapFixedOutput, JposConst.JPOS_E_ILLEGAL, "Non-fiscal fixed text printing not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Cannot change to non-fiscal document state");
+        check(!Data.CapFixedOutput, JPOS_E_ILLEGAL, "Non-fiscal fixed text printing not supported");
+        checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Cannot change to non-fiscal document state");
         switch (station) {
-            case FiscalPrinterConst.FPTR_S_RECEIPT:
-                Device.check(!Data.CapRecPresent, JposConst.JPOS_E_ILLEGAL, "Unsupported station: Receipt");
-                break;
-            case FiscalPrinterConst.FPTR_S_SLIP:
-                Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "Unsupported station: Slip");
-                break;
-            default:
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid station: " + station);
+            case FPTR_S_RECEIPT -> check(!Data.CapRecPresent, JPOS_E_ILLEGAL, "Unsupported station: Receipt");
+            case FPTR_S_SLIP -> check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "Unsupported station: Slip");
+            default -> throw new JposException(JPOS_E_ILLEGAL, "Invalid station: " + station);
         }
         FiscalPrinterInterface.beginFixedOutput(station, documentType);
         logCall("BeginFixedOutput");
@@ -1202,21 +1127,21 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void beginInsertion(int timeout) throws JposException {
-        logPreCall("BeginInsertion", "" + timeout);
+        logPreCall("BeginInsertion", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "Slip station not supported");
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
-        Device.checkext(Data.PrinterState == FiscalPrinterConst.FPTR_PS_LOCKED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device locked");
+        check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "Slip station not supported");
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        checkext(Data.PrinterState == FPTR_PS_LOCKED, JPOS_EFPTR_WRONG_STATE, "Device locked");
         FiscalPrinterInterface.beginInsertion(timeout);
         logCall("BeginInsertion");
     }
 
     @Override
     public void beginItemList(int vatID) throws JposException {
-        logPreCall("BeginItemList", "" + vatID);
+        logPreCall("BeginItemList", removeOuterArraySpecifier(new Object[]{vatID}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapItemList, JposConst.JPOS_E_ILLEGAL, "Non-fiscal item list printing not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Cannot change to item list state");
+        check(!Data.CapItemList, JPOS_E_ILLEGAL, "Non-fiscal item list printing not supported");
+        checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Cannot change to item list state");
         FiscalPrinterInterface.beginItemList(vatID);
         logCall("BeginItemList");
     }
@@ -1225,19 +1150,19 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void beginNonFiscal() throws JposException {
         logPreCall("BeginNonFiscal");
         checkEnabled();
-        Device.check(!Data.CapNonFiscalMode, JposConst.JPOS_E_ILLEGAL, "Non-fiscal text printing not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Cannot change to non-fiscal text printing state");
+        check(!Data.CapNonFiscalMode, JPOS_E_ILLEGAL, "Non-fiscal text printing not supported");
+        checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Cannot change to non-fiscal text printing state");
         FiscalPrinterInterface.beginNonFiscal();
         logCall("BeginNonFiscal");
     }
 
     @Override
     public void beginRemoval(int timeout) throws JposException {
-        logPreCall("BeginRemoval", "" + timeout);
+        logPreCall("BeginRemoval", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "Slip station not supported");
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
-        Device.checkext(Data.PrinterState == FiscalPrinterConst.FPTR_PS_LOCKED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device locked");
+        check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "Slip station not supported");
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        checkext(Data.PrinterState == FPTR_PS_LOCKED, JPOS_EFPTR_WRONG_STATE, "Device locked");
         FiscalPrinterInterface.beginRemoval(timeout);
         logCall("BeginRemoval");
     }
@@ -1246,9 +1171,9 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void beginTraining() throws JposException {
         logPreCall("BeginTraining");
         checkEnabled();
-        Device.check(!Data.CapTrainingMode, JposConst.JPOS_E_ILLEGAL, "Training mode not supported");
-        Device.checkext(Data.TrainingModeActive, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device just in training mode");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Cannot change to training mode");
+        check(!Data.CapTrainingMode, JPOS_E_ILLEGAL, "Training mode not supported");
+        checkext(Data.TrainingModeActive, JPOS_EFPTR_WRONG_STATE, "Device just in training mode");
+        checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Cannot change to training mode");
         FiscalPrinterInterface.beginTraining();
         logCall("BeginTraining");
     }
@@ -1265,21 +1190,18 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void endFiscalDocument() throws JposException {
         logPreCall("EndFiscalDocument");
         checkEnabled();
-        Device.check(!Data.CapSlpFiscalDocument, JposConst.JPOS_E_ILLEGAL, "Fiscal document printing not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_DOCUMENT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Invalid printing state: " + Data.PrinterState);
+        check(!Data.CapSlpFiscalDocument, JPOS_E_ILLEGAL, "Fiscal document printing not supported");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_DOCUMENT, JPOS_EFPTR_WRONG_STATE, "Invalid printing state: " + Data.PrinterState);
         FiscalPrinterInterface.endFiscalDocument();
         logCall("EndFiscalDocument");
     }
 
     @Override
     public void endFiscalReceipt(boolean printHeader) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT,
-                FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT_ENDING
-        };
-        logPreCall("EndFiscalReceipt");
+        long[] allowed = { FPTR_PS_FISCAL_RECEIPT, FPTR_PS_FISCAL_RECEIPT_ENDING };
+        logPreCall("EndFiscalReceipt", removeOuterArraySpecifier(new Object[]{printHeader}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.checkext(!Device.member(Data.PrinterState, allowed), FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Invalid printing state: " + Data.PrinterState);
+        checkext(!member(Data.PrinterState, allowed), JPOS_EFPTR_WRONG_STATE, "Invalid printing state: " + Data.PrinterState);
         FiscalPrinterInterface.endFiscalReceipt(printHeader);
         logCall("EndFiscalReceipt");
     }
@@ -1288,8 +1210,8 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void endFixedOutput() throws JposException {
         logPreCall("EndFixedOutput");
         checkEnabled();
-        Device.check(!Data.CapFixedOutput, JposConst.JPOS_E_ILLEGAL, "Non-fiscal fixed text printing not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FIXED_OUTPUT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Invalid printing state: " + Data.PrinterState);
+        check(!Data.CapFixedOutput, JPOS_E_ILLEGAL, "Non-fiscal fixed text printing not supported");
+        checkext(Data.PrinterState != FPTR_PS_FIXED_OUTPUT, JPOS_EFPTR_WRONG_STATE, "Invalid printing state: " + Data.PrinterState);
         FiscalPrinterInterface.endFixedOutput();
         logCall("EndFixedOutput");
     }
@@ -1298,8 +1220,8 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void endInsertion() throws JposException {
         logPreCall("EndInsertion");
         checkEnabled();
-        Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "Slip station not supported");
-        Device.checkext(Data.PrinterState == FiscalPrinterConst.FPTR_PS_LOCKED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device locked");
+        check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "Slip station not supported");
+        checkext(Data.PrinterState == FPTR_PS_LOCKED, JPOS_EFPTR_WRONG_STATE, "Device locked");
         FiscalPrinterInterface.endInsertion();
         logCall("EndInsertion");
     }
@@ -1308,8 +1230,8 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void endItemList() throws JposException {
         logPreCall("EndItemList");
         checkEnabled();
-        Device.check(!Data.CapItemList, JposConst.JPOS_E_ILLEGAL, "Non-fiscal item validation printing not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_ITEM_LIST, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Invalid printing state: " + Data.PrinterState);
+        check(!Data.CapItemList, JPOS_E_ILLEGAL, "Non-fiscal item validation printing not supported");
+        checkext(Data.PrinterState != FPTR_PS_ITEM_LIST, JPOS_EFPTR_WRONG_STATE, "Invalid printing state: " + Data.PrinterState);
         FiscalPrinterInterface.endItemList();
         logCall("EndItemList");
     }
@@ -1318,8 +1240,8 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void endNonFiscal() throws JposException {
         logPreCall("EndNonFiscal");
         checkEnabled();
-        Device.check(!Data.CapNonFiscalMode, JposConst.JPOS_E_ILLEGAL, "Non-fiscal text printing not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_NONFISCAL, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Invalid printing state: " + Data.PrinterState);
+        check(!Data.CapNonFiscalMode, JPOS_E_ILLEGAL, "Non-fiscal text printing not supported");
+        checkext(Data.PrinterState != FPTR_PS_NONFISCAL, JPOS_EFPTR_WRONG_STATE, "Invalid printing state: " + Data.PrinterState);
         FiscalPrinterInterface.endNonFiscal();
         logCall("EndNonFiscal");
     }
@@ -1328,8 +1250,8 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void endRemoval() throws JposException {
         logPreCall("EndRemoval");
         checkEnabled();
-        Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "Slip station not supported");
-        Device.checkext(Data.PrinterState == FiscalPrinterConst.FPTR_PS_LOCKED, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device locked");
+        check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "Slip station not supported");
+        checkext(Data.PrinterState == FPTR_PS_LOCKED, JPOS_EFPTR_WRONG_STATE, "Device locked");
         FiscalPrinterInterface.endRemoval();
         logCall("EndRemoval");
     }
@@ -1338,150 +1260,115 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void endTraining() throws JposException {
         logPreCall("EndTraining");
         checkEnabled();
-        Device.check(!Data.CapTrainingMode, JposConst.JPOS_E_ILLEGAL, "Training mode not supported");
-        Device.checkext(!Data.TrainingModeActive, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device not in training mode");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Cannot disable training mode");
+        check(!Data.CapTrainingMode, JPOS_E_ILLEGAL, "Training mode not supported");
+        checkext(!Data.TrainingModeActive, JPOS_EFPTR_WRONG_STATE, "Device not in training mode");
+        checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Cannot disable training mode");
         FiscalPrinterInterface.endTraining();
         logCall("EndTraining");
     }
 
     @Override
     public void getData(int dataItem, int[] optArgs, String[] data) throws JposException {
-        long[] allowedstr = {
-                FiscalPrinterConst.FPTR_GD_FIRMWARE,
-                FiscalPrinterConst.FPTR_GD_PRINTER_ID,
-                FiscalPrinterConst.FPTR_GD_TENDER,
-        };
+        logPreCall("GetData", removeOuterArraySpecifier(new Object[]{dataItem, optArgs, "..."}, Device.MaxArrayStringElements));
+        long[] allowedstr = { FPTR_GD_FIRMWARE, FPTR_GD_PRINTER_ID, FPTR_GD_TENDER, };
         long[] allowedint = {
-                FiscalPrinterConst.FPTR_GD_MID_VOID,
-                FiscalPrinterConst.FPTR_GD_RECEIPT_NUMBER,
-                FiscalPrinterConst.FPTR_GD_NUMB_CONFIG_BLOCK,
-                FiscalPrinterConst.FPTR_GD_NUMB_CURRENCY_BLOCK,
-                FiscalPrinterConst.FPTR_GD_NUMB_HDR_BLOCK,
-                FiscalPrinterConst.FPTR_GD_NUMB_RESET_BLOCK,
-                FiscalPrinterConst.FPTR_GD_NUMB_VAT_BLOCK,
-                FiscalPrinterConst.FPTR_GD_FISCAL_DOC,
-                FiscalPrinterConst.FPTR_GD_FISCAL_DOC_VOID,
-                FiscalPrinterConst.FPTR_GD_FISCAL_REC,
-                FiscalPrinterConst.FPTR_GD_FISCAL_REC_VOID,
-                FiscalPrinterConst.FPTR_GD_NONFISCAL_DOC,
-                FiscalPrinterConst.FPTR_GD_NONFISCAL_DOC_VOID,
-                FiscalPrinterConst.FPTR_GD_NONFISCAL_REC,
-                FiscalPrinterConst.FPTR_GD_RESTART,
-                FiscalPrinterConst.FPTR_GD_SIMP_INVOICE,
-                FiscalPrinterConst.FPTR_GD_Z_REPORT,
-                FiscalPrinterConst.FPTR_GD_LINECOUNT,
-                FiscalPrinterConst.FPTR_GD_DESCRIPTION_LENGTH
+                FPTR_GD_MID_VOID, FPTR_GD_RECEIPT_NUMBER, FPTR_GD_NUMB_CONFIG_BLOCK, FPTR_GD_NUMB_CURRENCY_BLOCK,
+                FPTR_GD_NUMB_HDR_BLOCK, FPTR_GD_NUMB_RESET_BLOCK, FPTR_GD_NUMB_VAT_BLOCK, FPTR_GD_FISCAL_DOC,
+                FPTR_GD_FISCAL_DOC_VOID, FPTR_GD_FISCAL_REC, FPTR_GD_FISCAL_REC_VOID, FPTR_GD_NONFISCAL_DOC,
+                FPTR_GD_NONFISCAL_DOC_VOID, FPTR_GD_NONFISCAL_REC, FPTR_GD_RESTART, FPTR_GD_SIMP_INVOICE,
+                FPTR_GD_Z_REPORT, FPTR_GD_LINECOUNT, FPTR_GD_DESCRIPTION_LENGTH
         };
         long[] allowedlong = {
-                FiscalPrinterConst.FPTR_GD_CURRENT_TOTAL,
-                FiscalPrinterConst.FPTR_GD_DAILY_TOTAL,
-                FiscalPrinterConst.FPTR_GD_GRAND_TOTAL,
-                FiscalPrinterConst.FPTR_GD_NOT_PAID,
-                FiscalPrinterConst.FPTR_GD_REFUND,
-                FiscalPrinterConst.FPTR_GD_REFUND_VOID
+                FPTR_GD_CURRENT_TOTAL, FPTR_GD_DAILY_TOTAL, FPTR_GD_GRAND_TOTAL, FPTR_GD_NOT_PAID, FPTR_GD_REFUND,
+                FPTR_GD_REFUND_VOID
         };
-        Device.check(optArgs == null || data == null, JposConst.JPOS_E_ILLEGAL, "Unexpected null pointer argument");
-        Device.check(optArgs.length * data.length != 1, JposConst.JPOS_E_ILLEGAL, "Bad dimension of argument pointer");
-        logPreCall("GetData", "" + dataItem + ", " + optArgs[0]);
+        check(optArgs == null || data == null, JPOS_E_ILLEGAL, "Unexpected null pointer argument");
+        check(optArgs.length * data.length != 1, JPOS_E_ILLEGAL, "Bad dimension of argument pointer");
         checkEnabled();
         checkBusySync();
-        if (JposDevice.member(dataItem, allowedstr))
+        if (member(dataItem, allowedstr))
             FiscalPrinterInterface.getData(dataItem, optArgs, data);
-        else if (JposDevice.member(dataItem, allowedint)) {
+        else if (member(dataItem, allowedint)) {
             int[] intdata = {1};
             FiscalPrinterInterface.getData(dataItem, optArgs, intdata);
             data[0] = Integer.toString(intdata[0]);
-        } else if (JposDevice.member(dataItem, allowedlong)) {
+        } else if (member(dataItem, allowedlong)) {
             long[] longdata = {1};
             FiscalPrinterInterface.getData(dataItem, optArgs, longdata);
-            data[0] = CurrencyStringWithDecimalPoint
+            data[0] = Data.CurrencyStringWithDecimalPoint
                     ? new BigDecimal(longdata[0]).scaleByPowerOfTen(-4).stripTrailingZeros().toPlainString()
                     : Long.toString(longdata[0]);
         } else
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Data item invalid: " + dataItem);
-        logCall("GetData", "" + dataItem + ", " + optArgs[0] + ", " + data[0]);
+            throw new JposException(JPOS_E_ILLEGAL, "Data item invalid: " + dataItem);
+        logCall("GetData", removeOuterArraySpecifier(new Object[]{dataItem, optArgs[0], data[0]}, Device.MaxArrayStringElements));
     }
 
     @Override
     public void getDate(String[] date) throws JposException {
         logPreCall("GetDate");
         checkEnabled();
-        Device.check(date == null, JposConst.JPOS_E_ILLEGAL, "Unexpected null pointer argument");
-        Device.check(date.length != 1, JposConst.JPOS_E_ILLEGAL, "Bad dimension of argument pointer");
+        check(date == null, JPOS_E_ILLEGAL, "Unexpected null pointer argument");
+        check(date.length != 1, JPOS_E_ILLEGAL, "Bad dimension of argument pointer");
         FiscalPrinterInterface.getDate(date);
-        logCall("GetDate", "" + date[0]);
+        logCall("GetDate", removeOuterArraySpecifier(new Object[]{date[0]}, Device.MaxArrayStringElements));
     }
 
     @Override
     public void getTotalizer(int vatID, int optArgs, String[] data) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_GT_GROSS,
-                FiscalPrinterConst.FPTR_GT_NET,
-                FiscalPrinterConst.FPTR_GT_DISCOUNT,
-                FiscalPrinterConst.FPTR_GT_DISCOUNT_VOID,
-                FiscalPrinterConst.FPTR_GT_ITEM,
-                FiscalPrinterConst.FPTR_GT_ITEM_VOID,
-                FiscalPrinterConst.FPTR_GT_NOT_PAID,
-                FiscalPrinterConst.FPTR_GT_REFUND,
-                FiscalPrinterConst.FPTR_GT_REFUND_VOID,
-                FiscalPrinterConst.FPTR_GT_SUBTOTAL_DISCOUNT,
-                FiscalPrinterConst.FPTR_GT_SUBTOTAL_DISCOUNT_VOID,
-                FiscalPrinterConst.FPTR_GT_SUBTOTAL_SURCHARGES,
-                FiscalPrinterConst.FPTR_GT_SUBTOTAL_SURCHARGES_VOID,
-                FiscalPrinterConst.FPTR_GT_SURCHARGE,
-                FiscalPrinterConst.FPTR_GT_SURCHARGE_VOID,
-                FiscalPrinterConst.FPTR_GT_VAT,
-                FiscalPrinterConst.FPTR_GT_VAT_CATEGORY
+        logPreCall("GetTotalizer", removeOuterArraySpecifier(new Object[]{vatID, optArgs, "..."}, Device.MaxArrayStringElements));
+        long[] allowed = {
+                FPTR_GT_GROSS, FPTR_GT_NET, FPTR_GT_DISCOUNT, FPTR_GT_DISCOUNT_VOID, FPTR_GT_ITEM, FPTR_GT_ITEM_VOID,
+                FPTR_GT_NOT_PAID, FPTR_GT_REFUND, FPTR_GT_REFUND_VOID, FPTR_GT_SUBTOTAL_DISCOUNT,
+                FPTR_GT_SUBTOTAL_DISCOUNT_VOID, FPTR_GT_SUBTOTAL_SURCHARGES, FPTR_GT_SUBTOTAL_SURCHARGES_VOID,
+                FPTR_GT_SURCHARGE, FPTR_GT_SURCHARGE_VOID, FPTR_GT_VAT, FPTR_GT_VAT_CATEGORY
         };
-        logPreCall("GetTotalizer", "" + vatID + ", " + optArgs);
         checkEnabled();
-        Device.check(data == null, JposConst.JPOS_E_ILLEGAL, "Unexpected null pointer argument");
-        Device.check(data.length != 1, JposConst.JPOS_E_ILLEGAL, "Bad dimension of argument pointer");
-        Device.checkMember(optArgs, allowed, JposConst.JPOS_E_ILLEGAL, "Totalizer invalid: " + optArgs);
+        check(data == null, JPOS_E_ILLEGAL, "Unexpected null pointer argument");
+        check(data.length != 1, JPOS_E_ILLEGAL, "Bad dimension of argument pointer");
+        checkMember(optArgs, allowed, JPOS_E_ILLEGAL, "Totalizer invalid: " + optArgs);
         long[] longdata = {1};
         FiscalPrinterInterface.getTotalizer(vatID, optArgs, longdata);
-        data[0] = CurrencyStringWithDecimalPoint
+        data[0] = Data.CurrencyStringWithDecimalPoint
                 ? new BigDecimal(longdata[0]).scaleByPowerOfTen(-4).stripTrailingZeros().toPlainString()
                 : Long.toString(longdata[0]);
-        logCall("GetTotalizer", "" + vatID + ", " + optArgs + ", " + data[0]);
+        logCall("GetTotalizer", removeOuterArraySpecifier(new Object[]{vatID, optArgs, data[0]}, Device.MaxArrayStringElements));
     }
 
     @Override
     public void getVatEntry(int vatID, int optArgs, int[] vatRate) throws JposException {
-        logPreCall("GetVatEntry", "" + vatID + ", " + optArgs);
+        logPreCall("GetVatEntry", removeOuterArraySpecifier(new Object[]{vatID, optArgs, "..."}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapHasVatTable, JposConst.JPOS_E_ILLEGAL, "No VAT table");
-        Device.check(vatRate == null, JposConst.JPOS_E_ILLEGAL, "Unexpected null pointer argument");
-        Device.check(vatRate.length != 1, JposConst.JPOS_E_ILLEGAL, "Bad dimension of argument pointer");
+        check(!Data.CapHasVatTable, JPOS_E_ILLEGAL, "No VAT table");
+        check(vatRate == null, JPOS_E_ILLEGAL, "Unexpected null pointer argument");
+        check(vatRate.length != 1, JPOS_E_ILLEGAL, "Bad dimension of argument pointer");
         FiscalPrinterInterface.getVatEntry(vatID, optArgs, vatRate);
-        logCall("GetVatEntry", "" + vatID + ", " + optArgs + ", " + vatRate[0]);
+        logCall("GetVatEntry", removeOuterArraySpecifier(new Object[]{vatID, optArgs, vatRate[0]}, Device.MaxArrayStringElements));
     }
 
     @Override
     public void printDuplicateReceipt() throws JposException {
         logPreCall("PrintDuplicateReceipt");
         checkEnabled();
-        Device.check(!Data.CapDuplicateReceipt, JposConst.JPOS_E_ILLEGAL, "Duplicate receipt not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device not in monitor state");
-        Device.check(Data.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Output in progress");
+        check(!Data.CapDuplicateReceipt, JPOS_E_ILLEGAL, "Duplicate receipt not supported");
+        checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Device not in monitor state");
+        check(Data.State == JPOS_S_BUSY, JPOS_E_BUSY, "Output in progress");
         FiscalPrinterInterface.printDuplicateReceipt();
         logCall("PrintDuplicateReceipt");
     }
 
     @Override
     public void printPeriodicTotalsReport(String date1, String date2) throws JposException {
-        Device.check(date1 == null || date2 == null, JposConst.JPOS_E_ILLEGAL, "Starting date and ending date must not be null");
-        logPreCall("PrintPeriodicTotalsReport", date1 + ", " + date2);
+        logPreCall("PrintPeriodicTotalsReport", removeOuterArraySpecifier(new Object[]{date1, date2}, Device.MaxArrayStringElements));
+        check(date1 == null || date2 == null, JPOS_E_ILLEGAL, "Starting date and ending date must not be null");
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device not in monitor state");
+        checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Device not in monitor state");
         SimpleDateFormat format = new SimpleDateFormat("ddMMyyyyHHmm");
         format.setLenient(false);
         Date start = format.parse(date1, new ParsePosition(0));
         Date end = format.parse(date2, new ParsePosition(0));
-        Device.check(start == null || date1.length() != format.toPattern().length(), JposConst.JPOS_E_ILLEGAL, "Starting date invalid: " + date1);
-        Device.check(end == null || date2.length() != format.toPattern().length(), JposConst.JPOS_E_ILLEGAL, "Ending date invalid: " + date2);
-        Device.check(start.compareTo(end) > 0, JposConst.JPOS_E_ILLEGAL, "Starting date must not be after ending date");
+        check(start == null || date1.length() != format.toPattern().length(), JPOS_E_ILLEGAL, "Starting date invalid: " + date1);
+        check(end == null || date2.length() != format.toPattern().length(), JPOS_E_ILLEGAL, "Ending date invalid: " + date2);
+        check(start.compareTo(end) > 0, JPOS_E_ILLEGAL, "Starting date must not be after ending date");
         FiscalPrinterInterface.printPeriodicTotalsReport(date1, date2);
         logCall("PrintPeriodicTotalsReport");
     }
@@ -1490,80 +1377,60 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void printPowerLossReport() throws JposException {
         logPreCall("PrintPowerLossReport");
         checkEnabled();
-        Device.check(!Data.CapPowerLossReport, JposConst.JPOS_E_ILLEGAL, "Duplicate receipt not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device not in monitor state");
+        check(!Data.CapPowerLossReport, JPOS_E_ILLEGAL, "Duplicate receipt not supported");
+        checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Device not in monitor state");
         FiscalPrinterInterface.printPowerLossReport();
         logCall("PrintPowerLossReport");
     }
 
     @Override
     public void printRecVoidItem(String description, long price, int quantity, int adjustmentType, long adjustment, int vatInfo) throws JposException {
-        Device.check(!Data.AllowDeprecatedMethods, JposConst.JPOS_E_DEPRECATED, "Deprecated method, use PrintRecItemVoid and PrintRecItemAdjustmentVoid instead.");
-        long[] allowedType = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        long[] allowedamount = new long[]{
-                FiscalPrinterConst.FPTR_AT_AMOUNT_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_AMOUNT_DISCOUNT
-        };
-        long[] allowedpercent = new long[]{
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
-        };
-        long[] allowedpositive = new long[]{
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
-        logPreCall("PrintRecVoidItem", description + ", " + price + ", " + quantity + ", " + adjustmentType + ", " + adjustment + ", " + vatInfo);
+        logPreCall("PrintRecVoidItem", removeOuterArraySpecifier(new Object[]{description, price, quantity, adjustmentType, adjustment, vatInfo}, Device.MaxArrayStringElements));
+        Data.checkForDeprecation(1011000, "Deprecated method, use PrintRecItemVoid and PrintRecItemAdjustmentVoid instead.");
+        long[] allowedType = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
+        long[] allowedamount = { FPTR_AT_AMOUNT_DISCOUNT, FPTR_AT_AMOUNT_SURCHARGE, FPTR_AT_COUPON_AMOUNT_DISCOUNT };
+        long[] allowedpercent = { FPTR_AT_PERCENTAGE_DISCOUNT, FPTR_AT_PERCENTAGE_SURCHARGE, FPTR_AT_COUPON_PERCENTAGE_DISCOUNT };
+        long[] allowedpositive = { FPTR_AT_AMOUNT_SURCHARGE, FPTR_AT_PERCENTAGE_SURCHARGE };
+        check(description == null, JPOS_E_ILLEGAL, "Description must not be null");
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowedType, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
-        Device.check(!Device.member(adjustmentType, allowedamount) && !Device.member(adjustmentType, allowedpercent), JposConst.JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
-        Device.check(!Data.CapAmountAdjustment && Device.member(adjustmentType, allowedamount), JposConst.JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
-        Device.check(!Data.CapPercentAdjustment && Device.member(adjustmentType, allowedpercent), JposConst.JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
-        Device.check(!Data.CapPositiveAdjustment && !Device.member(adjustmentType, allowedpositive), JposConst.JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowedType, JPOS_E_ILLEGAL, "Not a sale receipt");
+        check(!member(adjustmentType, allowedamount) && !member(adjustmentType, allowedpercent), JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
+        check(!Data.CapAmountAdjustment && member(adjustmentType, allowedamount), JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
+        check(!Data.CapPercentAdjustment && member(adjustmentType, allowedpercent), JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
+        check(!Data.CapPositiveAdjustment && !member(adjustmentType, allowedpositive), JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
-        Device.checkext(price < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
-        Device.checkext(quantity < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
-        Device.checkext(adjustment < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_PRICE, "adjustment must be >= 0");
+        checkext(price < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
+        checkext(quantity < 0, JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
+        checkext(adjustment < 0, JPOS_EFPTR_BAD_PRICE, "adjustment must be >= 0");
         callIt(FiscalPrinterInterface.printRecVoidItem(description, price, quantity, adjustmentType, adjustment, vatInfo), "PrintRecVoidItem");
     }
 
     @Override
     public void printReport(int reportType, String startNum, String endNum) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_ORDINAL,
-                FiscalPrinterConst.FPTR_RT_DATE,
-                FiscalPrinterConst.FPTR_RT_EOD_ORDINAL
-        };
-        Device.check(startNum == null || endNum == null, JposConst.JPOS_E_ILLEGAL, "Starting and final record must not be null");
-        logPreCall("PrintReport", "" +reportType + ", " + startNum + ", " + endNum);
+        logPreCall("PrintReport", removeOuterArraySpecifier(new Object[]{reportType, startNum, endNum}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_ORDINAL, FPTR_RT_DATE, FPTR_RT_EOD_ORDINAL };
+        check(startNum == null || endNum == null, JPOS_E_ILLEGAL, "Starting and final record must not be null");
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device not in monitor state");
-        Device.checkMember(reportType, allowed, JposConst.JPOS_E_ILLEGAL, "Invalid report type: " + reportType);
-        if (reportType == FiscalPrinterConst.FPTR_RT_DATE) {
+        checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Device not in monitor state");
+        checkMember(reportType, allowed, JPOS_E_ILLEGAL, "Invalid report type: " + reportType);
+        if (reportType == FPTR_RT_DATE) {
             SimpleDateFormat format = new SimpleDateFormat("ddMMyyyyHHmm");
             format.setLenient(false);
             Date start = format.parse(startNum, new ParsePosition(0));
-            Device.check(start == null || startNum.length() != format.toPattern().length(), JposConst.JPOS_E_ILLEGAL, "Starting date invalid: " + startNum);
+            check(start == null || startNum.length() != format.toPattern().length(), JPOS_E_ILLEGAL, "Starting date invalid: " + startNum);
             Date end = format.parse(endNum, new ParsePosition(0));
-            Device.check(end == null || endNum.length() != format.toPattern().length(), JposConst.JPOS_E_ILLEGAL, "Ending date invalid: " + endNum);
-            Device.check(start.compareTo(end) > 0, JposConst.JPOS_E_ILLEGAL, "Starting date must not be after ending date");
+            check(end == null || endNum.length() != format.toPattern().length(), JPOS_E_ILLEGAL, "Ending date invalid: " + endNum);
+            check(start.compareTo(end) > 0, JPOS_E_ILLEGAL, "Starting date must not be after ending date");
         }
         else {
             try {
                 int start = Integer.parseInt(startNum);
                 int end = Integer.parseInt(endNum);
-                Device.check(start > end && end != 0, JposConst.JPOS_E_ILLEGAL, "Starting record must not be greater than final record");
+                check(start > end && end != 0, JPOS_E_ILLEGAL, "Starting record must not be greater than final record");
             } catch (NumberFormatException e) {
-                Device.check(true, JposConst.JPOS_E_ILLEGAL, "Starting and final record must be specified as numerical values");
+                throw new JposException(JPOS_E_ILLEGAL, "Starting and final record must be specified as numerical values");
             }
         }
         FiscalPrinterInterface.printReport(reportType, startNum, endNum);
@@ -1574,8 +1441,8 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void printXReport() throws JposException {
         logPreCall("PrintXReport");
         checkEnabled();
-        Device.check(!Data.CapXReport, JposConst.JPOS_E_ILLEGAL, "X report not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device not in monitor state");
+        check(!Data.CapXReport, JPOS_E_ILLEGAL, "X report not supported");
+        checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Device not in monitor state");
         FiscalPrinterInterface.printXReport();
         logCall("PrintXReport");
     }
@@ -1584,7 +1451,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void printZReport() throws JposException {
         logPreCall("PrintZReport");
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Device not in monitor state");
+        checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Device not in monitor state");
         FiscalPrinterInterface.printZReport();
         logCall("PrintZReport");
     }
@@ -1599,50 +1466,50 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void setCurrency(int newCurrency) throws JposException {
-        logPreCall("SetCurrency", "" + newCurrency);
+        logPreCall("SetCurrency", removeOuterArraySpecifier(new Object[]{newCurrency}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapSetCurrency, JposConst.JPOS_E_ILLEGAL, "Changing currency not supported");
-        Device.check(Data.DayOpened, JposConst.JPOS_E_ILLEGAL, "Fiscal day open");
-        Device.checkext(Data.ActualCurrency == FiscalPrinterConst.FPTR_AC_EUR, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Currency just changed to EUR");
-        Device.check(newCurrency != FiscalPrinterConst.FPTR_SC_EURO, JposConst.JPOS_E_ILLEGAL, "New currency not supported: " + newCurrency);
+        check(!Data.CapSetCurrency, JPOS_E_ILLEGAL, "Changing currency not supported");
+        check(Data.DayOpened, JPOS_E_ILLEGAL, "Fiscal day open");
+        checkext(Data.ActualCurrency == FPTR_AC_EUR, JPOS_EFPTR_WRONG_STATE, "Currency just changed to EUR");
+        check(newCurrency != FPTR_SC_EURO, JPOS_E_ILLEGAL, "New currency not supported: " + newCurrency);
         FiscalPrinterInterface.setCurrency(newCurrency);
         logCall("SetCurrency");
     }
 
     @Override
     public void setDate(String date) throws JposException {
-        Device.check(date == null, JposConst.JPOS_E_ILLEGAL, "Date must not be null");
-        logPreCall("SetDate", date);
+        logPreCall("SetDate", removeOuterArraySpecifier(new Object[]{date}, Device.MaxArrayStringElements));
+        check(date == null, JPOS_E_ILLEGAL, "Date must not be null");
         checkEnabled();
-        Device.check(Data.DayOpened, JposConst.JPOS_E_ILLEGAL, "Day open");
+        check(Data.DayOpened, JPOS_E_ILLEGAL, "Day open");
         SimpleDateFormat format = new SimpleDateFormat("ddMMyyyyHHmm");
         format.setLenient(false);
         Date start = format.parse(date, new ParsePosition(0));
-        Device.checkext(start == null || date.length() != format.toPattern().length(), FiscalPrinterConst.JPOS_EFPTR_BAD_DATE, "Date invalid: " + date);
+        checkext(start == null || date.length() != format.toPattern().length(), JPOS_EFPTR_BAD_DATE, "Date invalid: " + date);
         FiscalPrinterInterface.setDate(date);
         logCall("SetDate");
     }
 
     @Override
     public void setHeaderLine(int lineNumber, String text, boolean doubleWidth) throws JposException {
-        Device.check(text == null, JposConst.JPOS_E_ILLEGAL, "Text must not be null");
-        logPreCall("SetHeaderLine", lineNumber + ", " + text + ", " + doubleWidth);
+        logPreCall("SetHeaderLine", removeOuterArraySpecifier(new Object[]{lineNumber, text, doubleWidth}, Device.MaxArrayStringElements));
+        check(text == null, JPOS_E_ILLEGAL, "Text must not be null");
         checkEnabled();
-        Device.check(!Data.CapSetHeader, JposConst.JPOS_E_ILLEGAL, "Setting header line not supported");
-        Device.check(Data.DayOpened, JposConst.JPOS_E_ILLEGAL, "Day open");
-        Device.checkRange(lineNumber, 1, Data.NumHeaderLines, JposConst.JPOS_E_ILLEGAL, "Line number out of range: " + lineNumber);
-        Device.checkext(Data.CapReservedWord && text.lastIndexOf(Data.ReservedWord) >= 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_DESCRIPTION, "Line contains reserved word");
+        check(!Data.CapSetHeader, JPOS_E_ILLEGAL, "Setting header line not supported");
+        check(Data.DayOpened, JPOS_E_ILLEGAL, "Day open");
+        checkRange(lineNumber, 1, Data.NumHeaderLines, JPOS_E_ILLEGAL, "Line number out of range: " + lineNumber);
+        checkext(Data.CapReservedWord && text.lastIndexOf(Data.ReservedWord) >= 0, JPOS_EFPTR_BAD_ITEM_DESCRIPTION, "Line contains reserved word");
         FiscalPrinterInterface.setHeaderLine(lineNumber, text, doubleWidth);
         logCall("SetHeaderLine");
     }
 
     @Override
     public void setPOSID(String POSID, String cashierID) throws JposException {
-        Device.check(POSID == null || cashierID == null, JposConst.JPOS_E_ILLEGAL, "POSID and cashierID must not be null");
-        logPreCall("SetPOSID", POSID + ", " + cashierID);
+        logPreCall("SetPOSID", removeOuterArraySpecifier(new Object[]{POSID, cashierID}, Device.MaxArrayStringElements));
+        check(POSID == null || cashierID == null, JPOS_E_ILLEGAL, "POSID and cashierID must not be null");
         checkEnabled();
-        Device.check(!Data.CapSetPOSID, JposConst.JPOS_E_ILLEGAL, "Setting pos ID not supported");
-        Device.check(Data.DayOpened, JposConst.JPOS_E_ILLEGAL, "Day open");
+        check(!Data.CapSetPOSID, JPOS_E_ILLEGAL, "Setting pos ID not supported");
+        check(Data.DayOpened, JPOS_E_ILLEGAL, "Day open");
         checkReserved(POSID, "POSID");
         checkReserved(cashierID, "cashierID");
         FiscalPrinterInterface.setPOSID(POSID, cashierID);
@@ -1651,24 +1518,24 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void setStoreFiscalID(String ID) throws JposException {
-        Device.check(ID == null, JposConst.JPOS_E_ILLEGAL, "ID must not be null");
-        logPreCall("SetStoreFiscalID", ID);
+        logPreCall("SetStoreFiscalID", removeOuterArraySpecifier(new Object[]{ID}, Device.MaxArrayStringElements));
+        check(ID == null, JPOS_E_ILLEGAL, "ID must not be null");
         checkEnabled();
-        Device.check(!Data.CapSetStoreFiscalID, JposConst.JPOS_E_ILLEGAL, "Setting store fiscal ID not supported");
-        Device.check(Data.DayOpened, JposConst.JPOS_E_ILLEGAL, "Day open");
+        check(!Data.CapSetStoreFiscalID, JPOS_E_ILLEGAL, "Setting store fiscal ID not supported");
+        check(Data.DayOpened, JPOS_E_ILLEGAL, "Day open");
         FiscalPrinterInterface.setStoreFiscalID(ID);
         logCall("SetStoreFiscalID");
     }
 
     @Override
     public void setTrailerLine(int lineNumber, String text, boolean doubleWidth) throws JposException {
-        Device.check(text == null, JposConst.JPOS_E_ILLEGAL, "Text must not be null");
-        logPreCall("SetTrailerLine", lineNumber + ", " + text + ", " + doubleWidth);
+        logPreCall("SetTrailerLine", removeOuterArraySpecifier(new Object[]{lineNumber, text, doubleWidth}, Device.MaxArrayStringElements));
+        check(text == null, JPOS_E_ILLEGAL, "Text must not be null");
         checkEnabled();
-        Device.check(!Data.CapSetTrailer, JposConst.JPOS_E_ILLEGAL, "Setting trailer line not supported");
-        Device.check(Data.DayOpened, JposConst.JPOS_E_ILLEGAL, "Day open");
-        Device.checkRange(lineNumber, 1, Data.NumTrailerLines, JposConst.JPOS_E_ILLEGAL, "Line number out of range: " + lineNumber);
-        Device.checkext(Data.CapReservedWord && text.lastIndexOf(Data.ReservedWord) >= 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_DESCRIPTION, "Line contains reserved word");
+        check(!Data.CapSetTrailer, JPOS_E_ILLEGAL, "Setting trailer line not supported");
+        check(Data.DayOpened, JPOS_E_ILLEGAL, "Day open");
+        checkRange(lineNumber, 1, Data.NumTrailerLines, JPOS_E_ILLEGAL, "Line number out of range: " + lineNumber);
+        checkext(Data.CapReservedWord && text.lastIndexOf(Data.ReservedWord) >= 0, JPOS_EFPTR_BAD_ITEM_DESCRIPTION, "Line contains reserved word");
         FiscalPrinterInterface.setTrailerLine(lineNumber, text, doubleWidth);
         logCall("SetTrailerLine");
     }
@@ -1677,9 +1544,9 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     public void setVatTable() throws JposException {
         logPreCall("SetVatTable");
         checkEnabled();
-        Device.check(!Data.CapHasVatTable, JposConst.JPOS_E_ILLEGAL, "VAT tables not supported");
-        Device.check(!Data.CapSetVatTable, JposConst.JPOS_E_ILLEGAL, "Setting VAT table not supported");
-        Device.check(Data.DayOpened, JposConst.JPOS_E_ILLEGAL, "Day open");
+        check(!Data.CapHasVatTable, JPOS_E_ILLEGAL, "VAT tables not supported");
+        check(!Data.CapSetVatTable, JPOS_E_ILLEGAL, "Setting VAT table not supported");
+        check(Data.DayOpened, JPOS_E_ILLEGAL, "Day open");
         FiscalPrinterInterface.setVatTable();
         logCall("SetVatTable");
     }
@@ -1699,24 +1566,24 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
      */
     @Override
     public void setVatValue(int vatID, String vatValue) throws JposException {
-        Device.check(vatValue == null, JposConst.JPOS_E_ILLEGAL, "vatValue must not be null");
-        logPreCall("SetVatValue", vatID + ", " + vatValue);
+        logPreCall("SetVatValue", removeOuterArraySpecifier(new Object[]{vatID, vatValue}, Device.MaxArrayStringElements));
+        check(vatValue == null, JPOS_E_ILLEGAL, "vatValue must not be null");
         checkEnabled();
-        Device.check(!Data.CapHasVatTable, JposConst.JPOS_E_ILLEGAL, "VAT tables not supported");
-        Device.check(!Data.CapSetVatTable, JposConst.JPOS_E_ILLEGAL, "Setting trailer line not supported");
-        Device.check(Data.DayOpened, JposConst.JPOS_E_ILLEGAL, "Day open");
+        check(!Data.CapHasVatTable, JPOS_E_ILLEGAL, "VAT tables not supported");
+        check(!Data.CapSetVatTable, JPOS_E_ILLEGAL, "Setting trailer line not supported");
+        check(Data.DayOpened, JPOS_E_ILLEGAL, "Day open");
         if (vatValue.length() > 0 && vatValue.charAt(vatValue.length() - 1) == '%')
             vatValue = vatValue.substring(0, vatValue.length() - 1);
         String[] vatEntry = vatValue.split(",");
-        JposDevice.check(vatEntry.length > 2, JposConst.JPOS_E_ILLEGAL, "Invalid vatValue: " + vatValue);
+        check(vatEntry.length > 2, JPOS_E_ILLEGAL, "Invalid vatValue: " + vatValue);
         int[] values = new int[vatEntry.length];
         values[0] = stringToCurrency(vatEntry[vatEntry.length - 1], "Percentage Value", true).intValue();
-        Device.check(values[0] > 999999, JposConst.JPOS_E_ILLEGAL, "Percentage value too big: " + vatEntry[vatEntry.length - 1]);
+        check(values[0] > 999999, JPOS_E_ILLEGAL, "Percentage value too big: " + vatEntry[vatEntry.length - 1]);
         if (values.length == 2) {
             try {
                 values[1] = Integer.parseInt(vatEntry[0]);
             } catch (NumberFormatException e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid integer part of vatValue: " + vatEntry[0]);
+                throw new JposException(JPOS_E_ILLEGAL, "Invalid integer part of vatValue: " + vatEntry[0]);
             }
             FiscalPrinterInterface.setVatValue(vatID, values[1], values[0]);
 
@@ -1728,13 +1595,13 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void verifyItem(String itemName, int vatID) throws JposException {
-        Device.check(itemName == null, JposConst.JPOS_E_ILLEGAL, "itemName must not be null");
-        logPreCall("VerifyItem", itemName + ", " + vatID);
+        logPreCall("VerifyItem", removeOuterArraySpecifier(new Object[]{itemName, vatID}, Device.MaxArrayStringElements));
+        check(itemName == null, JPOS_E_ILLEGAL, "itemName must not be null");
         checkEnabled();
-        Device.check(!Data.CapHasVatTable, JposConst.JPOS_E_ILLEGAL, "VAT tables not supported");
-        Device.check(!Data.CapItemList, JposConst.JPOS_E_ILLEGAL, "Item list not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_ITEM_LIST, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in item list");
-        Device.checkext(Data.CapReservedWord && itemName.lastIndexOf(Data.ReservedWord) >= 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_DESCRIPTION, "Item name contains reserved word");
+        check(!Data.CapHasVatTable, JPOS_E_ILLEGAL, "VAT tables not supported");
+        check(!Data.CapItemList, JPOS_E_ILLEGAL, "Item list not supported");
+        checkext(Data.PrinterState != FPTR_PS_ITEM_LIST, JPOS_EFPTR_WRONG_STATE, "Not in item list");
+        checkext(Data.CapReservedWord && itemName.lastIndexOf(Data.ReservedWord) >= 0, JPOS_EFPTR_BAD_ITEM_DESCRIPTION, "Item name contains reserved word");
         FiscalPrinterInterface.verifyItem(itemName, vatID);
         logCall("VerifyItem");
     }
@@ -1745,65 +1612,49 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void printFiscalDocumentLine(String documentLine) throws JposException {
-        Device.check(documentLine == null, JposConst.JPOS_E_ILLEGAL, "DocumentLine must not be null");
-        logPreCall("PrintFiscalDocumentLine", documentLine);
+        logPreCall("PrintFiscalDocumentLine", removeOuterArraySpecifier(new Object[]{documentLine}, Device.MaxArrayStringElements));
+        check(documentLine == null, JPOS_E_ILLEGAL, "DocumentLine must not be null");
         checkEnabled();
-        Device.check(!Data.CapSlpFiscalDocument, JposConst.JPOS_E_ILLEGAL, "Fiscal document printing not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_DOCUMENT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal document state");
-        ifSyncCheckBusyCoverPaper(FiscalPrinterConst.FPTR_S_SLIP);
+        check(!Data.CapSlpFiscalDocument, JPOS_E_ILLEGAL, "Fiscal document printing not supported");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_DOCUMENT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal document state");
+        ifSyncCheckBusyCoverPaper(FPTR_S_SLIP);
         callIt(FiscalPrinterInterface.printFiscalDocumentLine(documentLine), "PrintFiscalDocumentLine");
     }
 
     @Override
     public void printFixedOutput(int documentType, int lineNumber, String data) throws JposException {
-        Device.check(data == null, JposConst.JPOS_E_ILLEGAL, "Data must not be null");
-        logPreCall("PrintFixedOutput", documentType + ", " + lineNumber + ", \"" + data + "\"");
+        logPreCall("PrintFixedOutput", removeOuterArraySpecifier(new Object[]{documentType, lineNumber, data}, Device.MaxArrayStringElements));
+        check(data == null, JPOS_E_ILLEGAL, "Data must not be null");
         checkEnabled();
-        Device.check(!Data.CapFixedOutput, JposConst.JPOS_E_ILLEGAL, "Fixed output printing not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FIXED_OUTPUT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fixed output state");
-        Device.check(!Props.AsyncMode && Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Device is busy");
+        check(!Data.CapFixedOutput, JPOS_E_ILLEGAL, "Fixed output printing not supported");
+        checkext(Data.PrinterState != FPTR_PS_FIXED_OUTPUT, JPOS_EFPTR_WRONG_STATE, "Not in fixed output state");
+        check(!Props.AsyncMode && Props.State == JPOS_S_BUSY, JPOS_E_BUSY, "Device is busy");
         callIt(FiscalPrinterInterface.printFixedOutput(documentType, lineNumber, data), "PrintFixedOutput");
     }
 
     @Override
     public void printNormal(int station, String data) throws JposException {
-        long[][] allowed = new long[][]{
-                new long[]{     // possible print stations
-                        FiscalPrinterConst.FPTR_S_JOURNAL,
-                        FiscalPrinterConst.FPTR_S_RECEIPT,
-                        FiscalPrinterConst.FPTR_S_SLIP
-                },
-                new long[]{     // corresponding presence capabilities
-                        Data.CapJrnPresent ? 1 : 0,
-                        Data.CapRecPresent ? 1 : 0,
-                        Data.CapSlpPresent ? 1 : 0
-                },
-                new long[]{
-                        -1,
-                        FiscalPrinterConst.FPTR_RS_RECEIPT,
-                        FiscalPrinterConst.FPTR_RS_SLIP
-                }
+        logPreCall("PrintNormal", removeOuterArraySpecifier(new Object[]{station, data}, Device.MaxArrayStringElements));
+        long[][] allowed = {
+                { FPTR_S_JOURNAL, FPTR_S_RECEIPT, FPTR_S_SLIP },    // possible print stations
+                { Data.CapJrnPresent ? 1 : 0, Data.CapRecPresent ? 1 : 0, Data.CapSlpPresent ? 1 : 0 },    // corresponding presence capabilities
+                { -1, FPTR_RS_RECEIPT, FPTR_RS_SLIP }
         };
-        long[] allowedFiscal = new long[]{
-                FiscalPrinterConst.FPTR_RT_GENERIC,
-                FiscalPrinterConst.FPTR_RT_CASH_IN,
-                FiscalPrinterConst.FPTR_RT_CASH_OUT
-        };
-        Device.check(data == null, JposConst.JPOS_E_ILLEGAL, "Data must not be null");
-        logPreCall("PrintNormal", station + ", \"" + data + "\"");
+        long[] allowedFiscal = { FPTR_RT_GENERIC, FPTR_RT_CASH_IN, FPTR_RT_CASH_OUT };
+        check(data == null, JPOS_E_ILLEGAL, "Data must not be null");
         checkEnabled();
         int stationindex;
         for (stationindex = 0; stationindex < allowed[0].length; stationindex++) {
             if (station == allowed[0][stationindex])
                 break;
         }
-        Device.check(stationindex == allowed[0].length, JposConst.JPOS_E_ILLEGAL, "Invalid station: " + station);
-        if (Data.CapFiscalReceiptType && Device.member(Data.FiscalReceiptType, allowedFiscal) && Data.PrinterState == FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT) {
-            Device.check(Data.FiscalReceiptStation != allowed[2][stationindex], JposConst.JPOS_E_ILLEGAL, "Station does not match receipt station: " + station);
+        check(stationindex == allowed[0].length, JPOS_E_ILLEGAL, "Invalid station: " + station);
+        if (Data.CapFiscalReceiptType && member(Data.FiscalReceiptType, allowedFiscal) && Data.PrinterState == FPTR_PS_FISCAL_RECEIPT) {
+            check(Data.FiscalReceiptStation != allowed[2][stationindex], JPOS_E_ILLEGAL, "Station does not match receipt station: " + station);
         }
         else {
-            Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_NONFISCAL, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fixed output state");
-            Device.check(allowed[1][stationindex] == 0, JposConst.JPOS_E_ILLEGAL, "Station does not exist: " + station);
+            checkext(Data.PrinterState != FPTR_PS_NONFISCAL, JPOS_EFPTR_WRONG_STATE, "Not in fixed output state");
+            check(allowed[1][stationindex] == 0, JPOS_E_ILLEGAL, "Station does not exist: " + station);
         }
         ifSyncCheckBusyCoverPaper(station);
         callIt(FiscalPrinterInterface.printNormal(station, data), "PrintNormal");
@@ -1811,141 +1662,97 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void printRecCash(long amount) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_CASH_IN, FiscalPrinterConst.FPTR_RT_CASH_OUT
-        };
-        logPreCall("PrintRecCash", "" + amount);
+        logPreCall("PrintRecCash", removeOuterArraySpecifier(new Object[]{amount}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_CASH_IN, FPTR_RT_CASH_OUT };
         checkEnabled();
-        Device.check(!Data.CapFiscalReceiptType, JposConst.JPOS_E_ILLEGAL, "Cash in / out not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not in cash in / cash out receipt");
+        check(!Data.CapFiscalReceiptType, JPOS_E_ILLEGAL, "Cash in / out not supported");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JPOS_E_ILLEGAL, "Not in cash in / cash out receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Amount of cash in / out must be > 0");
-        Device.check(truncUnusedDecimals(amount) != amount, JposConst.JPOS_E_ILLEGAL, "Amount contains fractions of smallest cash units");
+        check(amount <= 0, JPOS_E_ILLEGAL, "Amount of cash in / out must be > 0");
+        check(truncUnusedDecimals(amount) != amount, JPOS_E_ILLEGAL, "Amount contains fractions of smallest cash units");
         callIt(FiscalPrinterInterface.printRecCash(amount), "PrintRecCash");
     }
 
     @Override
     public void printRecItem(String description, long price, int quantity, int vatInfo, long unitPrice, String unitName) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
+        logPreCall("PrintRecItem", removeOuterArraySpecifier(new Object[]{description, price, quantity, vatInfo, unitPrice, unitName}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
+        check(description == null, JPOS_E_ILLEGAL, "Description must not be null");
         if (unitName == null)
             unitName = "";
-        logPreCall("PrintRecItem", description + ", " + price + ", " + quantity + ", " + vatInfo + ", " + unitPrice + ", " + unitName);
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
-        Device.checkext(price < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
-        Device.checkext(quantity < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
-        Device.checkext(unitPrice < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
+        checkext(price < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
+        checkext(quantity < 0, JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
+        checkext(unitPrice < 0, JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
         checkReserved(unitName, "unitName");
         callIt(FiscalPrinterInterface.printRecItem(description, price, quantity, vatInfo, unitPrice, unitName), "PrintRecItem");
     }
 
     @Override
     public void printRecItemAdjustment(int adjustmentType, String description, long amount, int vatInfo) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        long[] allowedamount = new long[]{
-                FiscalPrinterConst.FPTR_AT_AMOUNT_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_AMOUNT_DISCOUNT
-        };
-        long[] allowedpercent = new long[]{
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
-        };
-        long[] allowedpositive = new long[]{
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
-        logPreCall("PrintRecItemAdjustment", description + ", " + amount + ", " + vatInfo);
+        logPreCall("PrintRecItemAdjustment", removeOuterArraySpecifier(new Object[]{adjustmentType, description, amount, vatInfo}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
+        long[] allowedamount = { FPTR_AT_AMOUNT_DISCOUNT, FPTR_AT_AMOUNT_SURCHARGE, FPTR_AT_COUPON_AMOUNT_DISCOUNT };
+        long[] allowedpercent = { FPTR_AT_PERCENTAGE_DISCOUNT, FPTR_AT_PERCENTAGE_SURCHARGE, FPTR_AT_COUPON_PERCENTAGE_DISCOUNT };
+        long[] allowedpositive = { FPTR_AT_AMOUNT_SURCHARGE, FPTR_AT_PERCENTAGE_SURCHARGE };
+        check(description == null, JPOS_E_ILLEGAL, "Description must not be null");
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
-        Device.check(!Device.member(adjustmentType, allowedamount) && !Device.member(adjustmentType, allowedpercent), JposConst.JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
-        Device.check(!Data.CapAmountAdjustment && Device.member(adjustmentType, allowedamount), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
-        Device.check(!Data.CapPercentAdjustment && Device.member(adjustmentType, allowedpercent), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
-        Device.check(!Data.CapPositiveAdjustment && Device.member(adjustmentType, allowedpositive), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
+        check(!member(adjustmentType, allowedamount) && !member(adjustmentType, allowedpercent), JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
+        check(!Data.CapAmountAdjustment && member(adjustmentType, allowedamount), JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
+        check(!Data.CapPercentAdjustment && member(adjustmentType, allowedpercent), JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
+        check(!Data.CapPositiveAdjustment && member(adjustmentType, allowedpositive), JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
         checkReserved(description, "description");
-        Device.checkext(amount <= 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "amount must be > 0");
+        checkext(amount <= 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "amount must be > 0");
         callIt(FiscalPrinterInterface.printRecItemAdjustment(adjustmentType, description, amount, vatInfo), "PrintRecItemAdjustment");
     }
 
     @Override
     public void printRecItemAdjustmentVoid(int adjustmentType, String description, long amount, int vatInfo) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        long[] allowedamount = new long[]{
-                FiscalPrinterConst.FPTR_AT_AMOUNT_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_AMOUNT_DISCOUNT
-        };
-        long[] allowedpercent = new long[]{
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
-        };
-        long[] allowedpositive = new long[]{
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
-        logPreCall("PrintRecItemAdjustmentVoid", description + ", " + amount + ", " + vatInfo);
+        logPreCall("PrintRecItemAdjustmentVoid", removeOuterArraySpecifier(new Object[]{adjustmentType, description, amount, vatInfo}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
+        long[] allowedamount = { FPTR_AT_AMOUNT_DISCOUNT, FPTR_AT_AMOUNT_SURCHARGE, FPTR_AT_COUPON_AMOUNT_DISCOUNT };
+        long[] allowedpercent = { FPTR_AT_PERCENTAGE_DISCOUNT, FPTR_AT_PERCENTAGE_SURCHARGE, FPTR_AT_COUPON_PERCENTAGE_DISCOUNT };
+        long[] allowedpositive = { FPTR_AT_AMOUNT_SURCHARGE, FPTR_AT_PERCENTAGE_SURCHARGE };
+        check(description == null, JPOS_E_ILLEGAL, "Description must not be null");
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
-        Device.check(!Device.member(adjustmentType, allowedamount) && !Device.member(adjustmentType, allowedpercent), JposConst.JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
-        Device.check(!Data.CapAmountAdjustment && Device.member(adjustmentType, allowedamount), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
-        Device.check(!Data.CapPercentAdjustment && Device.member(adjustmentType, allowedpercent), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
-        Device.check(!Data.CapPositiveAdjustment && Device.member(adjustmentType, allowedpositive), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
+        check(!member(adjustmentType, allowedamount) && !member(adjustmentType, allowedpercent), JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
+        check(!Data.CapAmountAdjustment && member(adjustmentType, allowedamount), JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
+        check(!Data.CapPercentAdjustment && member(adjustmentType, allowedpercent), JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
+        check(!Data.CapPositiveAdjustment && member(adjustmentType, allowedpositive), JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
         checkReserved(description, "description");
-        Device.checkext(amount <= 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "amount must be > 0");
+        checkext(amount <= 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "amount must be > 0");
         callIt(FiscalPrinterInterface.printRecItemAdjustmentVoid(adjustmentType, description, amount, vatInfo), "PrintRecItemAdjustmentVoid");
     }
 
     @Override
     public void printRecItemFuel(String description, long price, int quantity, int vatInfo, long unitPrice, String unitName, long specialTax, String specialTaxName) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
+        logPreCall("PrintRecItemFuel", removeOuterArraySpecifier(new Object[]{description, price, quantity, vatInfo, unitPrice, unitName, specialTax, specialTaxName}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
+        check(description == null, JPOS_E_ILLEGAL, "Description must not be null");
         if (unitName == null)
             unitName = "";
         if (specialTaxName == null)
             specialTaxName = "";
-        logPreCall("PrintRecItemFuel", description + ", " + price + ", " + quantity + ", " + vatInfo + ", " + unitPrice + ", " + unitName + ", " + specialTax + ", " + specialTaxName);
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
-        Device.checkext(price < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
-        Device.checkext(quantity < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
-        Device.checkext(unitPrice < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
-        Device.check(specialTax < 0, JposConst.JPOS_E_ILLEGAL, "specialTax must be >= 0");
+        checkext(price < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
+        checkext(quantity < 0, JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
+        checkext(unitPrice < 0, JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
+        check(specialTax < 0, JPOS_E_ILLEGAL, "specialTax must be >= 0");
         checkReserved(unitName, "unitName");
         checkReserved(specialTaxName, "specialTaxName");
         callIt(FiscalPrinterInterface.printRecItemFuel(description, price, quantity, vatInfo, unitPrice, unitName, specialTax, specialTaxName), "PrintRecItemFuel");
@@ -1953,171 +1760,128 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void printRecItemFuelVoid(String description, long price, int vatInfo, long specialTax) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
-        logPreCall("PrintRecItemFuelVoid", description + ", " + price + ", " + vatInfo + ", " + specialTax);
+        logPreCall("PrintRecItemFuelVoid", removeOuterArraySpecifier(new Object[]{description, price, vatInfo, specialTax}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
+        check(description == null, JPOS_E_ILLEGAL, "Description must not be null");
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
-        Device.checkext(price < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
-        Device.check(specialTax < 0, JposConst.JPOS_E_ILLEGAL, "specialTax must be >= 0");
+        checkext(price < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
+        check(specialTax < 0, JPOS_E_ILLEGAL, "specialTax must be >= 0");
         callIt(FiscalPrinterInterface.printRecItemFuelVoid(description, price, vatInfo, specialTax), "PrintRecItemFuelVoid");
     }
 
     @Override
     public void printRecItemRefund(String description, long amount, int quantity, int vatInfo, long unitAmount, String unitName) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
+        logPreCall("PrintRecItemRefund", removeOuterArraySpecifier(new Object[]{description, amount, quantity, vatInfo, unitAmount, unitName}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_REFUND };
+        check(description == null, JPOS_E_ILLEGAL, "Description must not be null");
         if (unitName == null)
             unitName = "";
-        logPreCall("PrintRecItemRefund", description + ", " + amount + ", " + quantity + ", " + vatInfo + ", " + unitAmount + ", " + unitName);
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
-        Device.checkext(amount < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
-        Device.checkext(quantity < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
-        Device.checkext(unitAmount < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
+        checkext(amount < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
+        checkext(quantity < 0, JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
+        checkext(unitAmount < 0, JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
         checkReserved(unitName, "unitName");
         callIt(FiscalPrinterInterface.printRecItemRefund(description, amount, quantity, vatInfo, unitAmount, unitName), "PrintRecItemRefund");
     }
 
     @Override
     public void printRecItemRefundVoid(String description, long amount, int quantity, int vatInfo, long unitAmount, String unitName) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
+        logPreCall("PrintRecItemRefundVoid", removeOuterArraySpecifier(new Object[]{description, amount, quantity, vatInfo, unitAmount, unitName}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_REFUND };
+        check(description == null, JPOS_E_ILLEGAL, "Description must not be null");
         if (unitName == null)
             unitName = "";
-        logPreCall("PrintRecItemRefundVoid", description + ", " + amount + ", " + quantity + ", " + vatInfo + ", " + unitAmount + ", " + unitName);
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
-        Device.checkext(amount < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
-        Device.checkext(quantity < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
-        Device.checkext(unitAmount < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
+        checkext(amount < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
+        checkext(quantity < 0, JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
+        checkext(unitAmount < 0, JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
         checkReserved(unitName, "unitName");
         callIt(FiscalPrinterInterface.printRecItemRefundVoid(description, amount, quantity, vatInfo, unitAmount, unitName), "PrintRecItemRefundVoid");
     }
 
     @Override
     public void printRecItemVoid(String description, long price, int quantity, int vatInfo, long unitPrice, String unitName) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Description and unitName must not be null");
+        logPreCall("PrintRecItemVoid", removeOuterArraySpecifier(new Object[]{description, price, quantity, vatInfo, unitPrice, unitName}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
+        check(description == null, JPOS_E_ILLEGAL, "Description and unitName must not be null");
         if (unitName == null)
             unitName = "";
-        logPreCall("PrintRecItemVoid", description + ", " + price + ", " + quantity + ", " + vatInfo + ", " + unitPrice + ", " + unitName);
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
-        Device.checkext(price < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
-        Device.checkext(quantity < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
-        Device.checkext(unitPrice < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
+        checkext(price < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
+        checkext(quantity < 0, JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
+        checkext(unitPrice < 0, JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
         checkReserved(unitName, "unitName");
         callIt(FiscalPrinterInterface.printRecItemVoid(description, price, quantity, vatInfo, unitPrice, unitName), "PrintRecItemVoid");
     }
 
     @Override
     public void printRecMessage(String message) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        long[] allowedState = new long[]{
-                FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT,
-                FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT_TOTAL,
-                FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT_ENDING
-        };
-        Device.check(message == null, JposConst.JPOS_E_ILLEGAL, "Message must not be null");
-        logPreCall("PrintRecMessage", message);
+        logPreCall("PrintRecMessage", removeOuterArraySpecifier(new Object[]{message}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
+        long[] allowedState = { FPTR_PS_FISCAL_RECEIPT, FPTR_PS_FISCAL_RECEIPT_TOTAL, FPTR_PS_FISCAL_RECEIPT_ENDING };
+        check(message == null, JposConst.JPOS_E_ILLEGAL, "Message must not be null");
         checkEnabled();
-        Device.check(!Data.CapAdditionalLines, JposConst.JPOS_E_ILLEGAL, "Additional lines not supported");
-        Device.checkext(!Device.member(Data.PrinterState, allowedState), FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        check(!Data.CapAdditionalLines, JposConst.JPOS_E_ILLEGAL, "Additional lines not supported");
+        checkext(!member(Data.PrinterState, allowedState), JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(message, "message");
         if (!Data.AsyncMode) {
-            Device.checkext(message.length() > Data.MessageLength, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_DESCRIPTION, "Message too long");
+            checkext(message.length() > Data.MessageLength, JPOS_EFPTR_BAD_ITEM_DESCRIPTION, "Message too long");
         }
         callIt(FiscalPrinterInterface.printRecMessage(message), "PrintRecMessage");
     }
 
     @Override
     public void printRecNotPaid(String description, long amount) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        long[] allowedState = new long[]{
-                FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT_TOTAL
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
-        logPreCall("PrintRecNotPaid", description + ", " + amount);
+        logPreCall("PrintRecNotPaid", removeOuterArraySpecifier(new Object[]{description, amount}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
+        long[] allowedState = { FPTR_PS_FISCAL_RECEIPT, FPTR_PS_FISCAL_RECEIPT_TOTAL };
+        check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
         checkEnabled();
-        Device.check(!Data.CapReceiptNotPaid, JposConst.JPOS_E_ILLEGAL, "Receipt not paid not supported");
-        Device.checkext(!Device.member(Data.PrinterState, allowedState), FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        check(!Data.CapReceiptNotPaid, JposConst.JPOS_E_ILLEGAL, "Receipt not paid not supported");
+        checkext(!member(Data.PrinterState, allowedState), JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Amount <= 0");
+        check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Amount <= 0");
         callIt(FiscalPrinterInterface.printRecNotPaid(description, amount), "PrintRecNotPaid");
     }
 
     @Override
     public void printRecPackageAdjustment(int adjustmentType, String description, String vatAdjustment) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
+        logPreCall("PrintRecPackageAdjustment", removeOuterArraySpecifier(new Object[]{adjustmentType, description, vatAdjustment}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
         long[] allowedType = AllowItemAdjustmentTypesInPackageAdjustment ? new long[]{
-                FiscalPrinterConst.FPTR_AT_AMOUNT_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_AMOUNT_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
-        } : new long[]{FiscalPrinterConst.FPTR_AT_DISCOUNT, FiscalPrinterConst.FPTR_AT_SURCHARGE};
-        Device.check(vatAdjustment == null || description == null, JposConst.JPOS_E_ILLEGAL, "description and vatAdjustment must not be null");
-        logPreCall("PrintRecPackageAdjustment", adjustmentType + ", " + description + ", " + vatAdjustment);
+                FPTR_AT_AMOUNT_DISCOUNT, FPTR_AT_AMOUNT_SURCHARGE, FPTR_AT_COUPON_AMOUNT_DISCOUNT,
+                FPTR_AT_PERCENTAGE_DISCOUNT, FPTR_AT_PERCENTAGE_SURCHARGE, FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
+        } : new long[]{FPTR_AT_DISCOUNT, FPTR_AT_SURCHARGE};
+        check(vatAdjustment == null || description == null, JposConst.JPOS_E_ILLEGAL, "description and vatAdjustment must not be null");
         checkEnabled();
-        Device.check(!Data.CapPackageAdjustment, JposConst.JPOS_E_ILLEGAL, "Package Adjustment not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
-        Device.checkMember(adjustmentType, allowedType, JposConst.JPOS_E_ILLEGAL, "Adjustment not supported: " + adjustmentType);
+        check(!Data.CapPackageAdjustment, JposConst.JPOS_E_ILLEGAL, "Package Adjustment not supported");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkMember(adjustmentType, allowedType, JposConst.JPOS_E_ILLEGAL, "Adjustment not supported: " + adjustmentType);
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
         String[] adjustments = vatAdjustment.split(";");
-        Device.check(adjustments.length > Data.NumVatRates, JposConst.JPOS_E_ILLEGAL, "Bad number of pairs of VAT ID and amount");
+        check(adjustments.length > Data.NumVatRates, JposConst.JPOS_E_ILLEGAL, "Bad number of pairs of VAT ID and amount");
         Map<Integer, Number> vatAdjustments = new HashMap<>();
         vatAdjustment = getAndModifyVatAdjustments(adjustmentType, vatAdjustment, vatAdjustments);
         callIt(FiscalPrinterInterface.printRecPackageAdjustment(adjustmentType, description, vatAdjustment, vatAdjustments), "PrintRecPackageAdjustment");
@@ -2125,27 +1889,18 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void printRecPackageAdjustVoid(int adjustmentType, String vatAdjustment) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
+        logPreCall("PrintRecPackageAdjustVoid", removeOuterArraySpecifier(new Object[]{adjustmentType, vatAdjustment}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
         long[] allowedType = AllowItemAdjustmentTypesInPackageAdjustment ? new long[]{
-                FiscalPrinterConst.FPTR_AT_AMOUNT_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_AMOUNT_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
-        } : new long[]{FiscalPrinterConst.FPTR_AT_DISCOUNT, FiscalPrinterConst.FPTR_AT_SURCHARGE};
-        Device.check(vatAdjustment == null, JposConst.JPOS_E_ILLEGAL, "vatAdjustment must not be null");
-        logPreCall("PrintRecPackageAdjustVoid", adjustmentType + ", " + vatAdjustment);
+                FPTR_AT_AMOUNT_DISCOUNT, FPTR_AT_AMOUNT_SURCHARGE, FPTR_AT_COUPON_AMOUNT_DISCOUNT,
+                FPTR_AT_PERCENTAGE_DISCOUNT, FPTR_AT_PERCENTAGE_SURCHARGE, FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
+        } : new long[]{FPTR_AT_DISCOUNT, FPTR_AT_SURCHARGE};
+        check(vatAdjustment == null, JposConst.JPOS_E_ILLEGAL, "vatAdjustment must not be null");
         checkEnabled();
-        Device.check(!Data.CapPackageAdjustment, JposConst.JPOS_E_ILLEGAL, "Package Adjustment not supported");
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
-        Device.checkMember(adjustmentType, allowedType, JposConst.JPOS_E_ILLEGAL, "Adjustment not supported: " + adjustmentType);
+        check(!Data.CapPackageAdjustment, JposConst.JPOS_E_ILLEGAL, "Package Adjustment not supported");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkMember(adjustmentType, allowedType, JposConst.JPOS_E_ILLEGAL, "Adjustment not supported: " + adjustmentType);
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         Map<Integer, Number> vatAdjustments = new HashMap<>();
         vatAdjustment = getAndModifyVatAdjustments(adjustmentType, vatAdjustment, vatAdjustments);
@@ -2153,169 +1908,122 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     }
 
     private String getAndModifyVatAdjustments(int adjustmentType, String vatAdjustment, Map<Integer, Number> vatAdjustments) throws JposException {
-        long[] percentTypes = { FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT, FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE, FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT };
+        long[] percentTypes = { FPTR_AT_PERCENTAGE_DISCOUNT, FPTR_AT_PERCENTAGE_SURCHARGE, FPTR_AT_COUPON_PERCENTAGE_DISCOUNT };
         String[] adjustments = vatAdjustment.split(";");
-        Device.check(adjustments.length > Data.NumVatRates, JposConst.JPOS_E_ILLEGAL, "Bad number of pairs of VAT ID and amount");
-        boolean percent = JposDevice.member(adjustmentType, percentTypes);
-        vatAdjustment = "";
+        check(adjustments.length > Data.NumVatRates, JposConst.JPOS_E_ILLEGAL, "Bad number of pairs of VAT ID and amount");
+        boolean percent = member(adjustmentType, percentTypes);
+        StringBuilder vatAdjustmentBuilder = new StringBuilder();
         for (String adjustment : adjustments) {
             String[] value = adjustment.split(",");
-            JposDevice.check(value.length != 2, JposConst.JPOS_E_ILLEGAL, "Mal-formatted vatAdjustment parameter");
+            check(value.length != 2, JposConst.JPOS_E_ILLEGAL, "Mal-formatted vatAdjustment parameter");
             try {
                 int vatid = Integer.parseInt(value[0]);
                 boolean percentvalue = value[1].charAt(value[1].length() - 1) == '%';
                 if (percentvalue)
                     value[1] = value[1].substring(0, value[1].length() - 1);
                 Number amount = percent || percentvalue ? stringToCurrency(value[1], "percentage for VAT ID " + value[0], true)
-                        : (CurrencyStringWithDecimalPoint ? new BigDecimal(value[1]).scaleByPowerOfTen(4).longValueExact() : Long.parseLong(value[1]));
-                JposDevice.check(vatAdjustments.containsKey(vatid), JposConst.JPOS_E_ILLEGAL, "VatID specified twice: " + value[0]);
+                        : (Data.CurrencyStringWithDecimalPoint ? new BigDecimal(value[1]).scaleByPowerOfTen(4).longValueExact() : Long.parseLong(value[1]));
+                check(vatAdjustments.containsKey(vatid), JposConst.JPOS_E_ILLEGAL, "VatID specified twice: " + value[0]);
                 vatAdjustments.put(vatid, amount);
-                vatAdjustment += ";" + vatid + "," + new BigDecimal(amount.longValue()).scaleByPowerOfTen(-4).stripTrailingZeros().toPlainString();
+                vatAdjustmentBuilder.append(";").append(vatid).append(",").append(new BigDecimal(amount.longValue()).scaleByPowerOfTen(-4).stripTrailingZeros().toPlainString());
                 if (percentvalue)
-                    vatAdjustment += "%";
+                    vatAdjustmentBuilder.append("%");
             } catch (NumberFormatException | ArithmeticException e) {
                 throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid adjustment " + adjustment + ": " + e.getMessage(), e);
             }
         }
+        vatAdjustment = vatAdjustmentBuilder.toString();
         return vatAdjustment.length() > 0 ? vatAdjustment.substring(1) : vatAdjustment;
     }
 
     @Override
     public void printRecRefund(String description, long amount, int vatInfo) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
-        logPreCall("PrintRecRefund", description + ", " + amount + ", " + vatInfo);
+        logPreCall("PrintRecRefund", removeOuterArraySpecifier(new Object[]{description, amount, vatInfo}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_REFUND };
+        check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
-        Device.checkext(amount < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
+        checkext(amount < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
         callIt(FiscalPrinterInterface.printRecRefund(description, amount, vatInfo), "PrintRecRefund");
     }
 
     @Override
     public void printRecRefundVoid(String description, long amount, int vatInfo) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
-        logPreCall("PrintRecRefundVoid", description + ", " + amount + ", " + vatInfo);
+        logPreCall("PrintRecRefundVoid", removeOuterArraySpecifier(new Object[]{description, amount, vatInfo}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_REFUND };
+        check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
-        Device.checkext(amount < 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
+        checkext(amount < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
         callIt(FiscalPrinterInterface.printRecRefundVoid(description, amount, vatInfo), "PrintRecRefundVoid");
     }
 
     @Override
     public void printRecSubtotal(long amount) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        logPreCall("PrintRecSubtotal", "" + amount);
+        logPreCall("PrintRecSubtotal", removeOuterArraySpecifier(new Object[]{amount}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
-        Device.check(amount < 0, JposConst.JPOS_E_ILLEGAL, "amount < 0");
+        check(amount < 0, JposConst.JPOS_E_ILLEGAL, "amount < 0");
         callIt(FiscalPrinterInterface.printRecSubtotal(amount), "PrintRecSubtotal");
     }
 
     @Override
     public void printRecSubtotalAdjustment(int adjustmentType, String description, long amount) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        long[] allowedamount = new long[]{
-                FiscalPrinterConst.FPTR_AT_AMOUNT_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_AMOUNT_DISCOUNT
-        };
-        long[] allowedpercent = new long[]{
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_COUPON_PERCENTAGE_DISCOUNT
-        };
-        long[] allowedpositive = new long[]{
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
-        logPreCall("PrintRecSubtotalAdjustment", description + ", " + amount);
+        logPreCall("PrintRecSubtotalAdjustment", removeOuterArraySpecifier(new Object[]{adjustmentType, description, amount}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
+        long[] allowedamount = { FPTR_AT_AMOUNT_DISCOUNT, FPTR_AT_AMOUNT_SURCHARGE, FPTR_AT_COUPON_AMOUNT_DISCOUNT };
+        long[] allowedpercent = { FPTR_AT_PERCENTAGE_DISCOUNT, FPTR_AT_PERCENTAGE_SURCHARGE, FPTR_AT_COUPON_PERCENTAGE_DISCOUNT };
+        long[] allowedpositive = { FPTR_AT_AMOUNT_SURCHARGE, FPTR_AT_PERCENTAGE_SURCHARGE };
+        check(description == null, JposConst.JPOS_E_ILLEGAL, "Description must not be null");
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
-        Device.check(!Device.member(adjustmentType, allowedamount) && !Device.member(adjustmentType, allowedpercent), JposConst.JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
-        Device.check(!Data.CapSubAmountAdjustment && Device.member(adjustmentType, allowedamount), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
-        Device.check(!Data.CapSubPercentAdjustment && Device.member(adjustmentType, allowedpercent), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
-        Device.check(!Data.CapPositiveSubtotalAdjustment && Device.member(adjustmentType, allowedpositive), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
+        check(!member(adjustmentType, allowedamount) && !member(adjustmentType, allowedpercent), JposConst.JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
+        check(!Data.CapSubAmountAdjustment && member(adjustmentType, allowedamount), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
+        check(!Data.CapSubPercentAdjustment && member(adjustmentType, allowedpercent), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
+        check(!Data.CapPositiveSubtotalAdjustment && member(adjustmentType, allowedpositive), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
         checkReserved(description, "description");
-        Device.checkext(amount <= 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "amount must be > 0");
+        checkext(amount <= 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "amount must be > 0");
         callIt(FiscalPrinterInterface.printRecSubtotalAdjustment(adjustmentType, description, amount), "PrintRecSubtotalAdjustment");
     }
 
     @Override
     public void printRecSubtotalAdjustVoid(int adjustmentType, long amount) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        long[] allowedamount = new long[]{
-                FiscalPrinterConst.FPTR_AT_AMOUNT_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE
-        };
-        long[] allowedpercent = new long[]{
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_DISCOUNT,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE
-        };
-        long[] allowedpositive = new long[]{
-                FiscalPrinterConst.FPTR_AT_AMOUNT_SURCHARGE,
-                FiscalPrinterConst.FPTR_AT_PERCENTAGE_SURCHARGE
-        };
-        logPreCall("PrintRecSubtotalAdjustVoid", "" + amount);
+        logPreCall("PrintRecSubtotalAdjustVoid", removeOuterArraySpecifier(new Object[]{adjustmentType, amount}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
+        long[] allowedamount = { FPTR_AT_AMOUNT_DISCOUNT, FPTR_AT_AMOUNT_SURCHARGE };
+        long[] allowedpercent = { FPTR_AT_PERCENTAGE_DISCOUNT, FPTR_AT_PERCENTAGE_SURCHARGE };
+        long[] allowedpositive = { FPTR_AT_AMOUNT_SURCHARGE, FPTR_AT_PERCENTAGE_SURCHARGE };
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt state");
+        checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
-        Device.check(!Device.member(adjustmentType, allowedamount) && !Device.member(adjustmentType, allowedpercent), JposConst.JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
-        Device.check(!Data.CapSubAmountAdjustment && Device.member(adjustmentType, allowedamount), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
-        Device.check(!Data.CapSubPercentAdjustment && Device.member(adjustmentType, allowedpercent), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
-        Device.check(!Data.CapPositiveSubtotalAdjustment && Device.member(adjustmentType, allowedpositive), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
-        Device.checkext(amount <= 0, FiscalPrinterConst.JPOS_EFPTR_BAD_ITEM_AMOUNT, "amount must be > 0");
+        check(!member(adjustmentType, allowedamount) && !member(adjustmentType, allowedpercent), JposConst.JPOS_E_ILLEGAL, "Invalid adjustment type: " + adjustmentType);
+        check(!Data.CapSubAmountAdjustment && member(adjustmentType, allowedamount), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
+        check(!Data.CapSubPercentAdjustment && member(adjustmentType, allowedpercent), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
+        check(!Data.CapPositiveSubtotalAdjustment && member(adjustmentType, allowedpositive), JposConst.JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
+        checkext(amount <= 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "amount must be > 0");
         callIt(FiscalPrinterInterface.printRecSubtotalAdjustVoid(adjustmentType, amount), "PrintRecSubtotalAdjustVoid");
     }
 
     @Override
     public void printRecTaxID(String taxId) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        Device.check(taxId == null, JposConst.JPOS_E_ILLEGAL, "Tax-ID must not be null");
-        logPreCall("PrintRecTaxID", taxId);
+        logPreCall("PrintRecTaxID", removeOuterArraySpecifier(new Object[]{taxId}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
+        check(taxId == null, JposConst.JPOS_E_ILLEGAL, "Tax-ID must not be null");
         checkEnabled();
-        Device.checkext(Data.PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT_ENDING, FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt ending state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(Data.PrinterState != FPTR_PS_FISCAL_RECEIPT_ENDING, JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt ending state");
+        checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(taxId, "taxId");
         callIt(FiscalPrinterInterface.printRecTaxID(taxId), "PrintRecTaxID");
@@ -2323,24 +2031,16 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void printRecTotal(long total, long payment, String description) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        long[] allowedstate = new long[]{
-                FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT,
-                FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT_TOTAL
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Tax-ID must not be null");
-        logPreCall("PrintRecTotal", description);
+        logPreCall("PrintRecTotal", removeOuterArraySpecifier(new Object[]{total, payment, description}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
+        long[] allowedstate = { FPTR_PS_FISCAL_RECEIPT, FPTR_PS_FISCAL_RECEIPT_TOTAL };
+        check(description == null, JposConst.JPOS_E_ILLEGAL, "Tax-ID must not be null");
         checkEnabled();
-        Device.checkext(!Device.member(Data.PrinterState, allowedstate), FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt or fiscal receipt total ending state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(!member(Data.PrinterState, allowedstate), JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt or fiscal receipt total ending state");
+        checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
-        Device.check(total < 0, JposConst.JPOS_E_ILLEGAL, "Total < 0");
-        Device.check(payment < 0, JposConst.JPOS_E_ILLEGAL, "Payment < 0");
+        check(total < 0, JposConst.JPOS_E_ILLEGAL, "Total < 0");
+        check(payment < 0, JposConst.JPOS_E_ILLEGAL, "Payment < 0");
         if (Data.CapPredefinedPaymentLines) {
             String[] payments = Data.PredefinedPaymentLines.split(",");
             boolean found = false;
@@ -2350,7 +2050,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
                     break;
                 }
             }
-            Device.check(!found, JposConst.JPOS_E_ILLEGAL, "Invalid payment ID: " + description);
+            check(!found, JposConst.JPOS_E_ILLEGAL, "Invalid payment ID: " + description);
         }
         else
             checkReserved(description, "description");
@@ -2359,21 +2059,13 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
 
     @Override
     public void printRecVoid(String description) throws JposException {
-        long[] allowed = new long[]{
-                FiscalPrinterConst.FPTR_RT_SALES,
-                FiscalPrinterConst.FPTR_RT_SERVICE,
-                FiscalPrinterConst.FPTR_RT_SIMPLE_INVOICE,
-                FiscalPrinterConst.FPTR_RT_REFUND
-        };
-        long[] allowedstate = new long[]{
-                FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT,
-                FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT_TOTAL
-        };
-        Device.check(description == null, JposConst.JPOS_E_ILLEGAL, "Tax-ID must not be null");
-        logPreCall("PrintRecVoid", description);
+        logPreCall("PrintRecVoid", removeOuterArraySpecifier(new Object[]{description}, Device.MaxArrayStringElements));
+        long[] allowed = { FPTR_RT_SALES, FPTR_RT_SERVICE, FPTR_RT_SIMPLE_INVOICE, FPTR_RT_REFUND };
+        long[] allowedstate = { FPTR_PS_FISCAL_RECEIPT, FPTR_PS_FISCAL_RECEIPT_TOTAL };
+        check(description == null, JposConst.JPOS_E_ILLEGAL, "Tax-ID must not be null");
         checkEnabled();
-        Device.checkext(!Device.member(Data.PrinterState, allowedstate), FiscalPrinterConst.JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt or fiscal receipt total state");
-        Device.checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
+        checkext(!member(Data.PrinterState, allowedstate), JPOS_EFPTR_WRONG_STATE, "Not in fiscal receipt or fiscal receipt total state");
+        checkMember(Data.FiscalReceiptType, allowed, JposConst.JPOS_E_ILLEGAL, "Not a sale receipt");
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
         callIt(FiscalPrinterInterface.printRecVoid(description), "PrintRecVoid");

@@ -31,7 +31,7 @@ public class DrawRuledLine extends OutputRequest {
         return Station;
     }
 
-    private int Station;
+    private final int Station;
 
     /**
      * POSPrinter method DrawRuledLine parameter positionList, see UPOS specification.
@@ -41,7 +41,7 @@ public class DrawRuledLine extends OutputRequest {
         return PositionList;
     }
 
-    private String PositionList;
+    private final String PositionList;
 
     /**
      * POSPrinter method DrawRuledLine parameter lineDirection, see UPOS specification.
@@ -51,7 +51,7 @@ public class DrawRuledLine extends OutputRequest {
         return Direction;
     }
 
-    private int Direction;
+    private final int Direction;
 
     /**
      * POSPrinter method DrawRuledLine parameter lineWidth, see UPOS specification.
@@ -61,7 +61,7 @@ public class DrawRuledLine extends OutputRequest {
         return Width;
     }
 
-    private int Width;
+    private final int Width;
 
     /**
      * POSPrinter method DrawRuledLine parameter lineStyle, see UPOS specification.
@@ -71,7 +71,7 @@ public class DrawRuledLine extends OutputRequest {
         return Style;
     }
 
-    private int Style;
+    private final int Style;
 
     /**
      * POSPrinter method DrawRuledLine parameter lineColor, see UPOS specification.
@@ -81,7 +81,7 @@ public class DrawRuledLine extends OutputRequest {
         return Color;
     }
 
-    private int Color;
+    private final int Color;
 
     /**
      * Constructor. Stores given parameters for later use.

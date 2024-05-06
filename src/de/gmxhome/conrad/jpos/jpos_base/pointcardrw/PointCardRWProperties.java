@@ -20,6 +20,10 @@ package de.gmxhome.conrad.jpos.jpos_base.pointcardrw;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.PointCardRWConst.*;
+
 /**
  * Class containing the point card reader / writer specific properties, their default values and default implementations of
  * PointCardRWInterface.
@@ -42,7 +46,7 @@ public class PointCardRWProperties extends JposCommonProperties implements Point
      * UPOS property CapCharacterSet. Default: CCS_ASCII. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int CapCharacterSet = PointCardRWConst.PCRW_CCS_ASCII;
+    public int CapCharacterSet = PCRW_CCS_ASCII;
 
     /**
      * UPOS property CapCleanCard. Default: false. Can be overwritten by objects derived from JposDevice within the
@@ -132,7 +136,7 @@ public class PointCardRWProperties extends JposCommonProperties implements Point
      * UPOS property CardState. Default: STATE_NOCARD. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int CardState = PointCardRWConst.PCRW_STATE_NOCARD;
+    public int CardState = PCRW_STATE_NOCARD;
 
     /**
      * UPOS property CharacterSet. Default: 0. Should be overwritten by objects derived from JposDevice within the
@@ -192,7 +196,7 @@ public class PointCardRWProperties extends JposCommonProperties implements Point
      * UPOS property MapMode. Default: MM_DOTS. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int MapMode = PointCardRWConst.PCRW_MM_DOTS;
+    public int MapMode = PCRW_MM_DOTS;
 
     /**
      * UPOS property MaxLines. Default: 0. Must be overwritten by objects derived from JposDevice within the
@@ -269,8 +273,8 @@ public class PointCardRWProperties extends JposCommonProperties implements Point
         super(dev);
         ExclusiveUse = ExclusiveYes;
         for (int i = 1; i <= 6; i++) {
-            setReadState(i, JposConst.JPOS_E_FAILURE);
-            setWriteState(i, JposConst.JPOS_E_FAILURE);
+            setReadState(i, JPOS_E_FAILURE);
+            setWriteState(i, JPOS_E_FAILURE);
         }
     }
 
@@ -478,13 +482,13 @@ public class PointCardRWProperties extends JposCommonProperties implements Point
 
     @Override
     public void validateData(PointCardRWService.EscUnknown printData)  throws JposException {
-        throw new JposException(JposConst.JPOS_E_FAILURE, "Unsupported ESCsequence ending with " + (char)printData.getEsc());
+        throw new JposException(JPOS_E_FAILURE, "Unsupported ESCsequence ending with " + (char)printData.getEsc());
     }
 
     @Override
     public void validateData(PointCardRWService.PrintData printData)  throws JposException {
         for (int i = printData.getPrintData().length() - 1; i >= 0; --i)
-            JposDevice.check(printData.getPrintData().charAt(i) < 0x20, JposConst.JPOS_E_FAILURE, "Unsupported control character");
+            check(printData.getPrintData().charAt(i) < 0x20, JPOS_E_FAILURE, "Unsupported control character");
     }
 
     @Override
@@ -509,18 +513,18 @@ public class PointCardRWProperties extends JposCommonProperties implements Point
 
     @Override
     public void validateData(PointCardRWService.EscSimple escSimple)  throws JposException {
-        JposDevice.check(escSimple.getReverse(), JposConst.JPOS_E_ILLEGAL, "Reverse video not supported");
+        check(escSimple.getReverse(), JPOS_E_ILLEGAL, "Reverse video not supported");
     }
 
     @Override
     public void validateData(PointCardRWService.EscUnderline escUnderline)  throws JposException {
         int thickness = escUnderline.getThickness();
-        JposDevice.check(thickness != 1, JposConst.JPOS_E_ILLEGAL, "Thickness for underline not supported: " + thickness);
+        check(thickness != 1, JPOS_E_ILLEGAL, "Thickness for underline not supported: " + thickness);
     }
 
     @Override
     public void validateData(PointCardRWService.EscScale escScale)  throws JposException {
         int scale = escScale.getScaleValue();
-        JposDevice.check(scale > 2, JposConst.JPOS_E_ILLEGAL, "Scale not supported: " + scale);
+        check(scale > 2, JPOS_E_ILLEGAL, "Scale not supported: " + scale);
     }
 }

@@ -22,7 +22,7 @@ import jpos.*;
  * Output request base for FiscalPrinter methods that use properties PreLine and / or  PostLine.
  */
 class PrePostOutputRequest extends OutputRequest {
-    private String PostLine;
+    private final String PostLine;
 
     /**
      * Returns contents of property PostLine at the time where this instance has been created.
@@ -31,7 +31,7 @@ class PrePostOutputRequest extends OutputRequest {
     public String getPostLine() {
         return PostLine;
     }
-    private String PreLine;
+    private final String PreLine;
 
     /**
      * Returns contents of property PreLine at the time where this instance has been created.

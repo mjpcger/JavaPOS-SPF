@@ -18,6 +18,10 @@ package de.gmxhome.conrad.jpos.jpos_base.electronicjournal;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of ElectronicJournal factory for JPOS devices using this framework.
@@ -28,19 +32,30 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults.
      * @param index ElectronicJournal property set index.
      * @param dev   ElectronicJournal implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return ElectronicJournalService object.
      * @throws JposException If property set could not be retrieved.
      */
-    public ElectronicJournalService addDevice(int index, JposDevice dev) throws JposException {
+    public ElectronicJournalService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         ElectronicJournalProperties elejou = dev.getElectronicJournalProperties(index);
-        ElectronicJournalService service;
-        JposDevice.check(elejou == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getElectronicJournalProperties()");
-        service = (ElectronicJournalService) (elejou.EventSource = new ElectronicJournalService(elejou, dev));
-        elejou.Device = dev;
-        elejou.Claiming = dev.ClaimedElectronicJournal;
+        validateJposConfiguration(elejou, dev, dev.ClaimedElectronicJournal, entry);
+        ElectronicJournalService service = (ElectronicJournalService) (elejou.EventSource = new ElectronicJournalService(elejou, dev));
         dev.changeDefaults(elejou);
         elejou.addProperties(dev.ElectronicJournals);
         service.DeviceInterface = service.ElectronicJournalInterface = elejou;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index ElectronicJournal property set index.
+     * @param dev   ElectronicJournal implementation instance derived from JposDevice to be used by the service.
+     * @return ElectronicJournalService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public ElectronicJournalService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

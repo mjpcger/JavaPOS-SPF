@@ -23,11 +23,19 @@ import de.gmxhome.conrad.jpos.jpos_base.electronicjournal.*;
 import jpos.*;
 import jpos.config.JposEntry;
 import jpos.events.*;
-import net.bplaced.conrad.log4jpos.Level;
 
-import javax.swing.*;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static de.gmxhome.conrad.jpos.jpos_base.UniqueIOProcessor.IOProcessorError;
+import static javax.swing.JOptionPane.*;
+import static jpos.CATConst.*;
+import static jpos.JposConst.*;
+import static jpos.LineDisplayConst.*;
+import static jpos.POSPrinterConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * Base of a JposDevice based implementation of JavaPOS CAT and ElectronicJournal device service implementations for the
@@ -150,6 +158,7 @@ import java.util.Arrays;
  *     request to the target, in milliseconds. Default: 1000.</li>
  * </ul>
  */
+@SuppressWarnings("unused")
 public class Device extends JposDevice implements Runnable{
     /**
      * EventNumber of DirectIOEvent for display data. Property Data contains line number (starting from 1), Obj contains
@@ -205,12 +214,7 @@ public class Device extends JposDevice implements Runnable{
     /**
      * Status watcher instance.
      */
-    Thread StateWatcher = null;
-
-    /**
-     * Flag showing that status watcher shall be stopped.
-     */
-    boolean ToBeFinished;
+    ThreadHandler StateWatcher = null;
 
     /**
      * Flag showing the current communication state.
@@ -235,7 +239,7 @@ public class Device extends JposDevice implements Runnable{
      *     <li>SUE_MEDIUM_FULL: There is no free space available for the journal. Some space must be freed.</li>
      * </ul>
      */
-    int[] JournalState = new int[]{0, 0};
+    int[] JournalState = {0, 0};
 
     /**
      * Maximum size of of electronic journal (in tickets).
@@ -261,8 +265,8 @@ public class Device extends JposDevice implements Runnable{
     static private final int MaxDisplayWidth = 40;      // Maximum display line length.
     static private final int MaxDisplayLines = 4;       // Maximum display line length.
 
-    private String JournalConversion = "";  // Default conversion for ticket data on POSPrinter (Unicode, ansi or ascii).
-    private String DisplayConversion = "";  // Default conversion for display data on LineDisplay (Unicode, ansi or ascii).
+    private final String JournalConversion = "";  // Default conversion for ticket data on POSPrinter (Unicode, ansi or ascii).
+    private final String DisplayConversion = "";  // Default conversion for display data on LineDisplay (Unicode, ansi or ascii).
     private int DisplayWidth = 40;          // Length of display line.
     private int DisplayLines = 4;           // Number of display lines.
     private String DisplayName = "";        // Display name, if empty, use DirectIOEvents instead
@@ -291,8 +295,8 @@ public class Device extends JposDevice implements Runnable{
      * Class for processing terminal display information.
      */
     static class DisplayOutput {
-        private String[] Line = new String[]{"", "", "", ""};
-        private boolean[] PutOut = new boolean[]{true, true, true, true};
+        private final String[] Line = {"", "", "", ""};
+        private final boolean[] PutOut = {true, true, true, true};
 
         /**
          * Specifies whether the display output object is currently in use. This is the case between ini() and release().
@@ -455,9 +459,7 @@ public class Device extends JposDevice implements Runnable{
 
     private class TicketViaPrt extends Device.TicketOutput implements StatusUpdateListener {
         private POSPrinter Printer;
-        private String Conversion = new String("");
-        private String Contents;
-        private int Count;
+        private String Conversion = ANSI;
         private boolean HasCartridgeSensor;
         private SyncObject CleaningEndWaiter = null;
         TicketViaPrt(Device device) throws JposException {
@@ -474,19 +476,19 @@ public class Device extends JposDevice implements Runnable{
 
         @Override
         void prepare() throws JposException {
-            boolean fitsMinimumRequirements = Printer.getCapPowerReporting() != JposConst.JPOS_PR_NONE &&
-                    (Printer.getCapRecColor() & POSPrinterConst.PTR_COLOR_PRIMARY) != 0 &&
+            boolean fitsMinimumRequirements = Printer.getCapPowerReporting() != JPOS_PR_NONE &&
+                    (Printer.getCapRecColor() & PTR_COLOR_PRIMARY) != 0 &&
                     Printer.getCapRecPresent() &&
                     Printer.getCapRecPapercut() &&
                     Printer.getCapRecNearEndSensor();
-            check(!fitsMinimumRequirements, JposConst.JPOS_E_ILLEGAL, "Printer " + JournalPath + " does not fit minimum requirements");
-            HasCartridgeSensor = (Printer.getCapRecCartridgeSensor() & POSPrinterConst.PTR_CART_CLEANING) != 0;
+            check(!fitsMinimumRequirements, JPOS_E_ILLEGAL, "Printer " + JournalPath + " does not fit minimum requirements");
+            HasCartridgeSensor = (Printer.getCapRecCartridgeSensor() & PTR_CART_CLEANING) != 0;
             long[] allowedLineChars = stringArrayToLongArray(Printer.getRecLineCharsList().split(","));
             for (long chars : allowedLineChars) {
                 if (chars >= JournalWidth)
                     return;
             }
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Configured Print line (JournalWidth) not supported by printer");
+            throw new JposException(JPOS_E_ILLEGAL, "Configured Print line (JournalWidth) not supported by printer");
         }
 
         @Override
@@ -495,33 +497,33 @@ public class Device extends JposDevice implements Runnable{
                 try {
                     Printer.claim(100);
                     if (HasCartridgeSensor)
-                        Printer.setCartridgeNotify(POSPrinterConst.PTR_CN_ENABLED);
-                    Printer.setPowerNotify(JposConst.JPOS_PN_ENABLED);
+                        Printer.setCartridgeNotify(PTR_CN_ENABLED);
+                    Printer.setPowerNotify(JPOS_PN_ENABLED);
                     Printer.setDeviceEnabled(true);
                     if (HasCartridgeSensor)
-                        Printer.setRecCurrentCartridge(POSPrinterConst.PTR_COLOR_PRIMARY);
+                        Printer.setRecCurrentCartridge(PTR_COLOR_PRIMARY);
                     if (Printer.getCapMapCharacterSet()) {
                         Printer.setMapCharacterSet(true);
                     }
-                    else if (member(String.valueOf(POSPrinterConst.PTR_CS_UNICODE), Printer.getCharacterSetList().split(","))) {
-                        Printer.setCharacterSet(POSPrinterConst.PTR_CS_UNICODE);
+                    else if (member(String.valueOf(PTR_CS_UNICODE), Printer.getCharacterSetList().split(","))) {
+                        Printer.setCharacterSet(PTR_CS_UNICODE);
                     }
                     else if (!Printer.getMapCharacterSet()) {
-                        if (member(String.valueOf(POSPrinterConst.PTR_CS_ANSI), Printer.getCharacterSetList().split(","))) {
-                            Printer.setCharacterSet(POSPrinterConst.PTR_CS_ANSI);
+                        if (member(String.valueOf(PTR_CS_ANSI), Printer.getCharacterSetList().split(","))) {
+                            Printer.setCharacterSet(PTR_CS_ANSI);
                             Conversion = ANSI;
                         }
                         else {
-                            Printer.setCharacterSet(POSPrinterConst.PTR_CS_ASCII);
+                            Printer.setCharacterSet(PTR_CS_ASCII);
                             Conversion = ASCII;
                         }
                     }
                     Printer.setRecLineChars(JournalWidth);
-                    check(Printer.getRecNearEnd(), JposConst.JPOS_E_FAILURE, "Paper near end");
-                    check(Printer.getCapCoverSensor() &&Printer.getCoverOpen(), JposConst.JPOS_E_FAILURE, "Cover open");
-                    check(Printer.getPowerState() != JposConst.JPOS_SUE_POWER_ONLINE, JposConst.JPOS_E_FAILURE, "Printer off or offline");
+                    check(Printer.getRecNearEnd(), JPOS_E_FAILURE, "Paper near end");
+                    check(Printer.getCapCoverSensor() &&Printer.getCoverOpen(), JPOS_E_FAILURE, "Cover open");
+                    check(Printer.getPowerState() != JPOS_SUE_POWER_ONLINE, JPOS_E_FAILURE, "Printer off or offline");
                 } catch (JposException e) {
-                    throw new JposException(JposConst.JPOS_E_FAILURE, "Printer access error: " + e.getMessage(), e);
+                    throw new JposException(JPOS_E_FAILURE, "Printer access error: " + e.getMessage(), e);
                 }
             }
             super.init();
@@ -554,54 +556,44 @@ public class Device extends JposDevice implements Runnable{
         @Override
         void setTicket(int count, String contents) {
             try {
-                Count = count;
-                Contents = contents;
                 if (Conversion.length() > 0) {
                     try {
-                        byte[] source = Contents.getBytes(Conversion);
+                        byte[] source = contents.getBytes(Conversion);
                         char[] target = new char[source.length];
                         for (int i = 0; i < source.length; i++) {
                             target[i] = (char) source[i];
                         }
-                        Contents = new String(target);
+                        contents = new String(target);
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
                 }
-                Contents = Contents + "\33|fP";
+                contents = contents + "\33|fP";
                 while(true) {
                     SyncObject waiter = new SyncObject();
                     synchronized (this) {
                         (CleaningEndWaiter = waiter).suspend(0);
                     }
                     try {
-                        Printer.printNormal(POSPrinterConst.PTR_S_RECEIPT, "\33|N" + (count == 1 ? Contents : Contents + Contents));
+                        Printer.printNormal(PTR_S_RECEIPT, "\33|N" + (count == 1 ? contents : contents + contents));
                         break;
                     } catch (JposException e) {
-                        if (e.getErrorCode() == JposConst.JPOS_E_EXTENDED && e.getErrorCodeExtended() == POSPrinterConst.JPOS_EPTR_REC_HEAD_CLEANING)
-                            waiter.suspend(SyncObject.INFINITE);
+                        if (e.getErrorCode() == JPOS_E_EXTENDED && e.getErrorCodeExtended() == JPOS_EPTR_REC_HEAD_CLEANING)
+                            waiter.suspend(INFINITE);
                         else {
                             synchronized (this) {
                                 CleaningEndWaiter = null;
                             }
                             String message = "Check Printer";
-                            if (e.getErrorCode() != JposConst.JPOS_E_EXTENDED) {
+                            if (e.getErrorCode() != JPOS_E_EXTENDED) {
                                 switch (e.getErrorCodeExtended()) {
-                                    case POSPrinterConst.JPOS_EPTR_COVER_OPEN:
-                                        message = "Close Printer Cover";
-                                        break;
-                                    case POSPrinterConst.JPOS_EPTR_REC_CARTRIDGE_EMPTY:
-                                        message = "Change Color Cartridge";
-                                        break;
-                                    case POSPrinterConst.JPOS_EPTR_REC_CARTRIDGE_REMOVED:
-                                        message = "Insert Color Cartridge";
-                                        break;
-                                    case POSPrinterConst.JPOS_EPTR_REC_EMPTY:
-                                        message = "Insert Paper";
-                                        break;
+                                    case JPOS_EPTR_COVER_OPEN -> message = "Close Printer Cover";
+                                    case JPOS_EPTR_REC_CARTRIDGE_EMPTY -> message = "Change Color Cartridge";
+                                    case JPOS_EPTR_REC_CARTRIDGE_REMOVED -> message = "Insert Color Cartridge";
+                                    case JPOS_EPTR_REC_EMPTY -> message = "Insert Paper";
                                 }
                             }
-                            synchronizedMessageBox(message, "Printer Error", JOptionPane.ERROR_MESSAGE);
+                            synchronizedMessageBox(message, "Printer Error", ERROR_MESSAGE);
                         }
                     }
                 }
@@ -613,15 +605,14 @@ public class Device extends JposDevice implements Runnable{
         @Override
         public void statusUpdateOccurred(StatusUpdateEvent statusUpdateEvent) {
             switch (statusUpdateEvent.getStatus()) {
-                case POSPrinterConst.PTR_SUE_REC_CARTDRIGE_OK:
-                case POSPrinterConst.PTR_SUE_REC_CARTRIDGE_EMPTY:
-                case POSPrinterConst.PTR_SUE_REC_CARTRIDGE_NEAREMPTY:
+                case PTR_SUE_REC_CARTDRIGE_OK, PTR_SUE_REC_CARTRIDGE_EMPTY, PTR_SUE_REC_CARTRIDGE_NEAREMPTY -> {
                     synchronized (this) {
                         if (CleaningEndWaiter != null) {
                             CleaningEndWaiter.signal();
                             CleaningEndWaiter = null;
                         }
                     }
+                }
             }
         }
     }
@@ -638,7 +629,7 @@ public class Device extends JposDevice implements Runnable{
 
     private class DisplayViaLD extends DisplayOutput {
         private LineDisplay Display;
-        private String Conversion = new String("");
+        private String Conversion = ANSI;
         DisplayViaLD() throws JposException {
             super();
             Display = new LineDisplay();
@@ -670,21 +661,21 @@ public class Device extends JposDevice implements Runnable{
                     if (Display.getCapMapCharacterSet()) {
                         Display.setMapCharacterSet(true);
                     }
-                    else if (member(String.valueOf(LineDisplayConst.DISP_CS_UNICODE), Display.getCharacterSetList().split(","))) {
-                        Display.setCharacterSet(LineDisplayConst.DISP_CS_UNICODE);
+                    else if (member(String.valueOf(DISP_CS_UNICODE), Display.getCharacterSetList().split(","))) {
+                        Display.setCharacterSet(DISP_CS_UNICODE);
                     }
                     else if (!Display.getMapCharacterSet()) {
-                        if (member(String.valueOf(LineDisplayConst.DISP_CS_ANSI), Display.getCharacterSetList().split(","))) {
-                            Display.setCharacterSet(LineDisplayConst.DISP_CS_ANSI);
+                        if (member(String.valueOf(DISP_CS_ANSI), Display.getCharacterSetList().split(","))) {
+                            Display.setCharacterSet(DISP_CS_ANSI);
                             Conversion = ANSI;
                         }
                         else {
-                            Display.setCharacterSet(LineDisplayConst.DISP_CS_ASCII);
+                            Display.setCharacterSet(DISP_CS_ASCII);
                             Conversion = ASCII;
                         }
                     }
                 } catch (JposException e) {
-                    throw new JposException(JposConst.JPOS_E_FAILURE, "Display access error: " + e.getMessage(), e);
+                    throw new JposException(JPOS_E_FAILURE, "Display access error: " + e.getMessage(), e);
                 }
             }
             super.init();
@@ -695,8 +686,8 @@ public class Device extends JposDevice implements Runnable{
             super.setLine(number, contents);
             if (Active) {
                 if (Display != null) {
-                    int[] row = new int[]{number};
-                    String[] data = new String[1];
+                    int[] row = {number};
+                    String[] data = {null};
                     try {
                         if (setLineData(row, data, Display.getDeviceRows(), Display.getDeviceColumns())) {
                             displayTextLine(row[0], data[0]);
@@ -723,8 +714,8 @@ public class Device extends JposDevice implements Runnable{
                     e.printStackTrace();
                 }
             }
-            if (Display.getState() != JposConst.JPOS_S_CLOSED && Display.getDeviceEnabled())
-                Display.displayTextAt(number, 0, s, LineDisplayConst.DISP_DT_NORMAL);
+            if (Display.getState() != JPOS_S_CLOSED && Display.getDeviceEnabled())
+                Display.displayTextAt(number, 0, s, DISP_DT_NORMAL);
         }
 
         @Override
@@ -749,8 +740,8 @@ public class Device extends JposDevice implements Runnable{
         void setLine(int number, String contents) {
             super.setLine(number, contents);
             if (Active) {
-                int[] row = new int[]{number};
-                String[] data = new String[1];
+                int[] row = {number};
+                String[] data = {null};
                 if (setLineData(row, data, DisplayLines, DisplayWidth)) {
                     try {
                         handleEvent(new JposDirectIOEvent(getClaimingInstance(ClaimedCAT, 0).EventSource, CAT_CMD_DISPLAY, row[0], data[0]));
@@ -789,13 +780,13 @@ public class Device extends JposDevice implements Runnable{
         electronicJournalInit(JournalPath.length() == 0 || Ticket instanceof TicketViaPrt ? 0 : 2);
         PhysicalDeviceDescription = "CAT simulator for TCP";
         PhysicalDeviceName = "CAT Simulator";
-        CapPowerReporting = JposConst.JPOS_PR_STANDARD;
+        CapPowerReporting = JPOS_PR_STANDARD;
     }
 
     @Override
     public void checkProperties(JposEntry entry) throws JposException {
-        check(Display == null, JposConst.JPOS_E_ILLEGAL, "Invalid DisplayName property: " + DisplayName);
-        check(Ticket == null, JposConst.JPOS_E_ILLEGAL, "Invalid JournalPath property: " + JournalPath);
+        check(Display == null, JPOS_E_ILLEGAL, "Invalid DisplayName property: " + DisplayName);
+        check(Ticket == null, JPOS_E_ILLEGAL, "Invalid JournalPath property: " + JournalPath);
         super.checkProperties(entry);
         try {
             Object o;
@@ -815,15 +806,15 @@ public class Device extends JposDevice implements Runnable{
             if ((o = entry.getPropertyValue("DisplayLines")) != null && (value = Integer.parseInt(o.toString())) >= 0 && MinDisplayLines <= value && value <= MaxDisplayLines)
                 DisplayLines = value;
             if ((o = entry.getPropertyValue("JournalPath")) != null)
-                check(!JournalPath.equals(o.toString()), JposConst.JPOS_E_ILLEGAL, "Inconsistent JournalPath properties: \"" + JournalPath + "\" - \"" + o.toString() + "\"");
+                check(!JournalPath.equals(o.toString()), JPOS_E_ILLEGAL, "Inconsistent JournalPath properties: \"" + JournalPath + "\" - \"" + o.toString() + "\"");
             if ((o = entry.getPropertyValue("JournalMaxSize")) != null && (value = Integer.parseInt(o.toString())) >= 0)
                 JournalMaxSize = value;
             if ((o = entry.getPropertyValue("JournalLowSize")) != null && (value = Integer.parseInt(o.toString())) >= 0 && JournalMaxSize <= value)
                 JournalLowSize = value;
             if ((o = entry.getPropertyValue("DisplayName")) != null)
-                check(!DisplayName.equals(o.toString()), JposConst.JPOS_E_ILLEGAL, "Inconsistent DisplayName properties: \"" + DisplayName + "\" - \"" + o.toString() + "\"");
+                check(!DisplayName.equals(o.toString()), JPOS_E_ILLEGAL, "Inconsistent DisplayName properties: \"" + DisplayName + "\" - \"" + o.toString() + "\"");
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property", e);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property", e);
         }
         Ticket.prepare();
     }
@@ -848,7 +839,7 @@ public class Device extends JposDevice implements Runnable{
         props.CapRetrieveCurrentMarker = true;
         props.CapRetrieveMarkerByDateTime = true;
         props.CapRetrieveMarkersDateTime = true;
-        props.MediumSizeDef = (JournalMaxSize * JournalWidth * JRN_MAX_LINE_COUNT + Ticket.HEADSIZE) * CURRENCYFACTOR;
+        props.MediumSizeDef = (JournalMaxSize * JournalWidth * JRN_MAX_LINE_COUNT + TicketOutput.HEADSIZE) * CURRENCYFACTOR;
     }
 
     @Override
@@ -873,9 +864,8 @@ public class Device extends JposDevice implements Runnable{
          */
         char ResultHead = 0;
 
-        private SyncObject FrameReader = new SyncObject();
+        private final SyncObject FrameReader = new SyncObject();
         private String TheFrame = null;
-        final private int BIGTIMEOUT = 1000000000;  // One billion milliseconds
 
         StreamReader(String name) {
             super(name);
@@ -883,11 +873,14 @@ public class Device extends JposDevice implements Runnable{
         }
 
         @Override
+        @SuppressWarnings({"LoopConditionNotUpdatedInsideLoop", "ThrowableInstanceNeverThrown"})
         public void run() {
             TcpClientIOProcessor stream = OutStream;
-            byte[] frame = new byte[0];
+            byte[] frame = {};
             while (stream != null) {
                 try {
+                    // One billion milliseconds
+                    int BIGTIMEOUT = 1000000000;
                     stream.setTimeout(frame.length == 0 ? BIGTIMEOUT : CharacterTimeout);
                     byte[] part1 = stream.read(1);
                     if (part1.length > 0) {
@@ -898,7 +891,7 @@ public class Device extends JposDevice implements Runnable{
                         System.arraycopy(part2, 0, data, frame.length + part1.length, part2.length);
                         for (int i = frame.length; i < data.length; i++) {
                             if (data[i] == ETX) {
-                                processFrame(new String(Arrays.copyOf(data, i), UTF8));
+                                processFrame(new String(Arrays.copyOf(data, i), StandardCharsets.UTF_8));
                                 data = Arrays.copyOfRange(data, i + 1, data.length);
                                 i = -1;
                             }
@@ -906,7 +899,7 @@ public class Device extends JposDevice implements Runnable{
                         frame = data;
                     }
                     else if (frame.length > 0) {
-                        log(Level.DEBUG, ID + ": Incomplete frame discarded.");
+                        log(DEBUG, ID + ": Incomplete frame discarded.");
                         frame = new byte[0];
                     }
                 } catch (JposException e) {
@@ -987,7 +980,7 @@ public class Device extends JposDevice implements Runnable{
             if (!FrameReader.suspend(timeout) && (stream = OutStream) != null) {
                 try {
                     stream.write(new byte[]{'a', ETX});
-                } catch (JposException e) {}
+                } catch (JposException ignored) {}
             }
             synchronized(this) {
                 String response = TheFrame;
@@ -1004,6 +997,7 @@ public class Device extends JposDevice implements Runnable{
      * Closes the port
      * @return In case of an IO error, the corresponding exception. Otherwise null
      */
+    @SuppressWarnings("UnusedReturnValue")
     JposException closePort() {
         JposException e = null;
         if (OutStream != null) {
@@ -1042,6 +1036,7 @@ public class Device extends JposDevice implements Runnable{
      * @param timeout  Timeout for whole operation.
      * @return JposException in case of communication error, String containing the response otherwise.
      */
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     public Object sendRecv(String command, char resptype, int timeout) {
         TcpClientIOProcessor stream;
         StreamReader reader;
@@ -1056,15 +1051,15 @@ public class Device extends JposDevice implements Runnable{
             reader = ReadThread;
         }
         try {
-            byte[] request = (command + "\3").getBytes(UTF8);
+            byte[] request = (command + "\3").getBytes(StandardCharsets.UTF_8);
             reader.prepareReadResponse(resptype);
             stream.write(request);
             return resptype == 0 ? "" : reader.readFrame(timeout);
         } catch (Exception e) {
-            log(Level.TRACE, ID + ": IO error: " + e.getMessage());
+            log(TRACE, ID + ": IO error: " + e.getMessage());
             closePort();
             InIOError = true;
-            return e instanceof JposException ? (JposException)e : new JposException(JposConst.JPOS_E_ILLEGAL, UniqueIOProcessor.IOProcessorError, e.getMessage());
+            return e instanceof JposException ? (JposException)e : new JposException(JPOS_E_ILLEGAL, IOProcessorError, e.getMessage());
         }
     }
 
@@ -1072,6 +1067,7 @@ public class Device extends JposDevice implements Runnable{
      * Method to send an abort command without waiting for the response.
      * @return JposException in error case, null if no error occurred.
      */
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     public Object sendAbort() {
         TcpClientIOProcessor stream;
         synchronized(this) {
@@ -1084,14 +1080,14 @@ public class Device extends JposDevice implements Runnable{
             stream = OutStream;
         }
         try {
-            byte[] request = ("a\3").getBytes(UTF8);
+            byte[] request = ("a\3").getBytes(StandardCharsets.UTF_8);
             stream.write(request);
             return "";
         } catch (Exception e) {
-            log(Level.TRACE, ID + ": IO error: " + e.getMessage());
+            log(TRACE, ID + ": IO error: " + e.getMessage());
             closePort();
             InIOError = true;
-            return e instanceof JposException ? (JposException)e : new JposException(JposConst.JPOS_E_ILLEGAL, UniqueIOProcessor.IOProcessorError, e.getMessage());
+            return e instanceof JposException ? (JposException)e : new JposException(JPOS_E_ILLEGAL, IOProcessorError, e.getMessage());
         }
     }
 
@@ -1115,7 +1111,7 @@ public class Device extends JposDevice implements Runnable{
             throw (JposException) o;
         String resp = (String) o;
         if (resp.length() == 0)
-            throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
+            throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
         // This function fails only if the terminal is just in the requested state. Therefore, errors will be ignored.
     }
 
@@ -1132,15 +1128,12 @@ public class Device extends JposDevice implements Runnable{
             throw (JposException) o;
         String resp = (String) o;
         if (resp.length() == 0)
-            throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
+            throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
         int code = Integer.parseInt(resp.substring(1));
         switch (code) {
-            case 4:
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_RESET, "Terminal locked");
-            case 6:
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "Confirmation requested");
-            case 7:
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "Authorization just activated");
+            case 4 -> throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Terminal locked");
+            case 6 -> throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Confirmation requested");
+            case 7 -> throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Authorization just activated");
         }
     }
 
@@ -1156,28 +1149,28 @@ public class Device extends JposDevice implements Runnable{
 
     /**
      * Transaction confirmation. Will be requested after signature-based sale authorization.
-     * @param transno   Transaction number of corresponding sale transaction.
-     * @param committed True if confirmation was successful, false if confirmation failed
-     * @param timeout   Timeout for answer-back.
-     * @throws JposException    Communication error or terminal in wrong state.
+     *
+     * @param transno Transaction number of corresponding sale transaction.
+     * @param timeout Timeout for answer-back.
+     * @throws JposException Communication error or terminal in wrong state.
      */
-    void confirm(int transno, boolean committed, int timeout) throws JposException {
-        Object o = sendRecv(String.format("c%d\2%d", transno, committed ? 1 : 0), 'E', timeout);
+    void confirm(int transno, int timeout) throws JposException {
+        Object o = sendRecv(String.format("c%d\2%d", transno, 1), 'E', timeout);
         if (o instanceof JposException)
             throw (JposException) o;
         String resp = (String) o;
         if (resp.length() == 0)
-            throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
+            throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
         int code = Integer.parseInt(resp.substring(1));
         switch (code) {
-            case 4: // Device locked:
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_RESET, "Terminal locked");
-            case 5: // Not in transaction: Ignore.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "Not in transaction");
-            case 7: // No confirmation requested.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "No confirmation requested");
-            case 8: // Invalid transaction number:
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, code, "Invalid transaction number: " + transno);
+            case 4 -> // Device locked:
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Terminal locked");
+            case 5 -> // Not in transaction: Ignore.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Not in transaction");
+            case 7 -> // No confirmation requested.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "No confirmation requested");
+            case 8 -> // Invalid transaction number:
+                    throw new JposException(JPOS_E_ILLEGAL, code, "Invalid transaction number: " + transno);
         }
     }
 
@@ -1194,24 +1187,24 @@ public class Device extends JposDevice implements Runnable{
             throw (JposException) o;
         String resp = (String) o;
         if (resp.length() == 0)
-            throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
+            throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
         int codeEndIndex = resp.indexOf(STX);
         int code = Integer.parseInt(resp.substring(1, codeEndIndex > 0 ? codeEndIndex : resp.length()));
         switch (code) {
-            case 4: // Device locked:
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_RESET, "Terminal locked");
-            case 5: // Not in transaction: Ignore.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "Not in transaction");
-            case 6: // Waiting for commit.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "Waiting for commit");
-            case 7: // No confirmation requested.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "Authorization active");
-            case 3: // Operation abort confirmed
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "Authorization aborted");
-            case 0: // Transaction OK
-            case 1: // Wait for commit
-            case 2: // Authorization failure
-                setTransactionProperties(refund ? 1 : 0, resp);
+            case 4 -> // Device locked:
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Terminal locked");
+            case 5 -> // Not in transaction: Ignore.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Not in transaction");
+            case 6 -> // Waiting for commit.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Waiting for commit");
+            case 7 -> // No confirmation requested.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Authorization active");
+            case 3 -> // Operation abort confirmed
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Authorization aborted");
+            // Transaction OK
+            // Wait for commit
+            case 0, 1, 2 -> // Authorization failure
+                    setTransactionProperties(refund ? 1 : 0, resp);
         }
     }
 
@@ -1227,24 +1220,24 @@ public class Device extends JposDevice implements Runnable{
             throw (JposException) o;
         String resp = (String) o;
         if (resp.length() == 0)
-            throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
+            throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
         int codeEndIndex = resp.indexOf(STX);
         int code = Integer.parseInt(resp.substring(1, codeEndIndex > 0 ? codeEndIndex : resp.length()));
         switch (code) {
-            case 4: // Device locked:
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_RESET, "Terminal locked");
-            case 5: // Not in transaction: Ignore.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "Not in transaction");
-            case 6: // Waiting for commit.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "Waiting for commit");
-            case 7: // No confirmation requested.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "Authorization active");
-            case 8: // No confirmation requested.
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, code, "Invalid transaction: " + transno);
-            case 0: // Transaction OK
-            case 1: // Wait for commit
-            case 2: // Authorization failure
-                setTransactionProperties(2, resp);
+            case 4 -> // Device locked:
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Terminal locked");
+            case 5 -> // Not in transaction: Ignore.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Not in transaction");
+            case 6 -> // Waiting for commit.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Waiting for commit");
+            case 7 -> // No confirmation requested.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Authorization active");
+            case 8 -> // No confirmation requested.
+                    throw new JposException(JPOS_E_ILLEGAL, code, "Invalid transaction: " + transno);
+            // Transaction OK
+            // Wait for commit
+            case 0, 1, 2 -> // Authorization failure
+                    setTransactionProperties(2, resp);
         }
     }
 
@@ -1271,51 +1264,50 @@ public class Device extends JposDevice implements Runnable{
             try {
                 props.Balance = (long) (Double.parseDouble(params[2]) * 10000);
             } catch (Exception e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, 0, "Illegal balance (" + params[2] + "): " + e.getMessage());
+                throw new JposException(JPOS_E_ILLEGAL, 0, "Illegal balance (" + params[2] + "): " + e.getMessage());
             }
             props.CardCompanyID = params[4];
             props.AccountNumber = params[5];
             props.ApprovalCode = params[6];
             props.AdditionalSecurityInformation = params[7];
             props.SlipNumber = params[8].substring(0, 8) + params[8].substring(9);
-            props.PaymentMedia = CATConst.CAT_MEDIA_CREDIT;
-            props.PaymentCondition = CATConst.CAT_PAYMENT_DEBIT;
+            props.PaymentMedia = CAT_MEDIA_CREDIT;
+            props.PaymentCondition = CAT_PAYMENT_DEBIT;
             switch (what) {
-                case 0: // Sale transaction
-                    props.TransactionType = CATConst.CAT_TRANSACTION_SALES;
-                    break;
-                case 1: // Refund operation
-                    props.TransactionType = CATConst.CAT_TRANSACTION_REFUND;
-                    break;
-                case 2: // Void operation
-                    props.TransactionType = CATConst.CAT_TRANSACTION_VOID;
+                case 0 -> // Sale transaction
+                        props.TransactionType = CAT_TRANSACTION_SALES;
+                case 1 -> // Refund operation
+                        props.TransactionType = CAT_TRANSACTION_REFUND;
+                case 2 -> // Void operation
+                        props.TransactionType = CAT_TRANSACTION_VOID;
             }
             switch (Integer.parseInt(params[0])) {
-                case 100:   // Abort by user
-                    throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_RESET, "Aborted by customer");
-                case 101:   // Card locked
-                    throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_CENTERERROR, "Card locked");
-                case 102:   // Retain card
-                    throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_CENTERERROR, "Retain card");
-                case 103:   // Card error
-                    throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_CENTERERROR, "Card error");
-                case 104:   // Approval error
-                    throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_CENTERERROR, "Approval error");
+                case 100 ->   // Abort by user
+                        throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Aborted by customer");
+                case 101 ->   // Card locked
+                        throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_CENTERERROR, "Card locked");
+                case 102 ->   // Retain card
+                        throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_CENTERERROR, "Retain card");
+                case 103 ->   // Card error
+                        throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_CENTERERROR, "Card error");
+                case 104 ->   // Approval error
+                        throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_CENTERERROR, "Approval error");
             }
         }
         else
-            throw new JposException(JposConst.JPOS_E_EXTENDED, CATConst.JPOS_ECAT_COMMANDERROR, "Invalid response: " + resp);
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Invalid response: " + resp);
     }
 
     @Override
+    @SuppressWarnings({"ThrowableInstanceNeverThrown", "resource"})
     public void run() {
         UniqueIOProcessor oldstream = null;
         UniqueIOProcessor currentStream = null;
         try {
             oldstream = new UniqueIOProcessor(this, "");
-        } catch (JposException e) {}
+        } catch (JposException ignored) {}
         JposCommonProperties props;
-        while (!ToBeFinished) {
+        while (!StateWatcher.ToBeFinished) {
             StreamReader reader;
             synchronized (this) {
                 if (OutStream == null)
@@ -1327,7 +1319,7 @@ public class Device extends JposDevice implements Runnable{
                 oldstream = currentStream;
                 if ((props = getClaimingInstance(ClaimedCAT, 0)) != null) {
                     try {
-                        handleEvent(new JposStatusUpdateEvent(props.EventSource, oldstream == null ? JposConst.JPOS_SUE_POWER_OFF_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE));
+                        handleEvent(new JposStatusUpdateEvent(props.EventSource, oldstream == null ? JPOS_SUE_POWER_OFF_OFFLINE : JPOS_SUE_POWER_ONLINE));
                     } catch (JposException e) {
                         e.printStackTrace();
                     }

@@ -17,10 +17,11 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.scale;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import de.gmxhome.conrad.jpos.jpos_base.JposInputRequest;
-import jpos.JposConst;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * Input request executor for Scale method ReadWeight.
@@ -43,7 +44,7 @@ public class ReadWeight extends JposInputRequest {
     public int getTimeout() {
         return Timeout;
     }
-    private int Timeout;
+    private final int Timeout;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -61,10 +62,9 @@ public class ReadWeight extends JposInputRequest {
 
     @Override
     public void invoke() throws JposException {
-        Props.Device.check(Timeout < 0  && Timeout != JposConst.JPOS_FOREVER && EndSync != null, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + Timeout);
+        check(Timeout < 0  && Timeout != JPOS_FOREVER && EndSync != null, JPOS_E_ILLEGAL, "Invalid timeout: " + Timeout);
         ((ScaleService)Props.EventSource).ScaleInterface.readWeight(this);
         if (EndSync == null) {
-            ScaleProperties data = (ScaleProperties) Props;
             Props.Device.handleEvent(new ScaleDataEvent(Props.EventSource, WeightData, -1, SalesPrice, -1));
         }
     }

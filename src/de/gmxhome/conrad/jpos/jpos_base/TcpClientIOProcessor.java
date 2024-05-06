@@ -16,9 +16,7 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
-import jpos.JposConst;
 import jpos.JposException;
-import net.bplaced.conrad.log4jpos.Level;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -26,6 +24,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
+
+import static jpos.JposConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * Class to process TCP client communication. Includes functionality for automatic
@@ -49,7 +50,7 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
             int idx = 0;
             if (addr.charAt(0) != '[' || (idx = addr.indexOf(']')) < 0 || addr.indexOf(']',idx + 1) >= 0
                     || (splitaddr = addr.substring(idx).split(":")).length != 2 || !splitaddr[0].equals("]")) {
-                logerror("TcpClientIOProcessor", JposConst.JPOS_E_ILLEGAL, addr + " invalid: Format must be ip:port");
+                logerror("TcpClientIOProcessor", JPOS_E_ILLEGAL, addr + " invalid: Format must be ip:port");
             } else {
                 splitaddr[0] = addr.substring(1, idx);
             }
@@ -57,12 +58,12 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
         int port;
         try {
             if ((port = Integer.parseInt(splitaddr[1])) <= 0 || port > 0xffff)
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, splitaddr[1] + " invalid: Must be between 1 and 65535");
+                throw new JposException(JPOS_E_ILLEGAL, IOProcessorError, splitaddr[1] + " invalid: Must be between 1 and 65535");
             TargetIP = InetAddress.getByName(splitaddr[0]);
             TargetPort = port;
             InitialPort = getTarget();
         } catch (Exception e) {
-            logerror("TcpClientIOProcessor", JposConst.JPOS_E_FAILURE, e);
+            logerror("TcpClientIOProcessor", JPOS_E_FAILURE, e);
         }
     }
 
@@ -94,7 +95,7 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
      */
     public void setParam(int ownport) throws JposException {
         if (ownport < 0 || ownport > 0xffff)
-            logerror("SetParam", JposConst.JPOS_E_ILLEGAL, "Invalid port: " + ownport + ", must be between 0 and 65535");
+            logerror("SetParam", JPOS_E_ILLEGAL, "Invalid port: " + ownport + ", must be between 0 and 65535");
         OwnPort = ownport;
     }
 
@@ -106,7 +107,7 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
      */
     public void setParam(int ownport, int connectTimeout) throws JposException {
         if (connectTimeout <= 0)
-            logerror("SetParam", JposConst.JPOS_E_ILLEGAL, "Invalid connect timeout: " + connectTimeout + ", must be > 0");
+            logerror("SetParam", JPOS_E_ILLEGAL, "Invalid connect timeout: " + connectTimeout + ", must be > 0");
         setParam(ownport);
         ConnectTimeout = connectTimeout;
     }
@@ -114,7 +115,7 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
     @Override
     public String setTarget(String target) throws JposException {
         if (!target.equals(Port))
-            logerror("SetTarget", JposConst.JPOS_E_ILLEGAL, "Target must match " + Port);
+            logerror("SetTarget", JPOS_E_ILLEGAL, "Target must match " + Port);
         return Target;
     }
 
@@ -122,11 +123,11 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
     public int write(byte[] buffer) throws JposException {
         synchronized (WriteSynchronizer) {
             if (Sock == null)
-                logerror("Write", JposConst.JPOS_E_ILLEGAL, "Socket not connected");
+                logerror("Write", JPOS_E_ILLEGAL, "Socket not connected");
             try {
                 Sock.getOutputStream().write(buffer);
             } catch (IOException e) {
-                logerror("Write", JposConst.JPOS_E_FAILURE, e);
+                logerror("Write", JPOS_E_FAILURE, e);
             }
             return super.write(buffer);
         }
@@ -135,11 +136,11 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
     @Override
     public int available() throws JposException {
         if (Sock == null)
-            logerror("Available", JposConst.JPOS_E_ILLEGAL, "Socket not connected");
+            logerror("Available", JPOS_E_ILLEGAL, "Socket not connected");
         try {
             LoggingData = String.valueOf(Sock.getInputStream().available()).getBytes();
         } catch (IOException e) {
-            logerror("Available", JposConst.JPOS_E_FAILURE, e);
+            logerror("Available", JPOS_E_FAILURE, e);
         }
         return super.available();
     }
@@ -148,7 +149,7 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
     public byte[] read(int count) throws JposException {
         synchronized(ReadSynchronizer) {
             if (Sock == null)
-                logerror("Read", JposConst.JPOS_E_ILLEGAL, "Socket not connected");
+                logerror("Read", JPOS_E_ILLEGAL, "Socket not connected");
             try {
                 Sock.setSoTimeout(Timeout);
                 long start = System.currentTimeMillis();
@@ -156,29 +157,30 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
                 if (len > 0 || (Timeout >= 0 && System.currentTimeMillis() - start >= Timeout))
                     LoggingData = len > 0 ? Arrays.copyOf(LoggingData, len) : new byte[0];
                 else
-                    logerror("Read", JposConst.JPOS_E_FAILURE, "Bad socket: Timeout not working ");
+                    logerror("Read", JPOS_E_FAILURE, "Bad socket: Timeout not working ");
             } catch (SocketTimeoutException e) {
                 LoggingData = new byte[0];
             } catch (IOException e) {
-                logerror("Read", JposConst.JPOS_E_FAILURE, e);
+                logerror("Read", JPOS_E_FAILURE, e);
             }
             return super.read(count);
         }
     }
 
     @Override
+    @SuppressWarnings("unused")
     public void flush() throws JposException {
         synchronized(ReadSynchronizer) {
             if (Sock == null)
-                logerror("Flush", JposConst.JPOS_E_ILLEGAL, "Socket not connected");
+                logerror("Flush", JPOS_E_ILLEGAL, "Socket not connected");
             try {
                 Sock.setSoTimeout(1);
                 int count;
                 while ((count = Sock.getInputStream().available()) > 0) {
-                    Sock.getInputStream().read(new byte[count]);
+                    int got = Sock.getInputStream().read(new byte[count]);
                 }
             } catch (IOException e) {
-                logerror("Flush", JposConst.JPOS_E_FAILURE, e);
+                logerror("Flush", JPOS_E_FAILURE, e);
             }
             super.flush();
         }
@@ -189,8 +191,8 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
     @Override
     public void open(boolean noErrorLog) throws JposException {
         if (Sock != null) {
-            Dev.log(Level.ERROR, LoggingPrefix + "Open error: Socket just connected");
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, "Socket just connected");
+            Dev.log(ERROR, LoggingPrefix + "Open error: Socket just connected");
+            throw new JposException(JPOS_E_ILLEGAL, IOProcessorError, "Socket just connected");
         }
         try {
             Sock = new Socket();
@@ -200,21 +202,21 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
             super.open(noErrorLog);
         } catch (Exception e) {
             if (noErrorLog)
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, e.getMessage(), e);
-            logerror("Open", JposConst.JPOS_E_ILLEGAL, e);
+                throw new JposException(JPOS_E_ILLEGAL, IOProcessorError, e.getMessage(), e);
+            logerror("Open", JPOS_E_ILLEGAL, e);
         }
     }
 
     @Override
     public void close() throws JposException {
         if (Sock == null) {
-            Dev.log(Level.ERROR, LoggingPrefix + "Close error: Socket just closed");
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, "Socket just closed");
+            Dev.log(ERROR, LoggingPrefix + "Close error: Socket just closed");
+            throw new JposException(JPOS_E_ILLEGAL, IOProcessorError, "Socket just closed");
         }
         try {
             Sock.close();
         } catch (IOException e) {
-            logerror("Close", JposConst.JPOS_E_FAILURE, e);
+            logerror("Close", JPOS_E_FAILURE, e);
         }
         Sock = null;
         super.close();

@@ -19,7 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.cashchanger;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposBase;
 import de.gmxhome.conrad.jpos.jpos_base.JposDataEvent;
-import jpos.CashChangerConst;
+
+import static jpos.CashChangerConst.*;
 
 /**
  * Data event implementation for CashChanger devices.
@@ -29,13 +30,13 @@ public class CashChangerDataEvent extends JposDataEvent {
      * Holds the total of the cash accepted by the CashChanger. See UPOS specification, Chapter Cash Changer -
      * Properties - DepositCounts for details.
      */
-    public String Counts;
+    public final String Counts;
 
     /**
      * The total amount of deposited cash. See UPOS specification, Chapter Cash Changer - Properties - DepositAmount
      * for details.
      */
-    public int Amount;
+    public final int Amount;
 
     /**
      * Constructor. Parameters passed to base class unchanged.
@@ -56,7 +57,7 @@ public class CashChangerDataEvent extends JposDataEvent {
     public void setDataProperties() {
         super.setDataProperties();
         CashChangerProperties props = (CashChangerProperties) getPropertySet();
-        if (props.DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_START) {
+        if (props.DepositStatus == CHAN_STATUS_DEPOSIT_START) {
             props.DepositAmount = Amount;
             props.EventSource.logSet("DepositAmount");
             props.DepositCounts = Counts;

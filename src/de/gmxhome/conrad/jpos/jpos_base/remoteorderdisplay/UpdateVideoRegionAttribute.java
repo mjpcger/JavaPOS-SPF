@@ -31,7 +31,7 @@ public class UpdateVideoRegionAttribute extends ClearVideoRegion {
         return Function;
     }
 
-    private int Function;
+    private final int Function;
 
     /**
      * Constructor. Stores given parameters for later use.

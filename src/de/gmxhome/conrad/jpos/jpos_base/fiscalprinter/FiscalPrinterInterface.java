@@ -1668,7 +1668,6 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * <br>The default implementation should be called within derived methods to ensure that the property
      * PrinterState is updated as expected.
      *
-     *
      * @param request           Output request object returned by validation method that contains all parameters
      *                          to be used by PrintRecNotPaid.
      * @throws JposException    If an error occurs.

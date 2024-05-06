@@ -19,7 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.soundrecorder;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.JposException;
-import jpos.SoundRecorderConst;
+
+import static jpos.SoundRecorderConst.*;
 
 /**
  * Class containing the sound recorder specific properties, their default values and default implementations of
@@ -61,7 +62,7 @@ public class SoundRecorderProperties extends JposCommonProperties implements Sou
      * UPOS property CapStorage. Default: CST_HOST_ONLY. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int CapStorage = SoundRecorderConst.SREC_CST_HOST_ONLY;
+    public int CapStorage = SREC_CST_HOST_ONLY;
 
     /**
      * UPOS property Channel. Default: null. Can be overwritten by objects derived from JposDevice within the
@@ -123,7 +124,7 @@ public class SoundRecorderProperties extends JposCommonProperties implements Sou
      * UPOS property Storage. Default: an empty string. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int Storage = SoundRecorderConst.SREC_ST_HOST;
+    public int Storage = SREC_ST_HOST;
 
     /**
      * Constructor.
@@ -132,7 +133,6 @@ public class SoundRecorderProperties extends JposCommonProperties implements Sou
      */
     protected SoundRecorderProperties(int dev) {
         super(dev);
-        DeviceServiceVersion = 1016000;
 }
 
     @Override

@@ -25,12 +25,12 @@ public class POSPrinterException extends JposException {
     /**
      * Printer station. In case of asynchronous processing, this value will be passed to the ErrorStation property.
      */
-    public int Station;
+    public final int Station;
 
     /**
      * Error level. In case of asynchronous processing, this value will be passed to the ErrorLevel property.
      */
-    public int Level;
+    public final int Level;
 
     /**
      * Creates printer specific exception.

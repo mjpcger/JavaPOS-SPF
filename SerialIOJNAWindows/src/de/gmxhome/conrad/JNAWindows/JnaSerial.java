@@ -31,26 +31,28 @@ import java.nio.ByteBuffer;
 /**
  * Implementation of SerialIOAdapter using native Win32 OS calls via JNA.
  */
+@SuppressWarnings("unused")
 public class JnaSerial implements SerialIOAdapter {
 
-    private static interface Kernel32Ext extends Kernel32 {
+    private interface Kernel32Ext extends Kernel32 {
         boolean PurgeComm(HANDLE var1, int var2);
 
-        static final int PURGE_TXABORT = 1;
-        static final int PURGE_RXABORT = 2;
-        static final int PURGE_TXCLEAR = 4;
-        static final int PURGE_RXCLEAR = 8;
+        int PURGE_TXABORT = 1;
+        int PURGE_RXABORT = 2;
+        int PURGE_TXCLEAR = 4;
+        int PURGE_RXCLEAR = 8;
 
         boolean ClearCommError(HANDLE var1, IntByReference var2, WinBaseExt.COMSTAT var3);
         boolean WriteFile(HANDLE hd, ByteBuffer object, int length, IntByReference sent, OVERLAPPED ov);
         boolean ReadFile(HANDLE hd, ByteBuffer object, int length, IntByReference receiced, OVERLAPPED ov);
+        @SuppressWarnings("all")    // To avoid 'calls are always inverted' warning.
         boolean GetOverlappedResult(HANDLE hd, OVERLAPPED ov, IntByReference sentBytes, boolean b);
     }
 
     private interface WinBaseExt extends WinBase {
 
         @Structure.FieldOrder({"Flags", "cbInQue", "cbOutQue"})
-        public static class COMSTAT extends Structure {
+        class COMSTAT extends Structure {
             public int Flags;
             public int cbInQue;
             public int cbOutQue;
@@ -233,7 +235,7 @@ public class JnaSerial implements SerialIOAdapter {
     private void setTimeouts(int timeout) throws IOException {
         WinNT.HANDLE hd = checkOpened(true);
         WinBase.COMMTIMEOUTS tios = new WinBase.COMMTIMEOUTS();
-        final long MAXDWORD = 0xffffffffl;
+        final long MAXDWORD = 0xffffffffL;
         tios.WriteTotalTimeoutConstant.setValue(0);
         tios.WriteTotalTimeoutMultiplier.setValue(0);
         if (timeout >= 0) {

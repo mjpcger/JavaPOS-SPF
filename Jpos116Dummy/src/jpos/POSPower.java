@@ -22,17 +22,18 @@ import jpos.services.*;
 
 import java.util.Vector;
 
+@SuppressWarnings({"unused","SynchronizeOnNonFinalField"})
 public class POSPower extends BaseJposControl implements JposConst, POSPowerControl116 {
-    protected Vector directIOListeners;
-    protected Vector statusUpdateListeners;
+    protected Vector<DirectIOListener> directIOListeners;
+    protected Vector<StatusUpdateListener> statusUpdateListeners;
 
     private static final int v116 = deviceVersion115 + 1000;
 
     public POSPower() {
         deviceControlDescription = "JavaPOS POSPower Dummy Control";
         deviceControlVersion = deviceVersion115 + 1000;
-        directIOListeners = new Vector();
-        statusUpdateListeners = new Vector();
+        directIOListeners = new Vector<>();
+        statusUpdateListeners = new Vector<>();
     }
 
     protected class Callbacks implements EventCallbacks {
@@ -44,8 +45,8 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
         @Override
         public void fireDirectIOEvent(DirectIOEvent directIOEvent) {
             synchronized (directIOListeners) {
-                for (Object listener : directIOListeners)
-                    ((DirectIOListener) listener).directIOOccurred(directIOEvent);
+                for (DirectIOListener listener : directIOListeners)
+                    listener.directIOOccurred(directIOEvent);
             }
         }
 
@@ -60,8 +61,8 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
         @Override
         public void fireStatusUpdateEvent(StatusUpdateEvent statusUpdateEvent) {
             synchronized (statusUpdateListeners) {
-                for (Object listener : statusUpdateListeners)
-                    ((StatusUpdateListener)listener).statusUpdateOccurred(statusUpdateEvent);
+                for (StatusUpdateListener listener : statusUpdateListeners)
+                    listener.statusUpdateOccurred(statusUpdateEvent);
             }
         }
 
@@ -83,18 +84,16 @@ public class POSPower extends BaseJposControl implements JposConst, POSPowerCont
         } else {
             int version = 5;
             try {
-                service = (POSPowerService15) baseService; version++;
-                service = (POSPowerService16) baseService; version++;
-                service = (POSPowerService17) baseService; version++;
-                service = (POSPowerService18) baseService; version++;
-                service = (POSPowerService19) baseService; version++;
-                service = (POSPowerService110) baseService; version++;
-                service = (POSPowerService111) baseService; version++;
-                service = (POSPowerService112) baseService; version++;
-                service = (POSPowerService113) baseService; version++;
-                service = (POSPowerService114) baseService; version++;
-                service = (POSPowerService115) baseService; version++;
-                service = (POSPowerService116) baseService; version++;
+                for (Class<?> current : new Class<?>[]{POSPowerService15.class, POSPowerService16.class,
+                        POSPowerService17.class, POSPowerService18.class, POSPowerService19.class,
+                        POSPowerService110.class, POSPowerService111.class, POSPowerService112.class,
+                        POSPowerService113.class, POSPowerService114.class, POSPowerService115.class,
+                        POSPowerService116.class}) {
+                    if (current.isInstance(service))
+                        version++;
+                    else
+                        break;
+                }
             } catch (Exception e) {
                 if (i >= version * 1000 + 1000000)
                     throw new JposException(JPOS_E_NOSERVICE, "POSPowerService1" + version + " not fully implemented", e);

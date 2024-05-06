@@ -17,8 +17,7 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
-import jpos.JposConst;
-import jpos.JposException;
+import jpos.*;
 
 /**
  * Output request executor for common method DirectIO.
@@ -31,18 +30,18 @@ public class DirectIO extends JposOutputRequest {
     public int getCommand() {
         return Command;
     }
-    private int Command;
-    private int[] Data;
+    private final int Command;
+    private final int[] Data;
 
     /**
      * Common method DirectIO parameter data, see UPOS specification.
      */
-    public int Datum;
+    public final int Datum;
 
     /**
      * Common method DirectIO parameter object, see UPOS specification.
      */
-    public Object Object;
+    public final Object Object;
 
     /**
      * Constructor. Stores given parameters for later use.

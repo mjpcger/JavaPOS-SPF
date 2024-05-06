@@ -21,42 +21,43 @@ import jpos.events.*;
 import jpos.services.*;
 import java.util.Vector;
 
+@SuppressWarnings({"unused","SynchronizeOnNonFinalField"})
 public class SoundRecorder extends BaseJposControl implements JposConst, SoundRecorderControl116 {
-    protected Vector directIOListeners;
-    protected Vector statusUpdateListeners;
-    protected Vector dataListeners;
-    protected Vector errorListeners;
+    protected Vector<DirectIOListener> directIOListeners;
+    protected Vector<StatusUpdateListener> statusUpdateListeners;
+    protected Vector<DataListener> dataListeners;
+    protected Vector<ErrorListener> errorListeners;
     public SoundRecorder() {
         deviceControlDescription = "JavaPOS GestureControl Dummy Control";
         deviceControlVersion = deviceVersion115 + 1000;
-        directIOListeners = new Vector();
-        statusUpdateListeners = new Vector();
-        dataListeners = new Vector();
-        errorListeners = new Vector();
+        directIOListeners = new Vector<>();
+        statusUpdateListeners = new Vector<>();
+        dataListeners = new Vector<>();
+        errorListeners = new Vector<>();
     }
     protected class Callbacks implements EventCallbacks {
 
         @Override
         public void fireDataEvent(DataEvent dataEvent) {
             synchronized (dataListeners) {
-                for (Object listener : dataListeners)
-                    ((DataListener) listener).dataOccurred(dataEvent);
+                for (DataListener listener : dataListeners)
+                    listener.dataOccurred(dataEvent);
             }
         }
 
         @Override
         public void fireDirectIOEvent(DirectIOEvent directIOEvent) {
             synchronized (directIOListeners) {
-                for (Object listener : directIOListeners)
-                    ((DirectIOListener) listener).directIOOccurred(directIOEvent);
+                for (DirectIOListener listener : directIOListeners)
+                    listener.directIOOccurred(directIOEvent);
             }
         }
 
         @Override
         public void fireErrorEvent(ErrorEvent errorEvent) {
             synchronized (errorListeners) {
-                for (Object listener : errorListeners)
-                    ((ErrorListener) listener).errorOccurred(errorEvent);
+                for (ErrorListener listener : errorListeners)
+                    listener.errorOccurred(errorEvent);
             }
         }
 
@@ -67,8 +68,8 @@ public class SoundRecorder extends BaseJposControl implements JposConst, SoundRe
         @Override
         public void fireStatusUpdateEvent(StatusUpdateEvent statusUpdateEvent) {
             synchronized (statusUpdateListeners) {
-                for (Object listener : statusUpdateListeners)
-                    ((StatusUpdateListener)listener).statusUpdateOccurred(statusUpdateEvent);
+                for (StatusUpdateListener listener : statusUpdateListeners)
+                    listener.statusUpdateOccurred(statusUpdateEvent);
             }
         }
 
@@ -89,7 +90,13 @@ public class SoundRecorder extends BaseJposControl implements JposConst, SoundRe
         } else {
             int version = 16;
             try {
-                service = (SoundRecorderService116) baseService; version++;
+                for (Class<?> current : new Class<?>[]{SoundRecorderService116.class}) {
+                    if (current.isInstance(service))
+                        version++;
+                    else
+                        break;
+                }
+                service = baseService;
             } catch (Exception e) {
                 if (i >= version * 1000 + 1000000)
                     throw new JposException(JPOS_E_NOSERVICE, "GestureControlService1" + version + " not fully implemented", e);

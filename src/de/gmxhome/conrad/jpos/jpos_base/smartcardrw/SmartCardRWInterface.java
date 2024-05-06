@@ -17,9 +17,8 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.smartcardrw;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposBaseInterface;
-import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
 
 /**
  * Interface for methods that implement property setter and method calls for the SmartCardRW device category.

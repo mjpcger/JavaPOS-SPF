@@ -20,18 +20,21 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * ToneIndicator service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class ToneIndicatorService extends JposBase implements ToneIndicatorService115 {
+public class ToneIndicatorService extends JposBase implements ToneIndicatorService116 {
     /**
      * Instance of a class implementing the ToneIndicatorInterface for tone indicator specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public ToneIndicatorInterface ToneIndicatorInterface;
 
-    private ToneIndicatorProperties Data;
+    private final ToneIndicatorProperties Data;
 
     /**
      * Constructor. Stores property set and device driver implementation
@@ -77,7 +80,7 @@ public class ToneIndicatorService extends JposBase implements ToneIndicatorServi
     public void setMelodyType(int i) throws JposException {
         logPreSet("MelodyType");
         checkEnabled();
-        Device.checkRange(i, 0, Data.CapMelody, JposConst.JPOS_E_ILLEGAL, "Medody type out of range: " + i);
+        checkRange(i, 0, Data.CapMelody, JPOS_E_ILLEGAL, "Melody type out of range: " + i);
         ToneIndicatorInterface.melodyType(i);
         logSet("MelodyType");
     }
@@ -122,7 +125,7 @@ public class ToneIndicatorService extends JposBase implements ToneIndicatorServi
     public void setInterToneWait(int i) throws JposException {
         logPreSet("InterToneWait");
         checkEnabled();
-        Device.check(i < 0, JposConst.JPOS_E_ILLEGAL, "Negative InterToneWait");
+        check(i < 0, JPOS_E_ILLEGAL, "Negative InterToneWait");
         ToneIndicatorInterface.interToneWait(i);
         logSet("InterToneWait");
     }
@@ -219,11 +222,11 @@ public class ToneIndicatorService extends JposBase implements ToneIndicatorServi
 
     @Override
     public void sound(int numberOfCycles, int interSoundWait) throws JposException {
-        logPreCall("Sound", "" + numberOfCycles + ", " + interSoundWait);
+        logPreCall("Sound", removeOuterArraySpecifier(new Object[]{numberOfCycles, interSoundWait}, Device.MaxArrayStringElements));
         checkEnabledUnclaimed();
-        Device.check(numberOfCycles <= 0 && numberOfCycles != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid numberOfCycles");
-        Device.check(numberOfCycles == JposConst.JPOS_FOREVER && !Props.AsyncMode, JposConst.JPOS_E_ILLEGAL, "Invalid numberOfCycles");
-        Device.check(interSoundWait < 0, JposConst.JPOS_E_ILLEGAL, "Invalid interSoundWait specified");
+        check(numberOfCycles <= 0 && numberOfCycles != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid numberOfCycles");
+        check(numberOfCycles == JPOS_FOREVER && !Props.AsyncMode, JPOS_E_ILLEGAL, "Invalid numberOfCycles");
+        check(interSoundWait < 0, JPOS_E_ILLEGAL, "Invalid interSoundWait specified");
         if (callNowOrLater(ToneIndicatorInterface.sound(numberOfCycles, interSoundWait)))
             logAsyncCall("Sound");
         else

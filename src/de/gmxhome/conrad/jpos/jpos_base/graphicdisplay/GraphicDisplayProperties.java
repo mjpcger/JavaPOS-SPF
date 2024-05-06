@@ -18,11 +18,9 @@
 package de.gmxhome.conrad.jpos.jpos_base.graphicdisplay;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import jpos.GraphicDisplay;
-import jpos.GraphicDisplayConst;
-import jpos.JposException;
+import jpos.*;
 
-import java.awt.*;
+import static jpos.GraphicDisplayConst.*;
 
 public class GraphicDisplayProperties extends JposCommonProperties implements GraphicDisplayInterface {
     /**
@@ -53,7 +51,7 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
      * UPOS property CapStorage. Default: GDSP_CST_HARDTOTALS_ONLY. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int CapStorage = GraphicDisplayConst.GDSP_CST_HOST_ONLY;
+    public int CapStorage = GDSP_CST_HOST_ONLY;
 
     /**
      * UPOS property CapURLBack. Default: false. Can be overwritten by objects derived from JposDevice within the
@@ -83,7 +81,7 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
      * UPOS property DisplayMode. Default: GDSP_DMODE_HIDDEN. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int DisplayMode = GraphicDisplayConst.GDSP_DMODE_HIDDEN;
+    public int DisplayMode = GDSP_DMODE_HIDDEN;
 
     /**
      * UPOS property ImageType. Default: null. Can be overwritten by objects derived from JposDevice within the
@@ -108,7 +106,7 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
      * UPOS property Storage. Default: GDSP_ST_HOST. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int Storage = GraphicDisplayConst.GDSP_ST_HOST;
+    public int Storage = GDSP_ST_HOST;
 
     /**
      * UPOS property URL. Default: null. must be overwritten by objects derived from JposDevice before StatusUpdateEvent
@@ -142,7 +140,6 @@ public class GraphicDisplayProperties extends JposCommonProperties implements Gr
      */
     protected GraphicDisplayProperties(int dev) {
         super(dev);
-        DeviceServiceVersion = 1016000;
     }
 
     @Override

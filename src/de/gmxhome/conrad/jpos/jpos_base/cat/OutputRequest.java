@@ -29,7 +29,7 @@ public class OutputRequest extends JposOutputRequest {
     public String getAdditionalSecurityInformation() {
         return AdditionalSecurityInformation;
     }
-    private String AdditionalSecurityInformation;
+    private final String AdditionalSecurityInformation;
 
     /**
      * Returns contents of PaymentMedia when the output request has been generated.
@@ -38,7 +38,7 @@ public class OutputRequest extends JposOutputRequest {
     public int getPaymentMedia() {
         return PaymentMedia;
     }
-    private int PaymentMedia;
+    private final int PaymentMedia;
 
     /**
      * Returns contents of TrainingMode when the output request has been generated.
@@ -47,7 +47,7 @@ public class OutputRequest extends JposOutputRequest {
     public boolean getTrainingMode() {
         return TrainingMode;
     }
-    private boolean TrainingMode;
+    private final boolean TrainingMode;
 
     /**
      * Constructor. Stores given parameters for later use.

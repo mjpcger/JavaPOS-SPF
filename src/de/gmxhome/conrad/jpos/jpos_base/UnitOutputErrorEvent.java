@@ -16,8 +16,7 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
-import jpos.JposConst;
-import jpos.JposException;
+import static jpos.JposConst.*;
 
 /**
  * Subsystem unit output error event class. Holds unit and error message.
@@ -26,7 +25,7 @@ public class UnitOutputErrorEvent extends JposErrorEvent {
     /**
      * Subsystem units that forced the error. One bit per unit.
      */
-    public int Units;
+    public final int Units;
 
     /**
      * Constructor.
@@ -37,9 +36,8 @@ public class UnitOutputErrorEvent extends JposErrorEvent {
      * @param text      Error message. Value to be stored in property EventString.
      */
     public UnitOutputErrorEvent(JposBase source, int errorcode, int extended, int units, String text) {
-        super(source, errorcode, extended, JposConst.JPOS_EL_OUTPUT, text);
+        super(source, errorcode, extended, JPOS_EL_OUTPUT, text);
         Units = units;
-        Message = text;
     }
 
     UnitOutputErrorEvent(JposBase o, int errorcode, int extended, int locus, int units, String text) {

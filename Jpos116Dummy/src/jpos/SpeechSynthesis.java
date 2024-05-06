@@ -21,18 +21,19 @@ import jpos.events.*;
 import jpos.services.*;
 import java.util.Vector;
 
+@SuppressWarnings({"unused","SynchronizeOnNonFinalField"})
 public class SpeechSynthesis extends BaseJposControl implements JposConst, SpeechSynthesisControl116 {
-    protected Vector directIOListeners;
-    protected Vector statusUpdateListeners;
-    protected Vector errorListeners;
-    protected Vector outputCompleteListeners;
+    protected Vector<DirectIOListener> directIOListeners;
+    protected Vector<StatusUpdateListener> statusUpdateListeners;
+    protected Vector<ErrorListener> errorListeners;
+    protected Vector<OutputCompleteListener> outputCompleteListeners;
     public SpeechSynthesis() {
         deviceControlDescription = "JavaPOS SpeechSynthesis Dummy Control";
         deviceControlVersion = deviceVersion115 + 1000;
-        directIOListeners = new Vector();
-        statusUpdateListeners = new Vector();
-        errorListeners = new Vector();
-        outputCompleteListeners = new Vector();
+        directIOListeners = new Vector<>();
+        statusUpdateListeners = new Vector<>();
+        errorListeners = new Vector<>();
+        outputCompleteListeners = new Vector<>();
     }
     protected class Callbacks implements EventCallbacks {
 
@@ -43,32 +44,32 @@ public class SpeechSynthesis extends BaseJposControl implements JposConst, Speec
         @Override
         public void fireDirectIOEvent(DirectIOEvent directIOEvent) {
             synchronized (directIOListeners) {
-                for (Object listener : directIOListeners)
-                    ((DirectIOListener) listener).directIOOccurred(directIOEvent);
+                for (DirectIOListener listener : directIOListeners)
+                    listener.directIOOccurred(directIOEvent);
             }
         }
 
         @Override
         public void fireErrorEvent(ErrorEvent errorEvent) {
             synchronized (errorListeners) {
-                for (Object listener : errorListeners)
-                    ((ErrorListener) listener).errorOccurred(errorEvent);
+                for (ErrorListener listener : errorListeners)
+                    listener.errorOccurred(errorEvent);
             }
         }
 
         @Override
         public void fireOutputCompleteEvent(OutputCompleteEvent outputCompleteEvent) {
             synchronized (outputCompleteListeners) {
-                for (Object listener : outputCompleteListeners)
-                    ((OutputCompleteListener) listener).outputCompleteOccurred(outputCompleteEvent);
+                for (OutputCompleteListener listener : outputCompleteListeners)
+                    listener.outputCompleteOccurred(outputCompleteEvent);
             }
         }
 
         @Override
         public void fireStatusUpdateEvent(StatusUpdateEvent statusUpdateEvent) {
             synchronized (statusUpdateListeners) {
-                for (Object listener : statusUpdateListeners)
-                    ((StatusUpdateListener)listener).statusUpdateOccurred(statusUpdateEvent);
+                for (StatusUpdateListener listener : statusUpdateListeners)
+                    listener.statusUpdateOccurred(statusUpdateEvent);
             }
         }
 
@@ -89,7 +90,13 @@ public class SpeechSynthesis extends BaseJposControl implements JposConst, Speec
         } else {
             int version = 16;
             try {
-                service = (SpeechSynthesisService116) baseService; version++;
+                for (Class<?> current : new Class<?>[]{SpeechSynthesisService116.class}) {
+                    if (current.isInstance(service))
+                        version++;
+                    else
+                        break;
+                }
+                service = baseService;
             } catch (Exception e) {
                 if (i >= version * 1000 + 1000000)
                     throw new JposException(JPOS_E_NOSERVICE, "SpeechSynthesisService1" + version + " not fully implemented", e);

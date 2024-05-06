@@ -19,15 +19,15 @@ package SampleUdpDevice;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.biometrics.*;
-import jpos.BiometricsConst;
-import jpos.JposConst;
-import jpos.JposException;
+import jpos.*;
 import jpos.config.JposEntry;
 
-import javax.swing.*;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.nio.*;
 import java.util.Arrays;
+
+import static javax.swing.JOptionPane.*;
+import static jpos.BiometricsConst.*;
+import static jpos.JposConst.*;
 
 /**
  * JposDevice based implementation of a JavaPOS Biometrics device service implementation for the
@@ -77,7 +77,7 @@ public class Biometrics extends Device {
 
     private boolean InProcessing = false;
     private boolean Enrollment;
-    private byte[][] CapturePayload = {null};
+    private final byte[][] CapturePayload = {null};
     private byte[] LastCaptured = null;
     private boolean CapturesMatched = false;
     private int MaxEnrollmentEntries = 5;
@@ -94,7 +94,7 @@ public class Biometrics extends Device {
         biometricsInit(1);
         PhysicalDeviceDescription = "UDP device simulator, Biometrics part";
         PhysicalDeviceName = "UDP Biometrics";
-        CapPowerReporting = JposConst.JPOS_PR_STANDARD;
+        CapPowerReporting = JPOS_PR_STANDARD;
         Toolsets = new CommonSubDeviceToolset[]{new BiometricsSubDeviceToolset()};
     }
 
@@ -105,28 +105,28 @@ public class Biometrics extends Device {
             Object o;
             if ((o = entry.getPropertyValue("BIRFormatIDOwner")) != null) {
                 if ((BIRFormatIDOwner = Integer.parseInt(o.toString())) < 0 || BIRFormatIDOwner >= 1 << Short.SIZE)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid BIR format ID owner: " + BIRFormatIDOwner);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid BIR format ID owner: " + BIRFormatIDOwner);
             }
             if ((o = entry.getPropertyValue("BIRFormatIDType")) != null) {
                 if ((BIRFormatIDType = Integer.parseInt(o.toString())) < 0 || BIRFormatIDType >= 1 << Short.SIZE)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid BIR format ID type: " + BIRFormatIDType);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid BIR format ID type: " + BIRFormatIDType);
             }
             if ((o = entry.getPropertyValue("MaxEnrollmentEntries")) != null) {
                 if ((MaxEnrollmentEntries = Integer.parseInt(o.toString())) < 2)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid maximum enrollment entries: " + MaxEnrollmentEntries);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid maximum enrollment entries: " + MaxEnrollmentEntries);
             }
             if ((o = entry.getPropertyValue("FRRUserOnly")) != null) {
                 if ((FRRUserOnly = Integer.parseInt(o.toString())) < 0 || FRRUserOnly > 100)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid false reject rate for password mismatch: " + FRRUserOnly);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid false reject rate for password mismatch: " + FRRUserOnly);
             }
             if ((o = entry.getPropertyValue("FARUserOnly")) != null) {
                 if ((FARUserOnly = Integer.parseInt(o.toString())) < 0 || FARUserOnly > 100)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid false accept rate for password mismatch: " + FARUserOnly);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid false accept rate for password mismatch: " + FARUserOnly);
             }
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property", e);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property", e);
         }
     }
 
@@ -139,7 +139,7 @@ public class Biometrics extends Device {
         props.SensorBPP = 0;
         props.SensorHeight = 0;
         props.SensorWidth = 0;
-        props.SensorTypeDef = BiometricsConst.BIO_ST_PASSWORD;
+        props.SensorTypeDef = BIO_ST_PASSWORD;
     }
 
     private class BiometricsSubDeviceToolset extends CommonSubDeviceToolset {
@@ -202,6 +202,7 @@ public class Biometrics extends Device {
         }
 
         @Override
+        @SuppressWarnings("AssignmentUsedAsCondition")
         public void statusUpdateProcessing() {
             if (OldInProcessing != InProcessing) {
                 boolean wakeup = false;
@@ -209,20 +210,20 @@ public class Biometrics extends Device {
                 try {
                     JposCommonProperties props = getPropertySetInstance(Biometricss, 0, 0);
                     if (props != null) {
-                        byte[] bdb = new byte[0];
+                        byte[] bdb = {};
                         if (!InProcessing && !PreviousPowerState) {
                             String data = sendResp("BIO:Get");
                             if (data != null)
                                 bdb = getBDB(data);
                         }
                         if (failed = PreviousPowerState && !InProcessing)
-                            handleEvent(new BiometricsStatusUpdateEvent(props.EventSource, BiometricsConst.BIO_SUE_FAILED_READ));
+                            handleEvent(new BiometricsStatusUpdateEvent(props.EventSource, BIO_SUE_FAILED_READ));
                         else if (InProcessing) {
                             if (wakeup = !Enrollment || LastCaptured == null)
-                                handleEvent(new BiometricsStatusUpdateEvent(props.EventSource, BiometricsConst.BIO_SUE_SENSOR_READY));
+                                handleEvent(new BiometricsStatusUpdateEvent(props.EventSource, BIO_SUE_SENSOR_READY));
                         }
                         else if (bdb == null) {
-                            handleEvent(new BiometricsStatusUpdateEvent(props.EventSource, BiometricsConst.BIO_SUE_FAILED_READ));
+                            handleEvent(new BiometricsStatusUpdateEvent(props.EventSource, BIO_SUE_FAILED_READ));
                             CapturesMatched = false;
                         }
                         else {
@@ -238,18 +239,17 @@ public class Biometrics extends Device {
                                         failed = true;
                                 }
                             } else {
-                                if (!(failed = bdb.length <= 0))
+                                if (!(failed = bdb.length == 0))
                                     LastCaptured = bdb;
                                 wakeup = true;
                             }
                             if (failed)
-                                handleEvent(new BiometricsStatusUpdateEvent(props.EventSource, BiometricsConst.BIO_SUE_FAILED_READ));
+                                handleEvent(new BiometricsStatusUpdateEvent(props.EventSource, BIO_SUE_FAILED_READ));
                             else if (wakeup)
-                                handleEvent(new BiometricsStatusUpdateEvent(props.EventSource, BiometricsConst.BIO_SUE_SENSOR_COMPLETE));
+                                handleEvent(new BiometricsStatusUpdateEvent(props.EventSource, BIO_SUE_SENSOR_COMPLETE));
                         }
                     }
-                } catch (JposException e) {
-                }
+                } catch (JposException ignored) {}
                 if (wakeup || failed)
                     signalStatusWaits(Biometricss[0]);
             }
@@ -261,8 +261,8 @@ public class Biometrics extends Device {
             JposCommonProperties props = getPropertySetInstance(Biometricss, 0, 0);
             if (props != null) {
                 try {
-                    handleEvent(new BiometricsStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_ONLINE));
-                } catch (JposException e) {}
+                    handleEvent(new BiometricsStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_ONLINE));
+                } catch (JposException ignored) {}
             }
             return PreviousPowerState = super.statusPowerOnlineProcessing();
         }
@@ -272,8 +272,8 @@ public class Biometrics extends Device {
             JposCommonProperties props = getPropertySetInstance(Biometricss, 0, 0);
             if (props != null) {
                 try {
-                    handleEvent(new BiometricsStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE));
-                } catch (JposException e) {}
+                    handleEvent(new BiometricsStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_OFF_OFFLINE));
+                } catch (JposException ignored) {}
             }
             signalStatusWaits(Biometricss[0]);
         }
@@ -281,7 +281,7 @@ public class Biometrics extends Device {
 
     private static final int INTSIZE = Integer.SIZE / Byte.SIZE;
     private static final int BDBSIZE = 0;
-    private static final int BDBHASH1 = INTSIZE * 1;
+    private static final int BDBHASH1 = INTSIZE;
     private static final int BDBHASH2 = INTSIZE * 2;
     private static final int BDBHASH3 = INTSIZE * 3;
     private static final int BDBDATALEN = INTSIZE * 4;
@@ -356,20 +356,21 @@ public class Biometrics extends Device {
         }
 
         @Override
+        @SuppressWarnings("SynchronizeOnNonFinalField")
         public void handlePowerStateOnEnable() throws JposException {
             boolean offline;
             synchronized(Device) {
                 offline = Offline;
             }
-            handleEvent(new BiometricsStatusUpdateEvent(EventSource, offline ? JposConst.JPOS_SUE_POWER_OFF_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE));
+            handleEvent(new BiometricsStatusUpdateEvent(EventSource, offline ? JPOS_SUE_POWER_OFF_OFFLINE : JPOS_SUE_POWER_ONLINE));
         }
 
         @Override
         public void claim(int timeout) throws JposException {
             startPolling(this);
-            if (Offline && PowerNotify == JposConst.JPOS_PN_DISABLED) {
+            if (Offline && PowerNotify == JPOS_PN_DISABLED) {
                 stopPolling();
-                throw new JposException(JposConst.JPOS_E_OFFLINE, "Communication with device disrupted");
+                throw new JposException(JPOS_E_OFFLINE, "Communication with device disrupted");
             }
             super.claim(timeout);
         }
@@ -377,7 +378,7 @@ public class Biometrics extends Device {
         @Override
         public void deviceEnabled(boolean enable) throws JposException {
             if (InProcessing) {
-                doItWaitState("BIO:Cancel", "1", true);
+                doItWaitState("BIO:Cancel", true);
             }
             super.deviceEnabled(enable);
         }
@@ -390,25 +391,25 @@ public class Biometrics extends Device {
 
         @Override
         public void checkHealth(int level) throws JposException {
-            String how = level == JposConst.JPOS_CH_INTERNAL ? "Internal" : (level == JposConst.JPOS_CH_EXTERNAL ? "External" : "Interactive");
+            String how = level == JPOS_CH_INTERNAL ? "Internal" : (level == JPOS_CH_EXTERNAL ? "External" : "Interactive");
             if (Offline)
                 CheckHealthText = how + " Checkhealth: Offline";
             else {
                 CheckHealthText = how + " Checkhealth: OK";
             }
-            if (level == JposConst.JPOS_CH_INTERACTIVE)
-                synchronizedMessageBox("CheckHealth result:\n" + CheckHealthText, "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+            if (level == JPOS_CH_INTERACTIVE)
+                synchronizedMessageBox("CheckHealth result:\n" + CheckHealthText, "CheckHealth", INFORMATION_MESSAGE);
         }
 
-        private String doItWaitState(String command, String responseMask, boolean throwException) throws JposException {
+        private String doItWaitState(String command, boolean throwException) throws JposException {
             attachWaiter();
             String data = sendResp(command);
-            if(data != null && data.matches(responseMask)) {
+            if(data != null && data.matches("1")) {
                 PollWaiter.signal();
-                waitWaiter(RequestTimeout * MaxRetry);
+                waitWaiter((long)RequestTimeout * MaxRetry);
             } else if (throwException){
                 releaseWaiter();
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid capture request");
+                throw new JposException(JPOS_E_FAILURE, "Invalid capture request");
             }
             releaseWaiter();
             return data;
@@ -416,9 +417,9 @@ public class Biometrics extends Device {
 
         @Override
         public void beginEnrollCapture(byte[] referenceBIR, byte[] payload) throws JposException {
-            check(Offline, JposConst.JPOS_E_OFFLINE, "Device offline");
-            check(InProcessing, JposConst.JPOS_E_ILLEGAL, "Capture active");
-            doItWaitState("BIO:Start0", "1", true);
+            check(Offline, JPOS_E_OFFLINE, "Device offline");
+            check(InProcessing, JPOS_E_ILLEGAL, "Capture active");
+            doItWaitState("BIO:Start0", true);
             Enrollment = true;
             LastCaptured = null;
             CapturePayload[0] = payload;
@@ -428,24 +429,24 @@ public class Biometrics extends Device {
 
         @Override
         public void beginVerifyCapture() throws JposException {
-            check(Offline, JposConst.JPOS_E_OFFLINE, "Device offline");
-            check(InProcessing, JposConst.JPOS_E_ILLEGAL, "Capture active");
-            doItWaitState("BIO:Start0", "1", true);
+            check(Offline, JPOS_E_OFFLINE, "Device offline");
+            check(InProcessing, JPOS_E_ILLEGAL, "Capture active");
+            doItWaitState("BIO:Start0", true);
             Enrollment = false;
             CapturePayload[0] = new byte[0];
         }
 
         @Override
         public void endCapture() throws JposException {
-            check(Offline, JposConst.JPOS_E_OFFLINE, "Device offline");
-            check(CapturePayload[0] == null, JposConst.JPOS_E_ILLEGAL, "Capture not started");
+            check(Offline, JPOS_E_OFFLINE, "Device offline");
+            check(CapturePayload[0] == null, JPOS_E_ILLEGAL, "Capture not started");
             String data = "0";
             if (InProcessing) {
                 synchronized (CapturePayload) {
                     CapturePayload[0] = null;
                 }
-                data = doItWaitState("BIO:Cancel", "1", false);
-                check(InProcessing, JposConst.JPOS_E_FAILURE, "Stop capture failed");
+                data = doItWaitState("BIO:Cancel", false);
+                check(InProcessing, JPOS_E_FAILURE, "Stop capture failed");
             }
             BiometricInformationRecord result = new BiometricInformationRecord();
             if (data.equals("0")) {
@@ -471,19 +472,19 @@ public class Biometrics extends Device {
         public void identify(int maxFARRequested, int maxFRRRequested, boolean fARPrecedence, byte[][] referenceBIRPopulation, int[][] candidateRanking, int timeout) throws JposException {
             beginVerifyCapture();
             attachWaiter();
-            long tio = timeout == JposConst.JPOS_FOREVER ? Long.MAX_VALUE : (timeout == 0 ? 1 : timeout);
+            long tio = timeout == JPOS_FOREVER ? Long.MAX_VALUE : (timeout == 0 ? 1 : timeout);
             long starttime = System.currentTimeMillis();
             for (long deltatime = 0; deltatime < tio && InProcessing; deltatime = System.currentTimeMillis() - starttime) {
                 waitWaiter(tio - deltatime);
             }
             releaseWaiter();
             if (InProcessing) {
-                String data = doItWaitState("BIO:Cancel", "1", false);
-                check(data == null, JposConst.JPOS_E_FAILURE, "Stop identify failed");
-                throw new JposException(JposConst.JPOS_E_TIMEOUT, "Identify timed out");
+                String data = doItWaitState("BIO:Cancel", false);
+                check(data == null, JPOS_E_FAILURE, "Stop identify failed");
+                throw new JposException(JPOS_E_TIMEOUT, "Identify timed out");
             }
             endCapture();
-            check(isDataEmpty(BIR, true), JposConst.JPOS_E_TIMEOUT, "No non-empty BIR within time limit");
+            check(isDataEmpty(BIR, true), JPOS_E_TIMEOUT, "No non-empty BIR within time limit");
             identifyMatch(maxFARRequested, maxFRRRequested, fARPrecedence, BIR, referenceBIRPopulation, candidateRanking);
         }
 
@@ -495,7 +496,7 @@ public class Biometrics extends Device {
                     BiometricInformationRecord.PURPOSE_ENROLL,
                     BiometricInformationRecord.PURPOSE_ENROLL_FOR_VERIFICATION
             };
-            checkMember(source.getPurpose(), allowed, JposConst.JPOS_E_ILLEGAL, "Invalid purpose: " + source.getPurpose());
+            checkMember(source.getPurpose(), allowed, JPOS_E_ILLEGAL, "Invalid purpose: " + source.getPurpose());
             int[][] candidates = {new int[referenceBIRPopulation.length], new int[referenceBIRPopulation.length]};
             byte[] bdb = source.getBiometricDataBlock();
             int[] index = {0, 0};
@@ -521,23 +522,24 @@ public class Biometrics extends Device {
         public void verify(int maxFARRequested, int maxFRRRequested, boolean fARPrecedence, byte[] referenceBIR, byte[][] adaptedBIR, boolean[] result, int[] fARAchieved, int[] fRRAchieved, byte[][] payload, int timeout) throws JposException {
             beginEnrollCapture(referenceBIR, payload[0]);
             attachWaiter();
-            long tio = timeout == JposConst.JPOS_FOREVER ? Long.MAX_VALUE : (timeout == 0 ? 1 : timeout);
+            long tio = timeout == JPOS_FOREVER ? Long.MAX_VALUE : (timeout == 0 ? 1 : timeout);
             long starttime = System.currentTimeMillis();
             for (long deltatime = 0; deltatime < tio && InProcessing; deltatime = System.currentTimeMillis() - starttime) {
                 waitWaiter(tio - deltatime);
             }
             releaseWaiter();
             if (InProcessing) {
-                String data = doItWaitState("BIO:Cancel", "1", false);
-                check(data == null, JposConst.JPOS_E_FAILURE, "Stop verify failed");
-                throw new JposException(JposConst.JPOS_E_TIMEOUT, "Verify timed out");
+                String data = doItWaitState("BIO:Cancel", false);
+                check(data == null, JPOS_E_FAILURE, "Stop verify failed");
+                throw new JposException(JPOS_E_TIMEOUT, "Verify timed out");
             }
             endCapture();
-            check(isDataEmpty(BIR, true), JposConst.JPOS_E_TIMEOUT, "No non-empty BIR within time limit");
+            check(isDataEmpty(BIR, true), JPOS_E_TIMEOUT, "No non-empty BIR within time limit");
             verifyMatch(maxFARRequested, maxFRRRequested, fARPrecedence, BIR, referenceBIR, adaptedBIR, result, fARAchieved, fRRAchieved, payload);
         }
 
         @Override
+        @SuppressWarnings("AssignmentUsedAsCondition")
         public void verifyMatch(int maxFARRequested, int maxFRRRequested, boolean fARPrecedence, byte[] sampleBIR, byte[] referenceBIR, byte[][] adaptedBIR, boolean[] result, int[] fARAchieved, int[] fRRAchieved, byte[][] payload) throws JposException {
             // Ignore maxFARRequested, maxFRRRequested and fARPrecedence because password match is binary (0% or 100%).
             // Ignore adaptedBIR and payload because template adaption is not supported.
@@ -547,9 +549,9 @@ public class Biometrics extends Device {
                     BiometricInformationRecord.PURPOSE_ENROLL,
                     BiometricInformationRecord.PURPOSE_ENROLL_FOR_VERIFICATION
             };
-            checkMember(source.getPurpose(), allowed, JposConst.JPOS_E_ILLEGAL, "Invalid purpose: " + source.getPurpose());
+            checkMember(source.getPurpose(), allowed, JPOS_E_ILLEGAL, "Invalid purpose: " + source.getPurpose());
             BiometricInformationRecord reference = new BiometricInformationRecord(referenceBIR);
-            check(reference.getPurpose() != BiometricInformationRecord.PURPOSE_ENROLL, JposConst.JPOS_E_ILLEGAL, "Invalid referenceBIR");
+            check(reference.getPurpose() != BiometricInformationRecord.PURPOSE_ENROLL, JPOS_E_ILLEGAL, "Invalid referenceBIR");
             byte[] bdb = source.getBiometricDataBlock();
             Boolean match = isEqual(bdb, reference.getBiometricDataBlock());
             if (match == null) {

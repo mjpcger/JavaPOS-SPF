@@ -18,12 +18,14 @@
 package de.gmxhome.conrad.jpos.jpos_base.soundplayer;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.SoundPlayerConst;
-import jpos.services.SoundPlayerService116;
+import jpos.*;
+import jpos.services.*;
 
 import java.io.File;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.SoundPlayerConst.*;
 
 /**
  * SoundPlayer service implementation. For more details about getter, setter and method implementations,
@@ -116,16 +118,16 @@ public class SoundPlayerService extends JposBase implements SoundPlayerService11
 
     @Override
     public void setStorage(int storage) throws JposException {
-        long valid[] = { SoundPlayerConst.SPLY_ST_HARDTOTALS, SoundPlayerConst.SPLY_ST_HOST };
+        long[] valid = { SPLY_ST_HARDTOTALS, SPLY_ST_HOST };
         logPreSet("Storage");
         checkEnabled();
-        JposDevice.checkMember(storage, valid, JposConst.JPOS_E_ILLEGAL, "Invalid storage selected: " + storage);
-        JposDevice.check(Data.CapStorage == SoundPlayerConst.SPLY_CST_HOST_ONLY &&
-                storage != SoundPlayerConst.SPLY_ST_HOST, JposConst.JPOS_E_ILLEGAL, "Unsupported storage selected: " + storage);
-        JposDevice.check(Data.CapStorage == SoundPlayerConst.SPLY_CST_HARDTOTALS_ONLY &&
-                storage != SoundPlayerConst.SPLY_ST_HARDTOTALS, JposConst.JPOS_E_ILLEGAL, "Unsupported storage selected: " + storage);
-        JposDevice.check(Data.CapAssociatedHardTotalsDevice.length() == 0 && storage == SoundPlayerConst.SPLY_ST_HARDTOTALS,
-                JposConst.JPOS_E_ILLEGAL, "No HardTotals device configured");
+        checkMember(storage, valid, JPOS_E_ILLEGAL, "Invalid storage selected: " + storage);
+        check(Data.CapStorage == SPLY_CST_HOST_ONLY &&
+                storage != SPLY_ST_HOST, JPOS_E_ILLEGAL, "Unsupported storage selected: " + storage);
+        check(Data.CapStorage == SPLY_CST_HARDTOTALS_ONLY &&
+                storage != SPLY_ST_HARDTOTALS, JPOS_E_ILLEGAL, "Unsupported storage selected: " + storage);
+        check(Data.CapAssociatedHardTotalsDevice.length() == 0 && storage == SPLY_ST_HARDTOTALS,
+                JPOS_E_ILLEGAL, "No HardTotals device configured");
         SoundPlayer.storage(storage);
         logSet("Storage");
     }
@@ -134,22 +136,22 @@ public class SoundPlayerService extends JposBase implements SoundPlayerService11
     public void setVolume(int volume) throws JposException {
         logPreSet("Volume");
         checkEnabled();
-        JposDevice.check(!Data.CapVolume && volume != Data.Volume, JposConst.JPOS_E_ILLEGAL, "Unsupported volume selected: " + volume);
-        JposDevice.check( volume < 0 || volume > 100, JposConst.JPOS_E_ILLEGAL, "Volume out of range 0 - 100: " + volume);
+        check(!Data.CapVolume && volume != Data.Volume, JPOS_E_ILLEGAL, "Unsupported volume selected: " + volume);
+        check( volume < 0 || volume > 100, JPOS_E_ILLEGAL, "Volume out of range 0 - 100: " + volume);
         SoundPlayer.volume(volume);
         logSet("Volume");
     }
 
     @Override
     public void playSound(String fileName, boolean loop) throws JposException {
-        logPreCall("PlaySound", fileName + ", " + loop);
+        logPreCall("PlaySound", removeOuterArraySpecifier(new Object[]{fileName, loop}, Device.MaxArrayStringElements));
         String[] supported = Data.CapSoundTypeList.toLowerCase().split(",");
         checkEnabled();
-        if (!JposDevice.member(fileName, Data.DeviceSoundList.split(","))) {
+        if (!member(fileName, Data.DeviceSoundList.split(","))) {
             String name = new File(fileName).getName();
             int dotpos = name.lastIndexOf('.');
-            JposDevice.check(dotpos >= 0 && !JposDevice.member(name.substring(dotpos + 1), supported),
-                    JposConst.JPOS_E_ILLEGAL, "File type not one of {" + Data.CapSoundTypeList + "}");
+            check(dotpos >= 0 && !member(name.substring(dotpos + 1), supported),
+                    JPOS_E_ILLEGAL, "File type not one of {" + Data.CapSoundTypeList + "}");
         }
         JposOutputRequest request = SoundPlayer.playSound(fileName, loop);
         if (request != null)
@@ -159,12 +161,12 @@ public class SoundPlayerService extends JposBase implements SoundPlayerService11
 
     @Override
     public void stopSound(int outputID) throws JposException {
-        logPreCall("StopSound", "" + outputID);
+        logPreCall("StopSound", removeOuterArraySpecifier(new Object[]{outputID}, Device.MaxArrayStringElements));
         synchronized (Data.OutputIdListSync) {
             String[] supported = Data.OutputIDList.split(",");
             checkEnabled();
-            JposDevice.check(!JposDevice.member(Integer.toString(outputID), supported),
-                    JposConst.JPOS_E_ILLEGAL, "outputID not one of {" + String.join(",", supported) + "}");
+            check(!member(Integer.toString(outputID), supported),
+                    JPOS_E_ILLEGAL, "outputID not one of {" + String.join(",", supported) + "}");
         }
         SoundPlayer.stopSound(outputID);
         logCall("StopSound");

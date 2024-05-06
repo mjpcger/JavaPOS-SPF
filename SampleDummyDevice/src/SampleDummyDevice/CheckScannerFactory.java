@@ -23,6 +23,8 @@ import jpos.*;
 import jpos.config.*;
 import jpos.loader.*;
 
+import static jpos.JposConst.*;
+
 /**
  * Factory class for sample CheckScanner device implementation
  */
@@ -40,12 +42,12 @@ public class CheckScannerFactory extends Factory implements JposServiceInstanceF
                     if (create) {
                         dev = new Device("SampleCheckScanner");
                     } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: SampleCheckScanner");
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: SampleCheckScanner");
                     else {
                         dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
-                    CheckScannerService srv = addDevice(0, dev);
+                    CheckScannerService srv = addDevice(0, dev, jposEntry);
                     srv.CheckScanner.checkMandatoryProperties();
                     if (create) {
                         putDevice("SampleCheckScanner", dev);
@@ -53,11 +55,11 @@ public class CheckScannerFactory extends Factory implements JposServiceInstanceF
                     return srv;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.poskeyboard;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.POSKeyboardConst.*;
+
 /**
  * Class containing the keyboard specific properties, their default values and default implementations of
  * POSKeyboardInterface.
@@ -35,7 +37,7 @@ public class POSKeyboardProperties extends JposCommonProperties implements POSKe
      * UPOS property EventTypes. Default: ET_DOWN. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int EventTypes = POSKeyboardConst.KBD_ET_DOWN;
+    public int EventTypes = KBD_ET_DOWN;
 
     /**
      * UPOS property POSKeyData.

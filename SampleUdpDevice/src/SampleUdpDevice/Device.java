@@ -20,7 +20,9 @@ package SampleUdpDevice;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.config.JposEntry;
-import net.bplaced.conrad.log4jpos.Level;
+
+import static jpos.JposConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * JposDevice based implementation base for JavaPOS device service implementations for the
@@ -49,14 +51,13 @@ import net.bplaced.conrad.log4jpos.Level;
  */
 public class Device extends JposDevice implements Runnable {
     // General purpose objects
-    private boolean ToBeFinished = false;
     private int OwnPort = 0;
     private int PollDelay = 200;
     private boolean UseClientIO = true;
     private UniqueIOProcessor Target = null;
-    private int[] OpenCount = { 0 };
+    private final int[] OpenCount = { 0 };
     private JposCommonProperties StartPollingWaiter = null;
-    private Thread StateWatcher;
+    private ThreadHandler StateWatcher;
 
     /**
      * Offline flag, simple boolean that shows whether the last request has been responded correctly (false) or not (true).
@@ -87,7 +88,7 @@ public class Device extends JposDevice implements Runnable {
         super(id);
         PhysicalDeviceDescription = "UDP device simulator";
         PhysicalDeviceName = "UDP device Simulator";
-        CapPowerReporting = JposConst.JPOS_PR_STANDARD;
+        CapPowerReporting = JPOS_PR_STANDARD;
     }
 
     @Override
@@ -97,19 +98,19 @@ public class Device extends JposDevice implements Runnable {
             Object o;
             if ((o = entry.getPropertyValue("OwnPort")) != null) {
                 if ((OwnPort = Integer.parseInt(o.toString())) < 0 || OwnPort >= 0xffff)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid source port.");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid source port.");
             }
             if ((o = entry.getPropertyValue("PollDelay")) != null) {
                 if ((PollDelay = Integer.parseInt(o.toString())) <= 0)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid poll delay: " + PollDelay);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid poll delay: " + PollDelay);
             }
             if ((o = entry.getPropertyValue("RequestTimeout")) != null) {
                 if ((RequestTimeout = Integer.parseInt(o.toString())) <= 0)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid request timeout: " + RequestTimeout);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid request timeout: " + RequestTimeout);
             }
             if ((o = entry.getPropertyValue("MaxRetry")) != null) {
                 if ((MaxRetry = Integer.parseInt(o.toString())) <= 0)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid maximum retry count: " + MaxRetry);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid maximum retry count: " + MaxRetry);
             }
             if ((o = entry.getPropertyValue("UseClientIO")) != null) {
                 UseClientIO = Boolean.parseBoolean(o.toString());
@@ -117,7 +118,7 @@ public class Device extends JposDevice implements Runnable {
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property", e);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property", e);
         }
     }
 
@@ -136,6 +137,7 @@ public class Device extends JposDevice implements Runnable {
         return null;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private JposException closePort() {
         JposException e = null;
         if (Target != null) {
@@ -227,13 +229,13 @@ public class Device extends JposDevice implements Runnable {
          * Method to be called after status changes have been stored to perform event handling.
          */
         public void statusUpdateEventProcessing() {
-            if (Oldoffline && Oldoffline != Offline) {
+            if (Oldoffline && !Offline) {
                 statusPowerOnlineProcessing();
             }
             if (!Offline) {
                 statusUpdateProcessing();
             }
-            if (Offline && Oldoffline != Offline) {
+            if (Offline && !Oldoffline) {
                 statusPowerOfflineProcessing();
             }
         }
@@ -264,7 +266,7 @@ public class Device extends JposDevice implements Runnable {
     /**
      * List of ReturnValueCheckers to be used by a specific device implementation for the UDP sample
      */
-    public CommonSubDeviceToolset[] Toolsets = new CommonSubDeviceToolset[0];
+    public CommonSubDeviceToolset[] Toolsets = {};
 
     /**
      * Sends a single command to the device and returns the response on success. In case of a recoverable error,
@@ -287,14 +289,15 @@ public class Device extends JposDevice implements Runnable {
      * @param commandParts Array of commands to be sent to the device.
      * @return             Array of return parameters of the corresponding responses on success, otherwise null.
      */
+    @SuppressWarnings("ThrowableInstanceNeverThrown ")
     protected synchronized String[] sendResp(String[] commandParts) {
         if (connectionOffline())
             return null;
         try {
-            String commands = "";
+            StringBuilder commands = new StringBuilder();
             String[] result = new String[commandParts.length];
             for (String part : commandParts) {
-                commands += "," + part;
+                commands.append(",").append(part);
             }
             byte[] responses;
             byte[] request = commands.substring(1).getBytes();
@@ -329,7 +332,7 @@ public class Device extends JposDevice implements Runnable {
                 } while ((acttime = System.currentTimeMillis()) - starttime < RequestTimeout);
             }
         } catch (JposException e) {
-            log(Level.TRACE, ID + ": IO error: " + e.getMessage());
+            log(TRACE, ID + ": IO error: " + e.getMessage());
         }
         Offline = true;
         closePort();
@@ -339,7 +342,7 @@ public class Device extends JposDevice implements Runnable {
     @Override
     public void run() {
         try {
-            while (!ToBeFinished) {
+            while (!StateWatcher.ToBeFinished) {
                 String[][] commands = {new String[0]};
                 for (CommonSubDeviceToolset set : Toolsets) {
                     set.saveCurrentStatusInformation(commands);
@@ -366,16 +369,15 @@ public class Device extends JposDevice implements Runnable {
      * @param props Property set of the device that starts polling
      * @return      Start count, 1 if updating thread has been started and a value &gt; 1 if the thread is just running.
      */
+    @SuppressWarnings("UnusedReturnValue")
     int startPolling(JposCommonProperties props) {
         synchronized (OpenCount) {
             if (OpenCount[0] == 0) {
-                ToBeFinished = false;
                 PollWaiter = new SyncObject();
                 (StartPollingWaiter = props).attachWaiter();
-                (StateWatcher = new Thread(this)).start();
-                StateWatcher.setName(ID + "/StatusUpdater");
+                (StateWatcher = new ThreadHandler(ID + "/StatusUpdater", this)).start();
                 OpenCount[0] = 1;
-                props.waitWaiter(MaxRetry * RequestTimeout * 3);
+                props.waitWaiter((long)MaxRetry * RequestTimeout * 3);
                 props.releaseWaiter();
             }
             else
@@ -388,17 +390,13 @@ public class Device extends JposDevice implements Runnable {
      * Method to stop status updating thread if stopped as many times as previously started.
      * @return      Start count, 0 if updating thread has been stopped and a value &gt; 1 if the thread is just running.
      */
+    @SuppressWarnings({"UnusedReturnValue", "ThrowableInstanceNeverThrown"})
     int stopPolling() {
         synchronized(OpenCount) {
             if (OpenCount[0] == 1) {
-                ToBeFinished = true;
+                StateWatcher.ToBeFinished = true;
                 PollWaiter.signal();
-                while (true) {
-                    try {
-                        StateWatcher.join();
-                        break;
-                    } catch (InterruptedException e) {}
-                }
+                StateWatcher.waitFinished();
                 StartPollingWaiter = null;
                 closePort();
             }

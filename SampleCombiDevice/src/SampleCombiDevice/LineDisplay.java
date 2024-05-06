@@ -25,15 +25,16 @@ import javax.swing.*;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
+import static SampleCombiDevice.Device.*;
+import static javax.swing.JOptionPane.*;
+import static jpos.LineDisplayConst.*;
+import static jpos.JposConst.*;
+
 /**
  * Class implementing the LineDisplayInterface for the sample combi device.
  */
 public class LineDisplay extends LineDisplayProperties {
-    private Device Dev;
-    // Character attribute values
-    private final char ReverseChar = 'r';
-    private final char BlinkChar = 'b';
-    private final char BlinkReverseChar = 'a';
+    private final Device Dev;
     // Command for text output
     private static final byte CmdTextOutPrefix = 'T';
     private static final int TextLinePos = 1;
@@ -71,18 +72,18 @@ public class LineDisplay extends LineDisplayProperties {
 
     @Override
     public void checkHealth(int level) throws JposException {
-        if (!Dev.internalCheckHealth(this, level)) {
+        if (Dev.internalCheckHealth(this, level)) {
             try {
                 ((LineDisplayService) EventSource).clearText();
-                ((LineDisplayService) EventSource).displayTextAt(1, 3, "CheckHealth: OK!", LineDisplayConst.DISP_DT_NORMAL);
+                ((LineDisplayService) EventSource).displayTextAt(1, 3, "CheckHealth: OK!", DISP_DT_NORMAL);
                 CheckHealthText = "OK";
             } catch (JposException e) {
                 CheckHealthText = "Failed, " + e.getMessage();
             }
-            if (level == JposConst.JPOS_CH_INTERACTIVE)
-                Dev.synchronizedMessageBox("LineDisplay check " + CheckHealthText + ".", "CheckHealth LineDisplay",
-                        (CheckHealthText.equals("OK") ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE));
-            CheckHealthText = (level == JposConst.JPOS_CH_EXTERNAL ? "Externel" : "Internal") + " CheckHealth: " + CheckHealthText;
+            if (level == JPOS_CH_INTERACTIVE)
+                synchronizedMessageBox("LineDisplay check " + CheckHealthText + ".", "CheckHealth LineDisplay",
+                        (CheckHealthText.equals("OK") ? INFORMATION_MESSAGE : ERROR_MESSAGE));
+            CheckHealthText = (level == JPOS_CH_EXTERNAL ? "Externel" : "Internal") + " CheckHealth: " + CheckHealthText;
         }
         super.checkHealth(level);
     }
@@ -121,14 +122,14 @@ public class LineDisplay extends LineDisplayProperties {
     public void scrollText(int direction, int units) throws JposException {
         boolean otherDirection = false;
         switch (direction) {
-            case LineDisplayConst.DISP_ST_DOWN:
+            case DISP_ST_DOWN:
                 otherDirection = true;
-            case LineDisplayConst.DISP_ST_UP:
+            case DISP_ST_UP:
                 scrollVertical(units, otherDirection);
                 break;
-            case LineDisplayConst.DISP_ST_LEFT:
+            case DISP_ST_LEFT:
                 otherDirection = true;
-            case LineDisplayConst.DISP_ST_RIGHT:
+            case DISP_ST_RIGHT:
                 scrollHorizontal(units, otherDirection);
                 break;
         }
@@ -140,12 +141,11 @@ public class LineDisplay extends LineDisplayProperties {
         DisplayText request = super.displayText(text, attribute);
         LineDisplayService.DisplayDataPart[] data = request.getData();
         request.AdditionalData = new Device.DisplayCoordinates(CursorRow, CursorColumn, CursorUpdate);
-        if (CursorUpdate && InterCharacterWait > 0 && MarqueeType == LineDisplayConst.DISP_MT_NONE) {
+        if (CursorUpdate && InterCharacterWait > 0 && MarqueeType == DISP_MT_NONE) {
             // We update the coordinates here
             ((SampleCombiDevice.Device.DisplayCoordinates)request.AdditionalData).Update = false;
             for (Object o : data) {
-                if (o instanceof LineDisplayService.DisplayData) {
-                    LineDisplayService.DisplayData dd = (LineDisplayService.DisplayData)o;
+                if (o instanceof LineDisplayService.DisplayData dd) {
                     CursorColumn += dd.getData().length();
                     while (CursorColumn > Columns) {
                         CursorColumn -= Columns;
@@ -163,7 +163,7 @@ public class LineDisplay extends LineDisplayProperties {
         return request;
     }
 
-    private SyncObject InterCharacterWaiter = new SyncObject();
+    private final SyncObject InterCharacterWaiter = new SyncObject();
 
     @Override
     public void interCharacterWait(int b) throws JposException {
@@ -177,13 +177,14 @@ public class LineDisplay extends LineDisplayProperties {
     public void displayText(DisplayText request) throws  JposException {
         char attribute = Dev.NormalChar;
         SampleCombiDevice.Device.DisplayCoordinates coordinates = (SampleCombiDevice.Device.DisplayCoordinates)request.AdditionalData;
-        InterCharacterWaiter = new SyncObject();
+        InterCharacterWaiter.reset();
         for(Object o : request.getData()) {
+            char blinkReverseChar = 'a';
             if (o instanceof LineDisplayService.DisplayData){
                 String data = ((LineDisplayService.DisplayData) o).getData();
                 for (int i = 0; i < data.length(); i++) {
                     processChar(coordinates, data.charAt(i), attribute);
-                    if (InterCharacterWait > 0 && MarqueeType == LineDisplayConst.DISP_MT_NONE) {
+                    if (InterCharacterWait > 0 && MarqueeType == DISP_MT_NONE) {
                         refreshWindow(0);
                         InterCharacterWaiter.suspend(InterCharacterWait);
                     }
@@ -193,12 +194,14 @@ public class LineDisplay extends LineDisplayProperties {
                 processChar(coordinates, ((LineDisplayService.ControlChar) o).getControlCharacter(), attribute);
             else if (o instanceof LineDisplayService.EscNormalize)
                 attribute = Dev.NormalChar;
-            else if (o instanceof LineDisplayService.EscSimple && attribute != BlinkReverseChar) {
-                LineDisplayService.EscSimple esc = (LineDisplayService.EscSimple) o;
-                if ((esc.getBlinking() && (esc.getReverse() || attribute == ReverseChar)) || (esc.getReverse() && attribute == BlinkChar))
-                    attribute = BlinkReverseChar;
+            else if (o instanceof LineDisplayService.EscSimple esc && attribute != blinkReverseChar) {
+                // Character attribute values
+                char reverseChar = 'r';
+                char blinkChar = 'b';
+                if ((esc.getBlinking() && (esc.getReverse() || attribute == reverseChar)) || (esc.getReverse() && attribute == blinkChar))
+                    attribute = blinkReverseChar;
                 else
-                    attribute = esc.getReverse() ? ReverseChar : BlinkChar;
+                    attribute = esc.getReverse() ? reverseChar : blinkChar;
             }
         }
         if (coordinates.Update) {
@@ -228,10 +231,10 @@ public class LineDisplay extends LineDisplayProperties {
             if (c == '\n')
                 return;
         }
-        if (!MapCharacterSet && CharacterSet != LineDisplayConst.DISP_CS_UNICODE) {
+        if (!MapCharacterSet && CharacterSet != DISP_CS_UNICODE) {
             try {
                 c = new String(new byte[]{(byte)(c & 0xff)}, Encoding).charAt(0);
-            } catch (UnsupportedEncodingException e) {}
+            } catch (UnsupportedEncodingException ignored) {}
         }
         Dev.DisplayContents[coordinates.Line][coordinates.Column] = c;
         Dev.DisplayAttributes[coordinates.Line][coordinates.Column] = attribute;
@@ -245,41 +248,40 @@ public class LineDisplay extends LineDisplayProperties {
         try {
             line = linestr.getBytes(Encoding);
         } catch (UnsupportedEncodingException e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, e.getMessage(), e);
+            throw new JposException(JPOS_E_ILLEGAL, e.getMessage(), e);
         }
         byte[] buffer = Arrays.copyOf(new byte[]{CmdTextOutPrefix}, line.length + TextStartPos);
         System.arraycopy(line,0, buffer, TextStartPos, line.length);
         buffer[TextLinePos] = (byte)row;
         for (int i = TextStartPos, len = linestr.length(); --i >= TextLengthPos; len /= 10)
             buffer[i] = (byte)(len % 10 + '0');
-        Dev.sendCommand(buffer, Dev.NoResponse);
+        Dev.sendCommand(buffer, NoResponse);
     }
 
     private void setDeviceCodepage(int charset) throws JposException {
-        String[] encodings = new String[]{"UTF-8", "ASCII", "cp437", "cp1252"};
-        int[][] pairs = new int[][]{
-                new int[]{'0', LineDisplayConst.DISP_CS_UNICODE},
-                new int[]{'1', LineDisplayConst.DISP_CS_ASCII},
-                new int[]{'2', 437},
-                new int[]{'3', 1252}
+        String[] encodings = {"UTF-8", "ASCII", "cp437", "cp1252"};
+        int[][] pairs = {
+                {'0', DISP_CS_UNICODE},
+                {'1', DISP_CS_ASCII},
+                {'2', 437},
+                {'3', 1252}
         };
         for (int[] pair : pairs) {
             if (charset == pair[1]) {
-                byte[] buffer = new byte[]{'C', (byte) pair[0]};
+                byte[] buffer = {'C', (byte) pair[0]};
                 Dev.CpChanged = false;
-                Dev.sendCommand(buffer, Dev.RespFromDisplay);
-                Dev.check(!Dev.CpChanged, JposConst.JPOS_E_ILLEGAL, "Character set could not be changed to " + pair[1]);
+                Dev.sendCommand(buffer, RespFromDisplay);
+                check(!Dev.CpChanged, JPOS_E_ILLEGAL, "Character set could not be changed to " + pair[1]);
                 super.characterSet(charset);
                 Encoding = encodings[pair[0] - '0'];
                 return;
             }
         }
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Unsupported character set: " + charset);
+        throw new JposException(JPOS_E_ILLEGAL, "Unsupported character set: " + charset);
     }
 
     @Override
     public void refreshWindow(int index) throws JposException {
-        byte[][] lines = new byte[2][];
         if (DeviceBrightness < 50) {
             sendTextLine(" ", '0');
             sendTextLine(" ", '1');

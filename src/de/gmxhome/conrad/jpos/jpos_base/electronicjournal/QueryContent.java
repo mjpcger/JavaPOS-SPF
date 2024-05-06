@@ -30,7 +30,7 @@ public class QueryContent extends JposInputRequest {
     public String getFileName() {
         return FileName;
     }
-    private String FileName;
+    private final String FileName;
 
     /**
      * ElectronicJournal method QueryContent parameter fromMarker, see UPOS specification.
@@ -39,7 +39,7 @@ public class QueryContent extends JposInputRequest {
     public String getFromMarker() {
         return FromMarker;
     }
-    private String FromMarker;
+    private final String FromMarker;
 
     /**
      * ElectronicJournal method QueryContent parameter toMarker, see UPOS specification.
@@ -48,7 +48,7 @@ public class QueryContent extends JposInputRequest {
     public String getToMarker() {
         return ToMarker;
     }
-    private String ToMarker;
+    private final String ToMarker;
 
     /**
      * Constructor. Stores given parameters for later use.

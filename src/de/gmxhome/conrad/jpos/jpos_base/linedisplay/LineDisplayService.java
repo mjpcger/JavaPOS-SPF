@@ -20,21 +20,24 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.LineDisplayConst.*;
 
 /**
  * LineDisplay service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class LineDisplayService extends JposBase implements LineDisplayService115{
+public class LineDisplayService extends JposBase implements LineDisplayService116{
     /**
      * Instance of a class implementing the LineDisplayInterface for line display specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public LineDisplayInterface LineDisplayInterface;
 
-    private LineDisplayProperties Data;
+    private final LineDisplayProperties Data;
 
     /**
      * Constructor. Stores given property set and device implementation object.
@@ -163,7 +166,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setMapCharacterSet(boolean b) throws JposException {
         logPreSet("MapCharacterSet");
         checkOpened();
-        Device.check(!Data.CapMapCharacterSet && b, JposConst.JPOS_E_ILLEGAL, "Character set mapping not supported");
+        check(!Data.CapMapCharacterSet && b, JPOS_E_ILLEGAL, "Character set mapping not supported");
         LineDisplayInterface.mapCharacterSet(b);
         logSet("MapCharacterSet");
     }
@@ -193,9 +196,9 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setScreenMode(int i) throws JposException {
         logPreSet("ScreenMode");
         checkClaimed();
-        Device.check(Props.DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device enabled");
-        Device.check(!Data.CapScreenMode && i != 0, JposConst.JPOS_E_ILLEGAL, "Screen mode out of range");
-        Device.checkRange(i, 0, Data.ScreenModeList.split(",").length, JposConst.JPOS_E_ILLEGAL, "Screen mode out of range");
+        check(Props.DeviceEnabled, JPOS_E_ILLEGAL, "Device enabled");
+        check(!Data.CapScreenMode && i != 0, JPOS_E_ILLEGAL, "Screen mode out of range");
+        checkRange(i, 0, Data.ScreenModeList.split(",").length, JPOS_E_ILLEGAL, "Screen mode out of range");
         LineDisplayInterface.screenMode(i);
         logSet("ScreenMode");
     }
@@ -218,8 +221,8 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setBlinkRate(int i) throws JposException {
         logPreSet("BlinkRate");
         checkOpened();
-        Device.check(!Data.CapBlinkRate, JposConst.JPOS_E_ILLEGAL, "Blink rate setting not supported");
-        Device.check(i <= 0, JposConst.JPOS_E_ILLEGAL, "Illegal blink rate: " + i);
+        check(!Data.CapBlinkRate, JPOS_E_ILLEGAL, "Blink rate setting not supported");
+        check(i <= 0, JPOS_E_ILLEGAL, "Illegal blink rate: " + i);
         checkNoChangedOrClaimed(Data.BlinkRate, i);
         LineDisplayInterface.blinkRate(i);
         logSet("BlinkRate");
@@ -236,23 +239,16 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setCursorType(int i) throws JposException {
         logPreSet("CursorType");
         checkOpened();
-        Device.check(Data.CapCursorType == LineDisplayConst.DISP_CCT_NONE || Data.CapCursorType == LineDisplayConst.DISP_CCT_FIXED, JposConst.JPOS_E_ILLEGAL, "Cursor type cannot be set");
-        Device.check((i & LineDisplayConst.DISP_CT_BLINK) != 0 && (Data.CapCursorType & LineDisplayConst.DISP_CCT_BLINK) == 0, JposConst.JPOS_E_ILLEGAL, "Blinking cursor not supported");
-        switch (i & ~LineDisplayConst.DISP_CT_BLINK ) {
-            case LineDisplayConst.DISP_CT_NONE:
-                Device.check ((Data.CapCursorType & LineDisplayConst.DISP_CCT_NONE) == 0, JposConst.JPOS_E_ILLEGAL, "Cursor type not supported");
-            case LineDisplayConst.DISP_CT_BLOCK:
-                Device.check ((Data.CapCursorType & LineDisplayConst.DISP_CCT_BLOCK) == 0, JposConst.JPOS_E_ILLEGAL, "Cursor type not supported");
-            case LineDisplayConst.DISP_CT_HALFBLOCK:
-                Device.check ((Data.CapCursorType & LineDisplayConst.DISP_CCT_HALFBLOCK) == 0, JposConst.JPOS_E_ILLEGAL, "Cursor type not supported");
-            case LineDisplayConst.DISP_CT_UNDERLINE:
-                Device.check ((Data.CapCursorType & LineDisplayConst.DISP_CCT_UNDERLINE) == 0, JposConst.JPOS_E_ILLEGAL, "Cursor type not supported");
-            case LineDisplayConst.DISP_CT_REVERSE:
-                Device.check ((Data.CapCursorType & LineDisplayConst.DISP_CCT_REVERSE) == 0, JposConst.JPOS_E_ILLEGAL, "Cursor type not supported");
-            case LineDisplayConst.DISP_CT_OTHER:
-                Device.check ((Data.CapCursorType & LineDisplayConst.DISP_CCT_OTHER) == 0, JposConst.JPOS_E_ILLEGAL, "Cursor type not supported");
-            default:
-                Device.check (true, JposConst.JPOS_E_ILLEGAL, "Invalid cursor type: " + i);
+        check(Data.CapCursorType == DISP_CCT_NONE || Data.CapCursorType == DISP_CCT_FIXED, JPOS_E_ILLEGAL, "Cursor type cannot be set");
+        check((i & DISP_CT_BLINK) != 0 && (Data.CapCursorType & DISP_CCT_BLINK) == 0, JPOS_E_ILLEGAL, "Blinking cursor not supported");
+        switch (i & ~DISP_CT_BLINK ) {
+            case DISP_CT_NONE -> throw new JposException(JPOS_E_ILLEGAL, "Cursor type not supported");
+            case DISP_CT_BLOCK -> check((Data.CapCursorType & DISP_CCT_BLOCK) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
+            case DISP_CT_HALFBLOCK -> check((Data.CapCursorType & DISP_CCT_HALFBLOCK) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
+            case DISP_CT_UNDERLINE -> check((Data.CapCursorType & DISP_CCT_UNDERLINE) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
+            case DISP_CT_REVERSE -> check((Data.CapCursorType & DISP_CCT_REVERSE) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
+            case DISP_CT_OTHER -> check((Data.CapCursorType & DISP_CCT_OTHER) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
+            default -> throw new JposException(JPOS_E_ILLEGAL, "Invalid cursor type: " + i);
         }
         checkNoChangedOrClaimed(Data.CursorType, i);
         LineDisplayInterface.cursorType(i);
@@ -291,7 +287,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setCharacterSet(int i) throws JposException {
         logPreSet("CharacterSet");
         checkOpened();
-        Device.checkMember(i, Device.stringArrayToLongArray(Data.CharacterSetList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid Character set: " + i);
+        checkMember(i, stringArrayToLongArray(Data.CharacterSetList.split(",")), JPOS_E_ILLEGAL, "Invalid Character set: " + i);
         checkNoChangedOrClaimed(Data.CharacterSet, i);
         LineDisplayInterface.characterSet(i);
         logSet("CharacterSet");
@@ -322,7 +318,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setCurrentWindow(int i) throws JposException {
         logPreSet("CurrentWindow");
         checkOpened();
-        Device.check(i < 0 || Data.DeviceWindows < i, JposConst.JPOS_E_ILLEGAL, "Current windows out of range: " + i);
+        check(i < 0 || Data.DeviceWindows < i, JPOS_E_ILLEGAL, "Current windows out of range: " + i);
         checkNoChangedOrClaimed(Data.CurrentWindow, i);
         LineDisplayInterface.currentWindow(i);
         logSet("CurrentWindow");
@@ -339,7 +335,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setCursorColumn(int i) throws JposException {
         logPreSet("CursorColumn");
         checkOpened();
-        Device.check(Data.Columns < i || i < 0, JposConst.JPOS_E_ILLEGAL, "Cursor column out of range: " + i);
+        check(Data.Columns < i || i < 0, JPOS_E_ILLEGAL, "Cursor column out of range: " + i);
         checkNoChangedOrClaimed(Data.CursorColumn, i);
         LineDisplayInterface.cursorColumn(i);
         logSet("CursorColumn");
@@ -356,7 +352,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setCursorRow(int i) throws JposException {
         logPreSet("CursorRow");
         checkOpened();
-        Device.check(Data.Rows <= i || i < 0, JposConst.JPOS_E_ILLEGAL, "Cursor row out of range:" + i);
+        check(Data.Rows <= i || i < 0, JPOS_E_ILLEGAL, "Cursor row out of range:" + i);
         checkNoChangedOrClaimed(Data.CursorRow, i);
         LineDisplayInterface.cursorRow(i);
         logSet("CursorRow");
@@ -389,7 +385,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setDeviceBrightness(int i) throws JposException {
         logPreSet("DeviceBrightness");
         checkOpened();
-        Device.check(i < 0 || i > 100, JposConst.JPOS_E_ILLEGAL, "Invalid device brightness: " + i);
+        check(i < 0 || i > 100, JPOS_E_ILLEGAL, "Invalid device brightness: " + i);
         checkNoChangedOrClaimed(Data.DeviceBrightness, i);
         LineDisplayInterface.deviceBrightness(i);
         logSet("DeviceBrightness");
@@ -434,8 +430,8 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setInterCharacterWait(int i) throws JposException {
         logPreSet("InterCharacterWait");
         checkOpened();
-        Device.check(!Data.CapICharWait && i > 0, JposConst.JPOS_E_ILLEGAL, "Inter-character wait not supported");
-        Device.check(i < 0, JposConst.JPOS_E_ILLEGAL, "Invalid waiting time: " + i);
+        check(!Data.CapICharWait && i > 0, JPOS_E_ILLEGAL, "Inter-character wait not supported");
+        check(i < 0, JPOS_E_ILLEGAL, "Invalid waiting time: " + i);
         checkNoChangedOrClaimed(Data.InterCharacterWait, i);
         LineDisplayInterface.interCharacterWait(i);
         logSet("InterCharacterWait");
@@ -452,8 +448,8 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setMarqueeFormat(int i) throws JposException {
         logPreSet("MarqueeFormat");
         checkOpened();
-        Device.check(Data.CurrentWindow == 0, JposConst.JPOS_E_ILLEGAL, "No marquee format for device window");
-        Device.checkMember(i, new long[]{ LineDisplayConst.DISP_MF_WALK, LineDisplayConst.DISP_MF_PLACE }, JposConst.JPOS_E_ILLEGAL, "Invalid marquee format: " + i);
+        check(Data.CurrentWindow == 0, JPOS_E_ILLEGAL, "No marquee format for device window");
+        checkMember(i, new long[]{ DISP_MF_WALK, DISP_MF_PLACE }, JPOS_E_ILLEGAL, "Invalid marquee format: " + i);
         checkNoChangedOrClaimed(Data.MarqueeFormat, i);
         LineDisplayInterface.marqueeFormat(i);
         logSet("MarqueeFormat");
@@ -470,7 +466,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setMarqueeRepeatWait(int i) throws JposException {
         logPreSet("MarqueeRepeatWait");
         checkOpened();
-        Device.check(i < 0, JposConst.JPOS_E_ILLEGAL, "Invalid marquee repeat wait: " + i);
+        check(i < 0, JPOS_E_ILLEGAL, "Invalid marquee repeat wait: " + i);
         checkNoChangedOrClaimed(Data.MarqueeRepeatWait, i);
         LineDisplayInterface.marqueeRepeatWait(i);
         logSet("MarqueeRepeatWait");
@@ -487,11 +483,11 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setMarqueeType(int i) throws JposException {
         logPreSet("MarqueeType");
         checkOpened();
-        Device.check(Data.CurrentWindow == 0, JposConst.JPOS_E_CLOSED, "Invalid marquee type for device window");
-        Device.check(!Data.CapVMarquee && !Data.CapHMarquee && i != LineDisplayConst.DISP_MT_NONE, JposConst.JPOS_E_ILLEGAL, "Marquee not supported");
-        Device.check(!Data.CapHMarquee && !Device.member(i, new long[]{LineDisplayConst.DISP_MT_NONE, LineDisplayConst.DISP_MT_INIT, LineDisplayConst.DISP_MT_UP, LineDisplayConst.DISP_MT_DOWN}), JposConst.JPOS_E_ILLEGAL, "Invalid marquee type: " + i);
-        Device.check(!Data.CapVMarquee && !Device.member(i, new long[]{LineDisplayConst.DISP_MT_NONE, LineDisplayConst.DISP_MT_INIT, LineDisplayConst.DISP_MT_LEFT, LineDisplayConst.DISP_MT_RIGHT}), JposConst.JPOS_E_ILLEGAL, "Invalid marquee type: " + i);
-        Device.check(!Data.CapHMarquee && !Device.member(i, new long[]{LineDisplayConst.DISP_MT_NONE, LineDisplayConst.DISP_MT_INIT, LineDisplayConst.DISP_MT_UP, LineDisplayConst.DISP_MT_DOWN, LineDisplayConst.DISP_MT_LEFT, LineDisplayConst.DISP_MT_RIGHT}), JposConst.JPOS_E_ILLEGAL, "Invalid marquee type: " + i);
+        check(Data.CurrentWindow == 0, JPOS_E_CLOSED, "Invalid marquee type for device window");
+        check(!Data.CapVMarquee && !Data.CapHMarquee && i != DISP_MT_NONE, JPOS_E_ILLEGAL, "Marquee not supported");
+        check(!Data.CapHMarquee && !member(i, new long[]{DISP_MT_NONE, DISP_MT_INIT, DISP_MT_UP, DISP_MT_DOWN}), JPOS_E_ILLEGAL, "Invalid marquee type: " + i);
+        check(!Data.CapVMarquee && !member(i, new long[]{DISP_MT_NONE, DISP_MT_INIT, DISP_MT_LEFT, DISP_MT_RIGHT}), JPOS_E_ILLEGAL, "Invalid marquee type: " + i);
+        check(!Data.CapHMarquee && !member(i, new long[]{DISP_MT_NONE, DISP_MT_INIT, DISP_MT_UP, DISP_MT_DOWN, DISP_MT_LEFT, DISP_MT_RIGHT}), JPOS_E_ILLEGAL, "Invalid marquee type: " + i);
         checkNoChangedOrClaimed(Data.MarqueeType, i);
         LineDisplayInterface.marqueeType(i);
         logSet("MarqueeType");
@@ -508,8 +504,8 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void setMarqueeUnitWait(int i) throws JposException {
         logPreSet("MarqueeUnitWait");
         checkOpened();
-        Device.check(Data.CurrentWindow == 0, JposConst.JPOS_E_ILLEGAL, "Marque not supported for device window");
-        Device.check(i < 0, JposConst.JPOS_E_ILLEGAL, "Invalid marquee unit wait: " + i);
+        check(Data.CurrentWindow == 0, JPOS_E_ILLEGAL, "Marque not supported for device window");
+        check(i < 0, JPOS_E_ILLEGAL, "Invalid marquee unit wait: " + i);
         checkNoChangedOrClaimed(Data.MarqueeUnitWait, i);
         LineDisplayInterface.marqueeUnitWait(i);
         logSet("MarqueeUnitWait");
@@ -524,35 +520,37 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
 
     @Override
     public void displayBitmap(String fileName, int width, int alignmentX, int alignmentY) throws JposException {
-        logPreCall("DisplayBitmap", fileName + ", " + width + ", " + alignmentX + ", " + alignmentY);
+        logPreCall("DisplayBitmap", removeOuterArraySpecifier(new Object[]{fileName, width, alignmentX, alignmentY}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapBitmap, JposConst.JPOS_E_ILLEGAL, "Bitmaps not supported");
-        Device.check(width <= 0 && width != LineDisplayConst.DISP_BM_ASIS, JposConst.JPOS_E_ILLEGAL, "Bitmap width out of range: " + width);
-        Device.checkMember(alignmentX, new long[]{LineDisplayConst.DISP_BM_LEFT, LineDisplayConst.DISP_BM_CENTER, LineDisplayConst.DISP_BM_RIGHT}, JposConst.JPOS_E_ILLEGAL, "Bitmaps X alignment not supported: " + alignmentX);
-        Device.checkMember(alignmentY, new long[]{LineDisplayConst.DISP_BM_TOP, LineDisplayConst.DISP_BM_CENTER, LineDisplayConst.DISP_BM_BOTTOM}, JposConst.JPOS_E_ILLEGAL, "Bitmaps Y alignment not supported: " + alignmentY);
+        check(!Data.CapBitmap, JPOS_E_ILLEGAL, "Bitmaps not supported");
+        check(fileName == null || fileName.length() == 0, JPOS_E_ILLEGAL, "Empty filename");
+        check(width <= 0 && width != DISP_BM_ASIS, JPOS_E_ILLEGAL, "Bitmap width out of range: " + width);
+        checkMember(alignmentX, new long[]{DISP_BM_LEFT, DISP_BM_CENTER, DISP_BM_RIGHT}, JPOS_E_ILLEGAL, "Bitmaps X alignment not supported: " + alignmentX);
+        checkMember(alignmentY, new long[]{DISP_BM_TOP, DISP_BM_CENTER, DISP_BM_BOTTOM}, JPOS_E_ILLEGAL, "Bitmaps Y alignment not supported: " + alignmentY);
         LineDisplayInterface.displayBitmap(fileName, width, alignmentX, alignmentY);
         logCall("DisplayBitmap");
     }
 
     @Override
     public void setBitmap(int bitmapNumber, String fileName, int width, int alignmentX, int alignmentY) throws JposException {
-        logPreCall("SetBitmap", "" + bitmapNumber + ", " + fileName + ", " + width + ", " + alignmentX + ", " + alignmentY);
+        logPreCall("SetBitmap", removeOuterArraySpecifier(new Object[]{bitmapNumber, fileName, width, alignmentX, alignmentY}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapBitmap, JposConst.JPOS_E_ILLEGAL, "Bitmaps not supported");
-        Device.checkRange(bitmapNumber, 1, 100, JposConst.JPOS_E_ILLEGAL, "Invalid bitmap number: " + bitmapNumber);
-        Device.check(width <= 0 && width != LineDisplayConst.DISP_BM_ASIS, JposConst.JPOS_E_ILLEGAL, "Bitmap width out of range: " + width);
-        Device.checkMember(alignmentX, new long[]{LineDisplayConst.DISP_BM_LEFT, LineDisplayConst.DISP_BM_CENTER, LineDisplayConst.DISP_BM_RIGHT}, JposConst.JPOS_E_ILLEGAL, "Bitmaps X alignment not supported: " + alignmentX);
-        Device.checkMember(alignmentY, new long[]{LineDisplayConst.DISP_BM_TOP, LineDisplayConst.DISP_BM_CENTER, LineDisplayConst.DISP_BM_BOTTOM}, JposConst.JPOS_E_ILLEGAL, "Bitmaps Y alignment not supported: " + alignmentY);
+        check(!Data.CapBitmap, JPOS_E_ILLEGAL, "Bitmaps not supported");
+        checkRange(bitmapNumber, 1, 100, JPOS_E_ILLEGAL, "Invalid bitmap number: " + bitmapNumber);
+        check(fileName == null || fileName.length() == 0, JPOS_E_ILLEGAL, "Empty filename");
+        check(width <= 0 && width != DISP_BM_ASIS, JPOS_E_ILLEGAL, "Bitmap width out of range: " + width);
+        checkMember(alignmentX, new long[]{DISP_BM_LEFT, DISP_BM_CENTER, DISP_BM_RIGHT}, JPOS_E_ILLEGAL, "Bitmaps X alignment not supported: " + alignmentX);
+        checkMember(alignmentY, new long[]{DISP_BM_TOP, DISP_BM_CENTER, DISP_BM_BOTTOM}, JPOS_E_ILLEGAL, "Bitmaps Y alignment not supported: " + alignmentY);
         LineDisplayInterface.setBitmap(bitmapNumber, fileName, width, alignmentX, alignmentY);
         logCall("SetBitmap");
     }
 
     @Override
     public void defineGlyph(int glyphCode, byte[] glyph) throws JposException {
-        logPreCall("DefineGlyph", "" + glyphCode + ", ...");
+        logPreCall("DefineGlyph", removeOuterArraySpecifier(new Object[]{glyphCode, glyph}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapCustomGlyph, JposConst.JPOS_E_ILLEGAL, "Glyphs not supported");
-        Device.check(glyph == null || glyph.length < Data.GlyphHeight * (Data.GlyphWidth + 7) / 8, JposConst.JPOS_E_ILLEGAL, "Too few glyphs data");
+        check(!Data.CapCustomGlyph, JPOS_E_ILLEGAL, "Glyphs not supported");
+        check(glyph == null || glyph.length < Data.GlyphHeight * (Data.GlyphWidth + 7) / 8, JPOS_E_ILLEGAL, "Too few glyphs data");
         String[] codes = Data.CustomGlyphList.split(",");
         boolean valid = false;
         for (String s : codes) {
@@ -566,7 +564,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
                 break;
             }
         }
-        Device.check(!valid, JposConst.JPOS_E_ILLEGAL, "Invalid glyphcode: " + glyphCode);
+        check(!valid, JPOS_E_ILLEGAL, "Invalid glyphcode: " + glyphCode);
         LineDisplayInterface.defineGlyph(glyphCode, glyph);
         logCall("DefineGlyph");
     }
@@ -575,16 +573,17 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void readCharacterAtCursor(int[] cursorData) throws JposException {
         logPreCall("ReadCharacterAtCursor");
         checkEnabled();
-        Device.check(Data.CapReadBack == LineDisplayConst.DISP_CRB_NONE, JposConst.JPOS_E_ILLEGAL, "Read back not supported");
+        check(Data.CapReadBack == DISP_CRB_NONE, JPOS_E_ILLEGAL, "Read back not supported");
+        check(cursorData == null || cursorData.length != 1, JPOS_E_ILLEGAL, "CursorData must be of type int[1]");
         LineDisplayInterface.readCharacterAtCursor(cursorData);
-        logCall("ReadCharacterAtCursor", "" + cursorData[0]);
+        logCall("ReadCharacterAtCursor", removeOuterArraySpecifier(new Object[]{cursorData[0]}, Device.MaxArrayStringElements));
     }
 
     @Override
     public void clearDescriptors() throws JposException {
         logPreCall("ClearDescriptors");
         checkEnabled();
-        Device.check(!Data.CapDescriptors, JposConst.JPOS_E_ILLEGAL, "Descriptors not supported");
+        check(!Data.CapDescriptors, JPOS_E_ILLEGAL, "Descriptors not supported");
         LineDisplayInterface.clearDescriptors();
         logCall("ClearDescriptors");
     }
@@ -593,7 +592,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void clearText() throws JposException {
         logPreCall("ClearText");
         checkEnabled();
-        Device.checkMember(Data.MarqueeType, new long[]{LineDisplayConst.DISP_MT_NONE, LineDisplayConst.DISP_MT_INIT}, JposConst.JPOS_E_ILLEGAL, "Not supported in marquee mode");
+        checkMember(Data.MarqueeType, new long[]{DISP_MT_NONE, DISP_MT_INIT}, JPOS_E_ILLEGAL, "Not supported in marquee mode");
         if (Data.InterCharacterWait != 0) {
             // Clear outstanding asynchronous requests first
             LineDisplayInterface.clearOutput();
@@ -604,12 +603,12 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
 
     @Override
     public void createWindow(int viewportRow, int viewportColumn, int viewportHeight, int viewportWidth, int windowHeight, int windowWidth) throws JposException {
-        logPreCall("CreateWindow", "" + viewportRow + ", " + viewportColumn + ", " + viewportHeight + ", " + viewportWidth + ", " + windowHeight + ", " + windowWidth);
+        logPreCall("CreateWindow", removeOuterArraySpecifier(new Object[]{viewportRow, viewportColumn, viewportHeight, viewportWidth, windowHeight, windowWidth}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(Data.DeviceWindows == 0, JposConst.JPOS_E_ILLEGAL, "Create window not supported");
-        Device.check(viewportColumn < 0 || viewportRow < 0 || viewportColumn >= Data.DeviceColumns || viewportRow >= Data.DeviceRows || viewportHeight <= 0 || viewportWidth <= 0 || windowHeight <= 0 || windowWidth <= 0, JposConst.JPOS_E_ILLEGAL, "Illegal parameter");
-        Device.check(windowHeight < viewportHeight || windowWidth < viewportWidth || (windowHeight != viewportHeight && windowWidth != viewportWidth), JposConst.JPOS_E_ILLEGAL, "Viewport too large");
-        Device.check(viewportHeight + viewportRow > Data.DeviceRows || viewportWidth + viewportColumn > Data.DeviceColumns, JposConst.JPOS_E_ILLEGAL, "Window outside device window");
+        check(Data.DeviceWindows == 0, JPOS_E_ILLEGAL, "Create window not supported");
+        check(viewportColumn < 0 || viewportRow < 0 || viewportColumn >= Data.DeviceColumns || viewportRow >= Data.DeviceRows || viewportHeight <= 0 || viewportWidth <= 0 || windowHeight <= 0 || windowWidth <= 0, JPOS_E_ILLEGAL, "Illegal parameter");
+        check(windowHeight < viewportHeight || windowWidth < viewportWidth || (windowHeight != viewportHeight && windowWidth != viewportWidth), JPOS_E_ILLEGAL, "Viewport too large");
+        check(viewportHeight + viewportRow > Data.DeviceRows || viewportWidth + viewportColumn > Data.DeviceColumns, JPOS_E_ILLEGAL, "Window outside device window");
         LineDisplayInterface.createWindow(viewportRow, viewportColumn, viewportHeight, viewportWidth, windowHeight, windowWidth);
         logCall("CreateWindow");
     }
@@ -618,19 +617,21 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
     public void destroyWindow() throws JposException {
         logPreCall("DestroyWindow");
         checkEnabled();
-        Device.check(Data.CurrentWindow == 0, JposConst.JPOS_E_ILLEGAL, "Window 0 cannot be destroyed");
+        check(Data.CurrentWindow == 0, JPOS_E_ILLEGAL, "Window 0 cannot be destroyed");
         LineDisplayInterface.destroyWindow();
         logCall("DestroyWindow");
     }
 
     @Override
     public void displayText(String data, int attribute) throws JposException {
-        logPreCall("DisplayText", data + ", " + attribute);
+        logPreCall("DisplayText", removeOuterArraySpecifier(new Object[]{data, attribute}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.checkMember(attribute, new long[]{LineDisplayConst.DISP_DT_NORMAL, LineDisplayConst.DISP_DT_REVERSE, LineDisplayConst.DISP_DT_BLINK, LineDisplayConst.DISP_DT_BLINK_REVERSE, }, JposConst.JPOS_E_ILLEGAL, "Attribute invalid: " + attribute);
-        Device.checkMember(Data.MarqueeType, new long[]{LineDisplayConst.DISP_MT_NONE, LineDisplayConst.DISP_MT_INIT}, JposConst.JPOS_E_ILLEGAL, "Not supported in marquee mode");
+        if (data == null)
+            data = "";
+        checkMember(attribute, new long[]{DISP_DT_NORMAL, DISP_DT_REVERSE, DISP_DT_BLINK, DISP_DT_BLINK_REVERSE, }, JPOS_E_ILLEGAL, "Attribute invalid: " + attribute);
+        checkMember(Data.MarqueeType, new long[]{DISP_MT_NONE, DISP_MT_INIT}, JPOS_E_ILLEGAL, "Not supported in marquee mode");
         DisplayText request = LineDisplayInterface.displayText(data, attribute);
-        if (Data.InterCharacterWait > 0 && Data.MarqueeType == LineDisplayConst.DISP_MT_NONE){
+        if (Data.InterCharacterWait > 0 && Data.MarqueeType == DISP_MT_NONE){
             request.enqueue();
             logAsyncCall("DisplayText");
             return;
@@ -645,16 +646,18 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
 
     @Override
     public void displayTextAt(int row, int column, String data, int attribute) throws JposException {
-        logPreCall("DisplayTextAt", data + ", " + attribute);
+        logPreCall("DisplayTextAt", removeOuterArraySpecifier(new Object[]{row, column, data, attribute}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(Data.Rows <= row || row < 0, JposConst.JPOS_E_ILLEGAL, "Cursor row out of range:" + row);
+        if (data == null)
+            data = "";
+        check(Data.Rows <= row || row < 0, JPOS_E_ILLEGAL, "Cursor row out of range:" + row);
         LineDisplayInterface.cursorRow(row);
-        Device.check(Data.Columns < column || column < 0, JposConst.JPOS_E_ILLEGAL, "Cursor column out of range: " + column);
+        check(Data.Columns < column || column < 0, JPOS_E_ILLEGAL, "Cursor column out of range: " + column);
         LineDisplayInterface.cursorColumn(column);
-        Device.checkMember(attribute, new long[]{LineDisplayConst.DISP_DT_NORMAL, LineDisplayConst.DISP_DT_REVERSE, LineDisplayConst.DISP_DT_BLINK, LineDisplayConst.DISP_DT_BLINK_REVERSE, }, JposConst.JPOS_E_ILLEGAL, "Attribute invalid: " + attribute);
-        Device.checkMember(Data.MarqueeType, new long[]{LineDisplayConst.DISP_MT_NONE, LineDisplayConst.DISP_MT_INIT}, JposConst.JPOS_E_ILLEGAL, "Not supported in marquee mode");
+        checkMember(attribute, new long[]{DISP_DT_NORMAL, DISP_DT_REVERSE, DISP_DT_BLINK, DISP_DT_BLINK_REVERSE, }, JPOS_E_ILLEGAL, "Attribute invalid: " + attribute);
+        checkMember(Data.MarqueeType, new long[]{DISP_MT_NONE, DISP_MT_INIT}, JPOS_E_ILLEGAL, "Not supported in marquee mode");
         DisplayText request = LineDisplayInterface.displayText(data, attribute);
-        if (Data.InterCharacterWait > 0 && Data.MarqueeType == LineDisplayConst.DISP_MT_NONE){
+        if (Data.InterCharacterWait > 0 && Data.MarqueeType == DISP_MT_NONE){
             request.enqueue();
             logAsyncCall("DisplayTextAt");
             return;
@@ -669,32 +672,32 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
 
     @Override
     public void refreshWindow(int window) throws JposException {
-        logPreCall("RefreshWindow", "" + window);
+        logPreCall("RefreshWindow", removeOuterArraySpecifier(new Object[]{window}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(Data.DeviceWindows < window || window < 0, JposConst.JPOS_E_ILLEGAL, "Invalid window: " + window);
-        Device.checkMember(Data.MarqueeType, new long[]{LineDisplayConst.DISP_MT_NONE, LineDisplayConst.DISP_MT_INIT}, JposConst.JPOS_E_ILLEGAL, "Not supported in marquee mode");
+        check(Data.DeviceWindows < window || window < 0, JPOS_E_ILLEGAL, "Invalid window: " + window);
+        checkMember(Data.MarqueeType, new long[]{DISP_MT_NONE, DISP_MT_INIT}, JPOS_E_ILLEGAL, "Not supported in marquee mode");
         LineDisplayInterface.refreshWindow(window);
         logCall("RefreshWindow");
     }
 
     @Override
     public void scrollText(int direction, int units) throws JposException {
-        logPreCall("ScrollText", "" + direction + ", " + units);
+        logPreCall("ScrollText", removeOuterArraySpecifier(new Object[]{direction, units}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(Data.InterCharacterWait != 0 || Data.MarqueeType != LineDisplayConst.DISP_MT_NONE, JposConst.JPOS_E_ILLEGAL, "Scroll text not supported in marquee or teletype mode");
-        Device.checkMember(direction, new long[]{LineDisplayConst.DISP_ST_UP, LineDisplayConst.DISP_ST_DOWN, LineDisplayConst.DISP_ST_LEFT, LineDisplayConst.DISP_ST_RIGHT}, JposConst.JPOS_E_ILLEGAL, "Illegal direction: "+ direction);
-        Device.check(units < 0, JposConst.JPOS_E_ILLEGAL, "Scrolling negative units not supported");
+        check(Data.InterCharacterWait != 0 || Data.MarqueeType != DISP_MT_NONE, JPOS_E_ILLEGAL, "Scroll text not supported in marquee or teletype mode");
+        checkMember(direction, new long[]{DISP_ST_UP, DISP_ST_DOWN, DISP_ST_LEFT, DISP_ST_RIGHT}, JPOS_E_ILLEGAL, "Illegal direction: "+ direction);
+        check(units < 0, JPOS_E_ILLEGAL, "Scrolling negative units not supported");
         LineDisplayInterface.scrollText(direction, units);
         logCall("ScrollText");
     }
 
     @Override
     public void setDescriptor(int descriptor, int attribute) throws JposException {
-        logPreCall("SetDescriptor", "" + descriptor + ", " + attribute);
+        logPreCall("SetDescriptor", removeOuterArraySpecifier(new Object[]{descriptor, attribute}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapDescriptors, JposConst.JPOS_E_ILLEGAL, "Descriptors not supported");
-        Device.check(descriptor < 0 || descriptor >= Data.DeviceDescriptors, JposConst.JPOS_E_ILLEGAL, "Invalid descriptor: " + descriptor);
-        Device.checkMember(attribute, new long[]{LineDisplayConst.DISP_SD_ON, LineDisplayConst.DISP_SD_OFF, LineDisplayConst.DISP_SD_BLINK}, JposConst.JPOS_E_ILLEGAL, "Invalid attribute: " + attribute);
+        check(!Data.CapDescriptors, JPOS_E_ILLEGAL, "Descriptors not supported");
+        check(descriptor < 0 || descriptor >= Data.DeviceDescriptors, JPOS_E_ILLEGAL, "Invalid descriptor: " + descriptor);
+        checkMember(attribute, new long[]{DISP_SD_ON, DISP_SD_OFF, DISP_SD_BLINK}, JPOS_E_ILLEGAL, "Invalid attribute: " + attribute);
         LineDisplayInterface.setDescriptor(descriptor, attribute);
         logCall("SetDescriptor");
     }
@@ -723,7 +726,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
      * @return array of objects that describe all parts of data.
      */
     DisplayDataPart[] outputDataParts(String data, int attribute) {
-        List<DisplayDataPart> out = new ArrayList<DisplayDataPart>();
+        List<DisplayDataPart> out = new ArrayList<>();
         int index;
         try {
             while ((index = data.indexOf("\33|")) >= 0) {
@@ -747,7 +750,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         } catch (IndexOutOfBoundsException e) {
             out.add(new EscUnknown(0, 0, 0));
         }
-        out.add(0, attribute == LineDisplayConst.DISP_DT_NORMAL ? new LineDisplayService.EscNormalize() : new LineDisplayService.EscSimple((attribute & LineDisplayConst.DISP_DT_BLINK) != 0, (attribute & LineDisplayConst.DISP_DT_REVERSE) != 0));
+        out.add(0, attribute == DISP_DT_NORMAL ? new LineDisplayService.EscNormalize() : new LineDisplayService.EscSimple((attribute & DISP_DT_BLINK) != 0, (attribute & DISP_DT_REVERSE) != 0));
         return out.toArray(new DisplayDataPart[0]);
     }
 
@@ -768,9 +771,9 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
 
     private DisplayDataPart getEscObj(int temp, int subtype, int value) {
         DisplayDataPart ret;
-        boolean notnull = (ret = EscNormalize.getEscNormalize(null, temp, subtype, value)) != null ||
-                (ret = EscBitmap.getEscBitmap(ret, temp, subtype, value)) != null ||
-                (ret = EscSimple.getEscSimple(ret, temp, subtype, value)) != null;
+        boolean notnull = ((ret = EscNormalize.getEscNormalize(null, temp, subtype, value)) != null ||
+                (ret = EscBitmap.getEscBitmap(null, temp, subtype, value)) != null ||
+                (ret = EscSimple.getEscSimple(null, temp, subtype, value)) != null);
         return notnull ? ret : new EscUnknown(temp, subtype, value);
     }
 
@@ -787,7 +790,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         public char getControlCharacter() {
             return ControlCharacter;
         }
-        private char ControlCharacter;
+        private final char ControlCharacter;
 
         /**
          * Constructor
@@ -809,7 +812,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         public String getData() {
             return Data;
         }
-        private String Data;
+        private final String Data;
 
         /**
          * Returns whether the service maps data.
@@ -820,7 +823,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         public boolean getServiceIsMapping() {
             return ServiceIsMapping;
         }
-        private boolean ServiceIsMapping;
+        private final boolean ServiceIsMapping;
 
         /**
          * Returns character set to be used for output.
@@ -829,7 +832,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         public int getCharacterSet() {
             return CharacterSet;
         }
-        private int CharacterSet;
+        private final int CharacterSet;
 
         /**
          * Constructor.
@@ -889,7 +892,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         public int getEsc() {
             return Esc;
         }
-        private int Esc;
+        private final int Esc;
 
         /**
          * Returns value that contains the lower-case characters between value and upper-case character that marks the end
@@ -901,7 +904,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         public int getSubtype() {
             return Subtype;
         }
-        private int Subtype;
+        private final int Subtype;
 
         /**
          * Returns value in ESC sequence, in any. -1 if no value is present.
@@ -910,7 +913,7 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         public int getValue() {
             return Value;
         }
-        private int Value;
+        private final int Value;
 
         /**
          * Constructor.

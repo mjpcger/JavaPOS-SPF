@@ -22,7 +22,7 @@ import jpos.*;
  * Output request executor for FiscalPrinter method PrintRecItemAdjustment.
  */
 public class PrintRecItemAdjustment extends SimpleItemOutputRequest {
-    private int AdjustmentType;
+    private final int AdjustmentType;
 
     /**
      * FiscalPrinter method parameter adjustmentType, see method PrintRecItemAdjustment.

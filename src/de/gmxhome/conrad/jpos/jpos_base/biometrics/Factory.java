@@ -20,6 +20,10 @@ package de.gmxhome.conrad.jpos.jpos_base.biometrics;
 import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
 import de.gmxhome.conrad.jpos.jpos_base.JposDeviceFactory;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of Biometrics factory for JPOS devices using this framework.
@@ -30,23 +34,34 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults.
      * @param index Biometrics  property set index.
      * @param dev Biometrics implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return BiometricsService object.
      * @throws JposException If property set could not be retrieved.
      */
-    public BiometricsService addDevice(int index, JposDevice dev) throws JposException {
-        BiometricsService service;
+    public BiometricsService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         BiometricsProperties props = dev.getBiometricsProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBiometricsProperties()");
-        service = (BiometricsService) (props.EventSource = new BiometricsService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedBiometrics;
+        validateJposConfiguration(props, dev, dev.ClaimedBiometrics, entry);
+        BiometricsService service = (BiometricsService) (props.EventSource = new BiometricsService(props, dev));
         dev.changeDefaults(props);
-        JposDevice.check(props.SensorBPP == null, JposConst.JPOS_E_FAILURE, "Missing initialization of SensorBPP property");
-        JposDevice.check(props.SensorHeight == null, JposConst.JPOS_E_FAILURE, "Missing initialization of SensorHeight property");
-        JposDevice.check(props.SensorWidth == null, JposConst.JPOS_E_FAILURE, "Missing initialization of SensorWidth property");
-        JposDevice.check(!props.validateSensorColor(props.SensorColor), JposConst.JPOS_E_FAILURE, "SensorColor mismatch");
+        check(props.SensorBPP == null, JPOS_E_NOSERVICE, "Missing initialization of SensorBPP property");
+        check(props.SensorHeight == null, JPOS_E_NOSERVICE, "Missing initialization of SensorHeight property");
+        check(props.SensorWidth == null, JPOS_E_NOSERVICE, "Missing initialization of SensorWidth property");
+        check(props.validateSensorColor(props.SensorColor), JPOS_E_NOSERVICE, "SensorColor mismatch");
         props.addProperties(dev.Biometricss);
         service.DeviceInterface = service.Biometrics = props;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index Biometrics  property set index.
+     * @param dev Biometrics implementation instance derived from JposDevice to be used by the service.
+     * @return BiometricsService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public BiometricsService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

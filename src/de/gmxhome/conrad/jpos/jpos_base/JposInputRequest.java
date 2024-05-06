@@ -16,10 +16,12 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
-import jpos.JposConst;
 import jpos.JposException;
 
 import java.util.List;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * Class to invoke an input method synchronously or asynchronously, depending on AsyncMode property. Does neither change
@@ -39,7 +41,7 @@ public class JposInputRequest extends JposOutputRequest {
 
     @Override
     public JposErrorEvent createErrorEvent(JposException ex) {
-        return new JposErrorEvent(Props.EventSource, ex.getErrorCode(), ex.getErrorCodeExtended(), JposConst.JPOS_EL_INPUT, ex.getMessage());
+        return new JposErrorEvent(Props.EventSource, ex.getErrorCode(), ex.getErrorCodeExtended(), JPOS_EL_INPUT, ex.getMessage());
     }
 
     @Override
@@ -55,11 +57,11 @@ public class JposInputRequest extends JposOutputRequest {
                 Props.AsyncInputActive = true;
             Boolean concurrent = Device.concurrentProcessingSupported(this);
             if (concurrent == null || concurrent) {
-                if (Props.State == JposConst.JPOS_S_ERROR)
+                if (Props.State == JPOS_S_ERROR)
                     Props.SuspendedConcurrentCommands.add(this);
                 else
                     Device.createConcurrentRequestThread(this);
-            } else if (Props.State == JposConst.JPOS_S_ERROR)
+            } else if (Props.State == JPOS_S_ERROR)
                 Props.SuspendedCommands.add(this);
             else
                 Device.invokeRequestThread(this, null);
@@ -72,9 +74,10 @@ public class JposInputRequest extends JposOutputRequest {
         synchronized (Device.AsyncProcessorRunning) {
             if (Device.CurrentCommand != this && Device.CurrentCommand instanceof JposInputRequest && Device.CurrentCommand.Props == Props)
                 return processed;
-            for (Object o : new Object[]{ Device.PendingCommands, Props.SuspendedCommands, Props.SuspendedConcurrentCommands, Props.CurrentCommands }) {
-                if (o != null) {
-                    for (JposOutputRequest request : (List<JposOutputRequest>) o) {
+            for (List<JposOutputRequest> requests : getArrayOf(0,
+                    Device.PendingCommands, Props.SuspendedCommands, Props.SuspendedConcurrentCommands, Props.CurrentCommands)) {
+                if (requests != null) {
+                    for (JposOutputRequest request : requests) {
                         if (request != this && request instanceof JposInputRequest && request.Props == Props)
                             return processed;
                     }
@@ -92,8 +95,8 @@ public class JposInputRequest extends JposOutputRequest {
             while (Props.SuspendedCommands.size() > 0) {
                 JposOutputRequest request = Props.SuspendedCommands.get(i);
                 if ((request instanceof JposInputRequest) == queries) {
-                    if (!queries && Props.State != JposConst.JPOS_S_BUSY) {
-                        Props.State = JposConst.JPOS_S_BUSY;
+                    if (!queries && Props.State != JPOS_S_BUSY) {
+                        Props.State = JPOS_S_BUSY;
                         Props.EventSource.logSet("State");
                     }
                     Props.SuspendedCommands.remove(i);
@@ -106,8 +109,8 @@ public class JposInputRequest extends JposOutputRequest {
             while (Props.SuspendedConcurrentCommands.size() > 0) {
                 JposOutputRequest request = Props.SuspendedConcurrentCommands.get(0);
                 if ((request instanceof JposInputRequest) == queries) {
-                    if (!queries && Props.State != JposConst.JPOS_S_BUSY) {
-                        Props.State = JposConst.JPOS_S_BUSY;
+                    if (!queries && Props.State != JPOS_S_BUSY) {
+                        Props.State = JPOS_S_BUSY;
                         Props.EventSource.logSet("State");
                     }
                     Device.createConcurrentRequestThread(request);

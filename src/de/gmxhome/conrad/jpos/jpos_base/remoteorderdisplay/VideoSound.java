@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.JposConst.*;
+
 /**
  * Output request executor for RemoteOrderDisplay method VideoSound.
  */
@@ -31,7 +33,7 @@ public class VideoSound extends UnitOutputRequest {
         return Frequency;
     }
 
-    private int Frequency;
+    private final int Frequency;
 
     /**
      * Retrieves parameter duration of method VideoSound. See UPOS specification for further information.
@@ -41,7 +43,7 @@ public class VideoSound extends UnitOutputRequest {
         return Duration;
     }
 
-    private int Duration;
+    private final int Duration;
 
     /**
      * Retrieves parameter numberOfCycles of method VideoSound. See UPOS specification for further information.
@@ -51,7 +53,7 @@ public class VideoSound extends UnitOutputRequest {
         return NumberOfCycles;
     }
 
-    private int NumberOfCycles;
+    private final int NumberOfCycles;
 
     /**
      * Retrieves parameter interSoundWait of method VideoSound. See UPOS specification for further information.
@@ -61,7 +63,7 @@ public class VideoSound extends UnitOutputRequest {
         return InterSoundWait;
     }
 
-    private int InterSoundWait;
+    private final int InterSoundWait;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -86,7 +88,7 @@ public class VideoSound extends UnitOutputRequest {
         if (EndSync == null) {
             checkUnitsOnline();
             int errunits = svc.validateTone(getUnits());
-            svc.check(errunits != 0, errunits, JposConst.JPOS_E_FAILURE, 0, "Selected units do not support video sound: " + errunits, EndSync != null);
+            svc.check(errunits != 0, errunits, JPOS_E_FAILURE, 0, "Selected units do not support video sound: " + errunits, EndSync != null);
         }
         svc.RemoteOrderDisplayInterface.videoSound(this);
     }

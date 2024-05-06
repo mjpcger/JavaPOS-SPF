@@ -18,7 +18,9 @@ package de.gmxhome.conrad.jpos.jpos_base.posprinter;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import net.bplaced.conrad.log4jpos.Level;
+
+import static jpos.JposConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * Output request executor for POSPrinter method PrintImmediate.
@@ -41,12 +43,12 @@ public class PrintImmediate extends PrintNormal {
         int state;
         synchronized (Device.AsyncProcessorRunning) {
             state = Props.State;
-            if (state == JposConst.JPOS_S_IDLE)
-                Props.State = JposConst.JPOS_S_BUSY;
+            if (state == JPOS_S_IDLE)
+                Props.State = JPOS_S_BUSY;
             OutputID = -1;
             Device.invokeRequestThread(this, PrintImmediate.class);
         }
         if (state != Props.State)
-            Device.log(Level.DEBUG, Props.LogicalName + ": State <- " + Props.State);
+            Device.log(DEBUG, Props.LogicalName + ": State <- " + Props.State);
     }
 }

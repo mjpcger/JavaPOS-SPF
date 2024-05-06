@@ -22,7 +22,7 @@ import jpos.*;
  * Output request for FiscalPrinter methods PrintRecSubtotalAdjustment.
  */
 public class PrintRecSubtotalAdjustment extends PrintRecSubtotalAdjustVoid {
-    private String Description;
+    private final String Description;
 
     /**
      * FiscalPrinter method parameter description, see method PrintRecSubtotalAdjustment.

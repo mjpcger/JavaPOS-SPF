@@ -19,7 +19,10 @@ package de.gmxhome.conrad.jpos.jpos_base.soundplayer;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.config.JposEntry;
+import jpos.config.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of SoundPlayer factory for JPOS devices using this framework.
@@ -36,10 +39,8 @@ public class Factory extends JposDeviceFactory {
      */
     public SoundPlayerService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         SoundPlayerProperties props = dev.getSoundPlayerProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getSoundPlayerProperties()");
+        validateJposConfiguration(props, dev, dev.ClaimedSoundPlayer, entry);
         SoundPlayerService service = (SoundPlayerService) (props.EventSource = new SoundPlayerService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedSoundPlayer;
         dev.changeDefaults(props);
         props.addProperties(dev.SoundPlayers);
         service.DeviceInterface = service.SoundPlayer = props;

@@ -16,21 +16,22 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
-import jpos.JposConst;
+import static jpos.JposConst.*;
 import jpos.JposException;
-import net.bplaced.conrad.log4jpos.Level;
 
 import java.io.IOException;
 import java.lang.reflect.*;
 
-import static de.gmxhome.conrad.jpos.jpos_base.JposBaseDevice.SerialIOAdapterClass;
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static de.gmxhome.conrad.jpos.jpos_base.SerialIOAdapter.*;
+import static net.bplaced.conrad.log4jpos.Level.DEBUG;
 
 /**
  * Class to process serial communication. Current implementation uses jSSC implementation
  * for serial communication. Includes functionality for automatic data logging.
  */
 public class SerialIOProcessor extends UniqueIOProcessor {
-    static Constructor NewSerialPort;
+    static Constructor<?> NewSerialPort;
 
     static {
         if (SerialIOAdapterClass == null) {
@@ -40,7 +41,7 @@ public class SerialIOProcessor extends UniqueIOProcessor {
         }
         try {
             NewSerialPort = Class.forName(SerialIOAdapterClass).getConstructor();
-        } catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException ignored) {
         } catch (Throwable e) {
             e.printStackTrace();
         }
@@ -49,43 +50,43 @@ public class SerialIOProcessor extends UniqueIOProcessor {
     /**
      * Baudrate constant for 1200 baud.
      */
-    public final static int BAUDRATE_1200 = SerialIOAdapter.B_1200;
+    public final static int BAUDRATE_1200 = B_1200;
     /**
      * Baudrate constant for 2400 baud.
      */
-    public final static int BAUDRATE_2400 = SerialIOAdapter.B_2400;
+    public final static int BAUDRATE_2400 = B_2400;
     /**
      * Baudrate constant for 4800 baud.
      */
-    public final static int BAUDRATE_4800 = SerialIOAdapter.B_4800;
+    public final static int BAUDRATE_4800 = B_4800;
     /**
      * Baudrate constant for 9600 baud.
      */
-    public final static int BAUDRATE_9600 = SerialIOAdapter.B_9600;
+    public final static int BAUDRATE_9600 = B_9600;
     /**
      * Baudrate constant for 19200 baud.
      */
-    public final static int BAUDRATE_19200 = SerialIOAdapter.B_19200;
+    public final static int BAUDRATE_19200 = B_19200;
     /**
      * Baudrate constant for 38400 baud.
      */
-    public final static int BAUDRATE_38400 = SerialIOAdapter.B_38400;
+    public final static int BAUDRATE_38400 = B_38400;
     /**
      * Baudrate constant for 57600 baud.
      */
-    public final static int BAUDRATE_57600 = SerialIOAdapter.B_57600;
+    public final static int BAUDRATE_57600 = B_57600;
     /**
      * Baudrate constant for 115200 baud.
      */
-    public final static int BAUDRATE_115200 = SerialIOAdapter.B_115200;
+    public final static int BAUDRATE_115200 = B_115200;
     /**
      * Baudrate constant for 128000 baud.
      */
-    public final static int BAUDRATE_128000 = SerialIOAdapter.B_128000;
+    public final static int BAUDRATE_128000 = B_128000;
     /**
      * Baudrate constant for 256000 baud.
      */
-    public final static int BAUDRATE_256000 = SerialIOAdapter.B_256000;
+    public final static int BAUDRATE_256000 = B_256000;
 
     /**
      * Baudrate to be used. Default: BAUDRATE_9600.
@@ -95,23 +96,23 @@ public class SerialIOProcessor extends UniqueIOProcessor {
     /**
      * Parity constant for no parity.
      */
-    public final static int PARITY_NONE = SerialIOAdapter.P_NO;
+    public final static int PARITY_NONE = P_NO;
     /**
      * Parity constant for odd parity.
      */
-    public final static int PARITY_ODD = SerialIOAdapter.P_ODD;
+    public final static int PARITY_ODD = P_ODD;
     /**
      * Parity constant for even parity.
      */
-    public final static int PARITY_EVEN = SerialIOAdapter.P_EVEN;
+    public final static int PARITY_EVEN = P_EVEN;
     /**
      * Parity constant for mark parity.
      */
-    public final static int PARITY_MARK = SerialIOAdapter.P_MARK;
+    public final static int PARITY_MARK = P_MARK;
     /**
      * Parity constant for space parity.
      */
-    public final static int PARITY_SPACE = SerialIOAdapter.P_SPACE;
+    public final static int PARITY_SPACE = P_SPACE;
 
     /**
      * Parity to be used. Default: PARITY_NONE.
@@ -121,11 +122,11 @@ public class SerialIOProcessor extends UniqueIOProcessor {
     /**
      * Constant for 7 bit data size.
      */
-    public final static int DATABITS_7 = SerialIOAdapter.D_7;
+    public final static int DATABITS_7 = D_7;
     /**
      * Constant for 8 bit data size.
      */
-    public final static int DATABITS_8 = SerialIOAdapter.D_8;
+    public final static int DATABITS_8 = D_8;
 
     /**
      * Data bits to be used. Default: DATABITS_8.
@@ -135,11 +136,11 @@ public class SerialIOProcessor extends UniqueIOProcessor {
     /**
      * Constant for serial communication using 1 stop bit.
      */
-    public final static int STOPBITS_1 = SerialIOAdapter.S_1;
+    public final static int STOPBITS_1 = S_1;
     /**
      * Constant for serial communication using 2 stop bits.
      */
-    public final static int STOPBITS_2 = SerialIOAdapter.S_2;
+    public final static int STOPBITS_2 = S_2;
 
     /**
      * Stop bits to be used. Default: STOPBITS_2.
@@ -154,10 +155,6 @@ public class SerialIOProcessor extends UniqueIOProcessor {
     // For parameter setting:
     private boolean ParametersSet = false;
 
-    private void log(Level level, String message) {
-        Dev.log(level, message);
-    }
-
     /**
      * Creates simple serial connector for given port
      *
@@ -171,92 +168,65 @@ public class SerialIOProcessor extends UniqueIOProcessor {
     }
 
     @Override
-    /**
-     * write byte buffer to serial port
-     * @param buffer Buffer to be written
-     * @return length written
-     * @throws JposException In case of an IO error
-     */
     public int write(byte[] buffer) throws JposException {
         synchronized (WriteSynchronizer) {
             if (SerialIOExecutor == null)
-                logerror("Write", JposConst.JPOS_E_ILLEGAL, "Port not open");
+                logerror("Write", JPOS_E_ILLEGAL, "Port not open");
             try {
                 SerialIOExecutor.write(buffer);
                 return super.write(buffer);
             } catch (IOException e) {
-                return logerror("Write", JposConst.JPOS_E_FAILURE, e);
+                return logerror("Write", JPOS_E_FAILURE, e);
             }
         }
     }
 
     @Override
-    /**
-     * Returns no. of bytes available in input buffer
-     * @return Input buffer byte count
-     * @throws JposException In case of an IO error
-     */
     public int available() throws JposException {
         int count = 0;
         if (SerialIOExecutor == null)
-            logerror("Available", JposConst.JPOS_E_ILLEGAL, "Port not open");
+            logerror("Available", JPOS_E_ILLEGAL, "Port not open");
         try {
             count = SerialIOExecutor.available();
         } catch (IOException e) {
-            logerror("Available", JposConst.JPOS_E_FAILURE, e);
+            logerror("Available", JPOS_E_FAILURE, e);
         }
         if (count >= 0) {
             LoggingData = String.valueOf(count).getBytes();
             return super.available();
         }
-        return logerror("Available", JposConst.JPOS_E_FAILURE, "Bad connector");
+        return logerror("Available", JPOS_E_FAILURE, "Bad connector");
     }
 
     @Override
-    /**
-     * Reads count bytes from input buffer
-     * @param count No. of bytes to be read
-     * @return byte[] containing received bytes. In case of timeout, less than count
-     * bytes will be returned.
-     * @throws JposException In case of an IO error
-     */
     public byte[] read(int count) throws JposException {
         synchronized (ReadSynchronizer) {
-            boolean retry = false;
             int timeout = Timeout;
             if (SerialIOExecutor == null)
-                logerror("Read", JposConst.JPOS_E_ILLEGAL, "Port not open");
+                logerror("Read", JPOS_E_ILLEGAL, "Port not open");
             byte[] result = new byte[count];
             if (count == 0)
                 return result;
-            while (true) {
-                try {
-                    result = SerialIOExecutor.read(count, timeout);
-                    LoggingData = result;
-                    return super.read(count);
-                } catch (IOException e) {
-                    logerror("Read", JposConst.JPOS_E_FAILURE, e);
-                }
-                break;
+            try {
+                result = SerialIOExecutor.read(count, timeout);
+                LoggingData = result;
+                return super.read(count);
+            } catch (IOException e) {
+                logerror("Read", JPOS_E_FAILURE, e);
+                return null;    // Won't be reached
             }
-            log(Level.TRACE, LoggingPrefix + "Input timeout");
-            return new byte[0];
         }
     }
 
     @Override
-    /**
-     * Flushes input and output buffer
-     * @throws JposException In case of an IO error
-     */
     public void flush() throws JposException {
         if (SerialIOExecutor == null)
-            logerror("Flush", JposConst.JPOS_E_ILLEGAL, "Port not open error");
+            logerror("Flush", JPOS_E_ILLEGAL, "Port not open error");
         try {
             SerialIOExecutor.flush();
             super.flush();
         } catch (IOException e) {
-            logerror("Flush", JposConst.JPOS_E_FAILURE, e);
+            logerror("Flush", JPOS_E_FAILURE, e);
         }
     }
 
@@ -270,65 +240,51 @@ public class SerialIOProcessor extends UniqueIOProcessor {
     }
 
     @Override
-    /**
-     * Opens the port
-     * @param  noErrorLog  if set, no logging occurs in error case to avoid a flood
-     *                     of error messages.
-     * @throws JposException if an IO error occurs
-     */
     public void open(boolean noErrorLog) throws JposException {
-        Object error = null;
-        do {
-            if (SerialIOExecutor != null) {
-                error = "Port just open";
-                break;
-            }
-            if (NewSerialPort == null) {
-                error = "No SerialIOAdapter available";
-                break;
-            }
+        Object error;
+        if (SerialIOExecutor != null) {
+            error = "Port just open";
+        } else if (NewSerialPort == null) {
+            error = "No SerialIOAdapter available";
+        } else {
             try {
                 SerialIOExecutor = (SerialIOAdapter) NewSerialPort.newInstance();
                 SerialIOExecutor.open(Port);
                 if (ParametersSet)
                     SerialIOExecutor.setParameters(Baudrate, Databits, Stopbits, Parity);
+                super.open(noErrorLog);
+                return;
+            } catch (JposException e) {
+                throw e;
             } catch (Exception e) {
                 error = e;
-                break;
             }
-            super.open(noErrorLog);
-            return;
         }
-        while (false);
         if (noErrorLog) {
-            if (error instanceof SerialIOAdapter.NotFoundException)
-                throw new JposException(JposConst.JPOS_E_NOEXIST, ((Exception)error).getMessage());
+            if (error instanceof NotFoundException)
+                throw new JposException(JPOS_E_NOEXIST, ((Exception) error).getMessage());
             else if (error instanceof Exception)
-                throw new JposException(JposConst.JPOS_E_FAILURE, ((Exception)error).getMessage());
+                throw new JposException(JPOS_E_FAILURE, ((Exception) error).getMessage());
             else
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, error.toString());
+                throw new JposException(JPOS_E_ILLEGAL, error.toString());
         }
-        if (error instanceof SerialIOAdapter.NotFoundException)
-            logerror("Open", JposConst.JPOS_E_NOEXIST, (Exception)error);
+        if (error instanceof NotFoundException)
+            logerror("Open", JPOS_E_NOEXIST, (Exception) error);
         else if (error instanceof Exception)
-            logerror("Open", JposConst.JPOS_E_FAILURE, (Exception)error);
+            logerror("Open", JPOS_E_FAILURE, (Exception) error);
         else
-            logerror("Open", JposConst.JPOS_E_ILLEGAL, error.toString());
+            logerror("Open", JPOS_E_ILLEGAL, error.toString());
     }
 
     @Override
-    /**
-     * Close the port
-     * @throws JposException If an IO error occurs
-     */
     public void close() throws JposException {
         if (SerialIOExecutor == null)
-            logerror("Close", JposConst.JPOS_E_ILLEGAL, "Not opened");
+            logerror("Close", JPOS_E_ILLEGAL, "Not opened");
         try {
                 SerialIOExecutor.close();
             super.close();
         } catch (Exception e) {
-            logerror("Close", JposConst.JPOS_E_FAILURE, e);
+            logerror("Close", JPOS_E_FAILURE, e);
         } finally {
             SerialIOExecutor = null;
         }
@@ -351,12 +307,13 @@ public class SerialIOProcessor extends UniqueIOProcessor {
         try {
             dummyexec = (SerialIOAdapter)NewSerialPort.newInstance();
         } catch (Exception e) {
-            logerror("SetParameters", JposConst.JPOS_E_FAILURE, e);
+            logerror("SetParameters", JPOS_E_FAILURE, e);
         }
-        int[][] validrates = dummyexec.getCommunicationConstants(SerialIOAdapter.T_BAUD);
-        int[][] validdatabits = dummyexec.getCommunicationConstants(SerialIOAdapter.T_DATA);
-        int[][] validstopbits = dummyexec.getCommunicationConstants(SerialIOAdapter.T_STOP);
-        int[][] validparities = dummyexec.getCommunicationConstants(SerialIOAdapter.T_PARITY);
+        assert dummyexec != null;
+        int[][] validrates = dummyexec.getCommunicationConstants(T_BAUD);
+        int[][] validdatabits = dummyexec.getCommunicationConstants(T_DATA);
+        int[][] validstopbits = dummyexec.getCommunicationConstants(T_STOP);
+        int[][] validparities = dummyexec.getCommunicationConstants(T_PARITY);
         Baudrate = validate(baudrate, validrates, "baud rate");
         Databits = validate(databits, validdatabits, "data size");
         Stopbits = validate(stopbits, validstopbits, "number of stop bits");
@@ -366,10 +323,10 @@ public class SerialIOProcessor extends UniqueIOProcessor {
             try {
                     SerialIOExecutor.setParameters(Baudrate, Databits, Stopbits, Parity);
             } catch (IOException e) {
-                logerror("SetParameters", JposConst.JPOS_E_ILLEGAL, e);
+                logerror("SetParameters", JPOS_E_ILLEGAL, e);
             }
         }
-        log(Level.DEBUG, LoggingPrefix + "SetParameters(" + Baudrate + ", " + Databits + ", " + Stopbits + ", " + Parity + ") successful.");
+        Dev.log(DEBUG, LoggingPrefix + "SetParameters(" + Baudrate + ", " + Databits + ", " + Stopbits + ", " + Parity + ") successful.");
     }
 
     private int validate(int value, int[][] validvalues, String valuename) throws JposException {
@@ -380,14 +337,14 @@ public class SerialIOProcessor extends UniqueIOProcessor {
                 }
             }
         }
-        logerror("SetParameters", JposConst.JPOS_E_ILLEGAL, "Unsupported " + valuename + ": " + value);
+        logerror("SetParameters", JPOS_E_ILLEGAL, "Unsupported " + valuename + ": " + value);
         return 0;   // will never be reached.
     }
 
     @Override
     public String setTarget(String target) throws JposException {
         if (!target.equals(Port))
-            logerror("SetTarget", JposConst.JPOS_E_ILLEGAL, "Target must match " + Port);
+            logerror("SetTarget", JPOS_E_ILLEGAL, "Target must match " + Port);
         return Target;
     }
 

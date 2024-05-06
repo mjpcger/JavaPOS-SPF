@@ -18,11 +18,11 @@ package SampleFiscalPrinter;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.fiscalprinter.*;
-import jpos.JposConst;
-import jpos.JposException;
+import jpos.*;
 import jpos.config.JposEntry;
-import jpos.loader.JposServiceInstance;
-import jpos.loader.JposServiceInstanceFactory;
+import jpos.loader.*;
+
+import static jpos.JposConst.*;
 
 /**
  * Factory class for FiscalPrinter device class of sample fiscal printer service implementation
@@ -42,7 +42,7 @@ public class FiscalPrinterFactory extends Factory implements JposServiceInstance
                     if (!created) {
                         dev = new Device(port);
                     } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
+                        throw new JposException(JPOS_E_NOSERVICE, "Port " + port + " used by " + any.getClass().getName());
                     else {
                         dev = (Device) any;
                     }
@@ -53,11 +53,11 @@ public class FiscalPrinterFactory extends Factory implements JposServiceInstance
                     return obj;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

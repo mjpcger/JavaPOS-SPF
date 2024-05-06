@@ -31,7 +31,7 @@ public class PrintBitmap extends OutputRequest {
         return Station;
     }
 
-    private int Station;
+    private final int Station;
 
     /**
      * POSPrinter method PrintBitmap parameter fileName, see UPOS specification.
@@ -41,7 +41,7 @@ public class PrintBitmap extends OutputRequest {
         return FileName;
     }
 
-    private String FileName;
+    private final String FileName;
 
     /**
      * POSPrinter method PrintBitmap parameter width, see UPOS specification.
@@ -51,7 +51,7 @@ public class PrintBitmap extends OutputRequest {
         return Width;
     }
 
-    private int Width;
+    private final int Width;
 
     /**
      * POSPrinter method PrintBitmap parameter alignment, see UPOS specification.
@@ -61,7 +61,7 @@ public class PrintBitmap extends OutputRequest {
         return Alignment;
     }
 
-    private int Alignment;
+    private final int Alignment;
 
     /**
      * Constructor. Stores given parameters for later use.

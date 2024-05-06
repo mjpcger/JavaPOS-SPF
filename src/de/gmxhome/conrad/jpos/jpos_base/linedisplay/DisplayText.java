@@ -17,10 +17,9 @@
 package de.gmxhome.conrad.jpos.jpos_base.linedisplay;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import de.gmxhome.conrad.jpos.jpos_base.linedisplay.*;
 import jpos.*;
 
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * Output request executor for LineDisplay method DisplayText.
@@ -34,7 +33,7 @@ public class DisplayText extends JposOutputRequest {
         return Window;
     }
 
-    private int Window;
+    private final int Window;
 
     /**
      * LineDisplay method DisplayText parameter data, converted to an array of Object with LineDisplayService method outputDataParts.
@@ -45,7 +44,7 @@ public class DisplayText extends JposOutputRequest {
         return Arrays.copyOf(Data, Data.length);
     }
 
-    private LineDisplayService.DisplayDataPart[] Data;
+    private final LineDisplayService.DisplayDataPart[] Data;
 
     /**
      * Constructor. Stores given parameters for later use.

@@ -62,6 +62,7 @@ public interface ItemDispenserInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>itemCount is not null and has length 1,</li>
+     *     <li>itemCount[0] &gt; 0,</li>
      *     <li>slotNumber is between 1 and MaxSlots.</li>
      * </ul>
      *

@@ -28,9 +28,9 @@ public class SoundPlayer implements Runnable {
     private int Frequency;
     private int Duration;
     private int Volume;
-    private String ThreadName;
+    private final String ThreadName;
     private SourceDataLine SoundData = null;
-    private AudioFormat Format = new AudioFormat(SAMPLERATE, 8, 1, true, false);
+    private final AudioFormat Format = new AudioFormat(SAMPLERATE, 8, 1, true, false);
     private static final int SAMPLERATE = 48000;
     private Thread Player = null;
     private enum SoundPlayerState {OFF, OPEN, STARTED};
@@ -87,14 +87,14 @@ public class SoundPlayer implements Runnable {
      * Waits until sound has been finished.
      */
     public void waitFinished() {
-        Thread player = null;
+        Thread player;
         synchronized(this) {
             player = Player;
         }
         if (player != null) {
             try {
                 player.join();
-            } catch (InterruptedException e) {}
+            } catch (InterruptedException ignored) {}
         }
     }
 
@@ -106,12 +106,11 @@ public class SoundPlayer implements Runnable {
                 State = SoundPlayerState.STARTED;
             }
             while (Duration < 0) {
-                playMaxOneSecond(1000);
+                playMilliSeconds(Long.MAX_VALUE / (SAMPLERATE / 1000));
             }
-            for (int sec = Duration / 1000; sec >= 0; --sec) {
-                playMaxOneSecond(sec == 0 ? Duration % 1000 : 1000);
-            }
+            playMilliSeconds(Duration);
             SoundData.drain();
+        } catch (NullPointerException ignore) {
         } catch (Throwable e) {
             e.printStackTrace();
         } finally {
@@ -119,10 +118,13 @@ public class SoundPlayer implements Runnable {
         }
     }
 
-    private void playMaxOneSecond(int millisec) {
+    private void playMilliSeconds(long millisec) {
         double factor = (2 * Math.PI * Frequency) / (SAMPLERATE);
-        for (int i = 0; i < millisec * (SAMPLERATE / 1000); i++) {
+        boolean again = true;
+        for (long l = 0; l < millisec * (SAMPLERATE / 1000) || again; l++) {
+            int i = (int) l % SAMPLERATE;
             byte val = (byte) (Math.sin(i * factor) * Volume);
+            again = val * ((byte) (Math.sin((i + 1) * factor))) <= 0;
             SoundData.write(new byte[]{val}, 0, 1);
         }
     }

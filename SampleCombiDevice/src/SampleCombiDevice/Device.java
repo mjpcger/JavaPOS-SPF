@@ -26,13 +26,20 @@ import de.gmxhome.conrad.jpos.jpos_base.msr.*;
 import de.gmxhome.conrad.jpos.jpos_base.poskeyboard.*;
 import de.gmxhome.conrad.jpos.jpos_base.scanner.*;
 import de.gmxhome.conrad.jpos.jpos_base.toneindicator.*;
-import net.bplaced.conrad.log4jpos.Level;
 
 import java.io.*;
 import java.util.*;
 
-import static de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties.ExclusiveAllowed;
-import static de.gmxhome.conrad.jpos.jpos_base.UniqueIOProcessor.IOProcessorError;
+import static de.gmxhome.conrad.jpos.jpos_base.SerialIOProcessor.*;
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static jpos.CashDrawerConst.*;
+import static jpos.JposConst.*;
+import static jpos.KeylockConst.*;
+import static jpos.LineDisplayConst.*;
+import static jpos.MSRConst.*;
+import static jpos.POSKeyboardConst.*;
+import static jpos.ScannerConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * Base of a JposDevice based implementation of JavaPOS CashDrawer, Keylock, LineDisplay,MSR, POSKeyboard, Scanner and
@@ -84,10 +91,8 @@ import static de.gmxhome.conrad.jpos.jpos_base.UniqueIOProcessor.IOProcessorErro
  */
 public class Device extends JposDevice implements Runnable{
     private UniqueIOProcessor OutStream;
-    private Thread StateWatcher;
-    private SyncObject WaitObj;
-    private boolean ToBeFinished;
-    private Properties PropertySet;
+    private ThreadHandler StateWatcher;
+    private final SyncObject WaitObj;
 
     /**
      * Status request command.
@@ -119,7 +124,7 @@ public class Device extends JposDevice implements Runnable{
     private static final byte RespFromEKey = 'E';
     private static final int EKeyValuePos = 1;
     private static final int EKeyValueLen = 12;
-    private static final byte[] DefaultEKeyPos = new byte[0];
+    private static final byte[] DefaultEKeyPos = {};
     private static final byte RespFromKeyboard = 'B';
     private static final int KeybRowPos = 1;
     private static final int KeybColumnPos = 2;
@@ -155,14 +160,13 @@ public class Device extends JposDevice implements Runnable{
     private static final byte StatusDrawerPos = 1;
     private static final byte StatusLockPos = 2;
     private static final byte StatusEKeyPos = 3;
-    private static int LockIndex = 0;
-    private static int EKeyIndex = 1;
-    private int Baudrate = SerialIOProcessor.BAUDRATE_9600;
-    private int Databits = SerialIOProcessor.DATABITS_8;
-    private int Stopbits = SerialIOProcessor.STOPBITS_2;
-    private int Parity = SerialIOProcessor.PARITY_NONE;
+    private static final int EKeyIndex = 1;
+    private int Baudrate = BAUDRATE_9600;
+    private int Databits = DATABITS_8;
+    private int Stopbits = STOPBITS_2;
+    private int Parity = PARITY_NONE;
     private Integer OwnPort = null;
-    private int LoggingType = UniqueIOProcessor.LoggingTypeEscapeString;
+    private int LoggingType = LoggingTypeEscapeString;
     private int RequestTimeout = 500;
     private int CharacterTimeout = 10;
     private int PollDelay = 50;
@@ -189,7 +193,7 @@ public class Device extends JposDevice implements Runnable{
     boolean DeviceIsOffline = true;
 
     private byte LockPosition = DefaultLockPos;
-    private Map<Integer, Integer> LockMapping = new HashMap<Integer, Integer>();
+    private final Map<Integer, Integer> LockMapping = new HashMap<>();
     private byte[] EKeyValue = DefaultEKeyPos;
     private boolean BinaryEKey = true;
 
@@ -207,13 +211,14 @@ public class Device extends JposDevice implements Runnable{
      * Attribute value for normal display output.
      */
     final char NormalChar = 'n';
-    private int[][] KeyValueTable = new int[10][16];
+    private final int[][] KeyValueTable = new int[10][16];
     private int OpenCount = 0;
-    private List<CommandHelper> Commands = new ArrayList<CommandHelper>();
+    private final List<CommandHelper> Commands = new ArrayList<>();
     private long LastPollTick;
-    private SyncObject StartWaiter = new SyncObject();
+    private final SyncObject StartWaiter = new SyncObject();
 
-    private class CommandHelper {
+    @SuppressWarnings("unused")
+    private static class CommandHelper {
         byte[] Command;
         byte Response;
         SyncObject Signalizer;
@@ -233,7 +238,7 @@ public class Device extends JposDevice implements Runnable{
          * Constructor for internal use within communication handler (without symchronization)
          */
         CommandHelper() {
-            Command = Device.CmdStatusRequest;
+            Command = CmdStatusRequest;
             Response = 0;
             Signalizer = null;
         }
@@ -273,7 +278,7 @@ public class Device extends JposDevice implements Runnable{
         ProcessProperties();
         PhysicalDeviceDescription = "Combined device simulator for virtual COM ports";
         PhysicalDeviceName = "Combined Device Simulator";
-        CapPowerReporting = JposConst.JPOS_PR_ADVANCED;
+        CapPowerReporting = JPOS_PR_ADVANCED;
         WaitObj = new SyncObject();
         // Set property defaults, can be overwritten in every jpos.xml entry
         for (char[] line : DisplayContents) {
@@ -288,44 +293,45 @@ public class Device extends JposDevice implements Runnable{
             for (int val : row)
                 val = 0;    // 0: suppress key entry
         }
-        int[] positions = new int[]{'-', '0', '1', '2', 'X', 'Z', 'P', 'T'};
+        int[] positions = {'-', '0', '1', '2', 'X', 'Z', 'P', 'T'};
         for (int i = 0; i < positions.length; i++) {
             LockMapping.put(positions[i], i);
         }
     }
 
     @Override
+    @SuppressWarnings("resource")
     public void checkProperties(JposEntry entry) throws JposException {
         super.checkProperties(entry);
         try {
             new TcpClientIOProcessor(this, ID);
             OwnPort = 0;
-        } catch (JposException e) {}
+        } catch (JposException ignored) {}
         try {
             Object o;
             if ((o = entry.getPropertyValue("Baudrate")) != null) {
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Baudrate");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Baudrate");
                 Baudrate = Integer.parseInt(o.toString());
             }
             if ((o = entry.getPropertyValue("Databits")) != null) {
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Databits");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Databits");
                 Databits = Integer.parseInt(o.toString());
             }
             if ((o = entry.getPropertyValue("Stopbits")) != null) {
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Stopbits");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Stopbits");
                 Stopbits = Integer.parseInt(o.toString());
             }
             if ((o = entry.getPropertyValue("Parity")) != null) {
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Parity");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Parity");
                 Parity = Integer.parseInt(o.toString());
             }
             if ((o = entry.getPropertyValue("OwnPort")) != null) {
                 if (OwnPort == null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: OwnPort");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: OwnPort");
                 int port = Integer.parseInt(o.toString());
                 if (port < 0 || port > 0xffff)
                     throw new IOException("Invalid TCP port: " + o.toString());
@@ -334,12 +340,9 @@ public class Device extends JposDevice implements Runnable{
             if ((o = entry.getPropertyValue("LoggingType")) != null) {
                 int type = Integer.parseInt(o.toString());
                 switch (type) {
-                    default:
-                        throw new IOException("Unsupported logging type: " + o.toString());
-                    case UniqueIOProcessor.LoggingTypeEscapeString:
-                    case UniqueIOProcessor.LoggingTypeHexString:
-                    case UniqueIOProcessor.LoggingTypeNoLogging:
-                        LoggingType = type;
+                    default -> throw new IOException("Unsupported logging type: " + o.toString());
+                    case LoggingTypeEscapeString, LoggingTypeHexString, LoggingTypeNoLogging ->
+                            LoggingType = type;
                 }
             }
             if ((o = entry.getPropertyValue("RequestTimeout")) != null)
@@ -354,7 +357,7 @@ public class Device extends JposDevice implements Runnable{
                 BinaryEKey = Boolean.parseBoolean(o.toString());
             }
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property", e);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property", e);
         }
     }
 
@@ -363,11 +366,11 @@ public class Device extends JposDevice implements Runnable{
         super.changeDefaults(props);
         props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Display service for combined device simulator";
-        props.CapCharacterSet = LineDisplayConst.DISP_CCS_UNICODE;
-        props.CharacterSetDef = LineDisplayConst.DISP_CS_UNICODE;
+        props.CapCharacterSet = DISP_CCS_UNICODE;
+        props.CharacterSetDef = DISP_CS_UNICODE;
         props.CharacterSetList = "437,997,998,1252";
-        props.CapBlink = LineDisplayConst.DISP_CB_BLINKEACH;
-        props.CapReverse = LineDisplayConst.DISP_CR_REVERSEEACH;
+        props.CapBlink = DISP_CB_BLINKEACH;
+        props.CapReverse = DISP_CR_REVERSEEACH;
         props.CapICharWait = true;
     }
 
@@ -391,7 +394,7 @@ public class Device extends JposDevice implements Runnable{
         props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Keylock service for combined device simulator";
         if (props.Index == EKeyIndex) {
-            props.CapKeylockType = KeylockConst.LOCK_KT_ELECTRONIC;
+            props.CapKeylockType = LOCK_KT_ELECTRONIC;
         }
         else {
             props.PositionCount = 7;
@@ -424,192 +427,192 @@ public class Device extends JposDevice implements Runnable{
      * @throws JposException if <i>classname</i>.properties does not exist.
      */
     private void ProcessProperties() throws JposException {
-        PropertySet = new Properties();
+        Properties propertySet = new Properties();
         File propertyFile = new File(getClass().getName() + ".properties");
         if (propertyFile.exists()) {
             try (BufferedInputStream istream = new BufferedInputStream(new FileInputStream(propertyFile))) {
-                PropertySet.load(istream);
+                propertySet.load(istream);
             } catch (Exception e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Property file missing", e);
+                throw new JposException(JPOS_E_ILLEGAL, "Property file missing", e);
             }
-            KeyValueTable[0][0] = Integer.parseInt(PropertySet.getProperty("Key01-01Value", "0"));
-            KeyValueTable[0][1] = Integer.parseInt(PropertySet.getProperty("Key01-02Value", "0"));
-            KeyValueTable[0][2] = Integer.parseInt(PropertySet.getProperty("Key01-03Value", "0"));
-            KeyValueTable[0][3] = Integer.parseInt(PropertySet.getProperty("Key01-04Value", "0"));
-            KeyValueTable[0][4] = Integer.parseInt(PropertySet.getProperty("Key01-05Value", "0"));
-            KeyValueTable[0][5] = Integer.parseInt(PropertySet.getProperty("Key01-06Value", "0"));
-            KeyValueTable[0][6] = Integer.parseInt(PropertySet.getProperty("Key01-07Value", "0"));
-            KeyValueTable[0][7] = Integer.parseInt(PropertySet.getProperty("Key01-08Value", "0"));
-            KeyValueTable[0][8] = Integer.parseInt(PropertySet.getProperty("Key01-09Value", "0"));
-            KeyValueTable[0][9] = Integer.parseInt(PropertySet.getProperty("Key01-10Value", "0"));
-            KeyValueTable[0][10] = Integer.parseInt(PropertySet.getProperty("Key01-11Value", "0"));
-            KeyValueTable[0][11] = Integer.parseInt(PropertySet.getProperty("Key01-12Value", "0"));
-            KeyValueTable[0][12] = Integer.parseInt(PropertySet.getProperty("Key01-13Value", "0"));
-            KeyValueTable[0][13] = Integer.parseInt(PropertySet.getProperty("Key01-14Value", "0"));
-            KeyValueTable[0][14] = Integer.parseInt(PropertySet.getProperty("Key01-15Value", "0"));
-            KeyValueTable[0][15] = Integer.parseInt(PropertySet.getProperty("Key01-16Value", "0"));
-            KeyValueTable[1][0] = Integer.parseInt(PropertySet.getProperty("Key02-01Value", "0"));
-            KeyValueTable[1][1] = Integer.parseInt(PropertySet.getProperty("Key02-02Value", "0"));
-            KeyValueTable[1][2] = Integer.parseInt(PropertySet.getProperty("Key02-03Value", "0"));
-            KeyValueTable[1][3] = Integer.parseInt(PropertySet.getProperty("Key02-04Value", "0"));
-            KeyValueTable[1][4] = Integer.parseInt(PropertySet.getProperty("Key02-05Value", "0"));
-            KeyValueTable[1][5] = Integer.parseInt(PropertySet.getProperty("Key02-06Value", "0"));
-            KeyValueTable[1][6] = Integer.parseInt(PropertySet.getProperty("Key02-07Value", "0"));
-            KeyValueTable[1][7] = Integer.parseInt(PropertySet.getProperty("Key02-08Value", "0"));
-            KeyValueTable[1][8] = Integer.parseInt(PropertySet.getProperty("Key02-09Value", "0"));
-            KeyValueTable[1][9] = Integer.parseInt(PropertySet.getProperty("Key02-10Value", "0"));
-            KeyValueTable[1][10] = Integer.parseInt(PropertySet.getProperty("Key02-11Value", "0"));
-            KeyValueTable[1][11] = Integer.parseInt(PropertySet.getProperty("Key02-12Value", "0"));
-            KeyValueTable[1][12] = Integer.parseInt(PropertySet.getProperty("Key02-13Value", "0"));
-            KeyValueTable[1][13] = Integer.parseInt(PropertySet.getProperty("Key02-14Value", "0"));
-            KeyValueTable[1][14] = Integer.parseInt(PropertySet.getProperty("Key02-15Value", "0"));
-            KeyValueTable[1][15] = Integer.parseInt(PropertySet.getProperty("Key02-16Value", "0"));
-            KeyValueTable[2][0] = Integer.parseInt(PropertySet.getProperty("Key03-01Value", "0"));
-            KeyValueTable[2][1] = Integer.parseInt(PropertySet.getProperty("Key03-02Value", "0"));
-            KeyValueTable[2][2] = Integer.parseInt(PropertySet.getProperty("Key03-03Value", "0"));
-            KeyValueTable[2][3] = Integer.parseInt(PropertySet.getProperty("Key03-04Value", "0"));
-            KeyValueTable[2][4] = Integer.parseInt(PropertySet.getProperty("Key03-05Value", "0"));
-            KeyValueTable[2][5] = Integer.parseInt(PropertySet.getProperty("Key03-06Value", "0"));
-            KeyValueTable[2][6] = Integer.parseInt(PropertySet.getProperty("Key03-07Value", "0"));
-            KeyValueTable[2][7] = Integer.parseInt(PropertySet.getProperty("Key03-08Value", "0"));
-            KeyValueTable[2][8] = Integer.parseInt(PropertySet.getProperty("Key03-09Value", "0"));
-            KeyValueTable[2][9] = Integer.parseInt(PropertySet.getProperty("Key03-10Value", "0"));
-            KeyValueTable[2][10] = Integer.parseInt(PropertySet.getProperty("Key03-11Value", "0"));
-            KeyValueTable[2][11] = Integer.parseInt(PropertySet.getProperty("Key03-12Value", "0"));
-            KeyValueTable[2][12] = Integer.parseInt(PropertySet.getProperty("Key03-13Value", "0"));
-            KeyValueTable[2][13] = Integer.parseInt(PropertySet.getProperty("Key03-14Value", "0"));
-            KeyValueTable[2][14] = Integer.parseInt(PropertySet.getProperty("Key03-15Value", "0"));
-            KeyValueTable[2][15] = Integer.parseInt(PropertySet.getProperty("Key03-16Value", "0"));
-            KeyValueTable[3][0] = Integer.parseInt(PropertySet.getProperty("Key04-01Value", "0"));
-            KeyValueTable[3][1] = Integer.parseInt(PropertySet.getProperty("Key04-02Value", "0"));
-            KeyValueTable[3][2] = Integer.parseInt(PropertySet.getProperty("Key04-03Value", "0"));
-            KeyValueTable[3][3] = Integer.parseInt(PropertySet.getProperty("Key04-04Value", "0"));
-            KeyValueTable[3][4] = Integer.parseInt(PropertySet.getProperty("Key04-05Value", "0"));
-            KeyValueTable[3][5] = Integer.parseInt(PropertySet.getProperty("Key04-06Value", "0"));
-            KeyValueTable[3][6] = Integer.parseInt(PropertySet.getProperty("Key04-07Value", "0"));
-            KeyValueTable[3][7] = Integer.parseInt(PropertySet.getProperty("Key04-08Value", "0"));
-            KeyValueTable[3][8] = Integer.parseInt(PropertySet.getProperty("Key04-09Value", "0"));
-            KeyValueTable[3][9] = Integer.parseInt(PropertySet.getProperty("Key04-10Value", "0"));
-            KeyValueTable[3][10] = Integer.parseInt(PropertySet.getProperty("Key04-11Value", "0"));
-            KeyValueTable[3][11] = Integer.parseInt(PropertySet.getProperty("Key04-12Value", "0"));
-            KeyValueTable[3][12] = Integer.parseInt(PropertySet.getProperty("Key04-13Value", "0"));
-            KeyValueTable[3][13] = Integer.parseInt(PropertySet.getProperty("Key04-14Value", "0"));
-            KeyValueTable[3][14] = Integer.parseInt(PropertySet.getProperty("Key04-15Value", "0"));
-            KeyValueTable[3][15] = Integer.parseInt(PropertySet.getProperty("Key04-16Value", "0"));
-            KeyValueTable[4][0] = Integer.parseInt(PropertySet.getProperty("Key05-01Value", "0"));
-            KeyValueTable[4][1] = Integer.parseInt(PropertySet.getProperty("Key05-02Value", "0"));
-            KeyValueTable[4][2] = Integer.parseInt(PropertySet.getProperty("Key05-03Value", "0"));
-            KeyValueTable[4][3] = Integer.parseInt(PropertySet.getProperty("Key05-04Value", "0"));
-            KeyValueTable[4][4] = Integer.parseInt(PropertySet.getProperty("Key05-05Value", "0"));
-            KeyValueTable[4][5] = Integer.parseInt(PropertySet.getProperty("Key05-06Value", "0"));
-            KeyValueTable[4][6] = Integer.parseInt(PropertySet.getProperty("Key05-07Value", "0"));
-            KeyValueTable[4][7] = Integer.parseInt(PropertySet.getProperty("Key05-08Value", "0"));
-            KeyValueTable[4][8] = Integer.parseInt(PropertySet.getProperty("Key05-09Value", "0"));
-            KeyValueTable[4][9] = Integer.parseInt(PropertySet.getProperty("Key05-10Value", "0"));
-            KeyValueTable[4][10] = Integer.parseInt(PropertySet.getProperty("Key05-11Value", "0"));
-            KeyValueTable[4][11] = Integer.parseInt(PropertySet.getProperty("Key05-12Value", "0"));
-            KeyValueTable[4][12] = Integer.parseInt(PropertySet.getProperty("Key05-13Value", "0"));
-            KeyValueTable[4][13] = Integer.parseInt(PropertySet.getProperty("Key05-14Value", "0"));
-            KeyValueTable[4][14] = Integer.parseInt(PropertySet.getProperty("Key05-15Value", "0"));
-            KeyValueTable[4][15] = Integer.parseInt(PropertySet.getProperty("Key05-16Value", "0"));
-            KeyValueTable[5][0] = Integer.parseInt(PropertySet.getProperty("Key06-01Value", "0"));
-            KeyValueTable[5][1] = Integer.parseInt(PropertySet.getProperty("Key06-02Value", "0"));
-            KeyValueTable[5][2] = Integer.parseInt(PropertySet.getProperty("Key06-03Value", "0"));
-            KeyValueTable[5][3] = Integer.parseInt(PropertySet.getProperty("Key06-04Value", "0"));
-            KeyValueTable[5][4] = Integer.parseInt(PropertySet.getProperty("Key06-05Value", "0"));
-            KeyValueTable[5][5] = Integer.parseInt(PropertySet.getProperty("Key06-06Value", "0"));
-            KeyValueTable[5][6] = Integer.parseInt(PropertySet.getProperty("Key06-07Value", "0"));
-            KeyValueTable[5][7] = Integer.parseInt(PropertySet.getProperty("Key06-08Value", "0"));
-            KeyValueTable[5][8] = Integer.parseInt(PropertySet.getProperty("Key06-09Value", "0"));
-            KeyValueTable[5][9] = Integer.parseInt(PropertySet.getProperty("Key06-10Value", "0"));
-            KeyValueTable[5][10] = Integer.parseInt(PropertySet.getProperty("Key06-11Value", "0"));
-            KeyValueTable[5][11] = Integer.parseInt(PropertySet.getProperty("Key06-12Value", "0"));
-            KeyValueTable[5][12] = Integer.parseInt(PropertySet.getProperty("Key06-13Value", "0"));
-            KeyValueTable[5][13] = Integer.parseInt(PropertySet.getProperty("Key06-14Value", "0"));
-            KeyValueTable[5][14] = Integer.parseInt(PropertySet.getProperty("Key06-15Value", "0"));
-            KeyValueTable[5][15] = Integer.parseInt(PropertySet.getProperty("Key06-16Value", "0"));
-            KeyValueTable[6][0] = Integer.parseInt(PropertySet.getProperty("Key07-01Value", "0"));
-            KeyValueTable[6][1] = Integer.parseInt(PropertySet.getProperty("Key07-02Value", "0"));
-            KeyValueTable[6][2] = Integer.parseInt(PropertySet.getProperty("Key07-03Value", "0"));
-            KeyValueTable[6][3] = Integer.parseInt(PropertySet.getProperty("Key07-04Value", "0"));
-            KeyValueTable[6][4] = Integer.parseInt(PropertySet.getProperty("Key07-05Value", "0"));
-            KeyValueTable[6][5] = Integer.parseInt(PropertySet.getProperty("Key07-06Value", "0"));
-            KeyValueTable[6][6] = Integer.parseInt(PropertySet.getProperty("Key07-07Value", "0"));
-            KeyValueTable[6][7] = Integer.parseInt(PropertySet.getProperty("Key07-08Value", "0"));
-            KeyValueTable[6][8] = Integer.parseInt(PropertySet.getProperty("Key07-09Value", "0"));
-            KeyValueTable[6][9] = Integer.parseInt(PropertySet.getProperty("Key07-10Value", "0"));
-            KeyValueTable[6][10] = Integer.parseInt(PropertySet.getProperty("Key07-11Value", "0"));
-            KeyValueTable[6][11] = Integer.parseInt(PropertySet.getProperty("Key07-12Value", "0"));
-            KeyValueTable[6][12] = Integer.parseInt(PropertySet.getProperty("Key07-13Value", "0"));
-            KeyValueTable[6][13] = Integer.parseInt(PropertySet.getProperty("Key07-14Value", "0"));
-            KeyValueTable[6][14] = Integer.parseInt(PropertySet.getProperty("Key07-15Value", "0"));
-            KeyValueTable[6][15] = Integer.parseInt(PropertySet.getProperty("Key07-16Value", "0"));
-            KeyValueTable[7][0] = Integer.parseInt(PropertySet.getProperty("Key08-01Value", "0"));
-            KeyValueTable[7][1] = Integer.parseInt(PropertySet.getProperty("Key08-02Value", "0"));
-            KeyValueTable[7][2] = Integer.parseInt(PropertySet.getProperty("Key08-03Value", "0"));
-            KeyValueTable[7][3] = Integer.parseInt(PropertySet.getProperty("Key08-04Value", "0"));
-            KeyValueTable[7][4] = Integer.parseInt(PropertySet.getProperty("Key08-05Value", "0"));
-            KeyValueTable[7][5] = Integer.parseInt(PropertySet.getProperty("Key08-06Value", "0"));
-            KeyValueTable[7][6] = Integer.parseInt(PropertySet.getProperty("Key08-07Value", "0"));
-            KeyValueTable[7][7] = Integer.parseInt(PropertySet.getProperty("Key08-08Value", "0"));
-            KeyValueTable[7][8] = Integer.parseInt(PropertySet.getProperty("Key08-09Value", "0"));
-            KeyValueTable[7][9] = Integer.parseInt(PropertySet.getProperty("Key08-10Value", "0"));
-            KeyValueTable[7][10] = Integer.parseInt(PropertySet.getProperty("Key08-11Value", "0"));
-            KeyValueTable[7][11] = Integer.parseInt(PropertySet.getProperty("Key08-12Value", "0"));
-            KeyValueTable[7][12] = Integer.parseInt(PropertySet.getProperty("Key08-13Value", "0"));
-            KeyValueTable[7][13] = Integer.parseInt(PropertySet.getProperty("Key08-14Value", "0"));
-            KeyValueTable[7][14] = Integer.parseInt(PropertySet.getProperty("Key08-15Value", "0"));
-            KeyValueTable[7][15] = Integer.parseInt(PropertySet.getProperty("Key08-16Value", "0"));
-            KeyValueTable[8][0] = Integer.parseInt(PropertySet.getProperty("Key09-01Value", "0"));
-            KeyValueTable[8][1] = Integer.parseInt(PropertySet.getProperty("Key09-02Value", "0"));
-            KeyValueTable[8][2] = Integer.parseInt(PropertySet.getProperty("Key09-03Value", "0"));
-            KeyValueTable[8][3] = Integer.parseInt(PropertySet.getProperty("Key09-04Value", "0"));
-            KeyValueTable[8][4] = Integer.parseInt(PropertySet.getProperty("Key09-05Value", "0"));
-            KeyValueTable[8][5] = Integer.parseInt(PropertySet.getProperty("Key09-06Value", "0"));
-            KeyValueTable[8][6] = Integer.parseInt(PropertySet.getProperty("Key09-07Value", "0"));
-            KeyValueTable[8][7] = Integer.parseInt(PropertySet.getProperty("Key09-08Value", "0"));
-            KeyValueTable[8][8] = Integer.parseInt(PropertySet.getProperty("Key09-09Value", "0"));
-            KeyValueTable[8][9] = Integer.parseInt(PropertySet.getProperty("Key09-10Value", "0"));
-            KeyValueTable[8][10] = Integer.parseInt(PropertySet.getProperty("Key09-11Value", "0"));
-            KeyValueTable[8][11] = Integer.parseInt(PropertySet.getProperty("Key09-12Value", "0"));
-            KeyValueTable[8][12] = Integer.parseInt(PropertySet.getProperty("Key09-13Value", "0"));
-            KeyValueTable[8][13] = Integer.parseInt(PropertySet.getProperty("Key09-14Value", "0"));
-            KeyValueTable[8][14] = Integer.parseInt(PropertySet.getProperty("Key09-15Value", "0"));
-            KeyValueTable[8][15] = Integer.parseInt(PropertySet.getProperty("Key09-16Value", "0"));
-            KeyValueTable[9][0] = Integer.parseInt(PropertySet.getProperty("Key10-01Value", "0"));
-            KeyValueTable[9][1] = Integer.parseInt(PropertySet.getProperty("Key10-02Value", "0"));
-            KeyValueTable[9][2] = Integer.parseInt(PropertySet.getProperty("Key10-03Value", "0"));
-            KeyValueTable[9][3] = Integer.parseInt(PropertySet.getProperty("Key10-04Value", "0"));
-            KeyValueTable[9][4] = Integer.parseInt(PropertySet.getProperty("Key10-05Value", "0"));
-            KeyValueTable[9][5] = Integer.parseInt(PropertySet.getProperty("Key10-06Value", "0"));
-            KeyValueTable[9][6] = Integer.parseInt(PropertySet.getProperty("Key10-07Value", "0"));
-            KeyValueTable[9][7] = Integer.parseInt(PropertySet.getProperty("Key10-08Value", "0"));
-            KeyValueTable[9][8] = Integer.parseInt(PropertySet.getProperty("Key10-09Value", "0"));
-            KeyValueTable[9][9] = Integer.parseInt(PropertySet.getProperty("Key10-10Value", "0"));
-            KeyValueTable[9][10] = Integer.parseInt(PropertySet.getProperty("Key10-11Value", "0"));
-            KeyValueTable[9][11] = Integer.parseInt(PropertySet.getProperty("Key10-12Value", "0"));
-            KeyValueTable[9][12] = Integer.parseInt(PropertySet.getProperty("Key10-13Value", "0"));
-            KeyValueTable[9][13] = Integer.parseInt(PropertySet.getProperty("Key10-14Value", "0"));
-            KeyValueTable[9][14] = Integer.parseInt(PropertySet.getProperty("Key10-15Value", "0"));
-            KeyValueTable[9][15] = Integer.parseInt(PropertySet.getProperty("Key10-16Value", "0"));
+            KeyValueTable[0][0] = Integer.parseInt(propertySet.getProperty("Key01-01Value", "0"));
+            KeyValueTable[0][1] = Integer.parseInt(propertySet.getProperty("Key01-02Value", "0"));
+            KeyValueTable[0][2] = Integer.parseInt(propertySet.getProperty("Key01-03Value", "0"));
+            KeyValueTable[0][3] = Integer.parseInt(propertySet.getProperty("Key01-04Value", "0"));
+            KeyValueTable[0][4] = Integer.parseInt(propertySet.getProperty("Key01-05Value", "0"));
+            KeyValueTable[0][5] = Integer.parseInt(propertySet.getProperty("Key01-06Value", "0"));
+            KeyValueTable[0][6] = Integer.parseInt(propertySet.getProperty("Key01-07Value", "0"));
+            KeyValueTable[0][7] = Integer.parseInt(propertySet.getProperty("Key01-08Value", "0"));
+            KeyValueTable[0][8] = Integer.parseInt(propertySet.getProperty("Key01-09Value", "0"));
+            KeyValueTable[0][9] = Integer.parseInt(propertySet.getProperty("Key01-10Value", "0"));
+            KeyValueTable[0][10] = Integer.parseInt(propertySet.getProperty("Key01-11Value", "0"));
+            KeyValueTable[0][11] = Integer.parseInt(propertySet.getProperty("Key01-12Value", "0"));
+            KeyValueTable[0][12] = Integer.parseInt(propertySet.getProperty("Key01-13Value", "0"));
+            KeyValueTable[0][13] = Integer.parseInt(propertySet.getProperty("Key01-14Value", "0"));
+            KeyValueTable[0][14] = Integer.parseInt(propertySet.getProperty("Key01-15Value", "0"));
+            KeyValueTable[0][15] = Integer.parseInt(propertySet.getProperty("Key01-16Value", "0"));
+            KeyValueTable[1][0] = Integer.parseInt(propertySet.getProperty("Key02-01Value", "0"));
+            KeyValueTable[1][1] = Integer.parseInt(propertySet.getProperty("Key02-02Value", "0"));
+            KeyValueTable[1][2] = Integer.parseInt(propertySet.getProperty("Key02-03Value", "0"));
+            KeyValueTable[1][3] = Integer.parseInt(propertySet.getProperty("Key02-04Value", "0"));
+            KeyValueTable[1][4] = Integer.parseInt(propertySet.getProperty("Key02-05Value", "0"));
+            KeyValueTable[1][5] = Integer.parseInt(propertySet.getProperty("Key02-06Value", "0"));
+            KeyValueTable[1][6] = Integer.parseInt(propertySet.getProperty("Key02-07Value", "0"));
+            KeyValueTable[1][7] = Integer.parseInt(propertySet.getProperty("Key02-08Value", "0"));
+            KeyValueTable[1][8] = Integer.parseInt(propertySet.getProperty("Key02-09Value", "0"));
+            KeyValueTable[1][9] = Integer.parseInt(propertySet.getProperty("Key02-10Value", "0"));
+            KeyValueTable[1][10] = Integer.parseInt(propertySet.getProperty("Key02-11Value", "0"));
+            KeyValueTable[1][11] = Integer.parseInt(propertySet.getProperty("Key02-12Value", "0"));
+            KeyValueTable[1][12] = Integer.parseInt(propertySet.getProperty("Key02-13Value", "0"));
+            KeyValueTable[1][13] = Integer.parseInt(propertySet.getProperty("Key02-14Value", "0"));
+            KeyValueTable[1][14] = Integer.parseInt(propertySet.getProperty("Key02-15Value", "0"));
+            KeyValueTable[1][15] = Integer.parseInt(propertySet.getProperty("Key02-16Value", "0"));
+            KeyValueTable[2][0] = Integer.parseInt(propertySet.getProperty("Key03-01Value", "0"));
+            KeyValueTable[2][1] = Integer.parseInt(propertySet.getProperty("Key03-02Value", "0"));
+            KeyValueTable[2][2] = Integer.parseInt(propertySet.getProperty("Key03-03Value", "0"));
+            KeyValueTable[2][3] = Integer.parseInt(propertySet.getProperty("Key03-04Value", "0"));
+            KeyValueTable[2][4] = Integer.parseInt(propertySet.getProperty("Key03-05Value", "0"));
+            KeyValueTable[2][5] = Integer.parseInt(propertySet.getProperty("Key03-06Value", "0"));
+            KeyValueTable[2][6] = Integer.parseInt(propertySet.getProperty("Key03-07Value", "0"));
+            KeyValueTable[2][7] = Integer.parseInt(propertySet.getProperty("Key03-08Value", "0"));
+            KeyValueTable[2][8] = Integer.parseInt(propertySet.getProperty("Key03-09Value", "0"));
+            KeyValueTable[2][9] = Integer.parseInt(propertySet.getProperty("Key03-10Value", "0"));
+            KeyValueTable[2][10] = Integer.parseInt(propertySet.getProperty("Key03-11Value", "0"));
+            KeyValueTable[2][11] = Integer.parseInt(propertySet.getProperty("Key03-12Value", "0"));
+            KeyValueTable[2][12] = Integer.parseInt(propertySet.getProperty("Key03-13Value", "0"));
+            KeyValueTable[2][13] = Integer.parseInt(propertySet.getProperty("Key03-14Value", "0"));
+            KeyValueTable[2][14] = Integer.parseInt(propertySet.getProperty("Key03-15Value", "0"));
+            KeyValueTable[2][15] = Integer.parseInt(propertySet.getProperty("Key03-16Value", "0"));
+            KeyValueTable[3][0] = Integer.parseInt(propertySet.getProperty("Key04-01Value", "0"));
+            KeyValueTable[3][1] = Integer.parseInt(propertySet.getProperty("Key04-02Value", "0"));
+            KeyValueTable[3][2] = Integer.parseInt(propertySet.getProperty("Key04-03Value", "0"));
+            KeyValueTable[3][3] = Integer.parseInt(propertySet.getProperty("Key04-04Value", "0"));
+            KeyValueTable[3][4] = Integer.parseInt(propertySet.getProperty("Key04-05Value", "0"));
+            KeyValueTable[3][5] = Integer.parseInt(propertySet.getProperty("Key04-06Value", "0"));
+            KeyValueTable[3][6] = Integer.parseInt(propertySet.getProperty("Key04-07Value", "0"));
+            KeyValueTable[3][7] = Integer.parseInt(propertySet.getProperty("Key04-08Value", "0"));
+            KeyValueTable[3][8] = Integer.parseInt(propertySet.getProperty("Key04-09Value", "0"));
+            KeyValueTable[3][9] = Integer.parseInt(propertySet.getProperty("Key04-10Value", "0"));
+            KeyValueTable[3][10] = Integer.parseInt(propertySet.getProperty("Key04-11Value", "0"));
+            KeyValueTable[3][11] = Integer.parseInt(propertySet.getProperty("Key04-12Value", "0"));
+            KeyValueTable[3][12] = Integer.parseInt(propertySet.getProperty("Key04-13Value", "0"));
+            KeyValueTable[3][13] = Integer.parseInt(propertySet.getProperty("Key04-14Value", "0"));
+            KeyValueTable[3][14] = Integer.parseInt(propertySet.getProperty("Key04-15Value", "0"));
+            KeyValueTable[3][15] = Integer.parseInt(propertySet.getProperty("Key04-16Value", "0"));
+            KeyValueTable[4][0] = Integer.parseInt(propertySet.getProperty("Key05-01Value", "0"));
+            KeyValueTable[4][1] = Integer.parseInt(propertySet.getProperty("Key05-02Value", "0"));
+            KeyValueTable[4][2] = Integer.parseInt(propertySet.getProperty("Key05-03Value", "0"));
+            KeyValueTable[4][3] = Integer.parseInt(propertySet.getProperty("Key05-04Value", "0"));
+            KeyValueTable[4][4] = Integer.parseInt(propertySet.getProperty("Key05-05Value", "0"));
+            KeyValueTable[4][5] = Integer.parseInt(propertySet.getProperty("Key05-06Value", "0"));
+            KeyValueTable[4][6] = Integer.parseInt(propertySet.getProperty("Key05-07Value", "0"));
+            KeyValueTable[4][7] = Integer.parseInt(propertySet.getProperty("Key05-08Value", "0"));
+            KeyValueTable[4][8] = Integer.parseInt(propertySet.getProperty("Key05-09Value", "0"));
+            KeyValueTable[4][9] = Integer.parseInt(propertySet.getProperty("Key05-10Value", "0"));
+            KeyValueTable[4][10] = Integer.parseInt(propertySet.getProperty("Key05-11Value", "0"));
+            KeyValueTable[4][11] = Integer.parseInt(propertySet.getProperty("Key05-12Value", "0"));
+            KeyValueTable[4][12] = Integer.parseInt(propertySet.getProperty("Key05-13Value", "0"));
+            KeyValueTable[4][13] = Integer.parseInt(propertySet.getProperty("Key05-14Value", "0"));
+            KeyValueTable[4][14] = Integer.parseInt(propertySet.getProperty("Key05-15Value", "0"));
+            KeyValueTable[4][15] = Integer.parseInt(propertySet.getProperty("Key05-16Value", "0"));
+            KeyValueTable[5][0] = Integer.parseInt(propertySet.getProperty("Key06-01Value", "0"));
+            KeyValueTable[5][1] = Integer.parseInt(propertySet.getProperty("Key06-02Value", "0"));
+            KeyValueTable[5][2] = Integer.parseInt(propertySet.getProperty("Key06-03Value", "0"));
+            KeyValueTable[5][3] = Integer.parseInt(propertySet.getProperty("Key06-04Value", "0"));
+            KeyValueTable[5][4] = Integer.parseInt(propertySet.getProperty("Key06-05Value", "0"));
+            KeyValueTable[5][5] = Integer.parseInt(propertySet.getProperty("Key06-06Value", "0"));
+            KeyValueTable[5][6] = Integer.parseInt(propertySet.getProperty("Key06-07Value", "0"));
+            KeyValueTable[5][7] = Integer.parseInt(propertySet.getProperty("Key06-08Value", "0"));
+            KeyValueTable[5][8] = Integer.parseInt(propertySet.getProperty("Key06-09Value", "0"));
+            KeyValueTable[5][9] = Integer.parseInt(propertySet.getProperty("Key06-10Value", "0"));
+            KeyValueTable[5][10] = Integer.parseInt(propertySet.getProperty("Key06-11Value", "0"));
+            KeyValueTable[5][11] = Integer.parseInt(propertySet.getProperty("Key06-12Value", "0"));
+            KeyValueTable[5][12] = Integer.parseInt(propertySet.getProperty("Key06-13Value", "0"));
+            KeyValueTable[5][13] = Integer.parseInt(propertySet.getProperty("Key06-14Value", "0"));
+            KeyValueTable[5][14] = Integer.parseInt(propertySet.getProperty("Key06-15Value", "0"));
+            KeyValueTable[5][15] = Integer.parseInt(propertySet.getProperty("Key06-16Value", "0"));
+            KeyValueTable[6][0] = Integer.parseInt(propertySet.getProperty("Key07-01Value", "0"));
+            KeyValueTable[6][1] = Integer.parseInt(propertySet.getProperty("Key07-02Value", "0"));
+            KeyValueTable[6][2] = Integer.parseInt(propertySet.getProperty("Key07-03Value", "0"));
+            KeyValueTable[6][3] = Integer.parseInt(propertySet.getProperty("Key07-04Value", "0"));
+            KeyValueTable[6][4] = Integer.parseInt(propertySet.getProperty("Key07-05Value", "0"));
+            KeyValueTable[6][5] = Integer.parseInt(propertySet.getProperty("Key07-06Value", "0"));
+            KeyValueTable[6][6] = Integer.parseInt(propertySet.getProperty("Key07-07Value", "0"));
+            KeyValueTable[6][7] = Integer.parseInt(propertySet.getProperty("Key07-08Value", "0"));
+            KeyValueTable[6][8] = Integer.parseInt(propertySet.getProperty("Key07-09Value", "0"));
+            KeyValueTable[6][9] = Integer.parseInt(propertySet.getProperty("Key07-10Value", "0"));
+            KeyValueTable[6][10] = Integer.parseInt(propertySet.getProperty("Key07-11Value", "0"));
+            KeyValueTable[6][11] = Integer.parseInt(propertySet.getProperty("Key07-12Value", "0"));
+            KeyValueTable[6][12] = Integer.parseInt(propertySet.getProperty("Key07-13Value", "0"));
+            KeyValueTable[6][13] = Integer.parseInt(propertySet.getProperty("Key07-14Value", "0"));
+            KeyValueTable[6][14] = Integer.parseInt(propertySet.getProperty("Key07-15Value", "0"));
+            KeyValueTable[6][15] = Integer.parseInt(propertySet.getProperty("Key07-16Value", "0"));
+            KeyValueTable[7][0] = Integer.parseInt(propertySet.getProperty("Key08-01Value", "0"));
+            KeyValueTable[7][1] = Integer.parseInt(propertySet.getProperty("Key08-02Value", "0"));
+            KeyValueTable[7][2] = Integer.parseInt(propertySet.getProperty("Key08-03Value", "0"));
+            KeyValueTable[7][3] = Integer.parseInt(propertySet.getProperty("Key08-04Value", "0"));
+            KeyValueTable[7][4] = Integer.parseInt(propertySet.getProperty("Key08-05Value", "0"));
+            KeyValueTable[7][5] = Integer.parseInt(propertySet.getProperty("Key08-06Value", "0"));
+            KeyValueTable[7][6] = Integer.parseInt(propertySet.getProperty("Key08-07Value", "0"));
+            KeyValueTable[7][7] = Integer.parseInt(propertySet.getProperty("Key08-08Value", "0"));
+            KeyValueTable[7][8] = Integer.parseInt(propertySet.getProperty("Key08-09Value", "0"));
+            KeyValueTable[7][9] = Integer.parseInt(propertySet.getProperty("Key08-10Value", "0"));
+            KeyValueTable[7][10] = Integer.parseInt(propertySet.getProperty("Key08-11Value", "0"));
+            KeyValueTable[7][11] = Integer.parseInt(propertySet.getProperty("Key08-12Value", "0"));
+            KeyValueTable[7][12] = Integer.parseInt(propertySet.getProperty("Key08-13Value", "0"));
+            KeyValueTable[7][13] = Integer.parseInt(propertySet.getProperty("Key08-14Value", "0"));
+            KeyValueTable[7][14] = Integer.parseInt(propertySet.getProperty("Key08-15Value", "0"));
+            KeyValueTable[7][15] = Integer.parseInt(propertySet.getProperty("Key08-16Value", "0"));
+            KeyValueTable[8][0] = Integer.parseInt(propertySet.getProperty("Key09-01Value", "0"));
+            KeyValueTable[8][1] = Integer.parseInt(propertySet.getProperty("Key09-02Value", "0"));
+            KeyValueTable[8][2] = Integer.parseInt(propertySet.getProperty("Key09-03Value", "0"));
+            KeyValueTable[8][3] = Integer.parseInt(propertySet.getProperty("Key09-04Value", "0"));
+            KeyValueTable[8][4] = Integer.parseInt(propertySet.getProperty("Key09-05Value", "0"));
+            KeyValueTable[8][5] = Integer.parseInt(propertySet.getProperty("Key09-06Value", "0"));
+            KeyValueTable[8][6] = Integer.parseInt(propertySet.getProperty("Key09-07Value", "0"));
+            KeyValueTable[8][7] = Integer.parseInt(propertySet.getProperty("Key09-08Value", "0"));
+            KeyValueTable[8][8] = Integer.parseInt(propertySet.getProperty("Key09-09Value", "0"));
+            KeyValueTable[8][9] = Integer.parseInt(propertySet.getProperty("Key09-10Value", "0"));
+            KeyValueTable[8][10] = Integer.parseInt(propertySet.getProperty("Key09-11Value", "0"));
+            KeyValueTable[8][11] = Integer.parseInt(propertySet.getProperty("Key09-12Value", "0"));
+            KeyValueTable[8][12] = Integer.parseInt(propertySet.getProperty("Key09-13Value", "0"));
+            KeyValueTable[8][13] = Integer.parseInt(propertySet.getProperty("Key09-14Value", "0"));
+            KeyValueTable[8][14] = Integer.parseInt(propertySet.getProperty("Key09-15Value", "0"));
+            KeyValueTable[8][15] = Integer.parseInt(propertySet.getProperty("Key09-16Value", "0"));
+            KeyValueTable[9][0] = Integer.parseInt(propertySet.getProperty("Key10-01Value", "0"));
+            KeyValueTable[9][1] = Integer.parseInt(propertySet.getProperty("Key10-02Value", "0"));
+            KeyValueTable[9][2] = Integer.parseInt(propertySet.getProperty("Key10-03Value", "0"));
+            KeyValueTable[9][3] = Integer.parseInt(propertySet.getProperty("Key10-04Value", "0"));
+            KeyValueTable[9][4] = Integer.parseInt(propertySet.getProperty("Key10-05Value", "0"));
+            KeyValueTable[9][5] = Integer.parseInt(propertySet.getProperty("Key10-06Value", "0"));
+            KeyValueTable[9][6] = Integer.parseInt(propertySet.getProperty("Key10-07Value", "0"));
+            KeyValueTable[9][7] = Integer.parseInt(propertySet.getProperty("Key10-08Value", "0"));
+            KeyValueTable[9][8] = Integer.parseInt(propertySet.getProperty("Key10-09Value", "0"));
+            KeyValueTable[9][9] = Integer.parseInt(propertySet.getProperty("Key10-10Value", "0"));
+            KeyValueTable[9][10] = Integer.parseInt(propertySet.getProperty("Key10-11Value", "0"));
+            KeyValueTable[9][11] = Integer.parseInt(propertySet.getProperty("Key10-12Value", "0"));
+            KeyValueTable[9][12] = Integer.parseInt(propertySet.getProperty("Key10-13Value", "0"));
+            KeyValueTable[9][13] = Integer.parseInt(propertySet.getProperty("Key10-14Value", "0"));
+            KeyValueTable[9][14] = Integer.parseInt(propertySet.getProperty("Key10-15Value", "0"));
+            KeyValueTable[9][15] = Integer.parseInt(propertySet.getProperty("Key10-16Value", "0"));
         }
     }
 
     /**
      * Thread main, used for status check loop while device is opened.
      */
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     public void run() {
-        CommandHelper[] cmd = new CommandHelper[1];
-        cmd[0] = null;
+        CommandHelper[] cmd = {null};
         LastPollTick = System.currentTimeMillis() - PollDelay;
         SyncObject startWaiter = StartWaiter;
-        int[] retry = new int[]{0};
-        while (!ToBeFinished) {
+        int[] retry = {0};
+        while (!StateWatcher.ToBeFinished) {
             try {
                 Object e;
 
                 if (InIOError) {
-                    if (handleIOErrorState(true) != null)
+                    if (handleIOErrorState() != null)
                         continue;
                 }
                 if ((e = readData()) != null) {
@@ -619,30 +622,27 @@ public class Device extends JposDevice implements Runnable{
                     }
                     if (e instanceof JposException) {
                         if (((JposException) e).getErrorCodeExtended() != IOProcessorError)
-                        abortAllCommands(cmd);
+                            abortAllCommands(cmd);
                         handleIOExceptionState();
                         continue;
                     }
-                    if ((e instanceof Exception || e == null) && !DeviceIsOffline) {
-                        if (e != null)
-                            ((Exception) e).printStackTrace();
+                    if (e instanceof Exception && !DeviceIsOffline) {
+                        ((Exception) e).printStackTrace();
                         DeviceIsOffline = true;
                         abortAllCommands(cmd);
-                        handlePowerStateEvent(JposConst.JPOS_SUE_POWER_OFFLINE);
+                        handlePowerStateEvent(JPOS_SUE_POWER_OFFLINE);
                     }
                     if (e instanceof byte[]) {
                         handleNoErrorState((byte[]) e, retry, cmd);
                     }
                 }
-            } catch (Exception e) {
-            }
+            } catch (Exception ignored) {}
         }
         closePort(InIOError = true);
     }
 
-    private void handleNoErrorState(byte[] e, int[] retry, CommandHelper[] cmd) throws Exception {
-        byte[] head = e;
-
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
+    private void handleNoErrorState(byte[] head, int[] retry, CommandHelper[] cmd) throws Exception {
         if (cmd[0] != null && cmd[0].Response != NoResponse) {
             if (cmd[0].Response == head[0]) {
                 signalCommandOK(cmd);
@@ -661,7 +661,7 @@ public class Device extends JposDevice implements Runnable{
         }
         else if (DeviceIsOffline) {
             DeviceIsOffline = false;
-            handlePowerStateEvent(JposConst.JPOS_SUE_POWER_ONLINE);
+            handlePowerStateEvent(JPOS_SUE_POWER_ONLINE);
             retry[0] = 0;
         }
         if (DeviceIsOffline) {
@@ -677,10 +677,11 @@ public class Device extends JposDevice implements Runnable{
         }
     }
 
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     private void processMaxRetryReached(int[] retry) {
         if (!DeviceIsOffline) {
             DeviceIsOffline = true;
-            handlePowerStateEvent(JposConst.JPOS_SUE_POWER_OFFLINE);
+            handlePowerStateEvent(JPOS_SUE_POWER_OFFLINE);
         }
         retry[0] = 0;
     }
@@ -721,45 +722,40 @@ public class Device extends JposDevice implements Runnable{
         }
     }
 
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     private void handleIOExceptionState() {
         InIOError = true;
-        handlePowerStateEvent(JposConst.JPOS_SUE_POWER_OFF);
+        handlePowerStateEvent(JPOS_SUE_POWER_OFF);
         closePort(false);
         try {
             Thread.sleep(PollDelay);
-        } catch (InterruptedException e1) {
-        }
+        } catch (InterruptedException ignored) {}
         return;
     }
 
     /**
      * Handle IO error
-     * @param requestState If true,
+     *
      * @return Exception in case or error condition, null otherwise.
      */
-    private Exception handleIOErrorState(boolean requestState) {
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
+    private Exception handleIOErrorState() {
         Exception e;
         e = initPort();
         if (e == null) {
-            if (requestState) {
-                try {
-                    OutStream.write(CmdStatusRequest);
-                    DeviceIsOffline = InIOError = CpChanged = false;
-                    handlePowerStateEvent(JposConst.JPOS_SUE_POWER_ONLINE);
-                } catch (JposException e1) {
-                    closePort(false);
-                    return e1;
-                }
-            }
-            else {
+            try {
+                OutStream.write(CmdStatusRequest);
                 DeviceIsOffline = InIOError = CpChanged = false;
-                handlePowerStateEvent(JposConst.JPOS_SUE_POWER_ONLINE);
+                handlePowerStateEvent(JPOS_SUE_POWER_ONLINE);
+            } catch (JposException e1) {
+                closePort(false);
+                return e1;
             }
         }
         else {
             try {
                 Thread.sleep(RequestTimeout);
-            } catch (InterruptedException e1) {}
+            } catch (InterruptedException ignored) {}
             return e;
         }
         return null;
@@ -771,50 +767,49 @@ public class Device extends JposDevice implements Runnable{
      */
     private Object readData() {
         byte[] next = new byte[250];
-        int offset = 0;
-        byte[] head = new byte[1];
+        int offset;
+        byte[] head = {0};
         try {
             OutStream.setTimeout(RequestTimeout);
             byte[] charIn = OutStream.read(1);
-            Exception e;
             if (charIn.length == 1) {
                 next[0] = charIn[0];
                 offset = charIn.length;
                 switch (head[0] = next[0]) {
-                    case RespFromDisplay:
+                    case RespFromDisplay -> {
                         Object e0 = respFromDisplay(next, offset, head);
                         if (e0 != null) return e0;
-                        break;
-                    case RespFromDrawer:
+                    }
+                    case RespFromDrawer -> {
                         Object e1 = respFromDrawer(next, offset, head);
                         if (e1 != null) return e1;
-                        break;
-                    case RespFromEKey:
+                    }
+                    case RespFromEKey -> {
                         Object e2 = respFromEKey(next, offset, head);
                         if (e2 != null) return e2;
-                        break;
-                    case RespFromLock:
+                    }
+                    case RespFromLock -> {
                         Object e3 = respFromLock(next, offset, head);
                         if (e3 != null) return e3;
-                        break;
-                    case RespFromKeyboard:
+                    }
+                    case RespFromKeyboard -> {
                         Object e4 = respFromKeyboard(next, offset, head);
                         if (e4 != null) return e4;
-                        break;
-                    case RespFromMsr:
+                    }
+                    case RespFromMsr -> {
                         Object e5 = respFromMsr(next, offset, head);
                         if (e5 != null) return e5;
-                        break;
-                    case RespFromScanner:
-                        if (respFromScanner(next, offset, head)) return head;
-                        break;
-                    case RespFromStatus:
+                    }
+                    case RespFromScanner -> {
+                        if (respFromScanner(next, offset)) return head;
+                    }
+                    case RespFromStatus -> {
                         Object e6 = respFromStatus(next, offset, head);
                         if (e6 != null) return e6;
+                    }
                 }
             }
             else {
-                head[0] = 0;
                 return head;
             }
         }
@@ -849,35 +844,35 @@ public class Device extends JposDevice implements Runnable{
         return null;
     }
 
-    private boolean respFromScanner(byte[] next, int offset, byte[] head) throws JposException {
+    private boolean respFromScanner(byte[] next, int offset) throws JposException {
         if (readData(next, offset, LabelPos + LabelLen)) {
             int targetOffset = offset = LabelPos + LabelLen;
             byte[] label;
             byte[] data;
-            int labelType = ScannerConst.SCAN_SDT_UNKNOWN;
+            int labelType = SCAN_SDT_UNKNOWN;
             int labelOffset = LabelPos + LabelLen;
             switch (next[LabelPos]) {
-                case LabelUpcA:
+                case LabelUpcA -> {
                     targetOffset += UpcALen;
-                    labelType = ScannerConst.SCAN_SDT_UPCA;
-                    break;
-                case LabelUpcE:
+                    labelType = SCAN_SDT_UPCA;
+                }
+                case LabelUpcE -> {
                     targetOffset += UpcELen;
-                    labelType = ScannerConst.SCAN_SDT_UPCE;
-                    break;
-                case LabelEan:
+                    labelType = SCAN_SDT_UPCE;
+                }
+                case LabelEan -> {
                     if (readData(next, offset, offset + 1)) {
                         offset++;
                         if (next[LabelPos + LabelLen] == LabelEan8Flag) {
                             targetOffset += Ean8Len;
-                            labelType = ScannerConst.SCAN_SDT_EAN8;
+                            labelType = SCAN_SDT_EAN8;
                             labelOffset++;
-                        }
-                        else {
+                        } else {
                             targetOffset += Ean13Len;
-                            labelType = ScannerConst.SCAN_SDT_EAN13;
+                            labelType = SCAN_SDT_EAN13;
                         }
                     }
+                }
             }
             if (targetOffset > offset && readData(next, offset, targetOffset)) {
                 data = Arrays.copyOfRange(next, LabelPos, targetOffset);
@@ -887,7 +882,7 @@ public class Device extends JposDevice implements Runnable{
                     if (claimer.DecodeData)
                         handleEvent(new ScannerDataEvent(claimer.EventSource, 0, data, label, labelType));
                     else
-                        handleEvent(new ScannerDataEvent(claimer.EventSource, 0, data, new byte[0], ScannerConst.SCAN_SDT_UNKNOWN));
+                        handleEvent(new ScannerDataEvent(claimer.EventSource, 0, data, new byte[0], SCAN_SDT_UNKNOWN));
                 }
                 return true;
             }
@@ -900,7 +895,7 @@ public class Device extends JposDevice implements Runnable{
         props = (MSRProperties)getClaimingInstance(ClaimedMSR, 0);
         if (readData(next, offset, MsrLenPos + MsrLenLen)) {
             int trackTotal = Integer.parseInt(new String(Arrays.copyOfRange(next, MsrLenPos, MsrLenPos + MsrLenLen)));
-            byte[][] tracks = new byte[][]{new byte[0], new byte[0], new byte[0], new byte[3]};
+            byte[][] tracks = {new byte[0], new byte[0], new byte[0], new byte[3]};
             boolean success = readData(next, 0, trackTotal);
             if (props != null) {
                 if (success && next[0] == '1') {
@@ -921,7 +916,7 @@ public class Device extends JposDevice implements Runnable{
             POSKeyboardProperties claimer = (POSKeyboardProperties)getClaimingInstance(ClaimedPOSKeyboard, 0);
             if (claimer != null && KeyValueTable[row][column] != 0) {
                 try {
-                    handleEvent(new POSKeyboardDataEvent(claimer.EventSource, 0, KeyValueTable[row][column], POSKeyboardConst.KBD_KET_KEYDOWN));
+                    handleEvent(new POSKeyboardDataEvent(claimer.EventSource, 0, KeyValueTable[row][column], KBD_KET_KEYDOWN));
                 } catch (JposException e) {
                     return e;
                 }
@@ -980,16 +975,16 @@ public class Device extends JposDevice implements Runnable{
                 start = extractTrack(2, (byte) ';', next, trackTotal, tracks, ++start);
                 if (props != null) {
                     try {
-                        if (tracks[3][0] == JposConst.JPOS_SUCCESS && tracks[3][1] == JposConst.JPOS_SUCCESS && tracks[3][2] == JposConst.JPOS_SUCCESS && start == trackTotal) {
+                        if (tracks[3][0] == JPOS_SUCCESS && tracks[3][1] == JPOS_SUCCESS && tracks[3][2] == JPOS_SUCCESS && start == trackTotal) {
                             int status = (((tracks[2].length << 8) + tracks[1].length) << 8) + tracks[0].length;
                             handleEvent(new MSRDataEvent(props.EventSource, status, new TrackData(tracks)));
                         } else {
                             MSRErrorEvent ev;
-                            if (props.ErrorReportingType == MSRConst.MSR_ERT_CARD || start != trackTotal)
-                                ev = new MSRErrorEvent(props.EventSource, JposConst.JPOS_E_FAILURE, 0, new TrackData(tracks));
+                            if (props.ErrorReportingType == MSR_ERT_CARD || start != trackTotal)
+                                ev = new MSRErrorEvent(props.EventSource, JPOS_E_FAILURE, 0, new TrackData(tracks));
                             else {
                                 int exterr = ((((tracks[3][2] & 0xff) << 8) + (tracks[3][1] & 0xff)) << 8) + (tracks[3][0] & 0xff);
-                                ev = new MSRErrorEvent(props.EventSource, JposConst.JPOS_E_EXTENDED, exterr, new TrackData(tracks));
+                                ev = new MSRErrorEvent(props.EventSource, JPOS_E_EXTENDED, exterr, new TrackData(tracks));
                             }
                             handleEvent(ev);
                         }
@@ -1002,25 +997,26 @@ public class Device extends JposDevice implements Runnable{
         return null;
     }
 
+    @SuppressWarnings("all")    // Warning 'Loop can be terminated after condition is met' in line marked with ******* is not true!
     private int extractTrack(int index, byte startChar, byte[] next, int trackTotal, byte[][] tracks, int start) {
         int end = start + 1;
-        tracks[3][index] = JposConst.JPOS_SUCCESS;
+        tracks[3][index] = JPOS_SUCCESS;
         if (start < trackTotal && next[start] == startChar) {
             while (end < trackTotal && next[end] != '?') {
-                if(next[end] == startChar)
-                    tracks[3][index] = (byte) MSRConst.JPOS_EMSR_START;
+                if(next[end] == startChar)      // *******
+                    tracks[3][index] = (byte) JPOS_EMSR_START;
                 end++;
             }
             if (end < trackTotal) {
                 MSRProperties props = (MSRProperties)getClaimingInstance(ClaimedMSR, 0);
-                int trackbit = new int[]{MSRConst.MSR_TR_1, MSRConst.MSR_TR_2, MSRConst.MSR_TR_3}[index];
-                if (props != null && (trackbit & props.TracksToRead) != 0 && tracks[3][index] == JposConst.JPOS_SUCCESS) {
+                int trackbit = new int[]{MSR_TR_1, MSR_TR_2, MSR_TR_3}[index];
+                if (props != null && (trackbit & props.TracksToRead) != 0 && tracks[3][index] == JPOS_SUCCESS) {
                     tracks[index] = Arrays.copyOfRange(next, start, end + 1);
                 }
                 return end + 1;
             }
             else {
-                tracks[3][index] = (byte)MSRConst.JPOS_EMSR_END;
+                tracks[3][index] = (byte)JPOS_EMSR_END;
                 return start - 1;
             }
         }
@@ -1033,7 +1029,7 @@ public class Device extends JposDevice implements Runnable{
             JposCommonProperties props = getPropertySetInstance(CashDrawers, 0, 0);
             if (props != null) {
                 try {
-                    handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, DrawerIsOpen ? CashDrawerConst.CASH_SUE_DRAWEROPEN : CashDrawerConst.CASH_SUE_DRAWERCLOSED));
+                    handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, DrawerIsOpen ? CASH_SUE_DRAWEROPEN : CASH_SUE_DRAWERCLOSED));
                 } catch (JposException e) {
                     return e;
                 } finally {
@@ -1058,7 +1054,7 @@ public class Device extends JposDevice implements Runnable{
             JposCommonProperties props = getPropertySetInstance(Keylocks, EKeyIndex, 0);
             if (props != null) {
                 try {
-                    handleEvent(new KeylockStatusUpdateEvent(props.EventSource, KeylockConst.LOCK_KP_ELECTRONIC, EKeyValue));
+                    handleEvent(new KeylockStatusUpdateEvent(props.EventSource, LOCK_KP_ELECTRONIC, EKeyValue));
                 } catch (JposException e) {
                     return e;
                 } finally {
@@ -1072,20 +1068,22 @@ public class Device extends JposDevice implements Runnable{
     private Exception handleLockChange(byte newLockPos) {
         if (newLockPos != LockPosition) {
             LockPosition = newLockPos;
-            JposCommonProperties props = getPropertySetInstance(Keylocks, LockIndex, 0);
+            int lockIndex = 0;
+            JposCommonProperties props = getPropertySetInstance(Keylocks, lockIndex, 0);
             if (props != null) {
                 try {
                     handleEvent(new KeylockStatusUpdateEvent(props.EventSource, LockMapping.get((int)LockPosition), new byte[0]));
                 } catch (JposException e) {
                     return e;
                 } finally {
-                    signalStatusWaits(Keylocks[LockIndex]);
+                    signalStatusWaits(Keylocks[lockIndex]);
                 }
             }
         }
         return null;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private Exception handlePowerStateEvent(int status) {
         try {
             JposCommonProperties props;
@@ -1109,7 +1107,7 @@ public class Device extends JposDevice implements Runnable{
         catch (JposException e) {
             return e;
         } finally {
-            if (status != JposConst.JPOS_SUE_POWER_ONLINE) {
+            if (status != JPOS_SUE_POWER_ONLINE) {
                 signalStatusWaits(CashDrawers[0]);
                 signalStatusWaits(Keylocks[0]);
                 signalStatusWaits(Keylocks[1]);
@@ -1127,12 +1125,12 @@ public class Device extends JposDevice implements Runnable{
      */
     protected Byte sendCommand(byte[] request, byte responseType) throws JposException {
         if (InIOError || DeviceIsOffline) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Device not available");
+            throw new JposException(JPOS_E_ILLEGAL, "Device not available");
         }
         CommandHelper helper = new CommandHelper(request, responseType);
         enterCommand(helper);
         WaitObj.signal();
-        helper.Signalizer.suspend(SyncObject.INFINITE);
+        helper.Signalizer.suspend(INFINITE);
         if (helper.Response != responseType)
             return null;
         return responseType;
@@ -1143,6 +1141,7 @@ public class Device extends JposDevice implements Runnable{
      * @param doFlush Specifies whether the output stream shall be flushed befor close.
      * @return In case of an IO error, the corresponding exception. Otherwise null
      */
+    @SuppressWarnings("UnusedReturnValue")
     private Exception closePort(boolean doFlush) {
         Exception e = null;
         for (int i = 0; i < 2; i++) {
@@ -1167,12 +1166,13 @@ public class Device extends JposDevice implements Runnable{
      * Port initialization.
      * @return In case of initialization error, the exception. Otherwise null.
      */
+    @SuppressWarnings("resource")
     private Exception initPort() {
         try {
             if (OwnPort != null) {
                 try {
                     OutStream = new TcpClientIOProcessor(this, ID);
-                } catch (JposException e) {}
+                } catch (JposException ignored) {}
             }
             else
                 OutStream = null;
@@ -1183,7 +1183,8 @@ public class Device extends JposDevice implements Runnable{
             }
             else {
                 TcpClientIOProcessor tcp = OutStream != null ? (TcpClientIOProcessor) OutStream : new TcpClientIOProcessor(this, ID);
-                tcp.setParam(OwnPort);
+                if(OwnPort != null)
+                    tcp.setParam(OwnPort);
                 OutStream = tcp;
             }
             OutStream.setLoggingType(LoggingType);
@@ -1220,7 +1221,7 @@ public class Device extends JposDevice implements Runnable{
                 if(i != null)
                     props.KeyPosition = i;
                 else
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Internal error: Cannot translate key position");
+                    throw new JposException(JPOS_E_ILLEGAL, "Internal error: Cannot translate key position");
             }
         }
     }
@@ -1243,35 +1244,35 @@ public class Device extends JposDevice implements Runnable{
      */
     void updateCommonStates(JposCommonProperties dev, boolean enable) {
         if (enable) {
-            if (dev.PowerNotify == JposConst.JPOS_PN_ENABLED) {
-                dev.PowerState = InIOError ? JposConst.JPOS_PS_OFF : (DeviceIsOffline ? JposConst.JPOS_PS_OFFLINE : JposConst.JPOS_PS_ONLINE);
+            if (dev.PowerNotify == JPOS_PN_ENABLED) {
+                dev.PowerState = InIOError ? JPOS_PS_OFF : (DeviceIsOffline ? JPOS_PS_OFFLINE : JPOS_PS_ONLINE);
             } else
-                dev.PowerState = JposConst.JPOS_PS_UNKNOWN;
+                dev.PowerState = JPOS_PS_UNKNOWN;
         }
     }
 
     /**
      * Increments open count. If incremented to 1, starts communication handler.
      */
+    @SuppressWarnings("AssignmentUsedAsCondition")
     void startCommunication() {
-        if (changeOpenCount(1) == 1) {
-            ToBeFinished = false;
-            (StateWatcher = new Thread(this)).start();
-            StartWaiter.suspend((MaxRetry + 2) * RequestTimeout);
+        boolean wait;
+        synchronized (StartWaiter) {
+            if (wait = changeOpenCount(1) == 1) {
+                (StateWatcher = new ThreadHandler("CombiDeviceStateWatcher", this)).start();
+            }
         }
+        if (wait)
+            StartWaiter.suspend((MaxRetry + 2L) * RequestTimeout);
     }
 
     /**
      * Decrements open count. If decremented to 0, stops communication handler.
      */
     void stopCommunication() {
-        if (changeOpenCount(-1) == 0) {
-            ToBeFinished = true;
-            while (ToBeFinished) {
-                try {
-                    StateWatcher.join();
-                } catch (Exception e) {}
-                break;
+        synchronized (StartWaiter) {
+            if (changeOpenCount(-1) == 0) {
+                StateWatcher.waitFinished();
             }
         }
     }
@@ -1348,7 +1349,7 @@ public class Device extends JposDevice implements Runnable{
          * @param tracks    Initial value for tracks read before.
          */
         TrackData(byte[][] tracks) {
-            Tracks = Arrays.copyOf(tracks, tracks.length > 3 ? 3 : tracks.length);
+            Tracks = Arrays.copyOf(tracks, Math.min(tracks.length, 3));
         }
 
         /**
@@ -1357,10 +1358,10 @@ public class Device extends JposDevice implements Runnable{
          */
         @Override
         public String toString() {
-            String data = "";
+            StringBuilder data = new StringBuilder();
             for (int i = 0; i < Tracks.length; i++) {
                 if (Tracks[i].length > 0)
-                    data += "] / " + i + ": [" + new String(Tracks[i]);
+                    data.append("] / ").append(i).append(": [").append(new String(Tracks[i]));
             }
             return data.length() > 0 ? data.substring(4) + "]" : "No data";
         }
@@ -1380,17 +1381,17 @@ public class Device extends JposDevice implements Runnable{
      * Performs internal CheckHealth, equal processing for all device classes.
      * @param dev   Property set to be used.
      * @param level CheckHealth level parameter.
-     * @return true if level = CH_INTERNAL.
+     * @return true if level != CH_INTERNAL.
      */
     boolean internalCheckHealth(JposCommonProperties dev, int level) {
-        if (level == JposConst.JPOS_CH_INTERNAL) {
+        if (level == JPOS_CH_INTERNAL) {
             dev.CheckHealthText = "Internal CheckHealth: ";
             dev.CheckHealthText += InIOError || DeviceIsOffline ? "Failed" : "OK";
             dev.CheckHealthText += ".";
-            log(Level.DEBUG, dev.LogicalName + ": CheckHealthText <- " + dev.CheckHealthText);
-            return true;
+            log(DEBUG, dev.LogicalName + ": CheckHealthText <- " + dev.CheckHealthText);
+            return false;
         }
-        return false;
+        return true;
     }
 
     /**
@@ -1400,8 +1401,8 @@ public class Device extends JposDevice implements Runnable{
      */
     long timeoutToLong(int timeout) {
         long subtractor = Integer.MAX_VALUE;
-        if (timeout == JposConst.JPOS_FOREVER)
-            return -1l;
+        if (timeout == JPOS_FOREVER)
+            return -1L;
         if (timeout > 0)
             return timeout;
         return subtractor + subtractor + 2 + timeout;

@@ -18,7 +18,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.soundrecorder;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.*;
+
+import static jpos.SoundRecorderConst.*;
 
 /**
  * Status update event implementation for SoundRecorder devices.
@@ -35,16 +36,20 @@ public class SoundRecorderStatusUpdateEvent extends JposStatusUpdateEvent {
     }
 
     @Override
+    public boolean setStatusProperties() {
+        return super.setStatusProperties() || switch (getStatus()) {
+            case SREC_SUE_START_SOUND_RECORDING, SREC_SUE_STOP_SOUND_RECORDING -> true;
+            default -> false;
+        };
+    }
+
+    @Override
     public String toLogString() {
         String ret = super.toLogString();
-        if (ret.length() > 0)
-            return ret;
-        switch (getStatus()) {
-            case SoundRecorderConst.SREC_SUE_START_SOUND_RECORDING:
-                return "SoundRecorder Start Sound Recording";
-            case SoundRecorderConst.SREC_SUE_STOP_SOUND_RECORDING:
-                return "SoundRecorder End Sound Recording";
-        }
-        return "Unknown SoundRecorder Status Change: " + getStatus();
+        return ret.length() > 0 ? ret : switch (getStatus()) {
+            case SREC_SUE_START_SOUND_RECORDING -> "SoundRecorder Start Sound Recording";
+            case SREC_SUE_STOP_SOUND_RECORDING -> "SoundRecorder End Sound Recording";
+            default -> "Unknown SoundRecorder Status Change: " + getStatus();
+        };
     }
 }

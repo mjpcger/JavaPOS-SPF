@@ -21,6 +21,10 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.GraphicDisplayConst.*;
+import static jpos.JposConst.*;
+
 /**
  * GraphicDisplay service implementation. For more details about getter, setter and method implementations,
  * see JposBase.<br>
@@ -46,7 +50,7 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
      */
     public GraphicDisplayInterface GraphicDisplay;
 
-    private GraphicDisplayProperties Data;
+    private final GraphicDisplayProperties Data;
 
     @Override
     public int getBrightness() throws JposException {
@@ -59,8 +63,8 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void setBrightness(int brightness) throws JposException {
         logPreSet("Brightness");
         checkOpened();
-        JposDevice.check(!Data.CapBrightness && brightness != Data.Brightness, JposConst.JPOS_E_ILLEGAL, "Changing Brightness Illegal");
-        JposDevice.check(brightness < 0 || brightness > 100, JposConst.JPOS_E_ILLEGAL, "Brightness Must Be Between 0 And 100: " + brightness);
+        check(!Data.CapBrightness && brightness != Data.Brightness, JPOS_E_ILLEGAL, "Changing Brightness Illegal");
+        check(brightness < 0 || brightness > 100, JPOS_E_ILLEGAL, "Brightness Must Be Between 0 And 100: " + brightness);
         GraphicDisplay.brightness(brightness);
         logSet("Brightness");
     }
@@ -131,24 +135,14 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     @Override
     public void setDisplayMode(int displayMode) throws JposException {
         logPreSet("DisplayMode");
-        long[] valid = {
-                GraphicDisplayConst.GDSP_DMODE_HIDDEN,
-                GraphicDisplayConst.GDSP_DMODE_WEB
-        };
-        long[] validImage = {
-                GraphicDisplayConst.GDSP_DMODE_IMAGE_FIT,
-                GraphicDisplayConst.GDSP_DMODE_IMAGE_FILL,
-                GraphicDisplayConst.GDSP_DMODE_IMAGE_CENTER
-        };
-        long[] validVideo = {
-                GraphicDisplayConst.GDSP_DMODE_VIDEO_NORMAL,
-                GraphicDisplayConst.GDSP_DMODE_VIDEO_FULL
-        };
+        long[] valid = { GDSP_DMODE_HIDDEN, GDSP_DMODE_WEB };
+        long[] validImage = { GDSP_DMODE_IMAGE_FIT, GDSP_DMODE_IMAGE_FILL, GDSP_DMODE_IMAGE_CENTER };
+        long[] validVideo = { GDSP_DMODE_VIDEO_NORMAL, GDSP_DMODE_VIDEO_FULL };
         checkEnabled();
-        if (!JposDevice.member(displayMode, valid)) {
-            if (!Data.CapImageType || !JposDevice.member(displayMode, validImage)) {
-                if (!Data.CapVideoType || !JposDevice.member(displayMode, validVideo))
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "DisplayMode Invalid: " + displayMode);
+        if (!member(displayMode, valid)) {
+            if (!Data.CapImageType || !member(displayMode, validImage)) {
+                if (!Data.CapVideoType || !member(displayMode, validVideo))
+                    throw new JposException(JPOS_E_ILLEGAL, "DisplayMode Invalid: " + displayMode);
             }
         }
         GraphicDisplay.displayMode(displayMode);
@@ -166,8 +160,8 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void setImageType(String imageType) throws JposException {
         logPreSet("ImageType");
         checkEnabled();
-        JposDevice.check(!Data.CapImageType, JposConst.JPOS_E_ILLEGAL, "Image Mode Not Supported");
-        JposDevice.check(!JposDevice.member(imageType, Data.ImageTypeList.split(",")), JposConst.JPOS_E_ILLEGAL, "ImageType Illegal: " + imageType);
+        check(!Data.CapImageType, JPOS_E_ILLEGAL, "Image Mode Not Supported");
+        check(!member(imageType, Data.ImageTypeList.split(",")), JPOS_E_ILLEGAL, "ImageType Illegal: " + imageType);
         GraphicDisplay.imageType(imageType);
         logSet("ImageType");
     }
@@ -182,7 +176,7 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     @Override
     public int getLoadStatus() throws JposException {
         checkOpened();
-        JposDevice.check(Data.LoadStatus == null, JposConst.JPOS_E_ILLEGAL, "Load Status Not Available");
+        check(Data.LoadStatus == null, JPOS_E_ILLEGAL, "Load Status Not Available");
         logGet("LoadStatus");
         return Data.LoadStatus;
     }
@@ -198,15 +192,10 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void setStorage(int storage) throws JposException {
         logPreSet("Storage");
         checkEnabled();
-        long[] valid = {
-                GraphicDisplayConst.GDSP_ST_HOST, GraphicDisplayConst.GDSP_ST_HARDTOTALS
-        };
-        boolean[] condition = {
-                Data.CapStorage == GraphicDisplayConst.GDSP_CST_HOST_ONLY && storage != GraphicDisplayConst.GDSP_ST_HOST,
-                Data.CapStorage == GraphicDisplayConst.GDSP_CST_HARDTOTALS_ONLY && storage != GraphicDisplayConst.GDSP_ST_HARDTOTALS,
-                !JposDevice.member(storage, valid)
-        };
-        JposDevice.check(condition[0] || condition[1] || condition[2], JposConst.JPOS_E_ILLEGAL, "Storage Invalid: " + storage);
+        long[] valid = { GDSP_ST_HOST, GDSP_ST_HARDTOTALS };
+        check(Data.CapStorage == GDSP_CST_HOST_ONLY && storage != GDSP_ST_HOST, JPOS_E_ILLEGAL, "Storage not host: " + storage);
+        check(Data.CapStorage == GDSP_CST_HARDTOTALS_ONLY && storage != GDSP_ST_HARDTOTALS, JPOS_E_ILLEGAL, "Storage not hard total: " + storage);
+        checkMember(storage, valid, JPOS_E_ILLEGAL, "Unsupported storage: " + storage);
         GraphicDisplay.storage(storage);
         logSet("Storage");
     }
@@ -214,7 +203,7 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     @Override
     public String getURL() throws JposException {
         checkOpened();
-        JposDevice.check(Data.URL == null, JposConst.JPOS_E_ILLEGAL, "Load Status Not Available");
+        check(Data.URL == null, JPOS_E_ILLEGAL, "Load Status Not Available");
         logGet("URL");
         return Data.URL;
     }
@@ -230,9 +219,9 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void setVideoType(String videoType) throws JposException {
         logPreSet("VideoType");
         checkEnabled();
-        JposDevice.check(!Data.CapVideoType, JposConst.JPOS_E_ILLEGAL, "Video Mode Not Supported.");
+        check(!Data.CapVideoType, JPOS_E_ILLEGAL, "Video Mode Not Supported.");
         String[] valid = Data.VideoTypeList.split(",");
-        JposDevice.check(!JposDevice.member(videoType, valid), JposConst.JPOS_E_ILLEGAL, "VideoType Not Supported: " + videoType);
+        check(!member(videoType, valid), JPOS_E_ILLEGAL, "VideoType Not Supported: " + videoType);
         GraphicDisplay.videoType(videoType);
         logSet("VideoType");
     }
@@ -255,8 +244,8 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void setVolume(int volume) throws JposException {
         logPreSet("Volume");
         checkEnabled();
-        JposDevice.check(!Data.CapVolume && volume != Data.Volume, JposConst.JPOS_E_ILLEGAL, "Volume Change Not Supported");
-        JposDevice.check(volume < 0 || volume > 100, JposConst.JPOS_E_ILLEGAL, "Volume Must Be Between 0 And 100: " + volume);
+        check(!Data.CapVolume && volume != Data.Volume, JPOS_E_ILLEGAL, "Volume Change Not Supported");
+        check(volume < 0 || volume > 100, JPOS_E_ILLEGAL, "Volume Must Be Between 0 And 100: " + volume);
         GraphicDisplay.volume(volume);
         logSet("Volume");
     }
@@ -281,7 +270,7 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void cancelURLLoading() throws JposException {
         logPreCall("CancelURLLoading");
         checkEnabled();
-        JposDevice.check(!UrlLoading, JposConst.JPOS_E_ILLEGAL, "No URL Loading");
+        check(!UrlLoading, JPOS_E_ILLEGAL, "No URL Loading");
         GraphicDisplay.cancelURLLoading();
         logCall("CancelURLLoading");
     }
@@ -290,7 +279,7 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void goURLBack() throws JposException {
         logPreCall("GoURLBack");
         checkEnabled();
-        JposDevice.check(Data.DisplayMode == GraphicDisplayConst.GDSP_DMODE_HIDDEN, JposConst.JPOS_E_ILLEGAL, "Bad Mode");
+        check(Data.DisplayMode == GDSP_DMODE_HIDDEN, JPOS_E_ILLEGAL, "Bad Mode");
         callIt(GraphicDisplay.goURLBack(), "GoURLBack");
     }
 
@@ -298,42 +287,42 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void goURLForward() throws JposException {
         logPreCall("GoURLForward");
         checkEnabled();
-        JposDevice.check(Data.DisplayMode == GraphicDisplayConst.GDSP_DMODE_HIDDEN, JposConst.JPOS_E_ILLEGAL, "Bad Mode");
+        check(Data.DisplayMode == GDSP_DMODE_HIDDEN, JPOS_E_ILLEGAL, "Bad Mode");
         callIt(GraphicDisplay.goURLForward(), "GoURLForward");
     }
 
     @Override
     public void loadImage(String s) throws JposException {
+        logPreCall("LoadImage", removeOuterArraySpecifier(new Object[]{s}, Device.MaxArrayStringElements));
         if (s == null)
             s = "";
-        long[] valid = { GraphicDisplayConst.GDSP_DMODE_IMAGE_FIT, GraphicDisplayConst.GDSP_DMODE_IMAGE_FILL, GraphicDisplayConst.GDSP_DMODE_IMAGE_CENTER };
-        logPreCall("LoadImage", s);
+        long[] valid = { GDSP_DMODE_IMAGE_FIT, GDSP_DMODE_IMAGE_FILL, GDSP_DMODE_IMAGE_CENTER };
         checkEnabled();
-        JposDevice.check(!Data.CapImageType, JposConst.JPOS_E_ILLEGAL, "No Image Mode Support");
-        JposDevice.checkMember(Data.DisplayMode, valid, JposConst.JPOS_E_ILLEGAL, "Invalid DisplayMode For LoadImage: " + Data.DisplayMode);
+        check(!Data.CapImageType, JPOS_E_ILLEGAL, "No Image Mode Support");
+        checkMember(Data.DisplayMode, valid, JPOS_E_ILLEGAL, "Invalid DisplayMode For LoadImage: " + Data.DisplayMode);
         callIt(GraphicDisplay.loadImage(s), "LoadImage");
     }
 
     @Override
     public void loadURL(String s) throws JposException {
+        logPreCall("LoadURL", removeOuterArraySpecifier(new Object[]{s}, Device.MaxArrayStringElements));
         if (s == null)
             s = "";
-        logPreCall("LoadURL", s);
         checkEnabled();
-        JposDevice.check(Data.DisplayMode == GraphicDisplayConst.GDSP_DMODE_HIDDEN, JposConst.JPOS_E_ILLEGAL, "Bad Mode");
-        JposDevice.check(s.length() <= 0, JposConst.JPOS_E_ILLEGAL, "Empty URL");
+        check(Data.DisplayMode == GDSP_DMODE_HIDDEN, JPOS_E_ILLEGAL, "Bad Mode");
+        check(s.length() == 0, JPOS_E_ILLEGAL, "Empty URL");
         callIt(GraphicDisplay.loadURL(s), "LoadURL");
     }
 
     @Override
     public void playVideo(String s, boolean b) throws JposException {
+        logPreCall("PlayVideo", removeOuterArraySpecifier(new Object[]{s, b}, Device.MaxArrayStringElements));
         if (s == null)
             s = "";
-        long[] valid = { GraphicDisplayConst.GDSP_DMODE_VIDEO_NORMAL, GraphicDisplayConst.GDSP_DMODE_VIDEO_FULL };
-        logPreCall("PlayVideo", s + ", " + b);
+        long[] valid = { GDSP_DMODE_VIDEO_NORMAL, GDSP_DMODE_VIDEO_FULL };
         checkEnabled();
-        JposDevice.check(!Data.CapVideoType, JposConst.JPOS_E_ILLEGAL, "No Video Mode Support");
-        JposDevice.checkMember(Data.DisplayMode, valid, JposConst.JPOS_E_ILLEGAL, "Invalid DisplayMode For PlayVideo: " + Data.DisplayMode);
+        check(!Data.CapVideoType, JPOS_E_ILLEGAL, "No Video Mode Support");
+        checkMember(Data.DisplayMode, valid, JPOS_E_ILLEGAL, "Invalid DisplayMode For PlayVideo: " + Data.DisplayMode);
         callIt(GraphicDisplay.playVideo(s, b), "PlayVideo");
     }
 
@@ -341,7 +330,7 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void stopVideo() throws JposException {
         logPreCall("StopVideo");
         checkEnabled();
-        JposDevice.check(!VideoPlaying, JposConst.JPOS_E_ILLEGAL, "No Video Playing");
+        check(!VideoPlaying, JPOS_E_ILLEGAL, "No Video Playing");
         GraphicDisplay.stopVideo();
         logCall("StopVideo");
     }
@@ -350,8 +339,8 @@ public class GraphicDisplayService extends JposBase implements GraphicDisplaySer
     public void updateURLPage() throws JposException {
         logPreCall("UpdateURLPage");
         checkEnabled();
-        JposDevice.check(Data.DisplayMode == GraphicDisplayConst.GDSP_DMODE_HIDDEN, JposConst.JPOS_E_ILLEGAL, "Bad Mode");
-        JposDevice.check(UrlLoading, JposConst.JPOS_E_ILLEGAL, "URL Loading");
+        check(Data.DisplayMode == GDSP_DMODE_HIDDEN, JPOS_E_ILLEGAL, "Bad Mode");
+        check(UrlLoading, JPOS_E_ILLEGAL, "URL Loading");
         callIt(GraphicDisplay.updateURLPage(), "UpdateURLPage");
     }
 }

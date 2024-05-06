@@ -21,14 +21,16 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.toneindicator.*;
 import jpos.*;
 
-import javax.swing.*;
+import static SampleCombiDevice.Device.*;
+import static javax.swing.JOptionPane.*;
+import static jpos.JposConst.*;
 
 /**
  * Class implementing the POSKeyboardInterface for the sample combi device.
  * External and interactive Checkhealth might be implemented in a later version.
  */
 public class ToneIndicator extends ToneIndicatorProperties {
-    private Device Dev;
+    private final Device Dev;
 
     /**
      * Constructor. Gets instance of Device to be used as communication object. Device index for
@@ -60,14 +62,14 @@ public class ToneIndicator extends ToneIndicatorProperties {
 
     @Override
     public void checkHealth(int level) throws JposException {
-        if (!Dev.internalCheckHealth(this, level) || !externalCheckHealth(level)) {
+        if (Dev.internalCheckHealth(this, level) || !externalCheckHealth(level)) {
             interactiveCheckHealth(level);
         }
         super.checkHealth(level);
     }
 
     private void interactiveCheckHealth(int level) {
-        if (level == JposConst.JPOS_CH_INTERACTIVE) {
+        if (level == JPOS_CH_INTERACTIVE) {
             String result;
             try {
                 ((ToneIndicatorService) EventSource).soundImmediate();
@@ -75,14 +77,14 @@ public class ToneIndicator extends ToneIndicatorProperties {
             } catch (JposException e) {
                 result = "Error, " + e.getMessage();
             }
-            Dev.synchronizedMessageBox("ToneIndicator check " + result + ".", "CheckHealth ToneIndicator",
-                    (result.equals("OK") ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE));
+            synchronizedMessageBox("ToneIndicator check " + result + ".", "CheckHealth ToneIndicator",
+                    (result.equals("OK") ? INFORMATION_MESSAGE : ERROR_MESSAGE));
             CheckHealthText = "Interactive check: " + result;
         }
     }
 
     private boolean externalCheckHealth(int level) {
-        if (level == JposConst.JPOS_CH_EXTERNAL) {
+        if (level == JPOS_CH_EXTERNAL) {
             String result;
             try {
                 ((ToneIndicatorService) EventSource).soundImmediate();
@@ -99,7 +101,7 @@ public class ToneIndicator extends ToneIndicatorProperties {
     @Override
     public void sound(Sound request) throws JposException {
         if ((Tone1Duration | Tone2Duration) != 0) {
-            while (request.Count == JposConst.JPOS_FOREVER || request.Count-- > 0) {
+            while (request.Count == JPOS_FOREVER || request.Count-- > 0) {
                 if (soundAndDelay(request, Tone1Duration, InterToneWait))
                     break;
                 if (soundAndDelay(request, Tone2Duration, request.Delay))
@@ -113,15 +115,15 @@ public class ToneIndicator extends ToneIndicatorProperties {
         if (request.Abort != null) {
             JposCommonProperties claimer = props.getClaimingInstance();
             if (request.EndSync != null && claimer != null && claimer != props)
-                throw new JposException(JposConst.JPOS_E_CLAIMED, "Claimed by other instance");
+                throw new JposException(JPOS_E_CLAIMED, "Claimed by other instance");
             return true;
         }
         if (duration > 0) {
-            Dev.sendCommand(Dev.CmdBeepOn, Dev.NoResponse);
+            Dev.sendCommand(CmdBeepOn, NoResponse);
             request.Waiting.suspend(duration);
             if (request.Abort != null)
                 return true;
-            Dev.sendCommand(Dev.CmdBeepOff, Dev.NoResponse);
+            Dev.sendCommand(CmdBeepOff, NoResponse);
             if (request.Abort != null)
                 return true;
         }

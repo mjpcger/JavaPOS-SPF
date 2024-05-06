@@ -17,11 +17,12 @@
 
 package SampleSubsystemDevice;
 
-import jpos.RemoteOrderDisplayConst;
+import static jpos.RemoteOrderDisplayConst.*;
 
 /**
  * Class that holds display contents for all remote order display units supported by sample device
  */
+@SuppressWarnings("unused")
 public class DisplayContents {
     /**
      * Pseudo color value for non-present border lines.
@@ -76,12 +77,12 @@ public class DisplayContents {
         /**
          * Foreground color of the character at this display position.
          */
-        int ForegroundColor = RemoteOrderDisplayConst.ROD_ATTR_FG_BLACK;
+        int ForegroundColor = ROD_ATTR_FG_BLACK;
 
         /**
          * Background color of the character at this display position.
          */
-        int BackgroundColor = RemoteOrderDisplayConst.ROD_ATTR_FG_GRAY|RemoteOrderDisplayConst.ROD_ATTR_INTENSITY;
+        int BackgroundColor = ROD_ATTR_FG_GRAY|ROD_ATTR_INTENSITY;
 
         /**
          * Color of the left border at this display position, if present. NOT_PRESENT otherwise.
@@ -146,21 +147,21 @@ public class DisplayContents {
         /**
          * Allowed lower limits for clock value strings
          */
-        static char[][] ClockValueLowerBoarder = new char[][]{
-                new char[]{'0', ':', '0', '0'},
-                new char[]{0, ':', '0', '0'},
-                new char[]{1, ':', '0', '0', ':', '0', '0'},
-                new char[]{0, ':', '0', '0', ':', '0', '0'}
+        static char[][] ClockValueLowerBoarder = {
+                {'0', ':', '0', '0'},
+                {0, ':', '0', '0'},
+                {1, ':', '0', '0', ':', '0', '0'},
+                {0, ':', '0', '0', ':', '0', '0'}
         };
 
         /**
          * Allowed upper limits for clock value strings
          */
-        static char[][] ClockValueUpperBoarder = new char[][]{
-                new char[]{'9', ':', '5', '9'},
-                new char[]{59, ':', '5', '9'},
-                new char[]{12, ':', '5', '9', ':', '5', '9'},
-                new char[]{23, ':', '5', '9', ':', '5', '9'}
+        static char[][] ClockValueUpperBoarder = {
+                {'9', ':', '5', '9'},
+                {59, ':', '5', '9'},
+                {12, ':', '5', '9', ':', '5', '9'},
+                {23, ':', '5', '9', ':', '5', '9'}
         };
 
         /**
@@ -177,9 +178,9 @@ public class DisplayContents {
         /**
          * Character attributes for 20 lines with 25 columns, each.
          */
-        CharAttributes[][] Attribute = new CharAttributes[][]{
+        CharAttributes[][] Attribute = {
                 // Line 1
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -207,7 +208,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 2
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -235,7 +236,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 3
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -263,7 +264,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 4
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -291,7 +292,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 5
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -319,7 +320,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 6
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -347,7 +348,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 7
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -375,7 +376,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 8
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -403,7 +404,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 9
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -431,7 +432,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 10
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -459,7 +460,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 11
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -487,7 +488,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 12
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -515,7 +516,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 13
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -543,7 +544,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 14
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -571,7 +572,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 15
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -599,7 +600,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 16
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -627,7 +628,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 17
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -655,7 +656,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 18
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -683,7 +684,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 19
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),
@@ -711,7 +712,7 @@ public class DisplayContents {
                         new CharAttributes()   // 25
                 },
                 // Line 20
-                new CharAttributes[]{
+                {
                         new CharAttributes(),   // 1
                         new CharAttributes(),
                         new CharAttributes(),

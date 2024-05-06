@@ -18,9 +18,11 @@
 package de.gmxhome.conrad.jpos.jpos_base;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
 
-import static de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest.JposRequestThread.ActiveMessageBoxes;
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static javax.swing.JOptionPane.*;
 
 /**
  * Helper class to create message boxes from any thread that are synchronized with the current thread. Option dialogs
@@ -29,16 +31,17 @@ import static de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest.JposRequestThre
 public class SynchronizedMessageBox {
     private JOptionPane Box;
     private JDialog Dialog;
-    private SyncObject Sync = new SyncObject();
-    private SyncObject Ready = new SyncObject();
+    private Point CurrentPosition;
+    private final SyncObject Sync = new SyncObject();
+    private final SyncObject Ready = new SyncObject();
     private final Timer[] Timer = {null};
 
     /**
      * Confirmation result. Is null while confirmation dialog has not been finished. If not null, it holds
      * the index of the selected option, starting at zero. -2 in case of timeout,  -1 in case of a stop
-     * via abortDialog or no selection. Keep in mind: -1 is equal to JOptionPane.CLOSE_OPTION.
+     * via abortDialog or no selection. Keep in mind: -1 is equal to CLOSE_OPTION.
      */
-    public Integer Result = JOptionPane.CLOSED_OPTION;
+    public Integer Result = CLOSED_OPTION;
 
     /**
      * Create a confirmation message box and wait until one option has been selected or a timeout occurs. If at least
@@ -57,59 +60,54 @@ public class SynchronizedMessageBox {
      */
     public int synchronizedConfirmationBox(final String message, final String title, final String[] options, final String defaultOption, final int messageType, final int timeout) {
         Result = null;
-        Thread current = Thread.currentThread();
-        synchronized (ActiveMessageBoxes) {
-            ActiveMessageBoxes.add(this);
+        synchronized (JposOutputRequest.JposRequestThread.ActiveMessageBoxes) {
+            JposOutputRequest.JposRequestThread.ActiveMessageBoxes.add(this);
         }
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                int result;
-                try {
-                    int optionType = (options == null && defaultOption != null) ? Integer.parseInt(defaultOption) : JOptionPane.DEFAULT_OPTION;
-                    Box = new JOptionPane(message, messageType, optionType, null, options, options == null ? null : defaultOption);
-                    Dialog = Box.createDialog(title);
-                    if (Timer[0] == null) {
-                        Dialog.addComponentListener(new ComponentAdapter() {
-                            @Override
-                            public void componentShown(ComponentEvent e) {
-                                super.componentShown(e);
-                                Timer[0] = new Timer(Integer.MAX_VALUE, new ActionListener() {
-                                    @Override
-                                    public void actionPerformed(ActionEvent e) {
-                                        synchronized (Sync) {
-                                            if (Dialog != null && Dialog.isVisible() && Result == null) {
-                                                Box.setValue(JOptionPane.CLOSED_OPTION - 1);
-                                                Dialog.setVisible(false);
-                                            }
-                                        }
-                                        Timer[0].stop();
+        SwingUtilities.invokeLater(() -> {
+            int result = CLOSED_OPTION;
+            try {
+                int optionType = (options == null && defaultOption != null) ? Integer.parseInt(defaultOption) : DEFAULT_OPTION;
+                Box = new JOptionPane(message, messageType, optionType, null, options, options == null ? null : defaultOption);
+                Dialog = Box.createDialog(title);
+                if (CurrentPosition != null)
+                    Dialog.setLocation(CurrentPosition);
+                if (Timer[0] == null) {
+                    Dialog.addComponentListener(new ComponentAdapter() {
+                        @Override
+                        public void componentShown(ComponentEvent e) {
+                            super.componentShown(e);
+                            Timer[0] = new Timer(Integer.MAX_VALUE, (ActionEvent ignore) -> {
+                                synchronized (Sync) {
+                                    if (Dialog != null && Dialog.isVisible() && Result == null) {
+                                        Box.setValue(CLOSED_OPTION - 1);
+                                        Dialog.setVisible(false);
                                     }
-                                });
-                                if (timeout > 0) {
-                                    Timer[0].setInitialDelay(timeout);
-                                    Timer[0].start();
                                 }
+                                Timer[0].stop();
+                            });
+                            if (timeout > 0) {
+                                Timer[0].setInitialDelay(timeout);
+                                Timer[0].start();
                             }
-                        });
-                    } else if (timeout > 0) {
-                        Timer[0].setInitialDelay(timeout);
-                        Timer[0].restart();
-                    }
-                    Dialog.setAlwaysOnTop(true);
-                    Dialog.setModalExclusionType(java.awt.Dialog.ModalExclusionType.APPLICATION_EXCLUDE);
-                    if (timeout > 0) {
-                        Dialog.setVisible(true);
-                        if (Timer[0] != null)
-                            Timer[0].stop();
-                    } else
-                        Dialog.setVisible(true);
-                    Object selected = Box.getValue();
-                    if (selected == null)
-                        result = JOptionPane.CLOSED_OPTION;
-                    else if (selected instanceof String) {
-                        if ("".equals(selected))
-                            result = JOptionPane.CLOSED_OPTION;
-                        else {
+                        }
+                    });
+                } else if (timeout > 0) {
+                    Timer[0].setInitialDelay(timeout);
+                    Timer[0].restart();
+                }
+                Dialog.setAlwaysOnTop(true);
+                Dialog.setModalExclusionType(java.awt.Dialog.ModalExclusionType.APPLICATION_EXCLUDE);
+                if (timeout > 0) {
+                    Dialog.setVisible(true);
+                    if (Timer[0] != null)
+                        Timer[0].stop();
+                } else
+                    Dialog.setVisible(true);
+                Object selected = Box.getValue();
+                if (selected != null) {
+                    if (selected instanceof String) {
+                        if (!"".equals(selected)) {
+                            assert options != null;
                             for (result = options.length - 1; result >= 0; result--) {
                                 if (options[result].equals(selected))
                                     break;
@@ -117,22 +115,24 @@ public class SynchronizedMessageBox {
                         }
                     } else
                         result = (Integer) selected;
-                    synchronized (Sync) {
-                        Result = result;
-                        Ready.signal();
-                        Dialog.dispose();
-                        Dialog = null;
-                    }
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                    result = JOptionPane.CLOSED_OPTION;
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+                result = CLOSED_OPTION;
+                Ready.signal();
+            } finally {
+                synchronized (Sync) {
+                    Result = result;
                     Ready.signal();
+                    CurrentPosition = Dialog.getLocation();
+                    Dialog.dispose();
+                    Dialog = null;
                 }
             }
         });
-        Ready.suspend(SyncObject.INFINITE);
-        synchronized (ActiveMessageBoxes) {
-            ActiveMessageBoxes.remove(this);
+        Ready.suspend(INFINITE);
+        synchronized (JposOutputRequest.JposRequestThread.ActiveMessageBoxes) {
+            JposOutputRequest.JposRequestThread.ActiveMessageBoxes.remove(this);
         }
         return Result;
     }
@@ -141,14 +141,11 @@ public class SynchronizedMessageBox {
      * Method to abort the dialog.
      */
     public void abortDialog() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (Sync) {
-                    if (Dialog != null && Dialog.isVisible()) {
-                        Box.setValue(JOptionPane.CLOSED_OPTION);
-                        Dialog.setVisible(false);
-                    }
+        SwingUtilities.invokeLater(() -> {
+            synchronized (Sync) {
+                if (Dialog != null && Dialog.isVisible()) {
+                    Box.setValue(CLOSED_OPTION);
+                    Dialog.setVisible(false);
                 }
             }
         });

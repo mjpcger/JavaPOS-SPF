@@ -25,11 +25,11 @@ public class POSKeyboardDataEvent extends JposDataEvent {
     /**
      * Holds the POSKeyData property value to be stored before firing the event.
      */
-    int Data;
+    final int Data;
     /**
      * Holds the POSKeyEventType property value to be stored before firing the event.
      */
-    int EventType;
+    final int EventType;
 
     /**
      * Constructor. Parameters passed to base class unchanged.

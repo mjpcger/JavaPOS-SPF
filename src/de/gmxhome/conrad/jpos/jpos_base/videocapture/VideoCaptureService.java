@@ -21,6 +21,12 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import java.util.Objects;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.VideoCaptureConst.*;
+
 /**
  * VideoCapture service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
@@ -55,7 +61,7 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setAutoExposure(boolean flag) throws JposException {
         logPreSet("AutoExposure");
         checkEnabled();
-        JposDevice.check(flag != Data.AutoExposure && !Data.CapAutoExposure, JposConst.JPOS_E_ILLEGAL, "Changing AutoExposure not supported");
+        check(flag != Data.AutoExposure && !Data.CapAutoExposure, JPOS_E_ILLEGAL, "Changing AutoExposure not supported");
         VideoCapture.autoExposure(flag);
         logSet("AutoExposure");
     }
@@ -71,7 +77,7 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setAutoFocus(boolean flag) throws JposException {
         logPreSet("AutoFocus");
         checkEnabled();
-        JposDevice.check(flag != Data.AutoFocus && !Data.CapAutoFocus, JposConst.JPOS_E_ILLEGAL, "Changing AutoFocus not supported");
+        check(flag != Data.AutoFocus && !Data.CapAutoFocus, JPOS_E_ILLEGAL, "Changing AutoFocus not supported");
         VideoCapture.autoFocus(flag);
         logSet("AutoFocus");
     }
@@ -87,7 +93,7 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setAutoGain(boolean flag) throws JposException {
         logPreSet("AutoGain");
         checkEnabled();
-        JposDevice.check(flag != Data.AutoGain && !Data.CapAutoGain, JposConst.JPOS_E_ILLEGAL, "Changing AutoGain not supported");
+        check(flag != Data.AutoGain && !Data.CapAutoGain, JPOS_E_ILLEGAL, "Changing AutoGain not supported");
         VideoCapture.autoGain(flag);
         logSet("AutoGain");
     }
@@ -103,7 +109,7 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setAutoWhiteBalance(boolean flag) throws JposException {
         logPreSet("AutoWhiteBalance");
         checkEnabled();
-        JposDevice.check(flag != Data.AutoWhiteBalance && !Data.CapAutoWhiteBalance, JposConst.JPOS_E_ILLEGAL, "Changing AutoWhiteBalance not supported");
+        check(flag != Data.AutoWhiteBalance && !Data.CapAutoWhiteBalance, JPOS_E_ILLEGAL, "Changing AutoWhiteBalance not supported");
         VideoCapture.autoWhiteBalance(flag);
         logSet("AutoWhiteBalance");
     }
@@ -119,8 +125,8 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setBrightness(int brightness) throws JposException {
         logPreSet("Brightness");
         checkEnabled();
-        JposDevice.check(brightness != Data.Brightness && !Data.CapBrightness, JposConst.JPOS_E_ILLEGAL, "Changing Brightness not supported");
-        JposDevice.check(brightness < 0 || brightness > 100, JposConst.JPOS_E_ILLEGAL, "Invalid brighness: " + brightness);
+        check(brightness != Data.Brightness && !Data.CapBrightness, JPOS_E_ILLEGAL, "Changing Brightness not supported");
+        check(brightness < 0 || brightness > 100, JPOS_E_ILLEGAL, "Invalid brighness: " + brightness);
         VideoCapture.brightness(brightness);
         logSet("Brightness");
     }
@@ -304,8 +310,8 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setContrast(int contrast) throws JposException {
         logPreSet("Contrast");
         checkEnabled();
-        JposDevice.check(contrast != Data.Contrast && !Data.CapContrast, JposConst.JPOS_E_ILLEGAL, "Changing Contrast not supported");
-        JposDevice.check(contrast < 0 || contrast > 100, JposConst.JPOS_E_ILLEGAL, "Invalid contrast: " + contrast);
+        check(contrast != Data.Contrast && !Data.CapContrast, JPOS_E_ILLEGAL, "Changing Contrast not supported");
+        check(contrast < 0 || contrast > 100, JPOS_E_ILLEGAL, "Invalid contrast: " + contrast);
         VideoCapture.contrast(contrast);
         logSet("Contrast");
     }
@@ -321,8 +327,8 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setExposure(int exposure) throws JposException {
         logPreSet("Exposure");
         checkEnabled();
-        JposDevice.check(exposure != Data.Exposure && !Data.CapExposure, JposConst.JPOS_E_ILLEGAL, "Changing Exposure not supported");
-        JposDevice.check(exposure < 0 || exposure > 100, JposConst.JPOS_E_ILLEGAL, "Invalid exposure: " + exposure);
+        check(exposure != Data.Exposure && !Data.CapExposure, JPOS_E_ILLEGAL, "Changing Exposure not supported");
+        check(exposure < 0 || exposure > 100, JPOS_E_ILLEGAL, "Invalid exposure: " + exposure);
         VideoCapture.exposure(exposure);
         logSet("Exposure");
     }
@@ -338,8 +344,8 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setGain(int gain) throws JposException {
         logPreSet("Gain");
         checkEnabled();
-        JposDevice.check(gain != Data.Gain && !Data.CapGain, JposConst.JPOS_E_ILLEGAL, "Changing Gain not supported");
-        JposDevice.check(gain < 0 || gain > 100, JposConst.JPOS_E_ILLEGAL, "Invalid gain: " + gain);
+        check(gain != Data.Gain && !Data.CapGain, JPOS_E_ILLEGAL, "Changing Gain not supported");
+        check(gain < 0 || gain > 100, JPOS_E_ILLEGAL, "Invalid gain: " + gain);
         VideoCapture.gain(gain);
         logSet("Gain");
     }
@@ -355,7 +361,7 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setHorizontalFlip(boolean flag) throws JposException {
         logPreSet("HorizontalFlip");
         checkEnabled();
-        JposDevice.check(flag != Data.HorizontalFlip && !Data.CapHorizontalFlip, JposConst.JPOS_E_ILLEGAL, "Changing HorizontalFlip not supported");
+        check(flag != Data.HorizontalFlip && !Data.CapHorizontalFlip, JPOS_E_ILLEGAL, "Changing HorizontalFlip not supported");
         VideoCapture.horizontalFlip(flag);
         logSet("HorizontalFlip");
     }
@@ -371,8 +377,8 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setHue(int hue) throws JposException {
         logPreSet("Hue");
         checkEnabled();
-        JposDevice.check(hue != Data.Hue && !Data.CapHue, JposConst.JPOS_E_ILLEGAL, "Changing Hue not supported");
-        JposDevice.check(hue < 0 || hue > 100, JposConst.JPOS_E_ILLEGAL, "Invalid hue: " + hue);
+        check(hue != Data.Hue && !Data.CapHue, JPOS_E_ILLEGAL, "Changing Hue not supported");
+        check(hue < 0 || hue > 100, JPOS_E_ILLEGAL, "Invalid hue: " + hue);
         VideoCapture.hue(hue);
         logSet("Hue");
     }
@@ -388,9 +394,9 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setPhotoColorSpace(String photoColorSpace) throws JposException {
         logPreSet("PhotoColorSpace");
         checkEnabled();
-        JposDevice.check(!Data.CapPhoto, JposConst.JPOS_E_ILLEGAL, "Photo function not supported");
-        JposDevice.check(photoColorSpace != Data.PhotoColorSpace && !Data.CapPhotoColorSpace, JposConst.JPOS_E_ILLEGAL, "Changing PhotoColorSpace not supported");
-        JposDevice.check(!JposDevice.member(photoColorSpace, Data.PhotoColorSpaceList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid photoColorSpace: " + photoColorSpace);
+        check(!Data.CapPhoto, JPOS_E_ILLEGAL, "Photo function not supported");
+        check(!Objects.equals(photoColorSpace, Data.PhotoColorSpace) && !Data.CapPhotoColorSpace, JPOS_E_ILLEGAL, "Changing PhotoColorSpace not supported");
+        check(!member(photoColorSpace, Data.PhotoColorSpaceList.split(",")), JPOS_E_ILLEGAL, "Invalid photoColorSpace: " + photoColorSpace);
         VideoCapture.photoColorSpace(photoColorSpace);
         logSet("PhotoColorSpace");
     }
@@ -413,9 +419,9 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setPhotoFrameRate(int photoFrameRate) throws JposException {
         logPreSet("PhotoFrameRate");
         checkEnabled();
-        JposDevice.check(!Data.CapPhoto, JposConst.JPOS_E_ILLEGAL, "Photo function not supported");
-        JposDevice.check(photoFrameRate != Data.PhotoFrameRate && !Data.CapPhotoFrameRate, JposConst.JPOS_E_ILLEGAL, "Changing PhotoFrameRate not supported");
-        JposDevice.check(photoFrameRate < 1 || photoFrameRate > Data.PhotoMaxFrameRate, JposConst.JPOS_E_ILLEGAL, "Invalid PhotoFrameRate: " + photoFrameRate);
+        check(!Data.CapPhoto, JPOS_E_ILLEGAL, "Photo function not supported");
+        check(photoFrameRate != Data.PhotoFrameRate && !Data.CapPhotoFrameRate, JPOS_E_ILLEGAL, "Changing PhotoFrameRate not supported");
+        check(photoFrameRate < 1 || photoFrameRate > Data.PhotoMaxFrameRate, JPOS_E_ILLEGAL, "Invalid PhotoFrameRate: " + photoFrameRate);
         VideoCapture.photoFrameRate(photoFrameRate);
         logSet("PhotoFrameRate");
     }
@@ -438,9 +444,9 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setPhotoResolution(String photoResolution) throws JposException {
         logPreSet("PhotoResolution");
         checkEnabled();
-        JposDevice.check(!Data.CapPhoto, JposConst.JPOS_E_ILLEGAL, "Photo function not supported");
-        JposDevice.check(photoResolution != Data.PhotoResolution && !Data.CapPhotoResolution, JposConst.JPOS_E_ILLEGAL, "Changing PhotoResolution not supported");
-        JposDevice.check(!JposDevice.member(photoResolution, Data.PhotoResolutionList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid PhotoResolution: " + photoResolution);
+        check(!Data.CapPhoto, JPOS_E_ILLEGAL, "Photo function not supported");
+        check(!Objects.equals(photoResolution, Data.PhotoResolution) && !Data.CapPhotoResolution, JPOS_E_ILLEGAL, "Changing PhotoResolution not supported");
+        check(!member(photoResolution, Data.PhotoResolutionList.split(",")), JPOS_E_ILLEGAL, "Invalid PhotoResolution: " + photoResolution);
         VideoCapture.photoResolution(photoResolution);
         logSet("PhotoResolution");
     }
@@ -463,9 +469,9 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setPhotoType(String photoType) throws JposException {
         logPreSet("PhotoType");
         checkEnabled();
-        JposDevice.check(!Data.CapPhoto, JposConst.JPOS_E_ILLEGAL, "Photo function not supported");
-        JposDevice.check(photoType != Data.PhotoType && !Data.CapPhotoType, JposConst.JPOS_E_ILLEGAL, "Changing PhotoType not supported");
-        JposDevice.check(!JposDevice.member(photoType, Data.PhotoTypeList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid PhotoType: " + photoType);
+        check(!Data.CapPhoto, JPOS_E_ILLEGAL, "Photo function not supported");
+        check(!Objects.equals(photoType, Data.PhotoType) && !Data.CapPhotoType, JPOS_E_ILLEGAL, "Changing PhotoType not supported");
+        check(!member(photoType, Data.PhotoTypeList.split(",")), JPOS_E_ILLEGAL, "Invalid PhotoType: " + photoType);
         VideoCapture.photoType(photoType);
         logSet("PhotoType");
     }
@@ -479,9 +485,9 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
 
     @Override
     public int getRemainingRecordingTimeInSec() throws JposException {
-        if (Data.RemainingRecordingTimeInSec > 0)
+        if (Data.DeviceEnabled && Data.RemainingRecordingTimeInSec > 0)
             Data.updateRemainingRecordingTimeInSec();
-        logGet("PhotoTypeList");
+        logGet("RemainingRecordingTimeInSec");
         checkEnabled();
         return Data.RemainingRecordingTimeInSec;
     }
@@ -497,8 +503,8 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setSaturation(int saturation) throws JposException {
         logPreSet("Saturation");
         checkEnabled();
-        JposDevice.check(saturation != Data.Saturation && !Data.CapSaturation, JposConst.JPOS_E_ILLEGAL, "Changing Saturation not supported");
-        JposDevice.check(saturation < 0 || saturation > 100, JposConst.JPOS_E_ILLEGAL, "Invalid Saturation: " + saturation);
+        check(saturation != Data.Saturation && !Data.CapSaturation, JPOS_E_ILLEGAL, "Changing Saturation not supported");
+        check(saturation < 0 || saturation > 100, JPOS_E_ILLEGAL, "Invalid Saturation: " + saturation);
         VideoCapture.saturation(saturation);
         logSet("Saturation");
     }
@@ -514,16 +520,12 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setStorage(int storage) throws JposException {
         logPreSet("Storage");
         checkEnabled();
-        long valid[] = {
-                VideoCaptureConst.VCAP_ST_HOST,
-                VideoCaptureConst.VCAP_ST_HARDTOTALS,
-                VideoCaptureConst.VCAP_ST_HOST_HARDTOTALS
-        };
-        JposDevice.checkMember(storage, valid, JposConst.JPOS_E_ILLEGAL, "Invalid Storage: " + storage);
-        JposDevice.check(Data.CapStorage == VideoCaptureConst.VCAP_CST_HARDTOTALS_ONLY &&
-                storage != VideoCaptureConst.VCAP_ST_HARDTOTALS, JposConst.JPOS_E_ILLEGAL, "Storage not ST_HARDTOTALS");
-        JposDevice.check(Data.CapStorage == VideoCaptureConst.VCAP_CST_HOST_ONLY &&
-                storage != VideoCaptureConst.VCAP_ST_HOST, JposConst.JPOS_E_ILLEGAL, "Storage not ST_HOST");
+        long[] valid = { VCAP_ST_HOST, VCAP_ST_HARDTOTALS, VCAP_ST_HOST_HARDTOTALS };
+        checkMember(storage, valid, JPOS_E_ILLEGAL, "Invalid Storage: " + storage);
+        check(Data.CapStorage == VCAP_CST_HARDTOTALS_ONLY &&
+                storage != VCAP_ST_HARDTOTALS, JPOS_E_ILLEGAL, "Storage not ST_HARDTOTALS");
+        check(Data.CapStorage == VCAP_CST_HOST_ONLY &&
+                storage != VCAP_ST_HOST, JPOS_E_ILLEGAL, "Storage not ST_HOST");
         VideoCapture.storage(storage);
         logSet("Storage");
     }
@@ -539,7 +541,7 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setVerticalFlip(boolean verticalFlip) throws JposException {
         logPreSet("VerticalFlip");
         checkEnabled();
-        JposDevice.check(verticalFlip != Data.VerticalFlip && !Data.CapVerticalFlip, JposConst.JPOS_E_ILLEGAL, "Changing VerticalFlip not supported");
+        check(verticalFlip != Data.VerticalFlip && !Data.CapVerticalFlip, JPOS_E_ILLEGAL, "Changing VerticalFlip not supported");
         VideoCapture.verticalFlip(verticalFlip);
         logSet("VerticalFlip");
     }
@@ -555,12 +557,12 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setVideoCaptureMode(int videoCaptureMode) throws JposException {
         logPreSet("VideoCaptureMode");
         checkEnabled();
-        long valid[] = {VideoCaptureConst.VCAP_VCMODE_PHOTO, VideoCaptureConst.VCAP_VCMODE_VIDEO};
-        JposDevice.checkMember(videoCaptureMode, valid, JposConst.JPOS_E_ILLEGAL, "Invalid VideoCaptureMode");
-        JposDevice.check(!Data.CapPhoto && videoCaptureMode == VideoCaptureConst.VCAP_VCMODE_PHOTO,
-                JposConst.JPOS_E_ILLEGAL, "VCMODE_PHOTO not supported");
-        JposDevice.check(!Data.CapVideo && videoCaptureMode == VideoCaptureConst.VCAP_VCMODE_VIDEO,
-                JposConst.JPOS_E_ILLEGAL, "VCMODE_VIDEO not supported");
+        long[] valid = { VCAP_VCMODE_PHOTO, VCAP_VCMODE_VIDEO };
+        checkMember(videoCaptureMode, valid, JPOS_E_ILLEGAL, "Invalid VideoCaptureMode");
+        check(!Data.CapPhoto && videoCaptureMode == VCAP_VCMODE_PHOTO,
+                JPOS_E_ILLEGAL, "VCMODE_PHOTO not supported");
+        check(!Data.CapVideo && videoCaptureMode == VCAP_VCMODE_VIDEO,
+                JPOS_E_ILLEGAL, "VCMODE_VIDEO not supported");
         VideoCapture.videoCaptureMode(videoCaptureMode);
         logSet("VideoCaptureMode");
     }
@@ -576,9 +578,9 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setVideoColorSpace(String videoColorSpace) throws JposException {
         logPreSet("VideoColorSpace");
         checkEnabled();
-        JposDevice.check(!Data.CapVideo, JposConst.JPOS_E_ILLEGAL, "Video function not supported");
-        JposDevice.check(videoColorSpace != Data.VideoColorSpace && !Data.CapVideoColorSpace, JposConst.JPOS_E_ILLEGAL, "Changing VideoColorSpace not supported");
-        JposDevice.check(!JposDevice.member(videoColorSpace, Data.VideoColorSpaceList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid VideoColorSpace: " + videoColorSpace);
+        check(!Data.CapVideo, JPOS_E_ILLEGAL, "Video function not supported");
+        check(!Objects.equals(videoColorSpace, Data.VideoColorSpace) && !Data.CapVideoColorSpace, JPOS_E_ILLEGAL, "Changing VideoColorSpace not supported");
+        check(!member(videoColorSpace, Data.VideoColorSpaceList.split(",")), JPOS_E_ILLEGAL, "Invalid VideoColorSpace: " + videoColorSpace);
         VideoCapture.videoColorSpace(videoColorSpace);
         logSet("VideoColorSpace");
     }
@@ -601,9 +603,9 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setVideoFrameRate(int videoFrameRate) throws JposException {
         logPreSet("VideoFrameRate");
         checkEnabled();
-        JposDevice.check(!Data.CapVideo, JposConst.JPOS_E_ILLEGAL, "Video function not supported");
-        JposDevice.check(videoFrameRate != Data.VideoFrameRate && !Data.CapVideoFrameRate, JposConst.JPOS_E_ILLEGAL, "Changing VideoFrameRate not supported");
-        JposDevice.check(videoFrameRate < 1 || videoFrameRate > Data.VideoMaxFrameRate, JposConst.JPOS_E_ILLEGAL, "Invalid PhotoFrameRate: " + videoFrameRate);
+        check(!Data.CapVideo, JPOS_E_ILLEGAL, "Video function not supported");
+        check(videoFrameRate != Data.VideoFrameRate && !Data.CapVideoFrameRate, JPOS_E_ILLEGAL, "Changing VideoFrameRate not supported");
+        check(videoFrameRate < 1 || videoFrameRate > Data.VideoMaxFrameRate, JPOS_E_ILLEGAL, "Invalid PhotoFrameRate: " + videoFrameRate);
         VideoCapture.videoFrameRate(videoFrameRate);
         logSet("VideoFrameRate");
     }
@@ -626,9 +628,9 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setVideoResolution(String videoResolution) throws JposException {
         logPreSet("VideoResolution");
         checkEnabled();
-        JposDevice.check(!Data.CapVideo, JposConst.JPOS_E_ILLEGAL, "Video function not supported");
-        JposDevice.check(videoResolution != Data.VideoResolution && !Data.CapVideoResolution, JposConst.JPOS_E_ILLEGAL, "Changing VideoResolution not supported");
-        JposDevice.check(!JposDevice.member(videoResolution, Data.VideoResolutionList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid VideoResolution: " + videoResolution);
+        check(!Data.CapVideo, JPOS_E_ILLEGAL, "Video function not supported");
+        check(!Objects.equals(videoResolution, Data.VideoResolution) && !Data.CapVideoResolution, JPOS_E_ILLEGAL, "Changing VideoResolution not supported");
+        check(!member(videoResolution, Data.VideoResolutionList.split(",")), JPOS_E_ILLEGAL, "Invalid VideoResolution: " + videoResolution);
         VideoCapture.videoResolution(videoResolution);
         logSet("VideoResolution");
     }
@@ -651,9 +653,9 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void setVideoType(String videoType) throws JposException {
         logPreSet("VideoType");
         checkEnabled();
-        JposDevice.check(!Data.CapVideo, JposConst.JPOS_E_ILLEGAL, "Video function not supported");
-        JposDevice.check(videoType != Data.VideoType && !Data.CapVideoType, JposConst.JPOS_E_ILLEGAL, "Changing VideoType not supported");
-        JposDevice.check(!JposDevice.member(videoType, Data.VideoTypeList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid VideoType: " + videoType);
+        check(!Data.CapVideo, JPOS_E_ILLEGAL, "Video function not supported");
+        check(!Objects.equals(videoType, Data.VideoType) && !Data.CapVideoType, JPOS_E_ILLEGAL, "Changing VideoType not supported");
+        check(!member(videoType, Data.VideoTypeList.split(",")), JPOS_E_ILLEGAL, "Invalid VideoType: " + videoType);
         VideoCapture.videoType(videoType);
         logSet("VideoType");
     }
@@ -667,13 +669,13 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
 
     @Override
     public void startVideo(String fileName, boolean overWrite, int recordingTime) throws JposException {
-        logPreCall("StartVideo", fileName + ", " + overWrite + ", " + recordingTime);
+        logPreCall("StartVideo", removeOuterArraySpecifier(new Object[]{fileName, overWrite, recordingTime}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(Data.VideoCaptureMode != VideoCaptureConst.VCAP_VCMODE_VIDEO, JposConst.JPOS_E_ILLEGAL,
+        check(Data.VideoCaptureMode != VCAP_VCMODE_VIDEO, JPOS_E_ILLEGAL,
                 "Cannot capture video in photo mode");
-        JposDevice.check(Data.AsyncInputActive, JposConst.JPOS_E_BUSY, "Just recording other video");
-        JposDevice.check(recordingTime <= 0 && recordingTime != JposConst.JPOS_FOREVER,
-                JposConst.JPOS_E_ILLEGAL, "Invalid recording time: " + recordingTime);
+        check(Data.AsyncInputActive, JPOS_E_BUSY, "Just recording other video");
+        check(recordingTime <= 0 && recordingTime != JPOS_FOREVER,
+                JPOS_E_ILLEGAL, "Invalid recording time: " + recordingTime);
         StartVideo request = VideoCapture.startVideo(fileName, overWrite, recordingTime);
         if (request != null)
             request.enqueue();
@@ -684,22 +686,22 @@ public class VideoCaptureService extends JposBase implements VideoCaptureService
     public void stopVideo() throws JposException {
         logPreCall("StopVideo");
         checkEnabled();
-        JposDevice.check(Data.VideoCaptureMode != VideoCaptureConst.VCAP_VCMODE_VIDEO, JposConst.JPOS_E_ILLEGAL,
+        check(Data.VideoCaptureMode != VCAP_VCMODE_VIDEO, JPOS_E_ILLEGAL,
                 "Cannot capture video in photo mode");
-        JposDevice.check(!Data.AsyncInputActive, JposConst.JPOS_E_ILLEGAL, "Recording not active");
+        check(!Data.AsyncInputActive, JPOS_E_ILLEGAL, "Recording not active");
         VideoCapture.stopVideo();
         logCall("StopVideo");
     }
 
     @Override
     public void takePhoto(String fileName, boolean overWrite, int timeout) throws JposException {
-        logPreCall("TakePhoto", fileName + ", " + overWrite + ", " + timeout);
+        logPreCall("TakePhoto", removeOuterArraySpecifier(new Object[]{fileName, overWrite, timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(Data.VideoCaptureMode != VideoCaptureConst.VCAP_VCMODE_PHOTO, JposConst.JPOS_E_ILLEGAL,
+        check(Data.VideoCaptureMode != VCAP_VCMODE_PHOTO, JPOS_E_ILLEGAL,
                 "Cannot take photo in video mode");
-        JposDevice.check(Data.AsyncInputActive, JposConst.JPOS_E_BUSY, "Just taking other photo");
-        JposDevice.check(timeout <= 0 && timeout != JposConst.JPOS_FOREVER,
-                JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(Data.AsyncInputActive, JPOS_E_BUSY, "Just taking other photo");
+        check(timeout <= 0 && timeout != JPOS_FOREVER,
+                JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         TakePhoto request = VideoCapture.takePhoto(fileName, overWrite, timeout);
         if (request != null)
             request.enqueue();

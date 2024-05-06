@@ -17,8 +17,8 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
-import jpos.JposException;
-import net.bplaced.conrad.log4jpos.Level;
+import static net.bplaced.conrad.log4jpos.Level.*;
+
 
 /**
  * This class provides additional methods that allow firing StatusUpdateEvents with a specific delay. In this
@@ -117,7 +117,7 @@ public class DelayedStatusUpdateEvent extends JposStatusUpdateEvent implements R
                 e.printStackTrace();
             }
             props.EventList.add(this);
-            props.Device.log(Level.DEBUG, props.LogicalName + ": Buffer StatusUpdateEvent: [" + toLogString() + "]");
+            props.Device.log(DEBUG, props.LogicalName + ": Buffer StatusUpdateEvent: [" + toLogString() + "]");
             try {
                 props.Device.processEventList(props);
             } catch (Throwable e) {

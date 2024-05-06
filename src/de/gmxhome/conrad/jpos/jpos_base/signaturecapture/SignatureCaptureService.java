@@ -24,18 +24,20 @@ import jpos.services.*;
 import java.awt.*;
 import java.util.*;
 
+import static jpos.JposConst.*;
+
 /**
  * SignatureCapture service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class SignatureCaptureService extends JposBase implements SignatureCaptureService115 {
+public class SignatureCaptureService extends JposBase implements SignatureCaptureService116 {
     /**
      * Instance of a class implementing the SignatureCaptureInterface for signature capture specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public SignatureCaptureInterface SignatureCaptureInterface;
 
-    private SignatureCaptureProperties Data;
+    private final SignatureCaptureProperties Data;
 
     /**
      * Constructor. Stores given property set and device implementation object.
@@ -112,7 +114,7 @@ public class SignatureCaptureService extends JposBase implements SignatureCaptur
     public void setRealTimeDataEnabled(boolean b) throws JposException {
         logPreSet("RealTimeDataEnabled");
         checkOpened();
-        Device.check(b && !Data.CapRealTimeData, JposConst.JPOS_E_ILLEGAL, "Activating real time data not supported");
+        check(b && !Data.CapRealTimeData, JPOS_E_ILLEGAL, "Activating real time data not supported");
         checkNoChangedOrClaimed(Data.RealTimeDataEnabled, b);
         SignatureCaptureInterface.realTimeDataEnabled(b);
         logSet("RealTimeDataEnabled");
@@ -120,9 +122,9 @@ public class SignatureCaptureService extends JposBase implements SignatureCaptur
 
     @Override
     public void beginCapture(String formName) throws JposException {
+        logPreCall("BeginCapture", removeOuterArraySpecifier(new Object[]{formName}, Device.MaxArrayStringElements));
         if (formName == null)
             formName = "";
-        logPreCall("BeginCapture", formName);
         checkEnabled();
         SignatureCaptureInterface.beginCapture(formName);
         logCall("BeginCapture");

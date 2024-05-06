@@ -18,6 +18,10 @@ package de.gmxhome.conrad.jpos.jpos_base.linedisplay;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of LineDisplay factory for JPOS devices using this framework.
@@ -28,19 +32,30 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults.
      * @param index LineDisplay property set index.
      * @param dev   LineDisplay implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return LineDisplayService object.
      * @throws JposException If property set could not be retrieved.
      */
-    public LineDisplayService addDevice(int index, JposDevice dev) throws JposException {
+    public LineDisplayService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         LineDisplayProperties props = dev.getLineDisplayProperties(index);
-        LineDisplayService service;
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getLineDisplayProperties()");
-        service = (LineDisplayService) (props.EventSource = new LineDisplayService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedLineDisplay;
+        validateJposConfiguration(props, dev, dev.ClaimedLineDisplay, entry);
+        LineDisplayService service = (LineDisplayService) (props.EventSource = new LineDisplayService(props, dev));
         dev.changeDefaults(props);
         props.addProperties(dev.LineDisplays);
         service.DeviceInterface = service.LineDisplayInterface = props;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index LineDisplay property set index.
+     * @param dev   LineDisplay implementation instance derived from JposDevice to be used by the service.
+     * @return LineDisplayService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public LineDisplayService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

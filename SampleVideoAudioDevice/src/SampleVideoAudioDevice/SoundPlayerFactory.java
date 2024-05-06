@@ -16,15 +16,18 @@
  */
 package SampleVideoAudioDevice;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
+import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.soundplayer.*;
 import jpos.*;
 import jpos.config.JposEntry;
 import jpos.loader.*;
 
+import static jpos.JposConst.*;
+
 /**
  * Factory class for VLC SoundPlayer device implementation
  */
+@SuppressWarnings("unused")
 public class SoundPlayerFactory extends Factory implements JposServiceInstanceFactory {
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
@@ -39,7 +42,7 @@ public class SoundPlayerFactory extends Factory implements JposServiceInstanceFa
                     if (create) {
                         dev = new Device("VlcDevice");
                     } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: VlcDevice");
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: VlcDevice");
                     else {
                         dev = (Device) any;
                     }
@@ -50,11 +53,11 @@ public class SoundPlayerFactory extends Factory implements JposServiceInstanceFa
                     return srv;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
         }
     }
 }

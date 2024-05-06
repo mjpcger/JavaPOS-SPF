@@ -21,6 +21,10 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.POSPowerConst.*;
+
 /**
  * POSPower service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
@@ -32,7 +36,7 @@ public class POSPowerService extends JposBase implements POSPowerService116 {
      */
     public POSPowerInterface POSPowerInterface;
 
-    private POSPowerProperties Data;
+    private final POSPowerProperties Data;
 
     /**
      * Constructor. Stores given property set and device implementation object.
@@ -140,7 +144,7 @@ public class POSPowerService extends JposBase implements POSPowerService116 {
     public void setBatteryCriticallyLowThreshold(int threshold) throws JposException {
         logPreSet("BatteryCriticallyLowThreshold");
         checkOpened();
-        Device.check(threshold <= 0 || threshold > 99, JposConst.JPOS_E_ILLEGAL, "BatteryCriticallyLowThreshold must be between 0 and 100: " + threshold);
+        check(threshold <= 0 || threshold > 99, JPOS_E_ILLEGAL, "BatteryCriticallyLowThreshold must be between 0 and 100: " + threshold);
         POSPowerInterface.batteryCriticallyLowThreshold(threshold);
         logSet("BatteryCriticallyLowThreshold");
     }
@@ -156,7 +160,7 @@ public class POSPowerService extends JposBase implements POSPowerService116 {
     public void setBatteryLowThreshold(int threshold) throws JposException {
         logPreSet("BatteryLowThreshold");
         checkOpened();
-        Device.check(threshold <= 0 || threshold > 99, JposConst.JPOS_E_ILLEGAL, "BatteryLowThreshold must be between 0 and 99: " + threshold);
+        check(threshold <= 0 || threshold > 99, JPOS_E_ILLEGAL, "BatteryLowThreshold must be between 0 and 99: " + threshold);
         POSPowerInterface.batteryLowThreshold(threshold);
         logSet("Timeout");
     }
@@ -172,7 +176,7 @@ public class POSPowerService extends JposBase implements POSPowerService116 {
     public void setEnforcedShutdownDelayTime(int delay) throws JposException {
         logPreSet("EnforcedShutdownDelayTime");
         checkEnabled();
-        Device.check(delay < 0, JposConst.JPOS_E_ILLEGAL, "Enforced shutdown delay time must be >= 0: " + delay);
+        check(delay < 0, JPOS_E_ILLEGAL, "Enforced shutdown delay time must be >= 0: " + delay);
         POSPowerInterface.enforcedShutdownDelayTime(delay);
         logSet("EnforcedShutdownDelayTime");
     }
@@ -216,7 +220,7 @@ public class POSPowerService extends JposBase implements POSPowerService116 {
     public void restartPOS() throws JposException {
         logPreCall("RestartPOS");
         checkEnabled();
-        Device.check(!Data.CapRestartPOS, JposConst.JPOS_E_ILLEGAL, "RestartPOS not supported");
+        check(!Data.CapRestartPOS, JPOS_E_ILLEGAL, "RestartPOS not supported");
         POSPowerInterface.restartPOS();
         logCall("RestartPOS");
 
@@ -226,7 +230,7 @@ public class POSPowerService extends JposBase implements POSPowerService116 {
     public void shutdownPOS() throws JposException {
         logPreCall("ShutdownPOS");
         checkEnabled();
-        Device.check(!Data.CapShutdownPOS, JposConst.JPOS_E_ILLEGAL, "ShutdownPOS not supported");
+        check(!Data.CapShutdownPOS, JPOS_E_ILLEGAL, "ShutdownPOS not supported");
         POSPowerInterface.shutdownPOS();
         logCall("ShutdownPOS");
 
@@ -234,22 +238,22 @@ public class POSPowerService extends JposBase implements POSPowerService116 {
 
     @Override
     public void standbyPOS(int reason) throws JposException {
-        long[] allowed = {POSPowerConst.PWR_REASON_REQUEST, POSPowerConst.PWR_REASON_ALLOW, POSPowerConst.PWR_REASON_DENY};
-        logPreCall("StandbyPOS", "" + reason);
+        logPreCall("StandbyPOS", removeOuterArraySpecifier(new Object[]{reason}, Device.MaxArrayStringElements));
+        long[] allowed = { PWR_REASON_REQUEST, PWR_REASON_ALLOW, PWR_REASON_DENY };
         checkEnabled();
-        Device.checkMember(reason, allowed, JposConst.JPOS_E_ILLEGAL, "Unsupported reason: " + reason);
-        Device.check(!Data.CapStandbyPOS && reason == allowed[0], JposConst.JPOS_E_ILLEGAL, "Request standby not supported");
+        checkMember(reason, allowed, JPOS_E_ILLEGAL, "Unsupported reason: " + reason);
+        check(!Data.CapStandbyPOS && reason == allowed[0], JPOS_E_ILLEGAL, "Request standby not supported");
         POSPowerInterface.standbyPOS(reason);
         logCall("StandbyPOS");
     }
 
     @Override
     public void suspendPOS(int reason) throws JposException {
-        long[] allowed = {POSPowerConst.PWR_REASON_REQUEST, POSPowerConst.PWR_REASON_ALLOW, POSPowerConst.PWR_REASON_DENY};
-        logPreCall("SuspendPOS", "" + reason);
+        logPreCall("SuspendPOS", removeOuterArraySpecifier(new Object[]{reason}, Device.MaxArrayStringElements));
+        long[] allowed = { PWR_REASON_REQUEST, PWR_REASON_ALLOW, PWR_REASON_DENY };
         checkEnabled();
-        Device.checkMember(reason, allowed, JposConst.JPOS_E_ILLEGAL, "Unsupported reason: " + reason);
-        Device.check(!Data.CapSuspendPOS && reason == allowed[0], JposConst.JPOS_E_ILLEGAL, "Request suspend not supported");
+        checkMember(reason, allowed, JPOS_E_ILLEGAL, "Unsupported reason: " + reason);
+        check(!Data.CapSuspendPOS && reason == allowed[0], JPOS_E_ILLEGAL, "Request suspend not supported");
         POSPowerInterface.suspendPOS(reason);
         logCall("SuspendPOS");
     }
@@ -314,8 +318,8 @@ public class POSPowerService extends JposBase implements POSPowerService116 {
     public void setBatteryCriticallyLowThresholdInSeconds(int seconds) throws JposException {
         logPreSet("BatteryCriticallyLowThresholdInSeconds");
         checkEnabled();
-        JposDevice.check(!Data.CapVariableBatteryCriticallyLowThresholdInSeconds, JposConst.JPOS_E_ILLEGAL, "No support for critical low threshold in seconds");
-        JposDevice.check(seconds < 0, JposConst.JPOS_E_ILLEGAL, "Critical low threshold in seconds must be >= 0: " + seconds);
+        check(!Data.CapVariableBatteryCriticallyLowThresholdInSeconds, JPOS_E_ILLEGAL, "No support for critical low threshold in seconds");
+        check(seconds < 0, JPOS_E_ILLEGAL, "Critical low threshold in seconds must be >= 0: " + seconds);
         POSPowerInterface.setBatteryCriticallyLowThresholdInSeconds(seconds);
         logSet("BatteryCriticallyLowThresholdInSeconds");
     }
@@ -324,8 +328,8 @@ public class POSPowerService extends JposBase implements POSPowerService116 {
     public void setBatteryLowThresholdInSeconds(int seconds) throws JposException {
         logPreSet("BatteryLowThresholdInSeconds");
         checkEnabled();
-        JposDevice.check(!Data.CapVariableBatteryLowThresholdInSeconds, JposConst.JPOS_E_ILLEGAL, "No support for low threshold in seconds");
-        JposDevice.check(seconds < 0, JposConst.JPOS_E_ILLEGAL, "Low threshold in seconds must be >= 0: " + seconds);
+        check(!Data.CapVariableBatteryLowThresholdInSeconds, JPOS_E_ILLEGAL, "No support for low threshold in seconds");
+        check(seconds < 0, JPOS_E_ILLEGAL, "Low threshold in seconds must be >= 0: " + seconds);
         POSPowerInterface.setBatteryLowThresholdInSeconds(seconds);
         logSet("BatteryLowThresholdInSeconds");
     }

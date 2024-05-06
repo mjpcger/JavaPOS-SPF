@@ -26,6 +26,9 @@ import java.lang.reflect.*;
 import java.math.*;
 import java.util.*;
 
+import static jpos.FiscalPrinterConst.*;
+import static jpos.JposConst.*;
+
 /**
  * Wrapper class as interface between applications and services which use different kinds of currency-to-string
  * conversion.
@@ -62,6 +65,7 @@ public class FiscalPrinterToIntegerWrapper implements JposServiceInstanceFactory
         boolean TrailingPercent = true;
     }
     private static final Map<String, Wrapper> Wrappers = new HashMap<>();
+    @SuppressWarnings("LoopStatementThatDoesntLoop")
     @Override
     public JposServiceInstance createInstance(String name, JposEntry jposEntry) throws JposException {
         Exception errorException;
@@ -72,10 +76,10 @@ public class FiscalPrinterToIntegerWrapper implements JposServiceInstanceFactory
         while (wrapper == null) {
             wrapper = new Wrapper();
             String classes = null;
-            for (Iterator<JposEntry.Prop> iter = jposEntry.getProps(); iter.hasNext(); ) {
-                JposEntry.Prop prop = iter.next();
+            for (Iterator<?> iter = jposEntry.getProps(); iter.hasNext(); ) {
+                JposEntry.Prop prop = (JposEntry.Prop) iter.next();
                 if (prop.getName().equals(JposEntry.DEVICE_CATEGORY_PROP_NAME) && !prop.getValue().toString().equals("FiscalPrinter"))
-                    throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad Device Category");
+                    throw new JposException(JPOS_E_NOSERVICE, "Bad Device Category");
                 else if (prop.getName().equals("JavaPOS_SPF_WrappedClassFactory")) {
                     classes = prop.getValue().toString();
                     continue;       // consume the wrapper entry
@@ -86,7 +90,7 @@ public class FiscalPrinterToIntegerWrapper implements JposServiceInstanceFactory
                 wrapper.Entries.add(prop);
             }
             if (classes == null)
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Wrapped Service Not Specified");
+                throw new JposException(JPOS_E_NOSERVICE, "Wrapped Service Not Specified");
             wrapper.Entries.modifyPropertyValue(JposEntry.SI_FACTORY_CLASS_PROP_NAME, classes);
             try {
                 wrapper.Factory = (JposServiceInstanceFactory) Class.forName(classes).getConstructor().newInstance();
@@ -100,11 +104,11 @@ public class FiscalPrinterToIntegerWrapper implements JposServiceInstanceFactory
             } catch (NumberFormatException | InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException e) {
                 errorException = e;
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "FactoryClassInstantiationError: " + errorException.getMessage(), errorException);
+            throw new JposException(JPOS_E_NOSERVICE, "FactoryClassInstantiationError: " + errorException.getMessage(), errorException);
         }
         JposServiceInstance srv = wrapper.Factory.createInstance(name, wrapper.Entries);
         if (!(srv instanceof FiscalPrinterService13))
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad Device Class:" + srv.getClass().getSimpleName());
+            throw new JposException(JPOS_E_NOSERVICE, "Bad Device Class:" + srv.getClass().getSimpleName());
         return new WrapperService((FiscalPrinterService13) srv, wrapper.TrailingPercent);
     }
 
@@ -120,384 +124,384 @@ public class FiscalPrinterToIntegerWrapper implements JposServiceInstanceFactory
             TrailingPercent = trailingPercent;
         }
 
-        private FiscalPrinterService13 Service;
-        private boolean TrailingPercent;
+        private final FiscalPrinterService13 Service;
+        private final boolean TrailingPercent;
 
         @Override
         public void printRecItemRefund(String s, long l, int i, int i1, long l1, String s1) throws JposException {
             if (!(Service instanceof FiscalPrinterService112))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.12");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.12");
             ((FiscalPrinterService112) Service).printRecItemRefund(s, l, i, i1, l1, s1);
         }
 
         @Override
         public void printRecItemRefundVoid(String s, long l, int i, int i1, long l1, String s1) throws JposException {
             if (!(Service instanceof FiscalPrinterService112))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.12");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.12");
             ((FiscalPrinterService112) Service).printRecItemRefundVoid(s, l, i, i1, l1, s1);
         }
 
         @Override
         public boolean getCapPositiveSubtotalAdjustment() throws JposException {
             if (!(Service instanceof FiscalPrinterService111))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.11");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.11");
             return ((FiscalPrinterService111) Service).getCapPositiveSubtotalAdjustment();
         }
 
         @Override
         public void printRecItemAdjustmentVoid(int i, String s, long l, int i1) throws JposException {
             if (!(Service instanceof FiscalPrinterService111))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.11");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.11");
             ((FiscalPrinterService111) Service).printRecItemAdjustmentVoid(i, s, l, i1);
         }
 
         @Override
         public void printRecItemVoid(String s, long l, int i, int i1, long l1, String s1) throws JposException {
             if (!(Service instanceof FiscalPrinterService111))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.11");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.11");
             ((FiscalPrinterService111) Service).printRecItemVoid(s, l, i, i1, l1, s1);
         }
 
         @Override
         public boolean getCapCompareFirmwareVersion() throws JposException {
             if (!(Service instanceof FiscalPrinterService19))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.9");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9");
             return ((FiscalPrinterService19) Service).getCapCompareFirmwareVersion();
         }
 
         @Override
         public boolean getCapUpdateFirmware() throws JposException {
             if (!(Service instanceof FiscalPrinterService19))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.9");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9");
             return ((FiscalPrinterService19) Service).getCapUpdateFirmware();
         }
 
         @Override
         public void compareFirmwareVersion(String s, int[] ints) throws JposException {
             if (!(Service instanceof FiscalPrinterService19))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.9");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9");
             ((FiscalPrinterService19) Service).compareFirmwareVersion(s, ints);
         }
 
         @Override
         public void updateFirmware(String s) throws JposException {
             if (!(Service instanceof FiscalPrinterService19))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.9");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.9");
             ((FiscalPrinterService19) Service).updateFirmware(s);
         }
 
         @Override
         public boolean getCapStatisticsReporting() throws JposException {
             if (!(Service instanceof FiscalPrinterService18))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.8");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.8");
             return ((FiscalPrinterService18) Service).getCapStatisticsReporting();
         }
 
         @Override
         public boolean getCapUpdateStatistics() throws JposException {
             if (!(Service instanceof FiscalPrinterService18))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.8");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.8");
             return ((FiscalPrinterService18) Service).getCapUpdateStatistics();
         }
 
         @Override
         public void resetStatistics(String s) throws JposException {
             if (!(Service instanceof FiscalPrinterService18))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.8");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.8");
             ((FiscalPrinterService18) Service).resetStatistics(s);
         }
 
         @Override
         public void retrieveStatistics(String[] strings) throws JposException {
             if (!(Service instanceof FiscalPrinterService18))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.8");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.8");
             ((FiscalPrinterService18) Service).retrieveStatistics(strings);
         }
 
         @Override
         public void updateStatistics(String s) throws JposException {
             if (!(Service instanceof FiscalPrinterService18))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.8");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.8");
             ((FiscalPrinterService18) Service).updateStatistics(s);
         }
 
         @Override
         public int getAmountDecimalPlaces() throws JposException {
             if (!(Service instanceof FiscalPrinterService17))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.7");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.7");
             return ((FiscalPrinterService17) Service).getAmountDecimalPlaces();
         }
 
         @Override
         public boolean getCapAdditionalHeader() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getCapAdditionalHeader();
         }
 
         @Override
         public boolean getCapAdditionalTrailer() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getCapAdditionalTrailer();
         }
 
         @Override
         public boolean getCapChangeDue() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getCapChangeDue();
         }
 
         @Override
         public boolean getCapEmptyReceiptIsVoidable() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getCapEmptyReceiptIsVoidable();
         }
 
         @Override
         public boolean getCapFiscalReceiptStation() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getCapFiscalReceiptStation();
         }
 
         @Override
         public boolean getCapFiscalReceiptType() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getCapFiscalReceiptType();
         }
 
         @Override
         public boolean getCapMultiContractor() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getCapMultiContractor();
         }
 
         @Override
         public boolean getCapOnlyVoidLastItem() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getCapOnlyVoidLastItem();
         }
 
         @Override
         public boolean getCapPackageAdjustment() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getCapPackageAdjustment();
         }
 
         @Override
         public boolean getCapPostPreLine() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getCapPostPreLine();
         }
 
         @Override
         public boolean getCapSetCurrency() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getCapSetCurrency();
         }
 
         @Override
         public boolean getCapTotalizerType() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getCapTotalizerType();
         }
 
         @Override
         public int getActualCurrency() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getActualCurrency();
         }
 
         @Override
         public String getAdditionalHeader() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getAdditionalHeader();
         }
 
         @Override
         public void setAdditionalHeader(String s) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).setAdditionalHeader(s);
         }
 
         @Override
         public String getAdditionalTrailer() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getAdditionalTrailer();
         }
 
         @Override
         public void setAdditionalTrailer(String s) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).setAdditionalTrailer(s);
         }
 
         @Override
         public String getChangeDue() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getChangeDue();
         }
 
         @Override
         public void setChangeDue(String s) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).setChangeDue(s);
         }
 
         @Override
         public int getContractorId() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getContractorId();
         }
 
         @Override
         public void setContractorId(int i) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).setContractorId(i);
         }
 
         @Override
         public int getDateType() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getDateType();
         }
 
         @Override
         public void setDateType(int i) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).setDateType(i);
         }
 
         @Override
         public int getFiscalReceiptStation() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getFiscalReceiptStation();
         }
 
         @Override
         public void setFiscalReceiptStation(int i) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).setFiscalReceiptStation(i);
         }
 
         @Override
         public int getFiscalReceiptType() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getFiscalReceiptType();
         }
 
         @Override
         public void setFiscalReceiptType(int i) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).setFiscalReceiptType(i);
         }
 
         @Override
         public int getMessageType() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getMessageType();
         }
 
         @Override
         public void setMessageType(int i) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).setMessageType(i);
         }
 
         @Override
         public String getPostLine() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getPostLine();
         }
 
         @Override
         public void setPostLine(String s) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).setPostLine(s);
         }
 
         @Override
         public String getPreLine() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getPreLine();
         }
 
         @Override
         public void setPreLine(String s) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).setPreLine(s);
         }
 
         @Override
         public int getTotalizerType() throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             return ((FiscalPrinterService16) Service).getTotalizerType();
         }
 
         @Override
         public void setTotalizerType(int i) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).setTotalizerType(i);
         }
 
         @Override
         public void printRecCash(long l) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).printRecCash(l);
         }
 
         @Override
         public void printRecItemFuel(String s, long l, int i, int i1, long l1, String s1, long l2, String s2) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).printRecItemFuel(s, l, i, i1, l1, s1, l2, s2);
         }
 
         @Override
         public void printRecItemFuelVoid(String s, long l, int i, long l1) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).printRecItemFuelVoid(s, l, i, l1);
         }
 
         @Override
         public void printRecPackageAdjustVoid(int adjustmentType, String vatAdjustment) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             vatAdjustment = handleVatAdjustment(vatAdjustment);
             ((FiscalPrinterService16) Service).printRecPackageAdjustVoid(adjustmentType, vatAdjustment);
         }
@@ -505,7 +509,7 @@ public class FiscalPrinterToIntegerWrapper implements JposServiceInstanceFactory
         @Override
         public void printRecPackageAdjustment(int adjustmentType, String description, String vatAdjustment) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             vatAdjustment = handleVatAdjustment(vatAdjustment);
             ((FiscalPrinterService16) Service).printRecPackageAdjustment(adjustmentType, description, vatAdjustment);
         }
@@ -513,34 +517,34 @@ public class FiscalPrinterToIntegerWrapper implements JposServiceInstanceFactory
         @Override
         public void printRecRefundVoid(String s, long l, int i) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).printRecRefundVoid(s, l, i);
         }
 
         @Override
         public void printRecSubtotalAdjustVoid(int i, long l) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).printRecSubtotalAdjustVoid(i, l);
         }
 
         @Override
         public void printRecTaxID(String s) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).printRecTaxID(s);
         }
 
         @Override
         public void setCurrency(int i) throws JposException {
             if (!(Service instanceof FiscalPrinterService16))
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Service does not support version 1.6");
+                throw new JposException(JPOS_E_NOSERVICE, "Service does not support version 1.6");
             ((FiscalPrinterService16) Service).setCurrency(i);
         }
 
         private String handleVatAdjustment(String vatAdjustment) throws JposException {
             String[] adjustments = vatAdjustment.split(";");
-            String result = "";
+            StringBuilder result = new StringBuilder();
             for (String pair : adjustments) {
                 String[] args = pair.split(",");
                 try {
@@ -553,9 +557,9 @@ public class FiscalPrinterToIntegerWrapper implements JposServiceInstanceFactory
                     }
                     // No change for unknown format: more than 1 '%' character, characters before and behind '%' character
                 } catch (Exception e) {
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid amount argument: " + e.getMessage(), e);
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid amount argument: " + e.getMessage(), e);
                 }
-                result = result + ";" + args[0] + "," + args[1];
+                result.append(";").append(args[0]).append(",").append(args[1]);
             }
             return result.substring(1);
         }
@@ -1080,16 +1084,11 @@ public class FiscalPrinterToIntegerWrapper implements JposServiceInstanceFactory
             Service.getData(dataItem, optArgs, data);
             // If conversion is necessary depends on dataItem and optArgs:
             switch (dataItem) {
-                case FiscalPrinterConst.FPTR_GD_CURRENT_TOTAL:
-                case FiscalPrinterConst.FPTR_GD_DAILY_TOTAL:
-                case FiscalPrinterConst.FPTR_GD_GRAND_TOTAL:
-                case FiscalPrinterConst.FPTR_GD_NOT_PAID:
-                case FiscalPrinterConst.FPTR_GD_REFUND:
-                case FiscalPrinterConst.FPTR_GD_REFUND_VOID:
+                case FPTR_GD_CURRENT_TOTAL, FPTR_GD_DAILY_TOTAL, FPTR_GD_GRAND_TOTAL, FPTR_GD_NOT_PAID, FPTR_GD_REFUND, FPTR_GD_REFUND_VOID -> {
                     try {
                         data[0] = new BigDecimal(Long.parseLong(data[0])).scaleByPowerOfTen(-4).stripTrailingZeros().toPlainString();
-                    } catch (Exception e) {
-                    }    // Return unchanged data in case of data format error
+                    } catch (Exception ignored) {}    // Return unchanged data in case of data format error
+                }
             }
         }
 
@@ -1104,8 +1103,7 @@ public class FiscalPrinterToIntegerWrapper implements JposServiceInstanceFactory
             // All totalizers must be converted from internal format to decimal string with dot.
             try {
                 data[0] = new BigDecimal(Long.parseLong(data[0])).scaleByPowerOfTen(-4).stripTrailingZeros().toPlainString();
-            } catch (Exception e) {
-            }    // Return unchanged data in case of data format error
+            } catch (Exception ignored) {}    // Return unchanged data in case of data format error
         }
 
         @Override

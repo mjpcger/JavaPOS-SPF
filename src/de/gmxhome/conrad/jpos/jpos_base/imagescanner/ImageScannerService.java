@@ -20,22 +20,26 @@ package de.gmxhome.conrad.jpos.jpos_base.imagescanner;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
-import net.bplaced.conrad.log4jpos.Level;
 
 import java.util.Arrays;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.ImageScannerConst.*;
+import static jpos.JposConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * ImageScanner service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class ImageScannerService extends JposBase implements ImageScannerService115 {
+public class ImageScannerService extends JposBase implements ImageScannerService116 {
     /**
      * Instance of a class implementing the ImageScannerInterface for image scanner specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public ImageScannerInterface ImageScanner;
 
-    private ImageScannerProperties Data;
+    private final ImageScannerProperties Data;
     /**
      * Constructor. Stores given property set and device implementation object.
      *
@@ -50,7 +54,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     @Override
     public boolean getAutoDisable() throws JposException {
         checkOpened();
-        Device.log(Level.DEBUG, Props.LogicalName + ": AutoDisable: " + Data.StoredAutoDisable);
+        Device.log(DEBUG, Props.LogicalName + ": AutoDisable: " + Data.StoredAutoDisable);
         return Data.StoredAutoDisable;
     }
 
@@ -59,7 +63,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
         logPreSet("AutoDisable");
         checkOpened();
         ImageScanner.autoDisable(b);
-        Device.log(Level.INFO, Props.LogicalName + ": AutoDisable <- " + Data.StoredAutoDisable);
+        Device.log(INFO, Props.LogicalName + ": AutoDisable <- " + Data.StoredAutoDisable);
     }
 
     @Override
@@ -122,7 +126,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     public int getBitsPerPixel() throws JposException {
         checkOpened();
         logGet("BitsPerPixel");
-        JposDevice.check(Data.BitsPerPixel == null, JposConst.JPOS_E_ILLEGAL, "BitsPerPixel not available");
+        check(Data.BitsPerPixel == null, JPOS_E_ILLEGAL, "BitsPerPixel not available");
         return Data.BitsPerPixel;
     }
 
@@ -130,7 +134,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     public byte[] getFrameData() throws JposException {
         checkOpened();
         logGet("FrameData");
-        JposDevice.check(Data.FrameData == null, JposConst.JPOS_E_ILLEGAL, "FrameData not available");
+        check(Data.FrameData == null, JPOS_E_ILLEGAL, "FrameData not available");
         return Arrays.copyOf(Data.FrameData, Data.FrameData.length);
     }
 
@@ -138,7 +142,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     public int getFrameType() throws JposException {
         checkOpened();
         logGet("FrameType");
-        JposDevice.check(Data.FrameType == null, JposConst.JPOS_E_ILLEGAL, "FrameType not available");
+        check(Data.FrameType == null, JPOS_E_ILLEGAL, "FrameType not available");
         return Data.FrameType;
     }
 
@@ -146,7 +150,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     public boolean getIlluminateMode() throws JposException {
         checkOpened();
         logGet("IlluminateMode");
-        JposDevice.check(Data.IlluminateMode == null, JposConst.JPOS_E_ILLEGAL, "IlluminateMode not available");
+        check(Data.IlluminateMode == null, JPOS_E_ILLEGAL, "IlluminateMode not available");
         return Data.IlluminateMode;
     }
 
@@ -154,7 +158,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     public int getImageHeight() throws JposException {
         checkOpened();
         logGet("ImageHeight");
-        JposDevice.check(Data.ImageHeight == null, JposConst.JPOS_E_ILLEGAL, "ImageHeight not available");
+        check(Data.ImageHeight == null, JPOS_E_ILLEGAL, "ImageHeight not available");
         return Data.ImageHeight;
     }
 
@@ -162,7 +166,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     public int getImageLength() throws JposException {
         checkOpened();
         logGet("ImageLength");
-        JposDevice.check(Data.ImageLength == null, JposConst.JPOS_E_ILLEGAL, "ImageLength not available");
+        check(Data.ImageLength == null, JPOS_E_ILLEGAL, "ImageLength not available");
         return Data.ImageLength;
     }
 
@@ -191,7 +195,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     public int getImageWidth() throws JposException {
         checkOpened();
         logGet("ImageWidth");
-        JposDevice.check(Data.ImageWidth == null, JposConst.JPOS_E_ILLEGAL, "ImageWidth not available");
+        check(Data.ImageWidth == null, JPOS_E_ILLEGAL, "ImageWidth not available");
         return Data.ImageWidth;
     }
 
@@ -213,7 +217,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     public void setAimMode(boolean aimMode) throws JposException {
         logPreSet("AimMode");
         checkOpened();
-        JposDevice.check(!Data.CapAim && aimMode != Data.AimMode, JposConst.JPOS_E_ILLEGAL, "AimMode must not be changed");
+        check(!Data.CapAim && aimMode != Data.AimMode, JPOS_E_ILLEGAL, "AimMode must not be changed");
         checkNoChangedOrClaimed(Data.AimMode, aimMode);
         ImageScanner.aimMode(aimMode);
         logSet("AimMode");
@@ -223,7 +227,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     public void setIlluminateMode(boolean illuminateMode) throws JposException {
         logPreSet("IlluminateMode");
         checkOpened();
-        JposDevice.check(!Data.CapIlluminate && illuminateMode != Data.IlluminateMode, JposConst.JPOS_E_ILLEGAL, "IlluminateMode must not be changed");
+        check(!Data.CapIlluminate && illuminateMode != Data.IlluminateMode, JPOS_E_ILLEGAL, "IlluminateMode must not be changed");
         checkNoChangedOrClaimed(Data.IlluminateMode, illuminateMode);
         ImageScanner.illuminateMode(illuminateMode);
         logSet("IlluminateMode");
@@ -233,20 +237,20 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     public void setImageMode(int imageMode) throws JposException {
         logPreSet("ImageMode");
         checkOpened();
-        if (imageMode == ImageScannerConst.IMG_DECODE_ONLY)
-            JposDevice.check(!Data.CapDecodeData, JposConst.JPOS_E_ILLEGAL, "Unsupported ImageMode: " + imageMode);
-        else if (imageMode == ImageScannerConst.IMG_STILL_ONLY)
-            JposDevice.check(!Data.CapImageData, JposConst.JPOS_E_ILLEGAL, "Unsupported ImageMode: " + imageMode);
-        else if (imageMode == ImageScannerConst.IMG_STILL_DECODE)
-            JposDevice.check(!Data.CapDecodeData || !Data.CapImageData, JposConst.JPOS_E_ILLEGAL, "Unsupported ImageMode: " + imageMode);
-        else if (imageMode == ImageScannerConst.IMG_VIDEO_DECODE)
-            JposDevice.check(!Data.CapDecodeData || !Data.CapVideoData, JposConst.JPOS_E_ILLEGAL, "Unsupported ImageMode: " + imageMode);
-        else if (imageMode == ImageScannerConst.IMG_VIDEO_STILL)
-            JposDevice.check(!Data.CapImageData || !Data.CapVideoData, JposConst.JPOS_E_ILLEGAL, "Unsupported ImageMode: " + imageMode);
-        else if (imageMode == ImageScannerConst.IMG_ALL)
-            JposDevice.check(!Data.CapDecodeData || !Data.CapImageData || !Data.CapVideoData, JposConst.JPOS_E_ILLEGAL, "Unsupported ImageMode: " + imageMode);
+        if (imageMode == IMG_DECODE_ONLY)
+            check(!Data.CapDecodeData, JPOS_E_ILLEGAL, "Unsupported ImageMode: " + imageMode);
+        else if (imageMode == IMG_STILL_ONLY)
+            check(!Data.CapImageData, JPOS_E_ILLEGAL, "Unsupported ImageMode: " + imageMode);
+        else if (imageMode == IMG_STILL_DECODE)
+            check(!Data.CapDecodeData || !Data.CapImageData, JPOS_E_ILLEGAL, "Unsupported ImageMode: " + imageMode);
+        else if (imageMode == IMG_VIDEO_DECODE)
+            check(!Data.CapDecodeData || !Data.CapVideoData, JPOS_E_ILLEGAL, "Unsupported ImageMode: " + imageMode);
+        else if (imageMode == IMG_VIDEO_STILL)
+            check(!Data.CapImageData || !Data.CapVideoData, JPOS_E_ILLEGAL, "Unsupported ImageMode: " + imageMode);
+        else if (imageMode == IMG_ALL)
+            check(!Data.CapDecodeData || !Data.CapImageData || !Data.CapVideoData, JPOS_E_ILLEGAL, "Unsupported ImageMode: " + imageMode);
         else
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid ImageMode: " + imageMode);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid ImageMode: " + imageMode);
         checkNoChangedOrClaimed(Data.ImageMode, imageMode);
         ImageScanner.imageMode(imageMode);
         logSet("ImageMode");
@@ -254,11 +258,11 @@ public class ImageScannerService extends JposBase implements ImageScannerService
 
     @Override
     public void setImageQuality(int imageQuality) throws JposException {
-        long[] valid = { ImageScannerConst.IMG_QUAL_LOW, ImageScannerConst.IMG_QUAL_MED, ImageScannerConst.IMG_QUAL_HIGH };
+        long[] valid = { IMG_QUAL_LOW, IMG_QUAL_MED, IMG_QUAL_HIGH };
         logPreSet("ImageQuality");
         checkOpened();
-        JposDevice.checkMember(imageQuality, valid, JposConst.JPOS_E_ILLEGAL, "Invalid ImageQuality: " + imageQuality);
-        JposDevice.check(!Data.CapImageQuality && Data.ImageQuality != imageQuality, JposConst.JPOS_E_ILLEGAL, "Illegal ImageQuality: " + imageQuality);
+        checkMember(imageQuality, valid, JPOS_E_ILLEGAL, "Invalid ImageQuality: " + imageQuality);
+        check(!Data.CapImageQuality && Data.ImageQuality != imageQuality, JPOS_E_ILLEGAL, "Illegal ImageQuality: " + imageQuality);
         checkNoChangedOrClaimed(Data.ImageQuality, imageQuality);
         ImageScanner.imageQuality(imageQuality);
         logSet("ImageQuality");
@@ -268,7 +272,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     public void setVideoCount(int videoCount) throws JposException {
         logPreSet("VideoCount");
         checkOpened();
-        JposDevice.check(videoCount < 0, JposConst.JPOS_E_ILLEGAL, "Invalid VideoCount: " + videoCount);
+        check(videoCount < 0, JPOS_E_ILLEGAL, "Invalid VideoCount: " + videoCount);
         checkNoChangedOrClaimed(Data.VideoCount, videoCount);
         ImageScanner.videoCount(videoCount);
         logSet("VideoCount");
@@ -278,7 +282,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     public void setVideoRate(int videoRate) throws JposException {
         logPreSet("VideoRate");
         checkOpened();
-        JposDevice.check(videoRate < 0, JposConst.JPOS_E_ILLEGAL, "Invalid VideoRate: " + videoRate);
+        check(videoRate < 0, JPOS_E_ILLEGAL, "Invalid VideoRate: " + videoRate);
         checkNoChangedOrClaimed(Data.VideoRate, videoRate);
         ImageScanner.videoRate(videoRate);
         logSet("VideoRate");
@@ -288,7 +292,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     public void startSession() throws JposException {
         logPreCall("StartSession");
         checkEnabled();
-        JposDevice.check(!Data.CapHostTriggered, JposConst.JPOS_E_ILLEGAL, "Not host triggered");
+        check(!Data.CapHostTriggered, JPOS_E_ILLEGAL, "Not host triggered");
         ImageScanner.startSession();
         logCall("StartSession");
     }
@@ -297,7 +301,7 @@ public class ImageScannerService extends JposBase implements ImageScannerService
     public void stopSession() throws JposException {
         logPreCall("StopSession");
         checkEnabled();
-        JposDevice.check(!Data.CapHostTriggered, JposConst.JPOS_E_ILLEGAL, "Not host triggered");
+        check(!Data.CapHostTriggered, JPOS_E_ILLEGAL, "Not host triggered");
         ImageScanner.stopSession();
         logCall("StopSession");
     }

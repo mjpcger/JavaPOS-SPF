@@ -16,18 +16,19 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
 import jpos.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * Output request executor for FiscalPrinter method PrintRecPackageAdjustVoid and executor base for FiscalPrinterService method
  * PrintRecPackageAdjustment.
  */
 public class PrintRecPackageAdjustVoid extends PrePostOutputRequest {
-    private int AdjustmentType;
+    private final int AdjustmentType;
 
     /**
      * FiscalPrinter method parameter adjustmentType, see method PrintRecPackageAdjustVoid.
@@ -37,7 +38,7 @@ public class PrintRecPackageAdjustVoid extends PrePostOutputRequest {
         return AdjustmentType;
     }
 
-    private String VatAdjustment;
+    private final String VatAdjustment;
 
     /**
      * FiscalPrinter method parameter vatAdjustment, see method PrintRecPackageAdjustVoid.
@@ -48,7 +49,7 @@ public class PrintRecPackageAdjustVoid extends PrePostOutputRequest {
         return VatAdjustment;
     }
 
-    private Map.Entry<Integer,Number>[] ParsedParameters;
+    private final Map.Entry<Integer,Number>[] ParsedParameters;
 
     /**
      * Returns number of VAT ID and adjustment amount pairs specified within VatAdjustment. Even if VatAdjustment is still
@@ -67,7 +68,7 @@ public class PrintRecPackageAdjustVoid extends PrePostOutputRequest {
      * @throws JposException If the index is outside the valid range.
      */
     public int getVatID(int i) throws JposException {
-        JposDevice.check(i < 0 || i >= ParsedParameters.length, JposConst.JPOS_E_FAILURE, "Index out of bound: " + i);
+        check(i < 0 || i >= ParsedParameters.length, JPOS_E_FAILURE, "Index out of bound: " + i);
         return ParsedParameters[i].getKey();
     }
 
@@ -78,7 +79,7 @@ public class PrintRecPackageAdjustVoid extends PrePostOutputRequest {
      * @throws JposException If the index is outside the valid range.
      */
     public Number getAjustmentAmount(int i) throws JposException {
-        JposDevice.check(i < 0 || i >= ParsedParameters.length, JposConst.JPOS_E_FAILURE, "Index out of bound: " + i);
+        check(i < 0 || i >= ParsedParameters.length, JPOS_E_FAILURE, "Index out of bound: " + i);
         return ParsedParameters[i].getValue();
     }
 
@@ -93,7 +94,7 @@ public class PrintRecPackageAdjustVoid extends PrePostOutputRequest {
         super(props);
         AdjustmentType = adjustmentType;
         VatAdjustment = vatAdjustment;
-        ParsedParameters = new Map.Entry[0];
+        ParsedParameters = getArrayOf(0);
     }
 
     /**
@@ -109,7 +110,10 @@ public class PrintRecPackageAdjustVoid extends PrePostOutputRequest {
         super(props);
         AdjustmentType = adjustmentType;
         VatAdjustment = vatAdjustment;
-        ParsedParameters = (Map.Entry<Integer, Number>[]) parsedAdjustments.entrySet().toArray();
+        ParsedParameters = getArrayOf(parsedAdjustments.entrySet().size());
+        int i = 0;
+        for (Map.Entry<Integer,Number> element : parsedAdjustments.entrySet())
+            ParsedParameters[i++] = element;
     }
 
     @Override

@@ -26,7 +26,7 @@ public class MSRDataEvent extends JposDataEvent {
      * Object that contains all data that are necessary to fill data fields
      * before event is really fired.
      */
-    public Object TrackData;
+    public final Object TrackData;
     /**
      * Constructor. Parameters passed to base class unchanged.
      *

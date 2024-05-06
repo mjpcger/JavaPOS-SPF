@@ -21,6 +21,8 @@ import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
 import jpos.BillAcceptorConst;
 import jpos.JposException;
 
+import static jpos.BillAcceptorConst.*;
+
 /**
  * Class containing the bill acceptor specific properties, their default values and default implementations of
  * BillAcceptorInterface.
@@ -95,13 +97,13 @@ public class BillAcceptorProperties extends JposCommonProperties implements Bill
     /**
      * UPOS property DepositStatus.
      */
-    public int DepositStatus = BillAcceptorConst.BACC_STATUS_DEPOSIT_END;
+    public int DepositStatus = BACC_STATUS_DEPOSIT_END;
 
     /**
      * Default value of DepositStatus property. Default: STATUS_DEPOSIT_END. Should be updated
      * before calling initOnEnable the first time.
      */
-    public int DepositStatusDef = BillAcceptorConst.BACC_STATUS_DEPOSIT_END;
+    public int DepositStatusDef = BACC_STATUS_DEPOSIT_END;
 
     /**
      * UPOS property FullStatus.
@@ -159,7 +161,7 @@ public class BillAcceptorProperties extends JposCommonProperties implements Bill
      */
     @Override
     public void beginDeposit() throws JposException {
-        DepositStatus = BillAcceptorConst.BACC_STATUS_DEPOSIT_START;
+        DepositStatus = BACC_STATUS_DEPOSIT_START;
         EventSource.logSet("DepositStatus");
     }
 
@@ -169,7 +171,7 @@ public class BillAcceptorProperties extends JposCommonProperties implements Bill
      */
     @Override
     public void endDeposit(int success) throws JposException {
-        DepositStatus = BillAcceptorConst.BACC_STATUS_DEPOSIT_END;
+        DepositStatus = BACC_STATUS_DEPOSIT_END;
         EventSource.logSet("DepositStatus");
     }
 
@@ -179,7 +181,7 @@ public class BillAcceptorProperties extends JposCommonProperties implements Bill
      */
     @Override
     public void fixDeposit() throws JposException {
-        DepositStatus = BillAcceptorConst.BACC_STATUS_DEPOSIT_COUNT;
+        DepositStatus = BACC_STATUS_DEPOSIT_COUNT;
         EventSource.logSet("DepositStatus");
     }
 

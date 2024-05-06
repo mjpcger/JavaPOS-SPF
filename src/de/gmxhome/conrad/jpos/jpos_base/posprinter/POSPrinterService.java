@@ -22,18 +22,22 @@ import jpos.services.*;
 
 import java.util.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.POSPrinterConst.*;
+
 /**
  * POSPrinter service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class POSPrinterService extends JposBase implements POSPrinterService115 {
+public class POSPrinterService extends JposBase implements POSPrinterService116 {
     /**
      * Instance of a class implementing the POSPrinterInterface for pos printer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public POSPrinterInterface POSPrinterInterface;
 
-    private POSPrinterProperties Data;
+    private final POSPrinterProperties Data;
 
     private PageModePrint[] PagemodeCommand = new PageModePrint[3];
 
@@ -41,64 +45,34 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     private TransactionPrint[] TransactionCommand = new TransactionPrint[3];
 
-    static private long[] Cartridges = new long[]{ POSPrinterConst.PTR_COLOR_PRIMARY, POSPrinterConst.PTR_COLOR_CUSTOM1,
-            POSPrinterConst.PTR_COLOR_CUSTOM2, POSPrinterConst.PTR_COLOR_CUSTOM3, POSPrinterConst.PTR_COLOR_CUSTOM4,
-            POSPrinterConst.PTR_COLOR_CUSTOM5, POSPrinterConst.PTR_COLOR_CUSTOM6, POSPrinterConst.PTR_COLOR_CYAN,
-            POSPrinterConst.PTR_COLOR_MAGENTA, POSPrinterConst.PTR_COLOR_YELLOW };
-
-    static private long[] Metrics = new long[]{
-            POSPrinterConst.PTR_MM_DOTS, POSPrinterConst.PTR_MM_TWIPS, POSPrinterConst.PTR_MM_ENGLISH, POSPrinterConst.PTR_MM_METRIC
+    static private final long[] Cartridges = {
+            PTR_COLOR_PRIMARY, PTR_COLOR_CUSTOM1, PTR_COLOR_CUSTOM2, PTR_COLOR_CUSTOM3, PTR_COLOR_CUSTOM4,
+            PTR_COLOR_CUSTOM5, PTR_COLOR_CUSTOM6, PTR_COLOR_CYAN, PTR_COLOR_MAGENTA, PTR_COLOR_YELLOW
     };
 
-    static private long[] PageModeHorizontalDirections = new long[]{
-            POSPrinterConst.PTR_PD_LEFT_TO_RIGHT, POSPrinterConst.PTR_PD_RIGHT_TO_LEFT
-    };
+    static private final long[] Metrics = { PTR_MM_DOTS, PTR_MM_TWIPS, PTR_MM_ENGLISH, PTR_MM_METRIC };
 
-    static private long[] PageModeVerticalDirections = new long[]{
-            POSPrinterConst.PTR_PD_BOTTOM_TO_TOP, POSPrinterConst.PTR_PD_TOP_TO_BOTTOM
-    };
+    static private final long[] PageModeHorizontalDirections = { PTR_PD_LEFT_TO_RIGHT, PTR_PD_RIGHT_TO_LEFT };
 
-    static private long PrintSides[] = new long[]{
-            POSPrinterConst.PTR_PS_OPPOSITE, POSPrinterConst.PTR_PS_SIDE1, POSPrinterConst.PTR_PS_SIDE2
-    };
+    static private final long[] PageModeVerticalDirections = { PTR_PD_BOTTOM_TO_TOP, PTR_PD_TOP_TO_BOTTOM };
 
-    static private long[] SingleStations = new long[]{
-            POSPrinterConst.PTR_S_JOURNAL, POSPrinterConst.PTR_S_RECEIPT, POSPrinterConst.PTR_S_SLIP
-    };
+    static private final long[] PrintSides = { PTR_PS_OPPOSITE, PTR_PS_SIDE1, PTR_PS_SIDE2 };
 
-    static private long[] Alignments = new long[]{
-            POSPrinterConst.PTR_BC_LEFT, POSPrinterConst.PTR_BC_CENTER, POSPrinterConst.PTR_BC_RIGHT
-    };
+    static private final long[] SingleStations = { PTR_S_JOURNAL, PTR_S_RECEIPT, PTR_S_SLIP };
 
-    static private long[] HRITextPositions = new long[]{
-            POSPrinterConst.PTR_BC_TEXT_ABOVE, POSPrinterConst.PTR_BC_TEXT_BELOW, POSPrinterConst.PTR_BC_TEXT_NONE
-    };
+    static private final long[] Alignments = { PTR_BC_LEFT, PTR_BC_CENTER, PTR_BC_RIGHT };
 
-    static private long[] RuledLineStyles = new long[]{
-            POSPrinterConst.PTR_LS_SINGLE_SOLID_LINE,
-            POSPrinterConst.PTR_LS_DOUBLE_SOLID_LINE,
-            POSPrinterConst.PTR_LS_BROKEN_LINE,
-            POSPrinterConst.PTR_LS_CHAIN_LINE
-    };
+    static private final long[] HRITextPositions = { PTR_BC_TEXT_ABOVE, PTR_BC_TEXT_BELOW, PTR_BC_TEXT_NONE };
 
-    static private long[] MarkFeedTypes = new long[]{
-            POSPrinterConst.PTR_MF_TO_TAKEUP,
-            POSPrinterConst.PTR_MF_TO_CUTTER,
-            POSPrinterConst.PTR_MF_TO_CURRENT_TOF,
-            POSPrinterConst.PTR_MF_TO_NEXT_TOF
-    };
+    static private final long[] RuledLineStyles = { PTR_LS_SINGLE_SOLID_LINE, PTR_LS_DOUBLE_SOLID_LINE, PTR_LS_BROKEN_LINE, PTR_LS_CHAIN_LINE };
 
-    static private long[] BitmapTypes = new long[]{
-            POSPrinterConst.PTR_BMT_BMP, POSPrinterConst.PTR_BMT_JPEG, POSPrinterConst.PTR_BMT_GIF
-    };
+    static private final long[] MarkFeedTypes = { PTR_MF_TO_TAKEUP, PTR_MF_TO_CUTTER, PTR_MF_TO_CURRENT_TOF, PTR_MF_TO_NEXT_TOF };
 
-    static private long[] Rotations = new long[]{
-            POSPrinterConst.PTR_RP_NORMAL, POSPrinterConst.PTR_RP_ROTATE180, POSPrinterConst.PTR_RP_LEFT90, POSPrinterConst.PTR_RP_RIGHT90
-    };
+    static private final long[] BitmapTypes = { PTR_BMT_BMP, PTR_BMT_JPEG, PTR_BMT_GIF };
 
-    static private long[] PageModes = new long[]{
-            POSPrinterConst.PTR_PM_PAGE_MODE, POSPrinterConst.PTR_PM_PRINT_SAVE, POSPrinterConst.PTR_PM_NORMAL, POSPrinterConst.PTR_PM_CANCEL
-    };
+    static private final long[] Rotations = { PTR_RP_NORMAL, PTR_RP_ROTATE180, PTR_RP_LEFT90, PTR_RP_RIGHT90 };
+
+    static private final long[] PageModes = { PTR_PM_PAGE_MODE, PTR_PM_PRINT_SAVE, PTR_PM_NORMAL, PTR_PM_CANCEL };
 
     /**
      * Constructor. Stores given property set and device implementation object.
@@ -572,9 +546,9 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setCartridgeNotify(int i) throws JposException {
         logPreSet("CartridgeNotify");
         checkOpened();
-        Device.check(Data.DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device enabled");
-        Device.check((Data.CapJrnCartridgeSensor | Data.CapRecCartridgeSensor | Data.CapSlpCartridgeSensor) == 0 && i != POSPrinterConst.PTR_CN_DISABLED, JposConst.JPOS_E_ILLEGAL, "No cartridge sensor notification");
-        Device.check(i != POSPrinterConst.PTR_CN_DISABLED && i != POSPrinterConst.PTR_CN_ENABLED, JposConst.JPOS_E_ILLEGAL, "Invalid cartridge notification value: " + i);
+        check(Data.DeviceEnabled, JPOS_E_ILLEGAL, "Device enabled");
+        check((Data.CapJrnCartridgeSensor | Data.CapRecCartridgeSensor | Data.CapSlpCartridgeSensor) == 0 && i != PTR_CN_DISABLED, JPOS_E_ILLEGAL, "No cartridge sensor notification");
+        check(i != PTR_CN_DISABLED && i != PTR_CN_ENABLED, JPOS_E_ILLEGAL, "Invalid cartridge notification value: " + i);
         checkNoChangedOrClaimed(Data.CartridgeNotify, i);
         POSPrinterInterface.cartridgeNotify(i);
         logSet("CartridgeNotify");
@@ -591,7 +565,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setCharacterSet(int i) throws JposException {
         logPreSet("CharacterSet");
         checkEnabled();
-        Device.check(!Device.member(i, Device.stringArrayToLongArray(Data.CharacterSetList.split(","))), JposConst.JPOS_E_ILLEGAL, "Invalid character set: " + i);
+        check(!member(i, stringArrayToLongArray(Data.CharacterSetList.split(","))), JPOS_E_ILLEGAL, "Invalid character set: " + i);
         POSPrinterInterface.characterSet(i);
         logSet("CharacterSet");
     }
@@ -672,11 +646,11 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         logPreSet("JrnCurrentCartridge");
         checkEnabled();
         if (Data.CapJrnPresent) {
-            Device.checkMember(i, Cartridges, JposConst.JPOS_E_ILLEGAL, "Invalid cartridge: " + i);
-            Device.check((i & Data.CapJrnColor) == 0, JposConst.JPOS_E_ILLEGAL, "Unsupported color: " + 1);
+            checkMember(i, Cartridges, JPOS_E_ILLEGAL, "Invalid cartridge: " + i);
+            check((i & Data.CapJrnColor) == 0, JPOS_E_ILLEGAL, "Unsupported color: " + 1);
         }
         else
-            Device.check(i != 0, JposConst.JPOS_E_ILLEGAL, "Journal not present");
+            check(i != 0, JPOS_E_ILLEGAL, "Journal not present");
         POSPrinterInterface.jrnCurrentCartridge(i);
         logSet("JrnCurrentCartridge");
     }
@@ -699,7 +673,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setJrnLetterQuality(boolean b) throws JposException {
         logPreSet("JrnLetterQuality");
         checkEnabled();
-        Device.check(!Data.CapJrnPresent, JposConst.JPOS_E_ILLEGAL, "Journal not present");
+        check(!Data.CapJrnPresent, JPOS_E_ILLEGAL, "Journal not present");
         POSPrinterInterface.jrnLetterQuality(b);
         logSet("JrnLetterQuality");
     }
@@ -715,8 +689,8 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setJrnLineChars(int i) throws JposException {
         logPreSet("JrnLineChars");
         checkEnabled();
-        Device.check(!Data.CapJrnPresent, JposConst.JPOS_E_ILLEGAL, "Journal not present");
-        Device.check(i < 0 || i > max(Device.stringArrayToLongArray(Data.JrnLineCharsList.split(","))), JposConst.JPOS_E_ILLEGAL, "Value for JrnLineChars out of range: " + i);
+        check(!Data.CapJrnPresent, JPOS_E_ILLEGAL, "Journal not present");
+        check(i < 0 || i > max(stringArrayToLongArray(Data.JrnLineCharsList.split(","))), JPOS_E_ILLEGAL, "Value for JrnLineChars out of range: " + i);
         POSPrinterInterface.jrnLineChars(i);
         logSet("JrnLineChars");
     }
@@ -739,7 +713,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setJrnLineHeight(int i) throws JposException {
         logPreSet("JrnLineHeight");
         checkEnabled();
-        Device.check(!Data.CapJrnPresent, JposConst.JPOS_E_ILLEGAL, "Journal not present");
+        check(!Data.CapJrnPresent, JPOS_E_ILLEGAL, "Journal not present");
         POSPrinterInterface.jrnLineHeight(i);
         logSet("JrnLineHeight");
     }
@@ -755,7 +729,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setJrnLineSpacing(int i) throws JposException {
         logPreSet("JrnLineSpacing");
         checkEnabled();
-        Device.check(!Data.CapJrnPresent, JposConst.JPOS_E_ILLEGAL, "Journal not present");
+        check(!Data.CapJrnPresent, JPOS_E_ILLEGAL, "Journal not present");
         POSPrinterInterface.jrnLineSpacing(i);
         logSet("JrnLineSpacing");
     }
@@ -785,7 +759,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setMapCharacterSet(boolean b) throws JposException {
         logPreSet("MapCharacterSet");
         checkEnabled();
-        Device.check(!Data.CapMapCharacterSet && b, JposConst.JPOS_E_ILLEGAL, "Mapping character set not supported");
+        check(!Data.CapMapCharacterSet && b, JPOS_E_ILLEGAL, "Mapping character set not supported");
         POSPrinterInterface.mapCharacterSet(b);
         logSet("MapCharacterSet");
     }
@@ -801,7 +775,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setMapMode(int i) throws JposException {
         logPreSet("MapMode");
         checkEnabled();
-        Device.checkMember(i, Metrics, JposConst.JPOS_E_ILLEGAL, "Invalid MapMode: " + i);
+        checkMember(i, Metrics, JPOS_E_ILLEGAL, "Invalid MapMode: " + i);
         POSPrinterInterface.mapMode(i);
         logSet("MapMode");
     }
@@ -837,7 +811,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setPageModeHorizontalPosition(int i) throws JposException {
         logPreSet("PageModeHorizontalPosition");
         checkEnabled();
-        Device.check(Data.PageModeStation == 0, JposConst.JPOS_E_ILLEGAL, "PageModeStation not selected");
+        check(Data.PageModeStation == 0, JPOS_E_ILLEGAL, "PageModeStation not selected");
         POSPrinterInterface.pageModeHorizontalPosition(i);
         logSet("PageModeHorizontalPosition");
     }
@@ -857,17 +831,17 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         checkEnabled();
         if (s == null)
             s = "";
-        Device.check(Data.PageModeStation == 0, JposConst.JPOS_E_ILLEGAL, "PageModeStation not selected");
-        long[] values = Device.stringArrayToLongArray(s.split(","));
-        long maxwidth = Data.PageModeStation == POSPrinterConst.PTR_S_RECEIPT ? Data.RecLineWidth : Data.SlpLineWidth;
-        Device.check(values.length != 4, JposConst.JPOS_E_ILLEGAL, "PageModePrintArea must consist of 4 comma separated integer numbers");
-        Device.check(values[0] < 0 || values[1] < 0 || values[2] < 0 ||values[3] < 0, JposConst.JPOS_E_ILLEGAL, ("PageModePrintArea values must be positive numbers"));
-        Device.check(Device.member((long)Data.PageModePrintDirection, PageModeHorizontalDirections) && values[0] + values[2] > maxwidth, JposConst.JPOS_E_ILLEGAL, "PageModePrintArea width out of range");
-        Device.check(Device.member((long)Data.PageModePrintDirection, PageModeVerticalDirections) && values[1] + values[3] > maxwidth, JposConst.JPOS_E_ILLEGAL, "PageModePrintArea height out of range");
-        if (Data.PageModeStation == POSPrinterConst.PTR_S_SLIP && Data.SlpMaxLines > 0) {
-            long maxheight = Data.SlpLineHeight * Data.SlpMaxLines;
-            Device.check(Device.member((long)Data.PageModePrintDirection, PageModeHorizontalDirections) && values[1] + values[3] > maxheight, JposConst.JPOS_E_ILLEGAL, "PageModePrintArea height out of range");
-            Device.check(Device.member((long)Data.PageModePrintDirection, PageModeVerticalDirections) && values[0] + values[2] > maxheight, JposConst.JPOS_E_ILLEGAL, "PageModePrintArea width out of range");
+        check(Data.PageModeStation == 0, JPOS_E_ILLEGAL, "PageModeStation not selected");
+        long[] values = stringArrayToLongArray(s.split(","));
+        long maxwidth = Data.PageModeStation == PTR_S_RECEIPT ? Data.RecLineWidth : Data.SlpLineWidth;
+        check(values.length != 4, JPOS_E_ILLEGAL, "PageModePrintArea must consist of 4 comma separated integer numbers");
+        check(values[0] < 0 || values[1] < 0 || values[2] < 0 ||values[3] < 0, JPOS_E_ILLEGAL, ("PageModePrintArea values must be positive numbers"));
+        check(member((long)Data.PageModePrintDirection, PageModeHorizontalDirections) && values[0] + values[2] > maxwidth, JPOS_E_ILLEGAL, "PageModePrintArea width out of range");
+        check(member((long)Data.PageModePrintDirection, PageModeVerticalDirections) && values[1] + values[3] > maxwidth, JPOS_E_ILLEGAL, "PageModePrintArea height out of range");
+        if (Data.PageModeStation == PTR_S_SLIP && Data.SlpMaxLines > 0) {
+            long maxheight = (long) Data.SlpLineHeight * Data.SlpMaxLines;
+            check(member((long)Data.PageModePrintDirection, PageModeHorizontalDirections) && values[1] + values[3] > maxheight, JPOS_E_ILLEGAL, "PageModePrintArea height out of range");
+            check(member((long)Data.PageModePrintDirection, PageModeVerticalDirections) && values[0] + values[2] > maxheight, JPOS_E_ILLEGAL, "PageModePrintArea width out of range");
         }
         POSPrinterInterface.pageModePrintArea(s);
         logSet("PageModePrintArea");
@@ -884,8 +858,8 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setPageModePrintDirection(int i) throws JposException {
         logPreSet("PageModePrintDirection");
         checkEnabled();
-        Device.check(Data.PageModeStation == 0, JposConst.JPOS_E_ILLEGAL, "PageModeStation not selected");
-        Device.check(!Device.member(i, PageModeVerticalDirections) && !Device.member(i, PageModeHorizontalDirections), JposConst.JPOS_E_ILLEGAL, "Invalid PageModePrintDirection: " + i);
+        check(Data.PageModeStation == 0, JPOS_E_ILLEGAL, "PageModeStation not selected");
+        check(!member(i, PageModeVerticalDirections) && !member(i, PageModeHorizontalDirections), JPOS_E_ILLEGAL, "Invalid PageModePrintDirection: " + i);
         POSPrinterInterface.pageModePrintDirection(i);
         logSet("PageModePrintDirection");
     }
@@ -901,9 +875,9 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setPageModeStation(int i) throws JposException {
         logPreSet("PageModeStation");
         checkEnabled();
-        Device.checkMember(i, new long[]{POSPrinterConst.PTR_S_RECEIPT, POSPrinterConst.PTR_S_SLIP}, JposConst.JPOS_E_ILLEGAL, "Invalid PageModeStation: " + i);
-        Device.check(i == POSPrinterConst.PTR_S_RECEIPT && !Data.CapRecPageMode, JposConst.JPOS_E_ILLEGAL, "No page mode support on receipt");
-        Device.check(i == POSPrinterConst.PTR_S_SLIP && !Data.CapSlpPageMode, JposConst.JPOS_E_ILLEGAL, "No page mode support on slip");
+        checkMember(i, new long[]{PTR_S_RECEIPT, PTR_S_SLIP}, JPOS_E_ILLEGAL, "Invalid PageModeStation: " + i);
+        check(i == PTR_S_RECEIPT && !Data.CapRecPageMode, JPOS_E_ILLEGAL, "No page mode support on receipt");
+        check(i == PTR_S_SLIP && !Data.CapSlpPageMode, JPOS_E_ILLEGAL, "No page mode support on slip");
         POSPrinterInterface.pageModeStation(i);
         logSet("PageModeStation");
     }
@@ -921,7 +895,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setPageModeVerticalPosition(int i) throws JposException {
         logPreSet("PageModeVerticalPosition");
         checkEnabled();
-        Device.check(Data.PageModeStation == 0, JposConst.JPOS_E_ILLEGAL, "PageModeStation not selected");
+        check(Data.PageModeStation == 0, JPOS_E_ILLEGAL, "PageModeStation not selected");
         POSPrinterInterface.pageModeVerticalPosition(i);
         logSet("PageModeVerticalPosition");
     }
@@ -959,11 +933,11 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         logPreSet("RecCurrentCartridge");
         checkEnabled();
         if (Data.CapRecPresent) {
-            Device.checkMember(i, Cartridges, JposConst.JPOS_E_ILLEGAL, "Invalid cartridge: " + i);
-            Device.check((i & Data.CapRecColor) == 0, JposConst.JPOS_E_ILLEGAL, "Unsupported color: " + 1);
+            checkMember(i, Cartridges, JPOS_E_ILLEGAL, "Invalid cartridge: " + i);
+            check((i & Data.CapRecColor) == 0, JPOS_E_ILLEGAL, "Unsupported color: " + 1);
         }
         else
-            Device.check(i != 0, JposConst.JPOS_E_ILLEGAL, "Receipt not present");
+            check(i != 0, JPOS_E_ILLEGAL, "Receipt not present");
         POSPrinterInterface.recCurrentCartridge(i);
         logSet("RecCurrentCartridge");
     }
@@ -986,7 +960,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setRecLetterQuality(boolean b) throws JposException {
         logPreSet("RecLetterQuality");
         checkEnabled();
-        Device.check(!Data.CapRecPresent, JposConst.JPOS_E_ILLEGAL, "Receipt not present");
+        check(!Data.CapRecPresent, JPOS_E_ILLEGAL, "Receipt not present");
         POSPrinterInterface.recLetterQuality(b);
         logSet("RecLetterQuality");
     }
@@ -1002,8 +976,8 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setRecLineChars(int i) throws JposException {
         logPreSet("RecLineChars");
         checkEnabled();
-        Device.check(!Data.CapRecPresent, JposConst.JPOS_E_ILLEGAL, "Receipt not present");
-        Device.check(i < 0 || i > max(Device.stringArrayToLongArray(Data.RecLineCharsList.split(","))), JposConst.JPOS_E_ILLEGAL, "Value for RecLineChars out of range: " + i);
+        check(!Data.CapRecPresent, JPOS_E_ILLEGAL, "Receipt not present");
+        check(i < 0 || i > max(stringArrayToLongArray(Data.RecLineCharsList.split(","))), JPOS_E_ILLEGAL, "Value for RecLineChars out of range: " + i);
         POSPrinterInterface.recLineChars(i);
         logSet("RecLineChars");
     }
@@ -1026,7 +1000,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setRecLineHeight(int i) throws JposException {
         logPreSet("RecLineHeight");
         checkEnabled();
-        Device.check(!Data.CapRecPresent, JposConst.JPOS_E_ILLEGAL, "Receipt not present");
+        check(!Data.CapRecPresent, JPOS_E_ILLEGAL, "Receipt not present");
         POSPrinterInterface.recLineHeight(i);
         logSet("RecLineHeight");
     }
@@ -1042,7 +1016,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setRecLineSpacing(int i) throws JposException {
         logPreSet("RecLineSpacing");
         checkEnabled();
-        Device.check(!Data.CapRecPresent, JposConst.JPOS_E_ILLEGAL, "Receipt not present");
+        check(!Data.CapRecPresent, JPOS_E_ILLEGAL, "Receipt not present");
         POSPrinterInterface.recLineSpacing(i);
         logSet("RecLineSpacing");
     }
@@ -1093,7 +1067,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setRotateSpecial(int i) throws JposException {
         logPreSet("RotateSpecial");
         checkOpened();
-        Device.check(!Data.CapRecBarCode && !Data.CapSlpBarCode, JposConst.JPOS_E_ILLEGAL, "Barcode not supported");
+        check(!Data.CapRecBarCode && !Data.CapSlpBarCode, JPOS_E_ILLEGAL, "Barcode not supported");
         checkNoChangedOrClaimed(Data.RotateSpecial, i);
         POSPrinterInterface.rotateSpecial(i);
         logSet("RotateSpecial");
@@ -1132,11 +1106,11 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         logPreSet("SlpCurrentCartridge");
         checkEnabled();
         if (Data.CapSlpPresent) {
-            Device.checkMember(i, Cartridges, JposConst.JPOS_E_ILLEGAL, "Invalid cartridge: " + i);
-            Device.check((i & Data.CapSlpColor) == 0, JposConst.JPOS_E_ILLEGAL, "Unsupported color: " + 1);
+            checkMember(i, Cartridges, JPOS_E_ILLEGAL, "Invalid cartridge: " + i);
+            check((i & Data.CapSlpColor) == 0, JPOS_E_ILLEGAL, "Unsupported color: " + 1);
         }
         else
-            Device.check(i != 0, JposConst.JPOS_E_ILLEGAL, "Slip not present");
+            check(i != 0, JPOS_E_ILLEGAL, "Slip not present");
         POSPrinterInterface.slpCurrentCartridge(i);
         logSet("SlpCurrentCartridge");
     }
@@ -1159,7 +1133,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setSlpLetterQuality(boolean b) throws JposException {
         logPreSet("SlpLetterQuality");
         checkEnabled();
-        Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "Slip not present");
+        check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "Slip not present");
         POSPrinterInterface.slpLetterQuality(b);
         logSet("SlpLetterQuality");
     }
@@ -1175,8 +1149,8 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setSlpLineChars(int i) throws JposException {
         logPreSet("SlpLineChars");
         checkEnabled();
-        Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "Slip not present");
-        Device.check(i < 0 || i > max(Device.stringArrayToLongArray(Data.SlpLineCharsList.split(","))), JposConst.JPOS_E_ILLEGAL, "Value for SlpLineChars out of range: " + i);
+        check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "Slip not present");
+        check(i < 0 || i > max(stringArrayToLongArray(Data.SlpLineCharsList.split(","))), JPOS_E_ILLEGAL, "Value for SlpLineChars out of range: " + i);
         POSPrinterInterface.slpLineChars(i);
         logSet("SlpLineChars");
     }
@@ -1199,7 +1173,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setSlpLineHeight(int i) throws JposException {
         logPreSet("SlpLineHeight");
         checkEnabled();
-        Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "Slip not present");
+        check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "Slip not present");
         POSPrinterInterface.slpLineHeight(i);
         logSet("SlpLineHeight");
     }
@@ -1222,7 +1196,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void setSlpLineSpacing(int i) throws JposException {
         logPreSet("SlpLineSpacing");
         checkEnabled();
-        Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "Slip not present");
+        check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "Slip not present");
         POSPrinterInterface.slpLineSpacing(i);
         logSet("SlpLineSpacing");
     }
@@ -1271,11 +1245,11 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     @Override
     public void beginInsertion(int timeout) throws JposException {
-        logPreCall("BeginInsertion", "" + timeout);
+        logPreCall("BeginInsertion", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "No Slip station support");
-        Device.check(Props.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_BUSY, "Output in progress or error detected");
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "No Slip station support");
+        check(Props.State != JPOS_S_IDLE, JPOS_E_BUSY, "Output in progress or error detected");
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
         POSPrinterInterface.beginInsertion(timeout);
         Data.InsertionMode = true;
         logCall("BeginInsertion");
@@ -1283,11 +1257,11 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     @Override
     public void beginRemoval(int timeout) throws JposException {
-        logPreCall("BeginRemoval", "" + timeout);
+        logPreCall("BeginRemoval", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "No Slip station support");
-        Device.check(Props.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_BUSY, "Output in progress or error detected");
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "No Slip station support");
+        check(Props.State != JPOS_S_IDLE, JPOS_E_BUSY, "Output in progress or error detected");
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
         POSPrinterInterface.beginRemoval(timeout);
         Data.RemovalMode = true;
         logCall("BeginRemoval");
@@ -1295,11 +1269,11 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     @Override
     public void changePrintSide(int side) throws JposException {
-        logPreCall("ChangePrintSide", "" + side);
+        logPreCall("ChangePrintSide", removeOuterArraySpecifier(new Object[]{side}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapSlpPresent || !Data.CapSlpBothSidesPrint, JposConst.JPOS_E_ILLEGAL, "No support for both side slip printing");
-        Device.check(Props.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_BUSY, "Output in progress or error detected");
-        Device.checkMember(side, PrintSides, JposConst.JPOS_E_ILLEGAL, "Bad print side: " + side);
+        check(!Data.CapSlpPresent || !Data.CapSlpBothSidesPrint, JPOS_E_ILLEGAL, "No support for both side slip printing");
+        check(Props.State != JPOS_S_IDLE, JPOS_E_BUSY, "Output in progress or error detected");
+        checkMember(side, PrintSides, JPOS_E_ILLEGAL, "Bad print side: " + side);
         POSPrinterInterface.changePrintSide(side);
         logCall("ChangePrintSide");
     }
@@ -1308,7 +1282,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void clearPrintArea() throws JposException {
         logPreCall("ClearPrintArea");
         checkEnabled();
-        Device.check(Data.PageModeStation == 0, JposConst.JPOS_E_ILLEGAL, "No page mode station selected");
+        check(Data.PageModeStation == 0, JPOS_E_ILLEGAL, "No page mode station selected");
         POSPrinterInterface.clearPrintArea();
         logCall("ClearPrintArea");
     }
@@ -1317,9 +1291,9 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void endInsertion() throws JposException {
         logPreCall("EndInsertion");
         checkEnabled();
-        Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "No Slip station support");
-        Device.check(!Data.InsertionMode, JposConst.JPOS_E_ILLEGAL, "Not in insertion mode");
-        Device.check(Props.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_BUSY, "Output in progress or error detected");
+        check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "No Slip station support");
+        check(!Data.InsertionMode, JPOS_E_ILLEGAL, "Not in insertion mode");
+        check(Props.State != JPOS_S_IDLE, JPOS_E_BUSY, "Output in progress or error detected");
         POSPrinterInterface.endInsertion();
         logCall("EndInsertion");
     }
@@ -1328,9 +1302,9 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     public void endRemoval() throws JposException {
         logPreCall("EndRemoval");
         checkEnabled();
-        Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "No Slip station support");
-        Device.check(!Data.RemovalMode, JposConst.JPOS_E_ILLEGAL, "Not in removal mode");
-        Device.check(Props.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_BUSY, "Output in progress or error detected");
+        check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "No Slip station support");
+        check(!Data.RemovalMode, JPOS_E_ILLEGAL, "Not in removal mode");
+        check(Props.State != JPOS_S_IDLE, JPOS_E_BUSY, "Output in progress or error detected");
         POSPrinterInterface.endRemoval();
         Data.RemovalMode = false;
         logCall("EndRemoval");
@@ -1338,7 +1312,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     @Override
     public void printImmediate(int station, String data) throws JposException {
-        logPreCall("PrintImmediate", "" + station + ", " + (data == null ? "<null>" : "\"" + data + "\""));
+        logPreCall("PrintImmediate", removeOuterArraySpecifier(new Object[]{station, data}, Device.MaxArrayStringElements));
         checkEnabled();
         checkStationPresent(station);
         extendedErrorCheck(station);
@@ -1352,30 +1326,30 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     @Override
     public void setBitmap(int bitmapNumber, int station, String fileName, int width, int alignment) throws JposException {
-        logPreCall("SetBitmap", "" + bitmapNumber + ", " + station + (fileName == null ? ", <null>, " : "\"" + fileName + "\", ") + width + ", " + alignment);
+        logPreCall("SetBitmap", removeOuterArraySpecifier(new Object[]{bitmapNumber, station, fileName, width, alignment}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(bitmapNumber < 1 || bitmapNumber > 20, JposConst.JPOS_E_ILLEGAL, "BitmapNumber out of range: " + bitmapNumber);
-        Device.checkMember(station, new long[]{POSPrinterConst.PTR_S_RECEIPT, POSPrinterConst.PTR_S_SLIP}, JposConst.JPOS_E_ILLEGAL, "Invalid station: " + station);
-        Device.check(station == POSPrinterConst.PTR_S_RECEIPT && (!Data.CapRecBitmap || !Data.CapRecPresent), JposConst.JPOS_E_ILLEGAL, "No bitmap support for receipt");
-        Device.check(station == POSPrinterConst.PTR_S_SLIP && (!Data.CapSlpBitmap || !Data.CapSlpPresent), JposConst.JPOS_E_ILLEGAL, "No bitmap support for slip");
-        Device.check(width != POSPrinterConst.PTR_BM_ASIS && width <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid width: " + width);
-        Device.check(!Device.member(alignment, new long[]{POSPrinterConst.PTR_BM_LEFT, POSPrinterConst.PTR_BM_CENTER, POSPrinterConst.PTR_BM_RIGHT}) && alignment < 0, JposConst.JPOS_E_ILLEGAL, "Invalid alignment: " + alignment);
+        check(bitmapNumber < 1 || bitmapNumber > 20, JPOS_E_ILLEGAL, "BitmapNumber out of range: " + bitmapNumber);
+        checkMember(station, new long[]{PTR_S_RECEIPT, PTR_S_SLIP}, JPOS_E_ILLEGAL, "Invalid station: " + station);
+        check(station == PTR_S_RECEIPT && (!Data.CapRecBitmap || !Data.CapRecPresent), JPOS_E_ILLEGAL, "No bitmap support for receipt");
+        check(station == PTR_S_SLIP && (!Data.CapSlpBitmap || !Data.CapSlpPresent), JPOS_E_ILLEGAL, "No bitmap support for slip");
+        check(width != PTR_BM_ASIS && width <= 0, JPOS_E_ILLEGAL, "Invalid width: " + width);
+        check(!member(alignment, new long[]{PTR_BM_LEFT, PTR_BM_CENTER, PTR_BM_RIGHT}) && alignment < 0, JPOS_E_ILLEGAL, "Invalid alignment: " + alignment);
         POSPrinterInterface.setBitmap(bitmapNumber, station, fileName == null ? "" : fileName, width, alignment);
         logCall("SetBitmap");
     }
 
     @Override
     public void setLogo(int location, String data) throws JposException {
-        logPreCall("SetLogo", "" + location + (data == null ? ", <null>" : "\"" + data + "\""));
+        logPreCall("SetLogo", removeOuterArraySpecifier(new Object[]{location, data}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.checkMember(location, new long[]{POSPrinterConst.PTR_L_TOP, POSPrinterConst.PTR_L_BOTTOM}, JposConst.JPOS_E_ILLEGAL, "Invalid location: " + location);
+        checkMember(location, new long[]{PTR_L_TOP, PTR_L_BOTTOM}, JPOS_E_ILLEGAL, "Invalid location: " + location);
         POSPrinterInterface.setLogo(location, data == null ? "" : data);
         logCall("SetLogo");
     }
 
     @Override
     public void validateData(int station, String text) throws JposException {
-        logPreCall("ValidateData", "" + station + ", \"" + text + "\"");
+        logPreCall("ValidateData", removeOuterArraySpecifier(new Object[]{station, text}, Device.MaxArrayStringElements));
         checkEnabled();
         try {
             POSPrinterInterface.validateData(station, text);
@@ -1384,74 +1358,67 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
                 throw e;
             return;
         }
-        List<PrintDataPart> data = text == null ? new ArrayList<PrintDataPart>() : outputDataParts(text);
+        List<PrintDataPart> data = text == null ? new ArrayList<>() : outputDataParts(text);
         switch (station) {
-            case POSPrinterConst.PTR_S_JOURNAL:
-                plausibilityCheckJournalData(data);
-                break;
-            case POSPrinterConst.PTR_S_RECEIPT:
-                plausibilityCheckReceiptData(data);
-                break;
-            case POSPrinterConst.PTR_S_SLIP:
-                plausibilityCheckSlipData(data);
-                break;
-            default:
-                throw new JposException(JposConst.JPOS_E_NOEXIST, "Invalid station: " + station);
+            case PTR_S_JOURNAL -> plausibilityCheckJournalData(data);
+            case PTR_S_RECEIPT -> plausibilityCheckReceiptData(data);
+            case PTR_S_SLIP -> plausibilityCheckSlipData(data);
+            default -> throw new JposException(JPOS_E_NOEXIST, "Invalid station: " + station);
         }
         logCall("ValidateData");
     }
 
     @Override
     public void cutPaper(int percentage) throws JposException {
-        logPreCall("CutPaper", "" + percentage);
-        int stationIndex = getStationIndex(POSPrinterConst.PTR_S_RECEIPT);
+        logPreCall("CutPaper", removeOuterArraySpecifier(new Object[]{percentage}, Device.MaxArrayStringElements));
+        int stationIndex = getStationIndex(PTR_S_RECEIPT);
         checkEnabled();
-        Device.check(!Data.CapRecPresent || !Data.CapRecPapercut, JposConst.JPOS_E_ILLEGAL, "Cut paper not supported");
-        Device.check(PagemodeCommand[stationIndex] != null || SidewaysCommand[stationIndex] != null, JposConst.JPOS_E_ILLEGAL, "Bad context for cut paper");
-        extendedSynchronousErrorCheck(POSPrinterConst.PTR_S_RECEIPT);
+        check(!Data.CapRecPresent || !Data.CapRecPapercut, JPOS_E_ILLEGAL, "Cut paper not supported");
+        check(PagemodeCommand[stationIndex] != null || SidewaysCommand[stationIndex] != null, JPOS_E_ILLEGAL, "Bad context for cut paper");
+        extendedSynchronousErrorCheck(PTR_S_RECEIPT);
         doItTrans(stationIndex, POSPrinterInterface.cutPaper(percentage), "CutPaper");
     }
 
     @Override
     public void drawRuledLine(int station, String positionList, int lineDirection, int lineWidth, int lineStyle, int lineColor) throws JposException {
-        logPreCall("DrawRuledLine", "" + station + ", " + (positionList == null ? "<null>" : "\"" + positionList + "\"") + ", " + lineDirection + ", " + lineWidth + ", " + lineStyle + ", " + lineColor);
+        logPreCall("DrawRuledLine", removeOuterArraySpecifier(new Object[]{station, positionList, lineDirection, lineWidth, lineStyle, lineColor}, Device.MaxArrayStringElements));
         String esc = "p" + (positionList == null ? "" : positionList) + "d" + lineDirection + "w" + lineWidth + "s" + lineStyle + "c" + lineColor;
         try {
             plausibilityCheckData(station, outputDataParts("\33|*" + esc.length() + "dL" + esc));
         } catch (JposException e) {
-            Device.check(e.getErrorCode() == JposConst.JPOS_E_FAILURE, JposConst.JPOS_E_ILLEGAL, e.getMessage());
-            if (e.getErrorCode() != JposConst.JPOS_E_ILLEGAL)
+            check(e.getErrorCode() == JPOS_E_FAILURE, JPOS_E_ILLEGAL, e.getMessage());
+            if (e.getErrorCode() != JPOS_E_ILLEGAL)
                 throw e;
         }
         int stationIndex = getStationIndex(station);
         extendedSynchronousErrorCheck(station);
-        Device.check(SidewaysCommand[stationIndex] != null, JposConst.JPOS_E_ILLEGAL, "No support for drawing ruled line when station is in sideways print mode");
-        Device.check(PagemodeCommand[stationIndex] != null, JposConst.JPOS_E_ILLEGAL, "No support for drawing ruled line when station is in page mode");
-        Device.check(TransactionCommand[stationIndex] != null, JposConst.JPOS_E_ILLEGAL, "No support for drawing ruled line when station is in transaction print mode");
+        check(SidewaysCommand[stationIndex] != null, JPOS_E_ILLEGAL, "No support for drawing ruled line when station is in sideways print mode");
+        check(PagemodeCommand[stationIndex] != null, JPOS_E_ILLEGAL, "No support for drawing ruled line when station is in page mode");
+        check(TransactionCommand[stationIndex] != null, JPOS_E_ILLEGAL, "No support for drawing ruled line when station is in transaction print mode");
         doIt(POSPrinterInterface.drawRuledLine(station, positionList == null ? "" : positionList, lineDirection, lineWidth, lineStyle, lineColor), "DrawRuledLine");
     }
 
     @Override
     public void markFeed(int type) throws JposException {
-        logPreCall("MarkFeed", "" + type);
-        int stationIndex = getStationIndex(POSPrinterConst.PTR_S_RECEIPT);
+        logPreCall("MarkFeed", removeOuterArraySpecifier(new Object[]{type}, Device.MaxArrayStringElements));
+        int stationIndex = getStationIndex(PTR_S_RECEIPT);
         checkEnabled();
-        Device.check(!Data.CapRecPresent || Data.CapRecMarkFeed == 0, JposConst.JPOS_E_ILLEGAL, "Mark feed not supported");
-        Device.check((Data.CapRecMarkFeed & type) == 0 || !Device.member(type, MarkFeedTypes), JposConst.JPOS_E_ILLEGAL, "Invalid feed type: " + type);
-        Device.check(PagemodeCommand[stationIndex] != null || SidewaysCommand[stationIndex] != null || TransactionCommand[stationIndex] != null, JposConst.JPOS_E_ILLEGAL, "Bad context for mark feed");
-        extendedSynchronousErrorCheck(POSPrinterConst.PTR_S_RECEIPT);
+        check(!Data.CapRecPresent || Data.CapRecMarkFeed == 0, JPOS_E_ILLEGAL, "Mark feed not supported");
+        check((Data.CapRecMarkFeed & type) == 0 || !member(type, MarkFeedTypes), JPOS_E_ILLEGAL, "Invalid feed type: " + type);
+        check(PagemodeCommand[stationIndex] != null || SidewaysCommand[stationIndex] != null || TransactionCommand[stationIndex] != null, JPOS_E_ILLEGAL, "Bad context for mark feed");
+        extendedSynchronousErrorCheck(PTR_S_RECEIPT);
         doIt(POSPrinterInterface.markFeed(type), "MarkFeed");
     }
 
     @Override
     public void printBarCode(int station, String data, int symbology, int height, int width, int alignment, int textPosition) throws JposException {
-        logPreCall("PrintBarCode", "" + station + ", " + (data == null ? "<null>" : "\"" + data + "\"") + ", " + symbology + ", " + height + ", " + width + ", " + alignment + ", " + textPosition);
+        logPreCall("PrintBarCode", removeOuterArraySpecifier(new Object[]{station, data, symbology, height, width, alignment, textPosition}, Device.MaxArrayStringElements));
         String esc = "s" + symbology + "h" + height + "w" + width + "a" + alignment + "t" + textPosition + "d" + (data == null ? "" : data) + "e";
         try {
             plausibilityCheckData(station, outputDataParts("\33|*" + esc.length() + "R" + esc));
         } catch (JposException e) {
-            Device.check(e.getErrorCode() == JposConst.JPOS_E_FAILURE, JposConst.JPOS_E_ILLEGAL, e.getMessage());
-            if (e.getErrorCode() != JposConst.JPOS_E_ILLEGAL)
+            check(e.getErrorCode() == JPOS_E_FAILURE, JPOS_E_ILLEGAL, e.getMessage());
+            if (e.getErrorCode() != JPOS_E_ILLEGAL)
                 throw e;
         }
         int stationIndex = getStationIndex(station);
@@ -1461,13 +1428,13 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     @Override
     public void printBitmap(int station, String fileName, int width, int alignment) throws JposException {
-        logPreCall("PrintBitmap", "" + station + ", " + (fileName == null ? "<null>" : "\"" + fileName + "\"") + ", " + width + ", " + alignment);
+        logPreCall("PrintBitmap", removeOuterArraySpecifier(new Object[]{station, fileName, width, alignment}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(station != POSPrinterConst.PTR_S_RECEIPT && station != POSPrinterConst.PTR_S_SLIP, JposConst.JPOS_E_ILLEGAL, "Invalid print station: " + station);
-        Device.check(station == POSPrinterConst.PTR_S_RECEIPT && (!Data.CapRecPresent || !Data.CapRecBitmap), JposConst.JPOS_E_ILLEGAL, "No bitmap printing support on receipt");
-        Device.check(station == POSPrinterConst.PTR_S_SLIP && (!Data.CapSlpPresent || !Data.CapSlpBitmap), JposConst.JPOS_E_ILLEGAL, "No bitmap printing support on slip");
-        Device.check(width != POSPrinterConst.PTR_BM_ASIS && alignment <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid width: " + width);
-        Device.check(!Device.member(alignment, Alignments) && alignment < 0, JposConst.JPOS_E_ILLEGAL, "Invalid alignment: " + alignment);
+        check(station != PTR_S_RECEIPT && station != PTR_S_SLIP, JPOS_E_ILLEGAL, "Invalid print station: " + station);
+        check(station == PTR_S_RECEIPT && (!Data.CapRecPresent || !Data.CapRecBitmap), JPOS_E_ILLEGAL, "No bitmap printing support on receipt");
+        check(station == PTR_S_SLIP && (!Data.CapSlpPresent || !Data.CapSlpBitmap), JPOS_E_ILLEGAL, "No bitmap printing support on slip");
+        check(width != PTR_BM_ASIS && alignment <= 0, JPOS_E_ILLEGAL, "Invalid width: " + width);
+        check(!member(alignment, Alignments) && alignment < 0, JPOS_E_ILLEGAL, "Invalid alignment: " + alignment);
         int stationIndex = getStationIndex(station);
         extendedSynchronousErrorCheck(station);
         doItSidewaysTransPagemode(stationIndex, POSPrinterInterface.printBitmap(station, fileName == null ? "" : fileName, width, alignment), "PrintBitmap");
@@ -1475,14 +1442,14 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     @Override
     public void printMemoryBitmap(int station, byte[] data, int type, int width, int alignment) throws JposException {
-        logPreCall("PrintMemoryBitmap", "" + station + ", " + (data == null ? "<null>" : "<data>") + ", " + type + ", " + width + ", " + alignment);
+        logPreCall("PrintMemoryBitmap", removeOuterArraySpecifier(new Object[]{station, data, type, width, alignment}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(station != POSPrinterConst.PTR_S_RECEIPT && station != POSPrinterConst.PTR_S_SLIP, JposConst.JPOS_E_ILLEGAL, "Invalid print station: " + station);
-        Device.check(station == POSPrinterConst.PTR_S_RECEIPT && (!Data.CapRecPresent || !Data.CapRecBitmap), JposConst.JPOS_E_ILLEGAL, "No bitmap printing support on receipt");
-        Device.check(station == POSPrinterConst.PTR_S_SLIP && (!Data.CapSlpPresent || !Data.CapSlpBitmap), JposConst.JPOS_E_ILLEGAL, "No bitmap printing support on slip");
-        Device.checkext(!Device.member(type, BitmapTypes), POSPrinterConst.JPOS_EPTR_BADFORMAT, "Invalid bitmap format: " + type);
-        Device.check(width != POSPrinterConst.PTR_BM_ASIS && width <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid width: " + width);
-        Device.check(!Device.member(alignment, Alignments) && alignment < 0, JposConst.JPOS_E_ILLEGAL, "Invalid alignment: " + alignment);
+        check(station != PTR_S_RECEIPT && station != PTR_S_SLIP, JPOS_E_ILLEGAL, "Invalid print station: " + station);
+        check(station == PTR_S_RECEIPT && (!Data.CapRecPresent || !Data.CapRecBitmap), JPOS_E_ILLEGAL, "No bitmap printing support on receipt");
+        check(station == PTR_S_SLIP && (!Data.CapSlpPresent || !Data.CapSlpBitmap), JPOS_E_ILLEGAL, "No bitmap printing support on slip");
+        checkext(!member(type, BitmapTypes), JPOS_EPTR_BADFORMAT, "Invalid bitmap format: " + type);
+        check(width != PTR_BM_ASIS && width <= 0, JPOS_E_ILLEGAL, "Invalid width: " + width);
+        check(!member(alignment, Alignments) && alignment < 0, JPOS_E_ILLEGAL, "Invalid alignment: " + alignment);
         int stationIndex = getStationIndex(station);
         extendedSynchronousErrorCheck(station);
         doItSidewaysTransPagemode(stationIndex, POSPrinterInterface.printMemoryBitmap(station, data == null ? new byte[0] : Arrays.copyOf(data, data.length), type, width, alignment), "PrintMemoryBitmap");
@@ -1490,7 +1457,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     @Override
     public void printNormal(int station, String data) throws JposException {
-        logPreCall("PrintNormal", "" + station + ", " + (data == null ? "<null>" : "\"" + data + "\""));
+        logPreCall("PrintNormal", removeOuterArraySpecifier(new Object[]{station, data}, Device.MaxArrayStringElements));
         checkEnabled();
         checkStationPresent(station);
         int stationIndex = getStationIndex(station);
@@ -1500,7 +1467,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     @Override
     public void printTwoNormal(int stations, String data1, String data2) throws JposException {
-        logPreCall("PrintTwoNormal", "" + stations + ", " + (data1 == null ? "<null>" : "\"" + data1 + "\"") + ", " + (data2 == null ? "<null>" : "\"" + data2 + "\""));
+        logPreCall("PrintTwoNormal", removeOuterArraySpecifier(new Object[]{stations, data1, data2}, Device.MaxArrayStringElements));
         checkEnabled();
         int[] stationIndex = new int[2];
         int[] station = new int[2];
@@ -1512,29 +1479,29 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     @Override
     public void pageModePrint(int control) throws JposException {
-        logPreCall("PageModePrint", "" + control);
+        logPreCall("PageModePrint", removeOuterArraySpecifier(new Object[]{control}, Device.MaxArrayStringElements));
         checkEnabled();
         int station = Data.PageModeStation;
         checkStationPresent(station);
         int stationIndex = getStationIndex(station);
-        Device.check(station == POSPrinterConst.PTR_S_JOURNAL, JposConst.JPOS_E_ILLEGAL, "No page mode on station: " + station);
-        Device.checkMember(control, PageModes, JposConst.JPOS_E_ILLEGAL, "Invalid control: " + control);
-        Device.check(station == POSPrinterConst.PTR_S_RECEIPT && !Data.CapRecPageMode, JposConst.JPOS_E_ILLEGAL, "No page mode on receipt");
-        Device.check(station == POSPrinterConst.PTR_S_SLIP && !Data.CapSlpPageMode, JposConst.JPOS_E_ILLEGAL, "No page mode on slip");
-        Device.check(control == POSPrinterConst.PTR_PM_PAGE_MODE && PagemodeCommand[stationIndex] != null, JposConst.JPOS_E_ILLEGAL, "Station just in page mode");
-        Device.check(control != POSPrinterConst.PTR_PM_PAGE_MODE && PagemodeCommand[stationIndex] == null, JposConst.JPOS_E_ILLEGAL, "Station not in page mode");
+        check(station == PTR_S_JOURNAL, JPOS_E_ILLEGAL, "No page mode on station: " + station);
+        checkMember(control, PageModes, JPOS_E_ILLEGAL, "Invalid control: " + control);
+        check(station == PTR_S_RECEIPT && !Data.CapRecPageMode, JPOS_E_ILLEGAL, "No page mode on receipt");
+        check(station == PTR_S_SLIP && !Data.CapSlpPageMode, JPOS_E_ILLEGAL, "No page mode on slip");
+        check(control == PTR_PM_PAGE_MODE && PagemodeCommand[stationIndex] != null, JPOS_E_ILLEGAL, "Station just in page mode");
+        check(control != PTR_PM_PAGE_MODE && PagemodeCommand[stationIndex] == null, JPOS_E_ILLEGAL, "Station not in page mode");
         extendedSynchronousErrorCheck(station);
         PageModePrint request = POSPrinterInterface.pageModePrint(control);
-        if (control == POSPrinterConst.PTR_PM_CANCEL) {
+        if (control == PTR_PM_CANCEL) {
             PagemodeCommand[stationIndex] = null;
         }
-        else if (control == POSPrinterConst.PTR_PM_PAGE_MODE) {
+        else if (control == PTR_PM_PAGE_MODE) {
             PagemodeCommand[stationIndex] = request;
         }
         else {
             PagemodeCommand[stationIndex].addMethod(request);
             request = PagemodeCommand[stationIndex];
-            if (control == POSPrinterConst.PTR_PM_NORMAL)
+            if (control == PTR_PM_NORMAL)
                 PagemodeCommand[stationIndex] = null;
             doItTrans(stationIndex, request, "PageModePrint");
             return;
@@ -1544,23 +1511,23 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     @Override
     public void rotatePrint(int station, int rotation) throws JposException {
-        logPreCall("RotatePrint", "" + station + ", " + rotation);
+        logPreCall("RotatePrint", removeOuterArraySpecifier(new Object[]{station, rotation}, Device.MaxArrayStringElements));
         checkEnabled();
         checkStationPresent(station);
         int stationIndex = getStationIndex(station);
-        Device.check(station == POSPrinterConst.PTR_S_JOURNAL, JposConst.JPOS_E_ILLEGAL, "No rotation on station: " + station);
-        int purerotation = rotation & ~(POSPrinterConst.PTR_RP_BARCODE|POSPrinterConst.PTR_RP_BITMAP);
-        Device.checkMember(purerotation, Rotations, JposConst.JPOS_E_ILLEGAL, "Invalid rotation: " + rotation);
-        Device.check (station == POSPrinterConst.PTR_S_RECEIPT && purerotation == POSPrinterConst.PTR_RP_ROTATE180 && !Data.CapRecRotate180, JposConst.JPOS_E_ILLEGAL, "Unsupported rotation: " + rotation);
-        Device.check (station == POSPrinterConst.PTR_S_SLIP && purerotation == POSPrinterConst.PTR_RP_ROTATE180 && !Data.CapSlpRotate180, JposConst.JPOS_E_ILLEGAL, "Unsupported rotation: " + rotation);
-        Device.check (station == POSPrinterConst.PTR_S_RECEIPT && purerotation == POSPrinterConst.PTR_RP_RIGHT90 && !Data.CapRecRight90, JposConst.JPOS_E_ILLEGAL, "Unsupported rotation: " + rotation);
-        Device.check (station == POSPrinterConst.PTR_S_SLIP && purerotation == POSPrinterConst.PTR_RP_RIGHT90 && !Data.CapSlpRight90, JposConst.JPOS_E_ILLEGAL, "Unsupported rotation: " + rotation);
-        Device.check (station == POSPrinterConst.PTR_S_RECEIPT && purerotation == POSPrinterConst.PTR_RP_LEFT90 && !Data.CapRecLeft90, JposConst.JPOS_E_ILLEGAL, "Unsupported rotation: " + rotation);
-        Device.check (station == POSPrinterConst.PTR_S_SLIP && purerotation == POSPrinterConst.PTR_RP_LEFT90 && !Data.CapSlpLeft90, JposConst.JPOS_E_ILLEGAL, "Unsupported rotation: " + rotation);
-        Device.check(purerotation != POSPrinterConst.PTR_RP_NORMAL && SidewaysCommand[stationIndex] != null, JposConst.JPOS_E_ILLEGAL, "Other rotation just started for station: " + station);
+        check(station == PTR_S_JOURNAL, JPOS_E_ILLEGAL, "No rotation on station: " + station);
+        int purerotation = rotation & ~(PTR_RP_BARCODE|PTR_RP_BITMAP);
+        checkMember(purerotation, Rotations, JPOS_E_ILLEGAL, "Invalid rotation: " + rotation);
+        check (station == PTR_S_RECEIPT && purerotation == PTR_RP_ROTATE180 && !Data.CapRecRotate180, JPOS_E_ILLEGAL, "Unsupported rotation: " + rotation);
+        check (station == PTR_S_SLIP && purerotation == PTR_RP_ROTATE180 && !Data.CapSlpRotate180, JPOS_E_ILLEGAL, "Unsupported rotation: " + rotation);
+        check (station == PTR_S_RECEIPT && purerotation == PTR_RP_RIGHT90 && !Data.CapRecRight90, JPOS_E_ILLEGAL, "Unsupported rotation: " + rotation);
+        check (station == PTR_S_SLIP && purerotation == PTR_RP_RIGHT90 && !Data.CapSlpRight90, JPOS_E_ILLEGAL, "Unsupported rotation: " + rotation);
+        check (station == PTR_S_RECEIPT && purerotation == PTR_RP_LEFT90 && !Data.CapRecLeft90, JPOS_E_ILLEGAL, "Unsupported rotation: " + rotation);
+        check (station == PTR_S_SLIP && purerotation == PTR_RP_LEFT90 && !Data.CapSlpLeft90, JPOS_E_ILLEGAL, "Unsupported rotation: " + rotation);
+        check(purerotation != PTR_RP_NORMAL && SidewaysCommand[stationIndex] != null, JPOS_E_ILLEGAL, "Other rotation just started for station: " + station);
         extendedSynchronousErrorCheck(station);
         RotatePrint request = POSPrinterInterface.rotatePrint(station, rotation);
-        if (purerotation == POSPrinterConst.PTR_RP_LEFT90 || purerotation == POSPrinterConst.PTR_RP_RIGHT90) {
+        if (purerotation == PTR_RP_LEFT90 || purerotation == PTR_RP_RIGHT90) {
             SidewaysCommand[stationIndex] = request;
         } else{
             if (SidewaysCommand[stationIndex] != null) {
@@ -1576,20 +1543,20 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     @Override
     public void transactionPrint(int station, int control) throws JposException {
-        logPreCall("TransactionPrint", "" + station + ", " + control);
+        logPreCall("TransactionPrint", removeOuterArraySpecifier(new Object[]{station, control}, Device.MaxArrayStringElements));
         TransactionPrint request;
         checkEnabled();
         checkStationPresent(station);
         int stationIndex = getStationIndex(station);
-        Device.check(!Data.CapTransaction, JposConst.JPOS_E_ILLEGAL, "Transaction print not supported");
-        Device.checkMember(control, new long[]{POSPrinterConst.PTR_TP_NORMAL, POSPrinterConst.PTR_TP_TRANSACTION}, JposConst.JPOS_E_ILLEGAL, "Invalid control: " + control);
-        if (control == POSPrinterConst.PTR_TP_TRANSACTION) {
-            Device.check(TransactionCommand[stationIndex] != null, JposConst.JPOS_E_ILLEGAL, "Transaction just in progress");
+        check(!Data.CapTransaction, JPOS_E_ILLEGAL, "Transaction print not supported");
+        checkMember(control, new long[]{PTR_TP_NORMAL, PTR_TP_TRANSACTION}, JPOS_E_ILLEGAL, "Invalid control: " + control);
+        if (control == PTR_TP_TRANSACTION) {
+            check(TransactionCommand[stationIndex] != null, JPOS_E_ILLEGAL, "Transaction just in progress");
             extendedSynchronousErrorCheck(station);
             request = POSPrinterInterface.transactionPrint(station, control);
             TransactionCommand[stationIndex] = request;
         } else {
-            Device.check(TransactionCommand[stationIndex] == null, JposConst.JPOS_E_ILLEGAL, "Transaction not started");
+            check(TransactionCommand[stationIndex] == null, JPOS_E_ILLEGAL, "Transaction not started");
             extendedSynchronousErrorCheck(station);
             request = POSPrinterInterface.transactionPrint(station, control);
             TransactionCommand[stationIndex].addMethod(request);
@@ -1637,7 +1604,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         public char getControlCharacter() {
             return ControlCharacter;
         }
-        private char ControlCharacter;
+        private final char ControlCharacter;
 
         /**
          * Constructor
@@ -1648,9 +1615,10 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
             validateData(srv, station);
         }
 
@@ -1671,7 +1639,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         public String getPrintData() {
             return PrintData;
         }
-        private String PrintData;
+        private final String PrintData;
 
         /**
          * Returns whether PrintData needs mapping.
@@ -1683,7 +1651,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         public boolean getServiceIsMapping() {
             return ServiceIsMapping;
         }
-        private boolean ServiceIsMapping;
+        private final boolean ServiceIsMapping;
 
         /**
          * Returns character set to be used for output.
@@ -1692,7 +1660,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         public int getCharacterSet() {
             return CharacterSet;
         }
-        private int CharacterSet;
+        private final int CharacterSet;
 
         /**
          * Constructor.
@@ -1707,9 +1675,10 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
             validateData(srv, station);
         }
 
@@ -1730,7 +1699,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         public String getEscData() {
             return EscData;
         }
-        private String EscData;
+        private final String EscData;
 
         /**
          * Returns capital characer that marks the end of the escape sequence.
@@ -1739,7 +1708,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         public int getEsc() {
             return Esc;
         }
-        private int Esc;
+        private final int Esc;
 
         /**
          * Returns value that contains the lower-case characters between value and upper-case character that marks the end
@@ -1751,7 +1720,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         public int getSubtype() {
             return Subtype;
         }
-        private int Subtype;
+        private final int Subtype;
 
         /**
          * Returns value in ESC sequence, in any. 0 if no value is present.
@@ -1760,7 +1729,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         public int getValue() {
             return Value;
         }
-        private int Value;
+        private final int Value;
 
         /**
          * Returns whether '!' follows "ESC|".
@@ -1769,7 +1738,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         public boolean getNegated() {
             return Negated;
         }
-        private boolean Negated;
+        private final boolean Negated;
 
         /**
          * Specifies whether a positive integer value is part of the escape sequence.
@@ -1778,7 +1747,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         public boolean getValuePresent() {
             return ValuePresent;
         }
-        private boolean ValuePresent;
+        private final boolean ValuePresent;
 
         /**
          * Constructor.
@@ -1799,9 +1768,10 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
             validateData(srv, station);
         }
 
@@ -1869,10 +1839,11 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanCut] == 0, JposConst.JPOS_E_FAILURE, "Cut paper not supported");
-            JposDevice.check(Stamp && allowedFeatures[CanStamp] == 0, JposConst.JPOS_E_FAILURE, "Stamp paper not supported");
+            check(allowedFeatures[CanCut] == 0, JPOS_E_FAILURE, "Cut paper not supported");
+            check(Stamp && allowedFeatures[CanStamp] == 0, JPOS_E_FAILURE, "Stamp paper not supported");
             validateData(srv, station);
         }
 
@@ -1894,13 +1865,13 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
          * @param obj               An object containing corresponding sequence parameters or null.
          * @param type              The sequence type (see EscUnknown, property Esc).
          * @param subtype           The subtype (see EscUnknown, property Subtype).
-         * @param value             The value (see EscUnknown, property Value).
+         * @param ignored           The value (see EscUnknown, property Value), will be ignored.
          * @param escdata           If value is a data length, the corresponding data. Otherwise null.
          * @param negated           The negation flag (see EscUnknown, property Negated).
          * @param valueispresent    The present flag (see EscUnknown, property ValuePresent).
          * @return      An EscStamp object, if the sequence is a well-formed stamp sequence, otherwise obj.
          */
-        static public PrintDataPart getEscStamp(PrintDataPart obj, int type, int subtype, int value, String escdata, boolean negated, boolean valueispresent) {
+        static public PrintDataPart getEscStamp(PrintDataPart obj, int type, int subtype, int ignored, String escdata, boolean negated, boolean valueispresent) {
             if (type == 'L' && subtype == 's' && escdata == null && !negated && !valueispresent) {
                 return new EscStamp();
             }
@@ -1908,9 +1879,10 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStamp] == 0, JposConst.JPOS_E_FAILURE, "Stamp paper not supported");
+            check(allowedFeatures[CanStamp] == 0, JPOS_E_FAILURE, "Stamp paper not supported");
             validateData(srv, station);
         }
 
@@ -1942,14 +1914,14 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
          * @param obj               An object containing corresponding sequence parameters or null.
          * @param type              The sequence type (see EscUnknown, property Esc).
          * @param subtype           The subtype (see EscUnknown, property Subtype).
-         * @param value             The value (see EscUnknown, property Value).
+         * @param ignored           The value (see EscUnknown, property Value). Will be ignored.
          * @param escdata           If value is a data length, the corresponding data. Otherwise null.
          * @param negated           The negation flag (see EscUnknown, property Negated).
          * @param valueispresent    The present flag (see EscUnknown, property ValuePresent).
          * @param printer           This object, used to retrieve logo data.
          * @return      An EscLogo object, if the sequence is a well-formed logo sequence, otherwise obj.
          */
-        static public PrintDataPart getEscLogo(PrintDataPart obj, int type, int subtype, int value, String escdata, boolean negated, boolean valueispresent, POSPrinterService printer) {
+        static public PrintDataPart getEscLogo(PrintDataPart obj, int type, int subtype, int ignored, String escdata, boolean negated, boolean valueispresent, POSPrinterService printer) {
             if (type == 'L' && escdata == null && !negated && !valueispresent) {
                 EscLogo esc = new EscLogo();
                 boolean top = subtype == 't';
@@ -1962,9 +1934,10 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
             validateData(srv, station);
         }
 
@@ -2011,10 +1984,11 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanBitmap] == 0, JposConst.JPOS_E_FAILURE, "Print bitmap not supported");
-            JposDevice.check(Number < 1 || Number > 20, JposConst.JPOS_E_FAILURE, "Bitmap number invalid: " + Number);
+            check(allowedFeatures[CanBitmap] == 0, JPOS_E_FAILURE, "Print bitmap not supported");
+            check(Number < 1 || Number > 20, JPOS_E_FAILURE, "Bitmap number invalid: " + Number);
             validateData(srv, station);
 
         }
@@ -2095,9 +2069,10 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
             validateData(srv, station);
         }
 
@@ -2129,14 +2104,14 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
          * @param obj               An object containing corresponding sequence parameters or null.
          * @param type              The sequence type (see EscUnknown, property Esc).
          * @param subtype           The subtype (see EscUnknown, property Subtype).
-         * @param value             The value (see EscUnknown, property Value).
+         * @param ignored           The value (see EscUnknown, property Value). Will be ignored.
          * @param escdata           If value is a data length, the corresponding data. Otherwise null.
          * @param negated           The negation flag (see EscUnknown, property Negated).
          * @param valueispresent    The present flag (see EscUnknown, property ValuePresent).
          * @return      An EscEmbedded object, if the sequence is a well-formed embedded sequence, otherwise obj.
          */
-        static public PrintDataPart getEscEmbedded(PrintDataPart obj, int type, int subtype, int value, String escdata, boolean negated, boolean valueispresent) {
-            if (type == 'E' && subtype == 0 && escdata != null && !negated) {
+        static public PrintDataPart getEscEmbedded(PrintDataPart obj, int type, int subtype, int ignored, String escdata, boolean negated, boolean valueispresent) {
+            if (type == 'E' && subtype == 0 && escdata != null && !negated && !valueispresent) {
                 EscEmbedded esc = new EscEmbedded();
                 esc.Data = escdata;
                 return esc;
@@ -2145,9 +2120,10 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
             validateData(srv, station);
         }
 
@@ -2195,9 +2171,11 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
+            check(allowedFeatures[FontCount] == 0, JPOS_E_FAILURE, "Select font not available");
             validateData(srv, station);
         }
 
@@ -2229,21 +2207,21 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
          * @param obj               An object containing corresponding sequence parameters or null.
          * @param type              The sequence type (see EscUnknown, property Esc).
          * @param subtype           The subtype (see EscUnknown, property Subtype).
-         * @param value             The value (see EscUnknown, property Value).
+         * @param ignored           The value (see EscUnknown, property Value). Will be ignored.
          * @param escdata           If value is a data length, the corresponding data. Otherwise null.
          * @param negated           The negation flag (see EscUnknown, property Negated).
          * @param valueispresent    The present flag (see EscUnknown, property ValuePresent).
          * @return      An EscAlignment object, if the sequence is a well-formed alignment sequence, otherwise obj.
          */
-        static public PrintDataPart getEscAlignment(PrintDataPart obj, int type, int subtype, int value, String escdata, boolean negated, boolean valueispresent) {
+        static public PrintDataPart getEscAlignment(PrintDataPart obj, int type, int subtype, int ignored, String escdata, boolean negated, boolean valueispresent) {
             if (type == 'A' && !negated && !valueispresent && escdata == null) {
                 EscAlignment esc = new EscAlignment();
                 if (subtype == 'l')
-                    esc.Alignment = POSPrinterConst.PTR_BC_LEFT;
+                    esc.Alignment = PTR_BC_LEFT;
                 else if (subtype == 'r')
-                    esc.Alignment = POSPrinterConst.PTR_BC_RIGHT;
+                    esc.Alignment = PTR_BC_RIGHT;
                 else if (subtype == 'c')
-                    esc.Alignment = POSPrinterConst.PTR_BC_CENTER;
+                    esc.Alignment = PTR_BC_CENTER;
                 else
                     return obj;
                 return esc;
@@ -2252,9 +2230,10 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
             validateData(srv, station);
         }
 
@@ -2277,22 +2256,23 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
          * @param obj               An object containing corresponding sequence parameters or null.
          * @param type              The sequence type (see EscUnknown, property Esc).
          * @param subtype           The subtype (see EscUnknown, property Subtype).
-         * @param value             The value (see EscUnknown, property Value).
+         * @param ignored           The value (see EscUnknown, property Value). Will be ignored.
          * @param escdata           If value is a data length, the corresponding data. Otherwise null.
          * @param negated           The negation flag (see EscUnknown, property Negated).
          * @param valueispresent    The present flag (see EscUnknown, property ValuePresent).
          * @return      An EscNormalize object, if the sequence is a well-formed normalize sequence, otherwise obj.
          */
-        static public PrintDataPart getEscNormalize(PrintDataPart obj, int type, int subtype, int value, String escdata, boolean negated, boolean valueispresent) {
+        static public PrintDataPart getEscNormalize(PrintDataPart obj, int type, int subtype, int ignored, String escdata, boolean negated, boolean valueispresent) {
             if (type == 'N' && subtype == 0 && escdata == null && !negated && !valueispresent)
                 return new EscNormalize();
             return obj;
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
             validateData(srv, station);
         }
 
@@ -2370,13 +2350,13 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
          * @param obj               An object containing corresponding sequence parameters or null.
          * @param type              The sequence type (see EscUnknown, property Esc).
          * @param subtype           The subtype (see EscUnknown, property Subtype).
-         * @param value             The value (see EscUnknown, property Value).
+         * @param ignored           The value (see EscUnknown, property Value). Will be ignored.
          * @param escdata           If value is a data length, the corresponding data. Otherwise null.
          * @param negated           The negation flag (see EscUnknown, property Negated).
          * @param valueispresent    The present flag (see EscUnknown, property ValuePresent).
          * @return      An EscSimple object, if the sequence is a well-formed simple attribute sequence, otherwise obj.
          */
-        static public PrintDataPart getEscSimple(PrintDataPart obj, int type, int subtype, int value, String escdata, boolean negated, boolean valueispresent) {
+        static public PrintDataPart getEscSimple(PrintDataPart obj, int type, int subtype, int ignored, String escdata, boolean negated, boolean valueispresent) {
             if (type == 'C' && !valueispresent && escdata == null) {
                 EscSimple esc = new EscSimple();
                 esc.Activate = !negated;
@@ -2392,11 +2372,12 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
-            JposDevice.check(Italic && Activate && allowedFeatures[CanItalic] == 0, JposConst.JPOS_E_FAILURE, "Italic printing not supported");
-            JposDevice.check(Bold && Activate && allowedFeatures[CanBold] == 0, JposConst.JPOS_E_FAILURE, "Bold printing not supported");
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
+            check(Italic && Activate && allowedFeatures[CanItalic] == 0, JPOS_E_FAILURE, "Italic printing not supported");
+            check(Bold && Activate && allowedFeatures[CanBold] == 0, JPOS_E_FAILURE, "Bold printing not supported");
             validateData(srv, station);
         }
 
@@ -2454,10 +2435,11 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
-            JposDevice.check(Underline && allowedFeatures[CanUnderline] == 0 && getThickness() != 0, JposConst.JPOS_E_FAILURE, "Underline not supported");
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
+            check(Underline && allowedFeatures[CanUnderline] == 0 && getThickness() != 0, JPOS_E_FAILURE, "Underline not supported");
             validateData(srv, station);
         }
 
@@ -2518,13 +2500,14 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
-            JposDevice.check(Rgb && (allowedFeatures[Can2Color] & POSPrinterConst.PTR_COLOR_FULL) == 0, JposConst.JPOS_E_FAILURE, "RGB color not supported");
-            JposDevice.check(Rgb && Color > 0 && (Color / 1000000 > 255 || (Color / 1000) % 1000 > 255 || Color % 1000 > 255), JposConst.JPOS_E_FAILURE, "Bad RGB color: " + Color);
-            JposDevice.check(!Rgb && Color > 0 && !JposDevice.member(Color, Cartridges), JposConst.JPOS_E_FAILURE, "Invalid color value: " + Color);
-            JposDevice.check(!Rgb && (allowedFeatures[Can2Color] & Color) == 0, JposConst.JPOS_E_FAILURE, "Invalid color value: " + Color);
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
+            check(Rgb && (allowedFeatures[Can2Color] & PTR_COLOR_FULL) == 0, JPOS_E_FAILURE, "RGB color not supported");
+            check(Rgb && Color > 0 && (Color / 1000000 > 255 || (Color / 1000) % 1000 > 255 || Color % 1000 > 255), JPOS_E_FAILURE, "Bad RGB color: " + Color);
+            check(!Rgb && Color > 0 && !member(Color, Cartridges), JPOS_E_FAILURE, "Invalid color value: " + Color);
+            check(!Rgb && (allowedFeatures[Can2Color] & Color) == 0, JPOS_E_FAILURE, "Invalid color value: " + Color);
             validateData(srv, station);
         }
 
@@ -2583,21 +2566,23 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         static public PrintDataPart getEscScale(PrintDataPart obj, int type, int subtype, int value, String escdata, boolean negated, boolean valueispresent) {
             if (type == 'C' && valueispresent && !negated && escdata == null) {
                 EscScale esc = new EscScale();
-                switch(subtype) {
-                    case 0:
+                switch (subtype) {
+                    case 0 -> {
                         return getEscScaleForSubtypeZero(obj, value, esc);
-                    case 'h':
+                    }
+                    case 'h' -> {
                         esc.ScaleHorizontal = true;
                         esc.ScaleVertical = false;
                         esc.ScaleValue = value;
-                        break;
-                    case 'v':
+                    }
+                    case 'v' -> {
                         esc.ScaleHorizontal = false;
                         esc.ScaleVertical = true;
                         esc.ScaleValue = value;
-                        break;
-                    default:
+                    }
+                    default -> {
                         return obj;
+                    }
                 }
                 return esc;
             }
@@ -2607,34 +2592,34 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         private static PrintDataPart getEscScaleForSubtypeZero(PrintDataPart obj, int value, EscScale esc) {
             esc.ScaleValue = 2;
             switch (value) {
-                case 1:
+                case 1 -> {
                     esc.ScaleValue = 1;
                     esc.ScaleHorizontal = esc.ScaleVertical = false;
-                    break;
-                case 2:
+                }
+                case 2 -> {
                     esc.ScaleHorizontal = true;
                     esc.ScaleVertical = false;
-                    break;
-                case 3:
+                }
+                case 3 -> {
                     esc.ScaleHorizontal = false;
                     esc.ScaleVertical = true;
-                    break;
-                case 4:
-                    esc.ScaleHorizontal = esc.ScaleVertical = true;
-                    break;
-                default:
+                }
+                case 4 -> esc.ScaleHorizontal = esc.ScaleVertical = true;
+                default -> {
                     return obj;
+                }
             }
             return esc;
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
-            JposDevice.check(ScaleValue >= 2 && ScaleVertical && ScaleHorizontal && allowedFeatures[CanDWideHigh] == 0, JposConst.JPOS_E_FAILURE, "Double size printing not supported");
-            JposDevice.check(ScaleValue >= 2 && ScaleVertical && allowedFeatures[CanDHigh] == 0, JposConst.JPOS_E_FAILURE, "Double high printing not supported");
-            JposDevice.check(ScaleValue >= 2 && ScaleHorizontal && allowedFeatures[CanDWide] == 0, JposConst.JPOS_E_FAILURE, "Double wide printing not supported");
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
+            check(ScaleValue >= 2 && ScaleVertical && ScaleHorizontal && allowedFeatures[CanDWideHigh] == 0, JPOS_E_FAILURE, "Double size printing not supported");
+            check(ScaleValue >= 2 && ScaleVertical && allowedFeatures[CanDHigh] == 0, JPOS_E_FAILURE, "Double high printing not supported");
+            check(ScaleValue >= 2 && ScaleHorizontal && allowedFeatures[CanDWide] == 0, JPOS_E_FAILURE, "Double wide printing not supported");
             validateData(srv, station);
         }
 
@@ -2682,9 +2667,10 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
             validateData(srv, station);
         }
 
@@ -2751,14 +2737,14 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
          * @param obj               An object containing corresponding sequence parameters or null.
          * @param type              The sequence type (see EscUnknown, property Esc).
          * @param subtype           The subtype (see EscUnknown, property Subtype).
-         * @param value             The value (see EscUnknown, property Value).
+         * @param ignored           The value (see EscUnknown, property Value). Will be ignored.
          * @param escdata           If value is a data length, the corresponding data. Otherwise null.
          * @param negated           The negation flag (see EscUnknown, property Negated).
          * @param valueispresent    The present flag (see EscUnknown, property ValuePresent).
          * @return      An EscRuledLine object, if the sequence is a well-formed ruled line sequence, otherwise obj.
          */
-        static public PrintDataPart getEscRuledLine(PrintDataPart obj, int type, int subtype, int value, String escdata, boolean negated, boolean valueispresent) {
-            if (type == 'L' && subtype == 'd' && !negated && escdata != null) {
+        static public PrintDataPart getEscRuledLine(PrintDataPart obj, int type, int subtype, int ignored, String escdata, boolean negated, boolean valueispresent) {
+            if (type == 'L' && subtype == 'd' && !negated && escdata != null && !valueispresent) {
                 EscRuledLine esc = new EscRuledLine();
                 try {
                     esc.PositionList = escdata.substring(escdata.indexOf('p') + 1, escdata.indexOf('d'));
@@ -2767,39 +2753,40 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
                     esc.LineStyle = Integer.parseInt(escdata.substring(escdata.indexOf('s') + 1, escdata.indexOf('c')));
                     esc.LineColor = Integer.parseInt(escdata.substring(escdata.indexOf('c') + 1));
                     return esc;
-                } catch (NumberFormatException e) {}
+                } catch (NumberFormatException ignored1) {}
             }
             return obj;
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
-            JposDevice.check(allowedFeatures[CanLine] == 0, JposConst.JPOS_E_FAILURE, "Ruled lines not supported");
-            JposDevice.check((LineDirection != POSPrinterConst.PTR_RL_VERTICAL && LineDirection != POSPrinterConst.PTR_RL_HORIZONTAL) || (LineDirection & allowedFeatures[CanLine]) == 0, JposConst.JPOS_E_FAILURE, "Ruled line not supported for direction " + LineDirection);
-            JposDevice.check(LineWidth <= 0, JposConst.JPOS_E_FAILURE, "Ruled line width must be > 0: " + LineWidth);
-            JposDevice.checkMember(LineStyle, RuledLineStyles, JposConst.JPOS_E_FAILURE, "Invalid ruled line style: " + LineStyle);
-            JposDevice.checkMember(LineColor, Cartridges, JposConst.JPOS_E_FAILURE, "Invalid color value: " + LineColor);
-            JposDevice.check((LineColor & allowedFeatures[CanColor]) == 0, JposConst.JPOS_E_FAILURE, "Unsupported ruled line color value: " + LineColor);
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
+            check(allowedFeatures[CanLine] == 0, JPOS_E_FAILURE, "Ruled lines not supported");
+            check((LineDirection != PTR_RL_VERTICAL && LineDirection != PTR_RL_HORIZONTAL) || (LineDirection & allowedFeatures[CanLine]) == 0, JPOS_E_FAILURE, "Ruled line not supported for direction " + LineDirection);
+            check(LineWidth <= 0, JPOS_E_FAILURE, "Ruled line width must be > 0: " + LineWidth);
+            checkMember(LineStyle, RuledLineStyles, JPOS_E_FAILURE, "Invalid ruled line style: " + LineStyle);
+            checkMember(LineColor, Cartridges, JPOS_E_FAILURE, "Invalid color value: " + LineColor);
+            check((LineColor & allowedFeatures[CanColor]) == 0, JPOS_E_FAILURE, "Unsupported ruled line color value: " + LineColor);
             try {
-                if (LineDirection == POSPrinterConst.PTR_RL_VERTICAL) {
-                    long[] values = JposDevice.stringArrayToLongArray(PositionList.split(","));
+                if (LineDirection == PTR_RL_VERTICAL) {
+                    long[] values = stringArrayToLongArray(PositionList.split(","));
                     if (values.length == 0)
-                        throw new JposException(JposConst.JPOS_E_FAILURE, "Empty ruled line position list");
+                        throw new JposException(JPOS_E_FAILURE, "Empty ruled line position list");
                     for (long i : values) {
-                        JposDevice.check(i < 0 || i > allowedFeatures[LineWidth], JposConst.JPOS_E_FAILURE, "Invalid ruled line position list: " + PositionList);
+                        check(i < 0 || i > allowedFeatures[LineWidth], JPOS_E_FAILURE, "Invalid ruled line position list: " + PositionList);
                     }
                 } else {
                     String[] valuepairs = PositionList.split(";");
-                    JposDevice.check(valuepairs.length == 0, JposConst.JPOS_E_FAILURE, "Empty ruled line position list");
+                    check(valuepairs.length == 0, JPOS_E_FAILURE, "Empty ruled line position list");
                     for (String s : valuepairs) {
-                        long[] values = JposDevice.stringArrayToLongArray(s.split(","));
-                        JposDevice.check(values.length != 2 || values[0] < 0 || values[0] + values[1] > allowedFeatures[LineWidth], JposConst.JPOS_E_FAILURE, "Invalid ruled line position list: " + PositionList);
+                        long[] values = stringArrayToLongArray(s.split(","));
+                        check(values.length != 2 || values[0] < 0 || values[0] + values[1] > allowedFeatures[LineWidth], JPOS_E_FAILURE, "Invalid ruled line position list: " + PositionList);
                     }
                 }
             } catch (NumberFormatException e) {
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Non-integer rule position");
+                throw new JposException(JPOS_E_FAILURE, "Non-integer rule position");
             }
             validateData(srv, station);
         }
@@ -2886,15 +2873,15 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
          * @param obj               An object containing corresponding sequence parameters or null.
          * @param type              The sequence type (see EscUnknown, property Esc).
          * @param subtype           The subtype (see EscUnknown, property Subtype).
-         * @param value             The value (see EscUnknown, property Value).
+         * @param ignored           The value (see EscUnknown, property Value). Will be ignored.
          * @param escdata           If value is a data length, the corresponding data. Otherwise null.
          * @param negated           The negation flag (see EscUnknown, property Negated).
          * @param valueispresent    The present flag (see EscUnknown, property ValuePresent).
          * @param mapmode           Contents of MapMode when the object has been created.
          * @return      An EscBarcode object, if the sequence is a well-formed bar code sequence, otherwise obj.
          */
-        static public PrintDataPart getEscBarcode(PrintDataPart obj, int type, int subtype, int value, String escdata, boolean negated, boolean valueispresent, int mapmode) {
-            if (type == 'R' && subtype == 0 && !negated && escdata != null) {
+        static public PrintDataPart getEscBarcode(PrintDataPart obj, int type, int subtype, int ignored, String escdata, boolean negated, boolean valueispresent, int mapmode) {
+            if (type == 'R' && subtype == 0 && !negated && escdata != null && !valueispresent) {
                 EscBarcode esc = new EscBarcode();
                 try {
                     esc.Symbology = Integer.parseInt(escdata.substring(escdata.indexOf('s') + 1, escdata.indexOf('h')));
@@ -2905,21 +2892,22 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
                     esc.Data = escdata.substring(escdata.indexOf('d') + 1, escdata.indexOf('e'));
                     esc.MapMode = mapmode;
                     return esc;
-                } catch (NumberFormatException e) {}
+                } catch (NumberFormatException ignored1) {}
             }
             return obj;
         }
 
         @Override
+        @SuppressWarnings("null")
         public void validate(POSPrinterService srv, int station) throws JposException {
             int[] allowedFeatures = srv.getAllowed(station);
-            JposDevice.check(allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, "Print station not available");
-            JposDevice.check(allowedFeatures[CanBarcode] == 0, JposConst.JPOS_E_FAILURE, "Print barcode not supported");
-            JposDevice.check(Symbology < POSPrinterConst.PTR_BCS_UPCA, JposConst.JPOS_E_FAILURE, "Invalid symbology: " + Symbology);
-            JposDevice.check(Height <= 0, JposConst.JPOS_E_FAILURE, "Invalid height: " + Height);
-            JposDevice.check(Width <= 0 || Width > allowedFeatures[LineWidth], JposConst.JPOS_E_FAILURE, "Invalid width: " + Width);
-            JposDevice.check(Alignment < 0 && !JposDevice.member(Alignment, Alignments), JposConst.JPOS_E_FAILURE, "Invalid alignment: " + Alignment);
-            JposDevice.checkMember(TextPosition, HRITextPositions, JposConst.JPOS_E_FAILURE, "Invalid HRI position: " + TextPosition);
+            check(allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, "Print station not available");
+            check(allowedFeatures[CanBarcode] == 0, JPOS_E_FAILURE, "Print barcode not supported");
+            check(Symbology < PTR_BCS_UPCA, JPOS_E_FAILURE, "Invalid symbology: " + Symbology);
+            check(Height <= 0, JPOS_E_FAILURE, "Invalid height: " + Height);
+            check(Width <= 0 || Width > allowedFeatures[LineWidth], JPOS_E_FAILURE, "Invalid width: " + Width);
+            check(Alignment < 0 && !member(Alignment, Alignments), JPOS_E_FAILURE, "Invalid alignment: " + Alignment);
+            checkMember(TextPosition, HRITextPositions, JPOS_E_FAILURE, "Invalid HRI position: " + TextPosition);
             validateData(srv, station);
         }
 
@@ -2980,7 +2968,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
      * @return List of objects that describe all parts of data.
      */
     public List<PrintDataPart> outputDataParts(String data) {
-        List<PrintDataPart> out = new ArrayList<PrintDataPart>();
+        List<PrintDataPart> out = new ArrayList<>();
         int index;
         try {
             while ((index = data.indexOf("\33|")) >= 0) {
@@ -3051,22 +3039,22 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     private PrintDataPart getEscObj(int temp, int subtype, int value, String escdata, boolean negated, boolean valueispresent) {
         PrintDataPart ret;
-        boolean notnull = (ret = EscCut.getEscCut(null, temp, subtype, value, escdata, negated, valueispresent)) != null ||
-                (ret = EscRuledLine.getEscRuledLine(ret, temp, subtype, value, escdata, negated, valueispresent)) != null ||
-                (ret = EscNormalize.getEscNormalize(ret, temp, subtype, value, escdata, negated, valueispresent)) != null ||
-                (ret = EscLogo.getEscLogo(ret, temp, subtype, value, escdata, negated, valueispresent, this)) != null ||
-                (ret = EscStamp.getEscStamp(ret, temp, subtype, value, escdata, negated, valueispresent)) != null ||
-                (ret = EscBitmap.getEscBitmap(ret, temp, subtype, value, escdata, negated, valueispresent)) != null ||
-                (ret = EscFeed.getEscFeed(ret, temp, subtype, value, escdata, negated, valueispresent, Data.MapMode)) != null ||
-                (ret = EscEmbedded.getEscEmbedded(ret, temp, subtype, value, escdata, negated, valueispresent)) != null ||
-                (ret = EscBarcode.getEscBarcode(ret, temp, subtype, value, escdata, negated, valueispresent, Data.MapMode)) != null ||
-                (ret = EscFontTypeface.getEscFontTypeface(ret, temp, subtype, value, escdata, negated, valueispresent)) != null ||
-                (ret = EscAlignment.getEscAlignment(ret, temp, subtype, value, escdata, negated, valueispresent)) != null ||
-                (ret = EscScale.getEscScale(ret, temp, subtype, value, escdata, negated, valueispresent)) != null ||
-                (ret = EscSimple.getEscSimple(ret, temp, subtype, value, escdata, negated, valueispresent)) != null ||
-                (ret = EscLine.getEscLine(ret, temp, subtype, value, escdata, negated, valueispresent)) != null ||
-                (ret = EscColor.getEscColor(ret, temp, subtype, value, escdata, negated, valueispresent)) != null ||
-                (ret = EscShade.getEscShade(ret, temp, subtype, value, escdata, negated, valueispresent)) != null;
+        boolean notnull = ((ret = EscCut.getEscCut(null, temp, subtype, value, escdata, negated, valueispresent)) != null ||
+                (ret = EscRuledLine.getEscRuledLine(null, temp, subtype, value, escdata, negated, valueispresent)) != null ||
+                (ret = EscNormalize.getEscNormalize(null, temp, subtype, value, escdata, negated, valueispresent)) != null ||
+                (ret = EscLogo.getEscLogo(null, temp, subtype, value, escdata, negated, valueispresent, this)) != null ||
+                (ret = EscStamp.getEscStamp(null, temp, subtype, value, escdata, negated, valueispresent)) != null ||
+                (ret = EscBitmap.getEscBitmap(null, temp, subtype, value, escdata, negated, valueispresent)) != null ||
+                (ret = EscFeed.getEscFeed(null, temp, subtype, value, escdata, negated, valueispresent, Data.MapMode)) != null ||
+                (ret = EscEmbedded.getEscEmbedded(null, temp, subtype, value, escdata, negated, valueispresent)) != null ||
+                (ret = EscBarcode.getEscBarcode(null, temp, subtype, value, escdata, negated, valueispresent, Data.MapMode)) != null ||
+                (ret = EscFontTypeface.getEscFontTypeface(null, temp, subtype, value, escdata, negated, valueispresent)) != null ||
+                (ret = EscAlignment.getEscAlignment(null, temp, subtype, value, escdata, negated, valueispresent)) != null ||
+                (ret = EscScale.getEscScale(null, temp, subtype, value, escdata, negated, valueispresent)) != null ||
+                (ret = EscSimple.getEscSimple(null, temp, subtype, value, escdata, negated, valueispresent)) != null ||
+                (ret = EscLine.getEscLine(null, temp, subtype, value, escdata, negated, valueispresent)) != null ||
+                (ret = EscColor.getEscColor(null, temp, subtype, value, escdata, negated, valueispresent)) != null ||
+                (ret = EscShade.getEscShade(null, temp, subtype, value, escdata, negated, valueispresent)) != null);
         return notnull ? ret : new EscUnknown(temp, subtype, value, escdata, negated, valueispresent);
     }
 
@@ -3097,76 +3085,73 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     private static final int CanStation = 16;
 
     private int[] getAllowed(int station) {
-        switch (station) {
-            case POSPrinterConst.PTR_S_JOURNAL:
-                return new int[] {
-                        Data.CapJrn2Color ? 1 : 0,
-                        Data.CapJrnBold ? 1 : 0,
-                        Data.CapJrnDhigh ? 1 : 0,
-                        Data.CapJrnDwide ? 1 : 0,
-                        Data.CapJrnDwideDhigh ? 1 : 0,
-                        Data.CapJrnItalic ? 1 : 0,
-                        Data.CapJrnUnderline ? 1 : 0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        Data.FontTypefaceList.length() > 0 ?Data.FontTypefaceList.split(",").length : 0,
-                        Data.CapJrnColor,
-                        Data.JrnLineWidth,
-                        POSPrinterConst.PTR_S_JOURNAL,
-                        Data.CapJrnPresent ? 1 : 0
-                };
-            case POSPrinterConst.PTR_S_RECEIPT:
-                return new int[] {
-                        Data.CapRec2Color ? 1 : 0,
-                        Data.CapRecBold ? 1 : 0,
-                        Data.CapRecDhigh ? 1 : 0,
-                        Data.CapRecDwide ? 1 : 0,
-                        Data.CapRecDwideDhigh ? 1 : 0,
-                        Data.CapRecItalic ? 1 : 0,
-                        Data.CapRecUnderline ? 1 : 0,
-                        Data.CapRecBarCode ? 1 : 0,
-                        Data.CapRecBitmap ? 1 : 0,
-                        Data.CapRecPapercut ? 1 : 0,
-                        Data.CapRecRuledLine,
-                        Data.CapRecStamp ? 1 : 0,
-                        Data.FontTypefaceList.length() > 0 ?Data.FontTypefaceList.split(",").length : 0,
-                        Data.CapRecColor,
-                        Data.RecLineWidth,
-                        POSPrinterConst.PTR_S_RECEIPT,
-                        Data.CapRecPresent ? 1 : 0
-                };
-            case POSPrinterConst.PTR_S_SLIP:
-                return new int[] {
-                        Data.CapSlp2Color ? 1 : 0,
-                        Data.CapSlpBold ? 1 : 0,
-                        Data.CapSlpDhigh ? 1 : 0,
-                        Data.CapSlpDwide ? 1 : 0,
-                        Data.CapSlpDwideDhigh ? 1 : 0,
-                        Data.CapSlpItalic ? 1 : 0,
-                        Data.CapSlpUnderline ? 1 : 0,
-                        Data.CapSlpBarCode ? 1 : 0,
-                        Data.CapSlpBitmap ? 1 : 0,
-                        0,
-                        Data.CapSlpRuledLine,
-                        0,
-                        Data.FontTypefaceList.length() > 0 ?Data.FontTypefaceList.split(",").length : 0,
-                        Data.CapSlpColor,
-                        Data.SlpLineWidth,
-                        POSPrinterConst.PTR_S_SLIP,
-                        Data.CapSlpPresent ? 1 : 0
-                };
-        }
-        return null;
+        return switch (station) {
+            case PTR_S_JOURNAL -> new int[]{
+                    Data.CapJrn2Color ? 1 : 0,
+                    Data.CapJrnBold ? 1 : 0,
+                    Data.CapJrnDhigh ? 1 : 0,
+                    Data.CapJrnDwide ? 1 : 0,
+                    Data.CapJrnDwideDhigh ? 1 : 0,
+                    Data.CapJrnItalic ? 1 : 0,
+                    Data.CapJrnUnderline ? 1 : 0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    Data.FontTypefaceList.length() > 0 ? Data.FontTypefaceList.split(",").length : 0,
+                    Data.CapJrnColor,
+                    Data.JrnLineWidth,
+                    PTR_S_JOURNAL,
+                    Data.CapJrnPresent ? 1 : 0
+            };
+            case PTR_S_RECEIPT -> new int[]{
+                    Data.CapRec2Color ? 1 : 0,
+                    Data.CapRecBold ? 1 : 0,
+                    Data.CapRecDhigh ? 1 : 0,
+                    Data.CapRecDwide ? 1 : 0,
+                    Data.CapRecDwideDhigh ? 1 : 0,
+                    Data.CapRecItalic ? 1 : 0,
+                    Data.CapRecUnderline ? 1 : 0,
+                    Data.CapRecBarCode ? 1 : 0,
+                    Data.CapRecBitmap ? 1 : 0,
+                    Data.CapRecPapercut ? 1 : 0,
+                    Data.CapRecRuledLine,
+                    Data.CapRecStamp ? 1 : 0,
+                    Data.FontTypefaceList.length() > 0 ? Data.FontTypefaceList.split(",").length : 0,
+                    Data.CapRecColor,
+                    Data.RecLineWidth,
+                    PTR_S_RECEIPT,
+                    Data.CapRecPresent ? 1 : 0
+            };
+            case PTR_S_SLIP -> new int[]{
+                    Data.CapSlp2Color ? 1 : 0,
+                    Data.CapSlpBold ? 1 : 0,
+                    Data.CapSlpDhigh ? 1 : 0,
+                    Data.CapSlpDwide ? 1 : 0,
+                    Data.CapSlpDwideDhigh ? 1 : 0,
+                    Data.CapSlpItalic ? 1 : 0,
+                    Data.CapSlpUnderline ? 1 : 0,
+                    Data.CapSlpBarCode ? 1 : 0,
+                    Data.CapSlpBitmap ? 1 : 0,
+                    0,
+                    Data.CapSlpRuledLine,
+                    0,
+                    Data.FontTypefaceList.length() > 0 ? Data.FontTypefaceList.split(",").length : 0,
+                    Data.CapSlpColor,
+                    Data.SlpLineWidth,
+                    PTR_S_SLIP,
+                    Data.CapSlpPresent ? 1 : 0
+            };
+            default -> null;
+        };
     }
 
     private void plausibilityCheckData(int station, List<PrintDataPart> data) throws JposException {
         String[] stationnames = {"Journal", "Receipt", "Slip"};
         int[] allowedFeatures = getAllowed(station);
-        JposDevice.check (allowedFeatures == null, JposConst.JPOS_E_FAILURE, "Invalid station: " + station);
-        JposDevice.check(+allowedFeatures[CanStation] == 0, JposConst.JPOS_E_FAILURE, stationnames[getStationIndex(station)] + " station not present");
+        check (allowedFeatures == null, JPOS_E_FAILURE, "Invalid station: " + station);
+        check(+allowedFeatures[CanStation] == 0, JPOS_E_FAILURE, stationnames[getStationIndex(station)] + " station not present");
         plausibilityCheckPrintData(allowedFeatures, data);
     }
 
@@ -3180,8 +3165,8 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
      * @throws JposException See UPOS specification of method ValidateData. Error code can be E_ILLEGAL or E_FAILURE.
      */
     public void plausibilityCheckSlipData(List<PrintDataPart> data) throws JposException {
-        Device.check(!Data.CapSlpPresent, JposConst.JPOS_E_FAILURE, "Slip station not present");
-        plausibilityCheckPrintData(getAllowed(POSPrinterConst.PTR_S_SLIP), data);
+        check(!Data.CapSlpPresent, JPOS_E_FAILURE, "Slip station not present");
+        plausibilityCheckPrintData(getAllowed(PTR_S_SLIP), data);
     }
 
     /**
@@ -3194,8 +3179,8 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
      * @throws JposException See UPOS specification of method ValidateData. Error code can be E_ILLEGAL or E_FAILURE.
      */
     public void plausibilityCheckReceiptData(List<PrintDataPart> data) throws JposException {
-        Device.check(!Data.CapRecPresent, JposConst.JPOS_E_FAILURE, "Receipt station not present");
-        plausibilityCheckPrintData(getAllowed(POSPrinterConst.PTR_S_RECEIPT), data);
+        check(!Data.CapRecPresent, JPOS_E_FAILURE, "Receipt station not present");
+        plausibilityCheckPrintData(getAllowed(PTR_S_RECEIPT), data);
     }
 
     /**
@@ -3208,8 +3193,8 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
      * @throws JposException See UPOS specification of method ValidateData. Error code can be E_ILLEGAL or E_FAILURE.
      */
     public void plausibilityCheckJournalData(List<PrintDataPart> data) throws JposException {
-        Device.check(!Data.CapJrnPresent, JposConst.JPOS_E_FAILURE, "Journal station not present");
-        plausibilityCheckPrintData(getAllowed(POSPrinterConst.PTR_S_JOURNAL), data);
+        check(!Data.CapJrnPresent, JPOS_E_FAILURE, "Journal station not present");
+        plausibilityCheckPrintData(getAllowed(PTR_S_JOURNAL), data);
     }
 
     private void plausibilityCheckPrintData(int[] allowedFeatures, List<PrintDataPart> out) throws JposException {
@@ -3223,10 +3208,10 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
      */
 
     private void checkStationPresent(int station) throws JposException {
-        Device.checkMember(station, SingleStations, JposConst.JPOS_E_ILLEGAL, "Invalid print station: " + station);
-        Device.check(station == POSPrinterConst.PTR_S_JOURNAL && !Data.CapJrnPresent, JposConst.JPOS_E_ILLEGAL, "No journal");
-        Device.check(station == POSPrinterConst.PTR_S_RECEIPT && !Data.CapRecPresent, JposConst.JPOS_E_ILLEGAL, "No receipt");
-        Device.check(station == POSPrinterConst.PTR_S_SLIP && !Data.CapSlpPresent, JposConst.JPOS_E_ILLEGAL, "No slip");
+        checkMember(station, SingleStations, JPOS_E_ILLEGAL, "Invalid print station: " + station);
+        check(station == PTR_S_JOURNAL && !Data.CapJrnPresent, JPOS_E_ILLEGAL, "No journal");
+        check(station == PTR_S_RECEIPT && !Data.CapRecPresent, JPOS_E_ILLEGAL, "No receipt");
+        check(station == PTR_S_SLIP && !Data.CapSlpPresent, JPOS_E_ILLEGAL, "No slip");
     }
 
     /**
@@ -3241,30 +3226,26 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
      */
     void checkTwoStations(int stations, int[] stationIndex, int[] station) throws JposException {
         switch (stations) {
-            case POSPrinterConst.PTR_S_JOURNAL_RECEIPT:
-            case POSPrinterConst.PTR_TWO_RECEIPT_JOURNAL:
-                Device.check(!Data.CapConcurrentJrnRec, JposConst.JPOS_E_ILLEGAL, "No concurrent printing on journal and receipt");
-                stationIndex[0] = getStationIndex(station[0] = POSPrinterConst.PTR_S_JOURNAL);
-                stationIndex[1] = getStationIndex(station[1] = POSPrinterConst.PTR_S_RECEIPT);
-                break;
-            case POSPrinterConst.PTR_S_JOURNAL_SLIP:
-            case POSPrinterConst.PTR_TWO_SLIP_JOURNAL:
-                Device.check(!Data.CapConcurrentJrnSlp, JposConst.JPOS_E_ILLEGAL, "No concurrent printing on journal and slip");
-                stationIndex[0] = getStationIndex(station[0] = POSPrinterConst.PTR_S_JOURNAL);
-                stationIndex[1] = getStationIndex(station[1] = POSPrinterConst.PTR_S_SLIP);
-                break;
-            case POSPrinterConst.PTR_S_RECEIPT_SLIP:
-            case POSPrinterConst.PTR_TWO_SLIP_RECEIPT:
-                Device.check(!Data.CapConcurrentRecSlp, JposConst.JPOS_E_ILLEGAL, "No concurrent printing on receipt and slip");
-                stationIndex[0] = getStationIndex(station[0] = POSPrinterConst.PTR_S_SLIP);
-                stationIndex[1] = getStationIndex(station[1] = POSPrinterConst.PTR_S_RECEIPT);
-                break;
-            default:
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid print stations: " + stations);
+            case PTR_S_JOURNAL_RECEIPT, PTR_TWO_RECEIPT_JOURNAL -> {
+                check(!Data.CapConcurrentJrnRec, JPOS_E_ILLEGAL, "No concurrent printing on journal and receipt");
+                stationIndex[0] = getStationIndex(station[0] = PTR_S_JOURNAL);
+                stationIndex[1] = getStationIndex(station[1] = PTR_S_RECEIPT);
+            }
+            case PTR_S_JOURNAL_SLIP, PTR_TWO_SLIP_JOURNAL -> {
+                check(!Data.CapConcurrentJrnSlp, JPOS_E_ILLEGAL, "No concurrent printing on journal and slip");
+                stationIndex[0] = getStationIndex(station[0] = PTR_S_JOURNAL);
+                stationIndex[1] = getStationIndex(station[1] = PTR_S_SLIP);
+            }
+            case PTR_S_RECEIPT_SLIP, PTR_TWO_SLIP_RECEIPT -> {
+                check(!Data.CapConcurrentRecSlp, JPOS_E_ILLEGAL, "No concurrent printing on receipt and slip");
+                stationIndex[0] = getStationIndex(station[0] = PTR_S_SLIP);
+                stationIndex[1] = getStationIndex(station[1] = PTR_S_RECEIPT);
+            }
+            default -> throw new JposException(JPOS_E_ILLEGAL, "Invalid print stations: " + stations);
         }
-        Device.check(SidewaysCommand[station[0]] != null || SidewaysCommand[station[1]] != null, JposConst.JPOS_E_ILLEGAL, "No support for printing to two stations when one station is in sideways print mode");
-        Device.check(PagemodeCommand[station[0]] != null || PagemodeCommand[station[1]] != null, JposConst.JPOS_E_ILLEGAL, "No support for printing to two stations when one station is in page mode");
-        Device.check(TransactionCommand[station[0]] != null || TransactionCommand[station[1]] != null, JposConst.JPOS_E_ILLEGAL, "No support for printing to two stations when one station is in transaction print mode");
+        check(SidewaysCommand[station[0]] != null || SidewaysCommand[station[1]] != null, JPOS_E_ILLEGAL, "No support for printing to two stations when one station is in sideways print mode");
+        check(PagemodeCommand[station[0]] != null || PagemodeCommand[station[1]] != null, JPOS_E_ILLEGAL, "No support for printing to two stations when one station is in page mode");
+        check(TransactionCommand[station[0]] != null || TransactionCommand[station[1]] != null, JPOS_E_ILLEGAL, "No support for printing to two stations when one station is in transaction print mode");
     }
 
     private int getStationIndex(int station) {
@@ -3277,23 +3258,23 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
      * @throws JposException If station is not present or not operational.
      */
     public void extendedErrorCheck(int station) throws JposException {
-        boolean[][] relevantconditions = new boolean[][]{
-                new boolean[]{Data.JrnEmpty, Data.JrnCartridgeState == POSPrinterConst.PTR_CART_REMOVED, Data.JrnCartridgeState == POSPrinterConst.PTR_CART_EMPTY, Data.JrnCartridgeState == POSPrinterConst.PTR_CART_CLEANING },
-                new boolean[]{Data.RecEmpty, Data.RecCartridgeState == POSPrinterConst.PTR_CART_REMOVED, Data.RecCartridgeState == POSPrinterConst.PTR_CART_EMPTY, Data.RecCartridgeState == POSPrinterConst.PTR_CART_CLEANING },
-                new boolean[]{Data.SlpEmpty, Data.SlpCartridgeState == POSPrinterConst.PTR_CART_REMOVED, Data.SlpCartridgeState == POSPrinterConst.PTR_CART_EMPTY, Data.SlpCartridgeState == POSPrinterConst.PTR_CART_CLEANING }
+        boolean[][] relevantconditions = {
+                {Data.JrnEmpty, Data.JrnCartridgeState == PTR_CART_REMOVED, Data.JrnCartridgeState == PTR_CART_EMPTY, Data.JrnCartridgeState == PTR_CART_CLEANING },
+                {Data.RecEmpty, Data.RecCartridgeState == PTR_CART_REMOVED, Data.RecCartridgeState == PTR_CART_EMPTY, Data.RecCartridgeState == PTR_CART_CLEANING },
+                {Data.SlpEmpty, Data.SlpCartridgeState == PTR_CART_REMOVED, Data.SlpCartridgeState == PTR_CART_EMPTY, Data.SlpCartridgeState == PTR_CART_CLEANING }
         };
-        int[][] exterrors = new int[][]{
-                new int[]{POSPrinterConst.JPOS_EPTR_JRN_EMPTY, POSPrinterConst.JPOS_EPTR_JRN_CARTRIDGE_REMOVED, POSPrinterConst.JPOS_EPTR_JRN_CARTRIDGE_EMPTY, POSPrinterConst.JPOS_EPTR_JRN_HEAD_CLEANING},
-                new int[]{POSPrinterConst.JPOS_EPTR_REC_EMPTY, POSPrinterConst.JPOS_EPTR_REC_CARTRIDGE_REMOVED, POSPrinterConst.JPOS_EPTR_REC_CARTRIDGE_EMPTY, POSPrinterConst.JPOS_EPTR_REC_HEAD_CLEANING},
-                new int[]{POSPrinterConst.JPOS_EPTR_SLP_EMPTY, POSPrinterConst.JPOS_EPTR_SLP_CARTRIDGE_REMOVED, POSPrinterConst.JPOS_EPTR_SLP_CARTRIDGE_EMPTY, POSPrinterConst.JPOS_EPTR_SLP_HEAD_CLEANING},
+        int[][] exterrors = {
+                {JPOS_EPTR_JRN_EMPTY, JPOS_EPTR_JRN_CARTRIDGE_REMOVED, JPOS_EPTR_JRN_CARTRIDGE_EMPTY, JPOS_EPTR_JRN_HEAD_CLEANING},
+                {JPOS_EPTR_REC_EMPTY, JPOS_EPTR_REC_CARTRIDGE_REMOVED, JPOS_EPTR_REC_CARTRIDGE_EMPTY, JPOS_EPTR_REC_HEAD_CLEANING},
+                {JPOS_EPTR_SLP_EMPTY, JPOS_EPTR_SLP_CARTRIDGE_REMOVED, JPOS_EPTR_SLP_CARTRIDGE_EMPTY, JPOS_EPTR_SLP_HEAD_CLEANING},
         };
         String[] errortexts = { "Paper empty", "Cartridge removed", "Cartridge empty", "Head cleaning" };
-        Device.check(Data.PowerNotify == JposConst.JPOS_PN_ENABLED && Data.PowerState != JposConst.JPOS_PS_ONLINE, JposConst.JPOS_E_FAILURE, "POSPrinter not reachable");
-        Device.checkext(Data.CoverOpen, POSPrinterConst.JPOS_EPTR_COVER_OPEN, "Cover open");
+        check(Data.PowerNotify == JPOS_PN_ENABLED && Data.PowerState != JPOS_PS_ONLINE, JPOS_E_FAILURE, "POSPrinter not reachable");
+        checkext(Data.CoverOpen, JPOS_EPTR_COVER_OPEN, "Cover open");
         for (int j = 0; j < relevantconditions.length; j++) {
             if (station == SingleStations[j]) {
                 for (int k = 0; k < relevantconditions[j].length; k++) {
-                    Device.checkext(relevantconditions[j][k], exterrors[j][k], errortexts[k]);
+                    checkext(relevantconditions[j][k], exterrors[j][k], errortexts[k]);
                 }
             }
         }
@@ -3302,7 +3283,7 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
     private void extendedSynchronousErrorCheck(int station) throws JposException {
         if (!Props.AsyncMode) {
             extendedErrorCheck(station);
-            Device.check(Props.State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_ILLEGAL, "POSPrinter busy");
+            check(Props.State != JPOS_S_IDLE, JPOS_E_ILLEGAL, "POSPrinter busy");
         }
     }
 
@@ -3317,18 +3298,6 @@ public class POSPrinterService extends JposBase implements POSPrinterService115 
 
     private void doItTrans(int stationIndex, OutputRequest request, String what) throws JposException {
         if (TransactionCommand[stationIndex] != null)
-            TransactionCommand[stationIndex].addMethod(request);
-        else if (!callNowOrLater(request)) {
-            logCall(what);
-            return;
-        }
-        logAsyncCall(what);
-    }
-
-    private void doItSidewaysTrans(int stationIndex, OutputRequest request, String what) throws JposException {
-        if (SidewaysCommand[stationIndex] != null)
-            SidewaysCommand[stationIndex].addMethod(request);
-        else if (TransactionCommand[stationIndex] != null)
             TransactionCommand[stationIndex].addMethod(request);
         else if (!callNowOrLater(request)) {
             logCall(what);

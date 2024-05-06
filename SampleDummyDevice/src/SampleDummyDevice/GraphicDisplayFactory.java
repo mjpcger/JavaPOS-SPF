@@ -23,9 +23,12 @@ import jpos.*;
 import jpos.config.*;
 import jpos.loader.*;
 
+import static jpos.JposConst.*;
+
 /**
  * Factory class for sample GraphicDisplay device implementation
  */
+@SuppressWarnings("unused")
 public class GraphicDisplayFactory extends Factory implements JposServiceInstanceFactory {
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
@@ -40,7 +43,7 @@ public class GraphicDisplayFactory extends Factory implements JposServiceInstanc
                     if (create) {
                         dev = new GraphicDisplayDevice("SampleGraphicDisplay");
                     } else if (!(any instanceof GraphicDisplayDevice))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: SampleGraphicDisplay");
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: SampleGraphicDisplay");
                     else {
                         dev = (GraphicDisplayDevice) any;
                     }
@@ -51,11 +54,11 @@ public class GraphicDisplayFactory extends Factory implements JposServiceInstanc
                     return srv;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

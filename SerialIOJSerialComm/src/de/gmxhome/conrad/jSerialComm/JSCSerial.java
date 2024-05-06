@@ -124,8 +124,9 @@ public class JSCSerial implements SerialIOAdapter {
     @Override
     public boolean exits(String port) {
         try {
-            return getCommPort(port) != null;
-        } catch (SerialPortInvalidPortException e) {
+            getCommPort(port);
+            return true;
+        } catch (SerialPortInvalidPortException ignored) {
         } catch (Throwable e) {
             e.printStackTrace();
         }

@@ -22,7 +22,7 @@ import jpos.*;
  * Output request executor for FiscalPrinter method PrintRecVoidItem.
  */
 public class PrintRecVoidItem extends SimpleItemOutputRequest {
-    private int Quantity;
+    private final int Quantity;
 
     /**
      * FiscalPrinter method PrintRecVoidItem parameter quantity, see UPOS specification.
@@ -32,7 +32,7 @@ public class PrintRecVoidItem extends SimpleItemOutputRequest {
         return Quantity;
     }
 
-    private int AdjustmentType;
+    private final int AdjustmentType;
 
     /**
      * FiscalPrinter method parameter adjustmentType, see method PrintRecVoidItem.
@@ -42,7 +42,7 @@ public class PrintRecVoidItem extends SimpleItemOutputRequest {
         return AdjustmentType;
     }
 
-    private long Adjustment;
+    private final long Adjustment;
 
     /**
      * FiscalPrinter method PrintRecVoidItem parameter adjustment, see UPOS specification.

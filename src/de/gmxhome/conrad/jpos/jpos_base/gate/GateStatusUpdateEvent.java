@@ -17,7 +17,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.gate;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.*;
+
+import static jpos.GateConst.*;
 
 /**
  * Status update event implementation for Gate devices.
@@ -44,42 +45,28 @@ public class GateStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         GateProperties props = (GateProperties)getPropertySet();
         switch (getStatus()) {
-            case GateConst.GATE_SUE_CLOSED:
-                props.GateStatus = GateConst.GATE_GS_CLOSED;
-                props.signalWaiter();
-                return true;
-            case GateConst.GATE_SUE_OPEN:
-                props.GateStatus = GateConst.GATE_GS_OPEN;
-                props.signalWaiter();
-                return true;
-            case GateConst.GATE_SUE_BLOCKED:
-                props.GateStatus = GateConst.GATE_GS_BLOCKED;
-                props.signalWaiter();
-                return true;
-            case GateConst.GATE_SUE_MALFUNCTION:
-                props.GateStatus = GateConst.GATE_GS_MALFUNCTION;
-                props.signalWaiter();
-                return true;
+            case GATE_SUE_CLOSED -> props.GateStatus = GATE_GS_CLOSED;
+            case GATE_SUE_OPEN -> props.GateStatus = GATE_GS_OPEN;
+            case GATE_SUE_BLOCKED -> props.GateStatus = GATE_GS_BLOCKED;
+            case GATE_SUE_MALFUNCTION -> props.GateStatus = GATE_GS_MALFUNCTION;
+            default -> {
+                return false;
+            }
         }
-        return false;
+        props.signalWaiter();
+        return true;
     }
 
     @Override
     public boolean checkStatusCorresponds() {
-        if (super.checkStatusCorresponds())
-            return true;
         GateProperties props = (GateProperties)getPropertySet();
-        switch (getStatus()) {
-            case GateConst.GATE_SUE_CLOSED:
-                return props.GateStatus == GateConst.GATE_GS_CLOSED;
-            case GateConst.GATE_SUE_OPEN:
-                return props.GateStatus == GateConst.GATE_GS_OPEN;
-            case GateConst.GATE_SUE_BLOCKED:
-                return props.GateStatus == GateConst.GATE_GS_BLOCKED;
-            case GateConst.GATE_SUE_MALFUNCTION:
-                return props.GateStatus == GateConst.GATE_GS_MALFUNCTION;
-        }
-        return false;
+        return super.checkStatusCorresponds() || switch (getStatus()) {
+            case GATE_SUE_CLOSED -> props.GateStatus == GATE_GS_CLOSED;
+            case GATE_SUE_OPEN -> props.GateStatus == GATE_GS_OPEN;
+            case GATE_SUE_BLOCKED -> props.GateStatus == GATE_GS_BLOCKED;
+            case GATE_SUE_MALFUNCTION -> props.GateStatus == GATE_GS_MALFUNCTION;
+            default -> false;
+        };
     }
 
     @Override
@@ -98,18 +85,12 @@ public class GateStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        if (ret.length() > 0)
-            return ret;
-        switch (getStatus()) {
-            case GateConst.GATE_SUE_CLOSED:
-                return "Gate Closed";
-            case GateConst.GATE_SUE_OPEN:
-                return "Gate Open";
-            case GateConst.GATE_SUE_BLOCKED:
-                return "Gate Blocked";
-            case GateConst.GATE_SUE_MALFUNCTION:
-                return "Gate Malfunction";
-        }
-        return "Unknown Status Change: " + getStatus();
+        return ret.length() > 0 ? ret : switch (getStatus()) {
+            case GATE_SUE_CLOSED -> "Gate Closed";
+            case GATE_SUE_OPEN -> "Gate Open";
+            case GATE_SUE_BLOCKED -> "Gate Blocked";
+            case GATE_SUE_MALFUNCTION -> "Gate Malfunction";
+            default -> "Unknown Status Change: " + getStatus();
+        };
     }
 }

@@ -49,9 +49,9 @@ public class RFIDRequest extends JposOutputRequest {
         return Timeout;
     }
 
-    private byte[] TagID;
-    private byte[] Password;
-    private int Timeout;
+    private final byte[] TagID;
+    private final byte[] Password;
+    private final int Timeout;
 
     /**
      * Constructor, stores given parameters for later use of WriteData operation.

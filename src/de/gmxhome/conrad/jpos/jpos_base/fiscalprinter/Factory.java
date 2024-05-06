@@ -20,7 +20,10 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.config.JposEntry;
 
-import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of FiscalPrinterService factory for JPOS devices using this framework.
@@ -36,15 +39,7 @@ public class Factory extends JposDeviceFactory {
      */
     @Deprecated
     public FiscalPrinterService addDevice(int index, JposDevice dev) throws JposException {
-        FiscalPrinterProperties props = dev.getFiscalPrinterProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getFiscalPrinterProperties()");
-        FiscalPrinterService service = (FiscalPrinterService)(props.EventSource = new FiscalPrinterService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedFiscalPrinter;
-        dev.changeDefaults(props);
-        props.addProperties(dev.FiscalPrinters);
-        service.DeviceInterface = service.FiscalPrinterInterface = props;
-        return service;
+        return addDevice(index, dev, CurrentEntry);
     }
 
     /**
@@ -58,13 +53,18 @@ public class Factory extends JposDeviceFactory {
      */
     public FiscalPrinterService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         FiscalPrinterProperties props = dev.getFiscalPrinterProperties(index);
-        Object o = entry.getPropertyValue("CurrencyStringWithDecimalPoint");
-        boolean currencyStringWithDecimalPoint = o != null ? Boolean.parseBoolean(o.toString()) : true;
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getFiscalPrinterProperties()");
-        FiscalPrinterService service = (FiscalPrinterService)(props.EventSource = new FiscalPrinterService(props, dev, currencyStringWithDecimalPoint));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedFiscalPrinter;
+        validateJposConfiguration(props, dev, dev.ClaimedFiscalPrinter, entry);
+        FiscalPrinterService service = (FiscalPrinterService)(props.EventSource = new FiscalPrinterService(props, dev));
         dev.changeDefaults(props);
+        if (props.DeviceServiceVersion < 1014000) {
+            try {   // printRecVoidItem deprecated since 1.11 implies support must be present until version 1.13
+                Method voidItem = props.getClass().getMethod("printRecVoidItem", PrintRecVoidItem.class);
+                Class<?> defaultImpl = Class.forName("de.gmxhome.conrad.jpos.jpos_base.fiscalprinter.FiscalPrinterProperties");
+                check(voidItem.getDeclaringClass() == defaultImpl, 0, "");
+            } catch (Exception e) {
+                throw new JposException(JPOS_E_NOSERVICE, "Method printRecVoidItem not implemented", e);
+            }
+        }
         props.addProperties(dev.FiscalPrinters);
         service.DeviceInterface = service.FiscalPrinterInterface = props;
         return service;

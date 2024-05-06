@@ -18,6 +18,10 @@ package de.gmxhome.conrad.jpos.jpos_base.toneindicator;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of ToneIndicator factory for JPOS devices using this framework.
@@ -28,19 +32,30 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults.
      * @param index ToneIndicator  property set index.
      * @param dev ToneIndicator implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return ToneIndicatorService object.
      * @throws JposException If property set could not be retrieved.
      */
-    public ToneIndicatorService addDevice(int index, JposDevice dev) throws JposException {
+    public ToneIndicatorService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         ToneIndicatorProperties props = dev.getToneIndicatorProperties(index);
-        ToneIndicatorService service;
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getToneIndicatorProperties()");
-        service = (ToneIndicatorService) (props.EventSource = new ToneIndicatorService(props, dev));
-        props.Device = dev;
-        props.Claiming = props.Device.ClaimedToneIndicator;
+        validateJposConfiguration(props, dev, dev.ClaimedToneIndicator, entry);
+        ToneIndicatorService service = (ToneIndicatorService) (props.EventSource = new ToneIndicatorService(props, dev));
         props.Device.changeDefaults(props);
         props.addProperties(props.Device.ToneIndicators);
         service.DeviceInterface = service.ToneIndicatorInterface = props;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index ToneIndicator  property set index.
+     * @param dev ToneIndicator implementation instance derived from JposDevice to be used by the service.
+     * @return ToneIndicatorService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public ToneIndicatorService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

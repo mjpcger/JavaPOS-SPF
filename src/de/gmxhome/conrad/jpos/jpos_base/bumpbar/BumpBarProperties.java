@@ -17,8 +17,9 @@
 package de.gmxhome.conrad.jpos.jpos_base.bumpbar;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.BumpBarConst;
 import jpos.JposException;
+
+import static jpos.BumpBarConst.*;
 
 /**
  * Class containing the bump bar specific properties, their default values and default implementations of
@@ -33,7 +34,7 @@ public class BumpBarProperties extends JposCommonProperties implements BumpBarIn
      * Default values are placeholders for offline bump bars. Whenever a unit goes online, the service must fill the
      * unit specific values into the corresponding UnitProperties instance.
      */
-    public class UnitProperties {
+    public static class UnitProperties {
         /**
          * UPOS property AutoToneDuration.
          */
@@ -84,7 +85,7 @@ public class BumpBarProperties extends JposCommonProperties implements BumpBarIn
     /**
      * Unit specific properties, one per possible unit.
      */
-    public UnitProperties[] Unit = new UnitProperties[32];
+    public final UnitProperties[] Unit = new UnitProperties[32];
 
     /**
      * Copies all properties to the property set belonging to this object.
@@ -129,6 +130,7 @@ public class BumpBarProperties extends JposCommonProperties implements BumpBarIn
      * @param units A bitmask specifying one or more bump bar units.
      * @return The lowest index where (units &amp; (1 &lt;&lt; index)) != 0.
      */
+    @SuppressWarnings("LoopConditionNotUpdatedInsideLoop ")
     public int unitsToFirstIndex(int units) {
         int i = -1;
         while (units != 0) {
@@ -163,7 +165,7 @@ public class BumpBarProperties extends JposCommonProperties implements BumpBarIn
     @Override
     public boolean initOnFirstEnable() {
         if (!super.initOnFirstEnable()) {
-            CurrentUnitID = BumpBarConst.BB_UID_1;
+            CurrentUnitID = BB_UID_1;
             copyIn();
             UnitsOnline = 0;
             return false;

@@ -17,7 +17,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.msr;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.*;
+
+import static jpos.MSRConst.*;
 
 /**
  * Status update event implementation for MSR devices.
@@ -39,30 +40,24 @@ public class MSRStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         MSRProperties props = (MSRProperties)getPropertySet();
         switch (getStatus()) {
-            case MSRConst.MSR_SUE_DEVICE_AUTHENTICATED:
-                props.DeviceAuthenticated = true;
-                props.signalWaiter();
-                return true;
-            case MSRConst.MSR_SUE_DEVICE_DEAUTHENTICATED:
-                props.DeviceAuthenticated = false;
-                props.signalWaiter();
-                return true;
+            case MSR_SUE_DEVICE_AUTHENTICATED -> props.DeviceAuthenticated = true;
+            case MSR_SUE_DEVICE_DEAUTHENTICATED -> props.DeviceAuthenticated = false;
+            default -> {
+                return false;
+            }
         }
-        return false;
+        props.signalWaiter();
+        return true;
     }
 
     @Override
     public boolean checkStatusCorresponds() {
-        if (super.checkStatusCorresponds())
-            return true;
         MSRProperties props = (MSRProperties)getPropertySet();
-        switch (getStatus()) {
-            case MSRConst.MSR_SUE_DEVICE_AUTHENTICATED:
-                return props.DeviceAuthenticated == true;
-            case MSRConst.MSR_SUE_DEVICE_DEAUTHENTICATED:
-                return props.DeviceAuthenticated == false;
-        }
-        return false;
+        return super.checkStatusCorresponds()  || switch (getStatus()) {
+            case MSR_SUE_DEVICE_AUTHENTICATED -> props.DeviceAuthenticated;
+            case MSR_SUE_DEVICE_DEAUTHENTICATED -> !props.DeviceAuthenticated;
+            default -> false;
+        };
     }
 
     @Override
@@ -81,14 +76,10 @@ public class MSRStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        if (ret.length() > 0)
-            return ret;
-        switch (getStatus()) {
-            case MSRConst.MSR_SUE_DEVICE_AUTHENTICATED:
-                return "Device Authenticated";
-            case MSRConst.MSR_SUE_DEVICE_DEAUTHENTICATED:
-                return "Device De-Authenticated";
-        }
-        return "Unknown Status Change: "+ getStatus();
+        return ret.length() > 0 ? ret : switch (getStatus()) {
+            case MSR_SUE_DEVICE_AUTHENTICATED -> "Device Authenticated";
+            case MSR_SUE_DEVICE_DEAUTHENTICATED -> "Device De-Authenticated";
+            default -> "Unknown Status Change: " + getStatus();
+        };
     }
 }

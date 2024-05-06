@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.msr;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.MSRConst.*;
+
 /**
  * Class containing the MSR specific properties, their default values and default implementations of
  * MSRInterface.
@@ -36,13 +38,13 @@ public class MSRProperties extends JposCommonProperties implements MSRInterface 
      * UPOS property CapDataEncryption. Default: DE_NONE. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapDataEncryption = MSRConst.MSR_DE_NONE;
+    public int CapDataEncryption = MSR_DE_NONE;
 
     /**
      * UPOS property CapDeviceAuthentication. Default: DA_NOT_SUPPORTED. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapDeviceAuthentication = MSRConst.MSR_DA_NOT_SUPPORTED;
+    public int CapDeviceAuthentication = MSR_DA_NOT_SUPPORTED;
 
     /**
      * UPOS property CapTrackDataMasking. Default: false. Can be overwritten
@@ -54,7 +56,7 @@ public class MSRProperties extends JposCommonProperties implements MSRInterface 
      * UPOS property CapWritableTracks. Default: TR_NONE. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapWritableTracks = MSRConst.MSR_TR_NONE;
+    public int CapWritableTracks = MSR_TR_NONE;
 
     /**
      * UPOS property CapTransmitSentinels. Default: true. Can be overwritten
@@ -115,7 +117,7 @@ public class MSRProperties extends JposCommonProperties implements MSRInterface 
      * UPOS property DataEncryptionAlgorithm. Default: DE_NONE. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int DataEncryptionAlgorithm = MSRConst.MSR_DE_NONE;
+    public int DataEncryptionAlgorithm = MSR_DE_NONE;
 
     /**
      * UPOS property DeviceAuthenticated.
@@ -126,7 +128,7 @@ public class MSRProperties extends JposCommonProperties implements MSRInterface 
      * UPOS property DeviceAuthenticationProtocol. Default: AP_NONE. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int DeviceAuthenticationProtocol = MSRConst.MSR_AP_NONE;
+    public int DeviceAuthenticationProtocol = MSR_AP_NONE;
 
     /**
      * UPOS property Track1EncryptedData.
@@ -294,13 +296,13 @@ public class MSRProperties extends JposCommonProperties implements MSRInterface 
         CardType = "";
         WriteCardType = "BANK";
         EncodingMaxLength = 0;
-        TracksToWrite = MSRConst.MSR_TR_NONE;
+        TracksToWrite = MSR_TR_NONE;
         TransmitSentinels = false;
         DecodeData = true;
-        ErrorReportingType = MSRConst.MSR_ERT_CARD;
+        ErrorReportingType = MSR_ERT_CARD;
         ParseDecodeData = true;
-        TracksToRead = MSRConst.MSR_TR_1_2_3;
-        // The following fields will be filled to hold default values that never will be filled
+        TracksToRead = MSR_TR_1_2_3;
+        // The following fields will be filled to hold default values that will never be filled
         // when using the defaults
         AdditionalSecurityInformation = new byte[0];
         CardAuthenticationData = new byte[0];
@@ -332,7 +334,7 @@ public class MSRProperties extends JposCommonProperties implements MSRInterface 
     @Override
     public void initOnEnable(boolean enable) {
         if (enable) {
-            super.initOnEnable(enable);
+            super.initOnEnable(true);
             DeviceAuthenticated = false;
         }
     }
@@ -363,7 +365,7 @@ public class MSRProperties extends JposCommonProperties implements MSRInterface 
 
     @Override
     public void decodeData(boolean flag) throws JposException {
-        if ((DecodeData = flag) == false) {
+        if (!(DecodeData = flag)) {
             ParseDecodeData = false;
             EventSource.logSet("ParseDecodeData");
         }
@@ -375,6 +377,7 @@ public class MSRProperties extends JposCommonProperties implements MSRInterface 
     }
 
     @Override
+    @SuppressWarnings("AssignmentUsedAsCondition")
     public void parseDecodeData(boolean flag) throws JposException {
         if (ParseDecodeData = flag) {
             DecodeData = true;

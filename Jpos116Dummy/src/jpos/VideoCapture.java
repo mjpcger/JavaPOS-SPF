@@ -21,16 +21,17 @@ import jpos.events.*;
 import jpos.services.*;
 import java.util.Vector;
 
+@SuppressWarnings({"unused","SynchronizeOnNonFinalField"})
 public class VideoCapture extends BaseJposControl implements JposConst, VideoCaptureControl116 {
-    protected Vector directIOListeners;
-    protected Vector statusUpdateListeners;
-    protected Vector errorListeners;
+    protected Vector<DirectIOListener> directIOListeners;
+    protected Vector<StatusUpdateListener> statusUpdateListeners;
+    protected Vector<ErrorListener> errorListeners;
     public VideoCapture() {
         deviceControlDescription = "JavaPOS VideoCapture Dummy Control";
         deviceControlVersion = deviceVersion115 + 1000;
-        directIOListeners = new Vector();
-        statusUpdateListeners = new Vector();
-        errorListeners = new Vector();
+        directIOListeners = new Vector<>();
+        statusUpdateListeners = new Vector<>();
+        errorListeners = new Vector<>();
     }
     protected class Callbacks implements EventCallbacks {
 
@@ -41,16 +42,16 @@ public class VideoCapture extends BaseJposControl implements JposConst, VideoCap
         @Override
         public void fireDirectIOEvent(DirectIOEvent directIOEvent) {
             synchronized (directIOListeners) {
-                for (Object listener : directIOListeners)
-                    ((DirectIOListener) listener).directIOOccurred(directIOEvent);
+                for (DirectIOListener listener : directIOListeners)
+                    listener.directIOOccurred(directIOEvent);
             }
         }
 
         @Override
         public void fireErrorEvent(ErrorEvent errorEvent) {
             synchronized (errorListeners) {
-                for (Object listener : errorListeners)
-                    ((ErrorListener) listener).errorOccurred(errorEvent);
+                for (ErrorListener listener : errorListeners)
+                    listener.errorOccurred(errorEvent);
             }
         }
 
@@ -61,8 +62,8 @@ public class VideoCapture extends BaseJposControl implements JposConst, VideoCap
         @Override
         public void fireStatusUpdateEvent(StatusUpdateEvent statusUpdateEvent) {
             synchronized (statusUpdateListeners) {
-                for (Object listener : statusUpdateListeners)
-                    ((StatusUpdateListener)listener).statusUpdateOccurred(statusUpdateEvent);
+                for (StatusUpdateListener listener : statusUpdateListeners)
+                    listener.statusUpdateOccurred(statusUpdateEvent);
             }
         }
 
@@ -83,7 +84,13 @@ public class VideoCapture extends BaseJposControl implements JposConst, VideoCap
         } else {
             int version = 16;
             try {
-                service = (VideoCaptureService116) baseService; version++;
+                for (Class<?> current : new Class<?>[]{VideoCaptureService116.class}) {
+                    if (current.isInstance(service))
+                        version++;
+                    else
+                        break;
+                }
+                service = baseService;
             } catch (Exception e) {
                 if (i >= version * 1000 + 1000000)
                     throw new JposException(JPOS_E_NOSERVICE, "VideoCaptureService1" + version + " not fully implemented", e);

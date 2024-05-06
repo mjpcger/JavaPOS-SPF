@@ -20,18 +20,20 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static jpos.JposConst.*;
+
 /**
  * Gate service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class GateService extends JposBase implements GateService115 {
+public class GateService extends JposBase implements GateService116 {
     /**
      * Instance of a class implementing the GateInterface for gate specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public GateInterface GateInterface;
 
-    private GateProperties Data;
+    private final GateProperties Data;
 
     /**
      * Constructor. Stores property set and device implementation object.
@@ -77,11 +79,11 @@ public class GateService extends JposBase implements GateService115 {
 
     @Override
     public void waitForGateClose(int timeout) throws JposException {
-        logPreCall("WaitForGateClose", "" + timeout);
+        logPreCall("WaitForGateClose", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabledUnclaimed();
         if (!Data.CapGateStatus)
             return;
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_CLOSED, "Negative timeout");
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_CLOSED, "Negative timeout");
         GateInterface.waitForGateClose(timeout);
         logCall("WaitForGateClose");
     }

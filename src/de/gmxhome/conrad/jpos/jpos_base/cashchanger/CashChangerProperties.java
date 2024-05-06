@@ -18,8 +18,9 @@
 package de.gmxhome.conrad.jpos.jpos_base.cashchanger;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import jpos.CashChangerConst;
 import jpos.JposException;
+
+import static jpos.CashChangerConst.*;
 
 /**
  * Class containing the cash changer specific properties, their default values and default implementations of
@@ -31,7 +32,7 @@ public class CashChangerProperties extends JposCommonProperties implements CashC
      * UPOS property AsyncResultCode. Default: STATUS_OK. Will be set when throwing a BillDispenserStatusUpdateEvent with
      * STATUS_ASYNC.
      */
-    public int AsyncResultCode = CashChangerConst.CHAN_STATUS_OK;
+    public int AsyncResultCode = CHAN_STATUS_OK;
 
     /**
      * UPOS property AsyncResultCodeExtended. Default: 0. Will be set when throwing a BillDispenserStatusUpdateEvent
@@ -273,7 +274,7 @@ public class CashChangerProperties extends JposCommonProperties implements CashC
      */
     @Override
     public void beginDeposit() throws JposException {
-        DepositStatus = CashChangerConst.CHAN_STATUS_DEPOSIT_START;
+        DepositStatus = CHAN_STATUS_DEPOSIT_START;
         EventSource.logSet("DepositStatus");
     }
 
@@ -283,7 +284,7 @@ public class CashChangerProperties extends JposCommonProperties implements CashC
      */
     @Override
     public void endDeposit(int success) throws JposException {
-        DepositStatus = CashChangerConst.CHAN_STATUS_DEPOSIT_END;
+        DepositStatus = CHAN_STATUS_DEPOSIT_END;
         EventSource.logSet("DepositStatus");
     }
 
@@ -293,7 +294,7 @@ public class CashChangerProperties extends JposCommonProperties implements CashC
      */
     @Override
     public void fixDeposit() throws JposException {
-        DepositStatus = CashChangerConst.CHAN_STATUS_DEPOSIT_COUNT;
+        DepositStatus = CHAN_STATUS_DEPOSIT_COUNT;
         EventSource.logSet("DepositStatus");
     }
 

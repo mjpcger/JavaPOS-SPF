@@ -29,37 +29,37 @@ public class ImageScannerDataEvent extends JposDataEvent {
     /**
      * New contents of FrameData property. For details, see UPOS specification.
      */
-    public byte[] FrameData;
+    public final byte[] FrameData;
 
     /**
      * New contents of BitsPerPixel property. For details, see UPOS specification.
      */
-    public int BitsPerPixel;
+    public final int BitsPerPixel;
 
     /**
      * New contents of FrameType property. For details, see UPOS specification.
      */
-    public int FrameType;
+    public final int FrameType;
 
     /**
      * New contents of ImageHeight property. For details, see UPOS specification.
      */
-    public int ImageHeight;
+    public final int ImageHeight;
 
     /**
      * New contents of ImageWidth property. For details, see UPOS specification.
      */
-    public int ImageWidth;
+    public final int ImageWidth;
 
     /**
      * New contents of ImageLength property. For details, see UPOS specification.
      */
-    public int ImageLength;
+    public final int ImageLength;
 
     /**
      * New contents of ImageType property. For details, see UPOS specification.
      */
-    public int ImageType;
+    public final int ImageType;
 
     /**
      * Constructor. Parameters passed to base class unchanged.
@@ -121,14 +121,14 @@ public class ImageScannerDataEvent extends JposDataEvent {
 
     @Override
     public String toLogString() {
-        String ret = super.toLogString();
-        ret += ", BitsPerPixel: " + BitsPerPixel;
-        ret += ", ImageData: [" + FrameData.length + " byte]";
-        ret += ", FrameType: " + FrameType;
-        ret += ", ImageHeight: " + ImageHeight;
-        ret += ", ImageWidth: " + ImageWidth;
-        ret += ", ImageLength: " + ImageLength;
-        ret += ", ImageType: " + ImageType;
-        return ret;
+        StringBuilder ret = new StringBuilder(super.toLogString());
+        ret.append(", BitsPerPixel: ").append(BitsPerPixel);
+        ret.append(", ImageData: [").append(FrameData.length).append(" byte]");
+        ret.append(", FrameType: ").append(FrameType);
+        ret.append(", ImageHeight: ").append(ImageHeight);
+        ret.append(", ImageWidth: ").append(ImageWidth);
+        ret.append(", ImageLength: ").append(ImageLength);
+        ret.append(", ImageType: ").append(ImageType);
+        return ret.toString();
     }
 }

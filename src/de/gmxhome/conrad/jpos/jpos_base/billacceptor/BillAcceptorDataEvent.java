@@ -19,7 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.billacceptor;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposBase;
 import de.gmxhome.conrad.jpos.jpos_base.JposDataEvent;
-import jpos.BillAcceptorConst;
+
+import static jpos.BillAcceptorConst.*;
 
 /**
  * Data event implementation for BillAcceptor devices.
@@ -29,13 +30,13 @@ public class BillAcceptorDataEvent extends JposDataEvent {
      * Holds the total of the cash accepted by the BillAcceptor. See UPOS specification, Chapter Bill Acceptor -
      * Properties - DepositCounts for details.
      */
-    public String Counts;
+    public final String Counts;
 
     /**
      * The total amount of deposited cash. See UPOS specification, Chapter Bill Acceptor - Properties - DepositAmount
      * for details.
      */
-    public int Amount;
+    public final int Amount;
 
     /**
      * Constructor. Parameters passed to base class unchanged.
@@ -55,7 +56,7 @@ public class BillAcceptorDataEvent extends JposDataEvent {
     public void setDataProperties() {
         super.setDataProperties();
         BillAcceptorProperties props = (BillAcceptorProperties) getPropertySet();
-        if (props.DepositStatus == BillAcceptorConst.BACC_STATUS_DEPOSIT_START) {
+        if (props.DepositStatus == BACC_STATUS_DEPOSIT_START) {
             props.DepositAmount = Amount;
             props.EventSource.logSet("DepositAmount");
             props.DepositCounts = Counts;

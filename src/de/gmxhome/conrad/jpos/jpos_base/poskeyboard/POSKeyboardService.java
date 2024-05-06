@@ -20,18 +20,21 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static jpos.JposConst.*;
+import static jpos.POSKeyboardConst.*;
+
 /**
  * POSKeyboard service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class POSKeyboardService extends JposBase implements POSKeyboardService115 {
+public class POSKeyboardService extends JposBase implements POSKeyboardService116 {
     /**
      * Instance of a class implementing the POSKeyboardInterface for pos keyboard specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public POSKeyboardInterface POSKeyboardInterface;
 
-    private POSKeyboardProperties Data;
+    private final POSKeyboardProperties Data;
 
     /**
      * Constructor. Stores property set and device driver implementation
@@ -62,8 +65,8 @@ public class POSKeyboardService extends JposBase implements POSKeyboardService11
     public void setEventTypes(int type) throws JposException {
         logPreSet("EventTypes");
         checkOpened();
-        Device.check(!Data.CapKeyUp && type != POSKeyboardConst.KBD_ET_DOWN, JposConst.JPOS_E_ILLEGAL, "No support for key up events");
-        Device.check(type != POSKeyboardConst.KBD_ET_DOWN && type != POSKeyboardConst.KBD_ET_DOWN_UP, JposConst.JPOS_E_ILLEGAL, "Invalid event type: " + type);
+        check(!Data.CapKeyUp && type != KBD_ET_DOWN, JPOS_E_ILLEGAL, "No support for key up events");
+        check(type != KBD_ET_DOWN && type != KBD_ET_DOWN_UP, JPOS_E_ILLEGAL, "Invalid event type: " + type);
         checkNoChangedOrClaimed(Data.EventTypes, type);
         POSKeyboardInterface.eventTypes(type);
         logSet("EventTypes");

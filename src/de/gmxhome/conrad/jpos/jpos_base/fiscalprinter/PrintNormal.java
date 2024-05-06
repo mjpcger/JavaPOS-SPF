@@ -22,7 +22,7 @@ import jpos.*;
  * Output request executor for FiscalPrinter method PrintNormal.
  */
 public class PrintNormal extends OutputRequest {
-    private int Station;
+    private final int Station;
 
     /**
      * FiscalPrinter method PrintNormal parameter station, see UPOS specification.
@@ -32,7 +32,7 @@ public class PrintNormal extends OutputRequest {
         return Station;
     }
 
-    private String Data;
+    private final String Data;
 
     /**
      * FiscalPrinter method PrintNormal parameter data, see UPOS specification.

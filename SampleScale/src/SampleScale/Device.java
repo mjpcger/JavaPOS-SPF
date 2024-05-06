@@ -2,14 +2,17 @@ package SampleScale;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.scale.*;
-import jpos.JposConst;
-import jpos.JposException;
-import jpos.ScaleConst;
+import jpos.*;
 import jpos.config.JposEntry;
-import net.bplaced.conrad.log4jpos.Level;
 
-import javax.swing.*;
 import java.nio.charset.Charset;
+import java.util.Objects;
+
+import static de.gmxhome.conrad.jpos.jpos_base.SerialIOProcessor.*;
+import static javax.swing.JOptionPane.*;
+import static jpos.JposConst.*;
+import static jpos.ScaleConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * JposDevice based implementation of a JavaPOS Scale device service implementation for the
@@ -54,7 +57,7 @@ public class Device extends JposDevice implements Runnable {
         scaleInit(1);
         PhysicalDeviceDescription = "Scales Dialog 02 / 04 simulator";
         PhysicalDeviceName = "Scales Simulator";
-        CapPowerReporting = JposConst.JPOS_PR_STANDARD;
+        CapPowerReporting = JPOS_PR_STANDARD;
     }
 
     /**
@@ -65,7 +68,7 @@ public class Device extends JposDevice implements Runnable {
     /**
      * In case of a serial connection, baud rates 2400 (Scales Dialog 02) or 4800 (Scales Dialog 04) are valid.
      */
-    Integer Baudrate = SerialIOProcessor.BAUDRATE_2400;
+    Integer Baudrate = BAUDRATE_2400;
     /**
      * In case of a TCP connection, values above 0 specify the source port number. Zero results in an random source port.
      */
@@ -99,33 +102,34 @@ public class Device extends JposDevice implements Runnable {
     /**
      * Weight unit of the scale. Currently, only supported value is SCAL_WU_KILOGRAM.
      */
-    int WeightUnit = ScaleConst.SCAL_WU_KILOGRAM;
+    int WeightUnit = SCAL_WU_KILOGRAM;
 
     private boolean InIOError = false;
     private String ScaleText = "";
-    private Charset AsciiCoder = Charset.availableCharsets().get("US-ASCII");
+    private final Charset AsciiCoder = Charset.availableCharsets().get("US-ASCII");
 
     @Override
+    @SuppressWarnings("resource")
     public void checkProperties(JposEntry entry) throws JposException {
         super.checkProperties(entry);
         try {
             new TcpClientIOProcessor(this, ID);
             OwnPort = 0;   // Default: Random port
-        } catch (JposException e) {}
+        } catch (JposException ignored) {}
         try {
             Object o;
             if ((o = entry.getPropertyValue("OwnPort")) != null) {
                 if (OwnPort != null) {
                     if ((OwnPort = Integer.parseInt(o.toString())) < 0 || OwnPort >= 0xffff)
-                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid source port.");
+                        throw new JposException(JPOS_E_ILLEGAL, "Invalid source port.");
                 }
                 else
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid property for Scale Dialog 04.");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid property for Scale Dialog 04.");
             }
             if ((o = entry.getPropertyValue("Baudrate")) != null) {
                 Baudrate = Integer.parseInt(o.toString());
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Baudrate");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Baudrate");
             }
             if ((o = entry.getPropertyValue("RequestTimeout")) != null) {
                 RequestTimeout = Integer.parseInt(o.toString());
@@ -148,7 +152,7 @@ public class Device extends JposDevice implements Runnable {
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property", e);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property", e);
         }
     }
 
@@ -167,27 +171,26 @@ public class Device extends JposDevice implements Runnable {
         props.DeviceServiceDescription = "Scales service for Scales Dialog 02/04 simulator";
     }
 
-    private Thread CommandProcessor;
+    private ThreadHandler CommandProcessor;
     private SyncObject SignalStatusUpdated = null;
-    private SyncObject WaitCommand = new SyncObject();
-    private boolean ToBeFinished;
-    private int Offline = JposConst.JPOS_PS_UNKNOWN;
+    private final SyncObject WaitCommand = new SyncObject();
+    private int Offline = JPOS_PS_UNKNOWN;
     /**
      * Thread main, used for status check loop while device is enabled.
      */
     @Override
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     public void run() {
         Target = null;
         int offline = Offline;
-        while (!ToBeFinished) {
+        while (!CommandProcessor.ToBeFinished) {
             long timeval = System.currentTimeMillis();
-            String response = sendCommand("\2" + "08\3", (MaxRetry + 1) * (RequestTimeout + CharacterTimeout) + 70);
+            sendCommand("\2" + "08\3", (MaxRetry + 1) * (RequestTimeout + CharacterTimeout) + 70);
             JposCommonProperties props = getClaimingInstance(ClaimedScale, 0);
-            if (!ToBeFinished && offline != Offline && Offline == JposConst.JPOS_PS_ONLINE) {
+            if (!CommandProcessor.ToBeFinished && offline != Offline && Offline == JPOS_PS_ONLINE) {
                 try {
-                    handleEvent(new JposStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_ONLINE));
-                } catch (JposException e) {
-                }
+                    handleEvent(new JposStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_ONLINE));
+                } catch (JposException ignored) {}
                 offline = Offline;
             }
             synchronized(CommandProcessor) {
@@ -196,11 +199,10 @@ public class Device extends JposDevice implements Runnable {
                     SignalStatusUpdated = null;
                 }
             }
-            if (!ToBeFinished && offline != Offline) {
+            if (!CommandProcessor.ToBeFinished && offline != Offline) {
                 try {
-                    handleEvent(new JposStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE));
-                } catch (JposException e) {
-                }
+                    handleEvent(new JposStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_OFF_OFFLINE));
+                } catch (JposException ignored) {}
                 offline = Offline;
             }
             timeval = System.currentTimeMillis() - timeval;
@@ -227,26 +229,20 @@ public class Device extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings("ThrowableInstanceNeverThrown")
         public void deviceEnabled(boolean enable) throws JposException {
             if (enable) {
                 int timeout = (MaxRetry + 2) * RequestTimeout;
                 SyncObject waiter = SignalStatusUpdated = new SyncObject();
-                ToBeFinished = false;
-                (CommandProcessor = new Thread(SampleScale.Device.this)).start();
-                CommandProcessor.setName(LogicalName +".StatusHandler");
+                (CommandProcessor = new ThreadHandler(LogicalName +".StatusHandler", Device.this)).start();
                 waiter.suspend(timeout);
             }
             else {
-                ToBeFinished = true;
+                CommandProcessor.ToBeFinished = true;
                 WaitCommand.signal();
-                while (ToBeFinished) {
-                    try {
-                        CommandProcessor.join();
-                    } catch (Exception e) {}
-                    break;
-                }
-                JposException e = closePort(true);
-                Offline = JposConst.JPOS_PS_UNKNOWN;
+                CommandProcessor.waitFinished();
+                closePort(true);
+                Offline = JPOS_PS_UNKNOWN;
                 InIOError = false;
             }
             super.deviceEnabled(enable);
@@ -254,15 +250,15 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void handlePowerStateOnEnable() throws JposException {
-            PowerState = SignalStatusUpdated != null || InIOError ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
+            PowerState = SignalStatusUpdated != null || InIOError ? JPOS_PS_OFF_OFFLINE : JPOS_PS_ONLINE;
             super.handlePowerStateOnEnable();
         }
 
         @Override
         public void checkHealth(int level) throws JposException {
-            if (level == JposConst.JPOS_CH_INTERNAL) {
+            if (level == JPOS_CH_INTERNAL) {
                 CheckHealthText = "Internal CheckHealth: ";
-                CheckHealthText += InIOError || member(PowerState, new long[]{JposConst.JPOS_PS_OFFLINE, JposConst.JPOS_PS_OFF, JposConst.JPOS_PS_OFF_OFFLINE}) ? "Failed" : "OK";
+                CheckHealthText += InIOError || member(PowerState, new long[]{JPOS_PS_OFFLINE, JPOS_PS_OFF, JPOS_PS_OFF_OFFLINE}) ? "Failed" : "OK";
             }
             else {
                 nonInternalCheckHealth(level);
@@ -274,38 +270,38 @@ public class Device extends JposDevice implements Runnable {
             long price = UnitPrice;
             String text = ScaleText;
             boolean async = AsyncMode;
-            int[] weight = new int[1];
-            int msgtype = JOptionPane.INFORMATION_MESSAGE;
-            CheckHealthText = level == JposConst.JPOS_CH_EXTERNAL ? "External CheckHealth: " : "Interactive CheckHealth: ";
+            int[] weight = {0};
+            int msgtype = INFORMATION_MESSAGE;
+            CheckHealthText = level == JPOS_CH_EXTERNAL ? "External CheckHealth: " : "Interactive CheckHealth: ";
             try {
                 if (async)
                     asyncMode(false);
                 UnitPrice = 123400;  // 12.34
                 srv.displayText("WEIGHING");
-                if (level == JposConst.JPOS_CH_INTERACTIVE)
+                if (level == JPOS_CH_INTERACTIVE)
                     synchronizedMessageBox("Put something on scale", "CheckHealth Scale", msgtype);
-                srv.readWeight(weight, level == JposConst.JPOS_CH_EXTERNAL ? Integer.MAX_VALUE : MaxRetry * RequestTimeout);
+                srv.readWeight(weight, level == JPOS_CH_EXTERNAL ? Integer.MAX_VALUE : MaxRetry * RequestTimeout);
                 CheckHealthText += "OK";
             } catch (JposException e) {
                 CheckHealthText += "Failed (" +e.getMessage() + ")";
-                msgtype = JOptionPane.ERROR_MESSAGE;
+                msgtype = ERROR_MESSAGE;
             }
             try {
-                if (UnitPrice != price || ScaleText != text) {
+                if (UnitPrice != price || !Objects.equals(ScaleText, text)) {
                     UnitPrice = price;
                     displayText(text);
                 }
                 if (async)
-                    asyncMode(async);
-            } catch (JposException e) {}
-            if (level == JposConst.JPOS_CH_INTERACTIVE)
+                    asyncMode(true);
+            } catch (JposException ignored) {}
+            if (level == JPOS_CH_INTERACTIVE)
                 synchronizedMessageBox(CheckHealthText, "CheckHealth Scale", msgtype);
         }
 
         @Override
         public void tareWeight(int weight) throws JposException {
             if (weight >= 5000)
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Tare too high");
+                throw new JposException(JPOS_E_ILLEGAL, "Tare too high");
             String request = String.format("\2%02d\33%06d\33%04d\3", 3, UnitPrice / 100, weight);
             sendSetupCommand(request);
             super.tareWeight(weight);
@@ -314,24 +310,23 @@ public class Device extends JposDevice implements Runnable {
         private void sendSetupCommand(String request) throws JposException {
             String response = sendCommand(request, Integer.MAX_VALUE);
             if (response == null)
-                throw new JposException(JposConst.JPOS_E_OFFLINE, "Communication error");
+                throw new JposException(JPOS_E_OFFLINE, "Communication error");
             if (!response.equals("\6")) {
                 if (response.equals("\15"))
-                    throw new JposException(JposConst.JPOS_E_FAILURE, "Negative acknowledge");
-                if (response.length() == 7 && response.charAt(0) == STX && response.charAt(3) == ESC && response.charAt(6) == ETX &&
-                        response.substring(1, 3).equals("09")) {
+                    throw new JposException(JPOS_E_FAILURE, "Negative acknowledge");
+                if (response.length() == 7 && response.charAt(6) == ETX && response.startsWith(String.format("%c09%c", STX, ESC))) {
                     int reason = Integer.parseInt(response.substring(4, 6), 10);
                     if (reason != 0)
-                        throw new JposException(JposConst.JPOS_E_FAILURE, "Scale in error state: " + reason);
+                        throw new JposException(JPOS_E_FAILURE, "Scale in error state: " + reason);
                 }
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid response");
+                throw new JposException(JPOS_E_FAILURE, "Invalid response");
             }
         }
 
         @Override
         public void unitPrice(long price) throws JposException {
             if (price >= 100000000)
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Unit price too high");
+                throw new JposException(JPOS_E_ILLEGAL, "Unit price too high");
             String request = String.format("\2%02d\33%06d\33\3", 1, price / 100);
             sendSetupCommand(request);
             super.unitPrice(price);
@@ -340,7 +335,7 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public void zeroValid(boolean b) throws JposException {
             if (b)
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, 0, "Valid zero weight not supported by sample scale");
+                throw new JposException(JPOS_E_ILLEGAL, 0, "Valid zero weight not supported by sample scale");
         }
 
         @Override
@@ -353,58 +348,56 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public ReadWeight readWeight(int[] weight, int timeout) throws JposException {
-            check(State == JposConst.JPOS_S_ERROR, JposConst.JPOS_E_BUSY, "Device busy (in error)");
+            check(State == JPOS_S_ERROR, JPOS_E_BUSY, "Device busy (in error)");
             return super.readWeight(weight, timeout);
         }
 
         @Override
         public void readWeight(ReadWeight request) throws JposException {
-            int timeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
+            int timeout = request.getTimeout() == JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
             if (timeout < (MaxRetry + 2) * RequestTimeout)
                 timeout = (MaxRetry + 2) * RequestTimeout;
             long startTime = System.currentTimeMillis();
             while (true) {
                 String response = sendCommand("\5", timeout);
                 try {
-                    Device.check(response.length() != 7 && response.length() != 26, JposConst.JPOS_E_FAILURE, "Bad frame size");
-                    if (response.length() == 7 && response.charAt(0) == STX && response.charAt(6) == ETX && response.charAt(3) == ESC && response.substring(1, 3).equals("09")) {
+                    assert response != null;
+                    check(response.length() != 7 && response.length() != 26, JPOS_E_FAILURE, "Bad frame size");
+                    if (response.length() == 7 && response.charAt(6) == ETX && response.startsWith(String.format("%c09%c", STX, ESC))) {
                         int state = Integer.parseInt(response.substring(4, 6), 10);
-                        switch (state) {
-                            case 20:    // Still in motion: Do it again (no remove of finalizer)
-                            case 30:    // Weight less than minimum (zero weight)
-                            case 31:    // Scale less than zero
-                                Device.check(System.currentTimeMillis() - startTime > timeout, JposConst.JPOS_E_TIMEOUT, "No valid weight within time limit");
-                                break;
-                            case 21:    // Not in motion since last weighing
-                                throw new JposException(JposConst.JPOS_E_EXTENDED, ScaleConst.JPOS_ESCAL_SAME_WEIGHT, "Not in motion since last weighing");
-                            case 22:    // No price calculation (unit price 0), should never occur
-                                throw new JposException(JposConst.JPOS_E_ILLEGAL, 0, "UnitPrice has not been set");
-                            case 32:    // Scale is overloaded
-                                throw new JposException(JposConst.JPOS_E_EXTENDED, ScaleConst.JPOS_ESCAL_OVERWEIGHT, "Scale overloaded");
-                            default:
-                                throw new JposException(JposConst.JPOS_E_FAILURE, 0, "Unknown scale status: " + state);
+                        switch (state) {    // Still in motion: Do it again (no remove of finalizer)
+                            // Weight less than minimum (zero weight)
+                            case 20, 30, 31 ->    // Scale less than zero
+                                    check(System.currentTimeMillis() - startTime > timeout, JPOS_E_TIMEOUT, "No valid weight within time limit");
+                            case 21 ->    // Not in motion since last weighing
+                                    throw new JposException(JPOS_E_EXTENDED, JPOS_ESCAL_SAME_WEIGHT, "Not in motion since last weighing");
+                            case 22 ->    // No price calculation (unit price 0), should never occur
+                                    throw new JposException(JPOS_E_ILLEGAL, 0, "UnitPrice has not been set");
+                            case 32 ->    // Scale is overloaded
+                                    throw new JposException(JPOS_E_EXTENDED, JPOS_ESCAL_OVERWEIGHT, "Scale overloaded");
+                            default ->
+                                    throw new JposException(JPOS_E_FAILURE, 0, "Unknown scale status: " + state);
                         }
                         new SyncObject().suspend(PollDelay);
-                    } else if (response.length() == 26 && response.charAt(0) == STX && response.charAt(3) == ESC && response.charAt(5) == ESC &&
-                            response.charAt(11) == ESC && response.charAt(18) == ESC && response.charAt(25) == ETX &&
-                            response.substring(1, 3).equals("02") && response.charAt(4) == 0x33) {
-                        Device.check(Long.parseLong(response.substring(12, 18), 10) * 100 != UnitPrice, JposConst.JPOS_E_FAILURE, "Unexpected unit price");
+                    } else if (response.length() == 26 && response.startsWith(String.format("%c02%c3%c", STX, ESC, ESC)) &&
+                            response.charAt(11) == ESC && response.charAt(18) == ESC && response.charAt(25) == ETX) {
+                        check(Long.parseLong(response.substring(12, 18), 10) * 100 != UnitPrice, JPOS_E_FAILURE, "Unexpected unit price");
                         request.WeightData = Integer.parseInt(response.substring(6, 11), 10);
                         request.SalesPrice = Long.parseLong(response.substring(19, 25), 10) * 100;
                         return;
                     } else
-                        throw new JposException(JposConst.JPOS_E_FAILURE, 0, "Invalid frame structure");
+                        throw new JposException(JPOS_E_FAILURE, 0, "Invalid frame structure");
                 } catch (NumberFormatException e) {
-                    Device.check(System.currentTimeMillis() - startTime < timeout, JposConst.JPOS_E_TIMEOUT, "No valid weight within time limit");
+                    check(System.currentTimeMillis() - startTime < timeout, JPOS_E_TIMEOUT, "No valid weight within time limit");
                 } catch (NullPointerException e) {
-                    throw new JposException(JposConst.JPOS_E_FAILURE, 0, "Offline");
+                    throw new JposException(JPOS_E_FAILURE, 0, "Offline");
                 }
             }
         }
 
         @Override
         public DoPriceCalculating doPriceCalculating(int[] weightData, int[] tare, long[] unitPrice, long[] unitPriceX, int[] weightUnitX, int[] weightNumeratorX, int[] weightDenominatorX, long[] price, int timeout) throws JposException {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Parameter values for unitPriceX, weightUnitX, weightNumeratorX and weightDenominatorX are not available.");
+            throw new JposException(JPOS_E_ILLEGAL, "Parameter values for unitPriceX, weightUnitX, weightNumeratorX and weightDenominatorX are not available.");
         }
     }
 
@@ -418,7 +411,7 @@ public class Device extends JposDevice implements Runnable {
                 ((TcpClientIOProcessor)(Target = new TcpClientIOProcessor(this, ID))).setParam(OwnPort);
             }
             else {
-                ((SerialIOProcessor)(Target = new SerialIOProcessor(this, ID))).setParameters(Baudrate, SerialIOProcessor.DATABITS_7, SerialIOProcessor.STOPBITS_1, SerialIOProcessor.PARITY_ODD);
+                ((SerialIOProcessor)(Target = new SerialIOProcessor(this, ID))).setParameters(Baudrate, DATABITS_7, STOPBITS_1, PARITY_ODD);
             }
             Target.open(InIOError);
             InIOError = false;
@@ -434,6 +427,7 @@ public class Device extends JposDevice implements Runnable {
      * @param doFlush Specifies whether the output stream shall be flushed befor close.
      * @return In case of an IO error, the corresponding exception. Otherwise null
      */
+    @SuppressWarnings("UnusedReturnValue")
     private JposException closePort(boolean doFlush) {
         JposException e = null;
         if (Target != null) {
@@ -474,25 +468,26 @@ public class Device extends JposDevice implements Runnable {
      Control characters used in scale dialog 04
      */
     private static final byte ACK = 6;
-    private static final byte NAK = 025;
+    private static final byte NAK = 0x15;
     private static final byte STX = 2;
-    private static final byte ESC = 033;
+    private static final byte ESC = 0x1b;
     private static final byte ETX = 3;
     private static final byte ENQ = 5;
     private static final byte EOT = 4;
 
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     synchronized private String sendCommand(String command, int timeout) {
         String resp;
         long starttime = System.currentTimeMillis();
         if (Target == null) {
             JposException e = initPort();
             if (e != null) {
-                Offline = JposConst.JPOS_PS_OFF_OFFLINE;
+                Offline = JPOS_PS_OFF_OFFLINE;
                 return null;
             }
         }
         try {
-            for (int retry = 0; !ToBeFinished && System.currentTimeMillis() - starttime <= timeout && retry <= MaxRetry; retry++) {
+            for (int retry = 0; !CommandProcessor.ToBeFinished && System.currentTimeMillis() - starttime <= timeout && retry <= MaxRetry; retry++) {
                 byte[] request = ("\4" + command).getBytes(AsciiCoder);
                 Target.flush();
                 Target.write(request);
@@ -508,7 +503,7 @@ public class Device extends JposDevice implements Runnable {
                             }
                         case ACK:   // Request orderly finished
                             Target.write(new byte[]{EOT});
-                            Offline = JposConst.JPOS_PS_ONLINE;
+                            Offline = JPOS_PS_ONLINE;
                             return new String(part);
                         case STX:   // Request orderly finished, record type 02 or 09 follows
                             resp = new String(part);
@@ -516,19 +511,19 @@ public class Device extends JposDevice implements Runnable {
                             part = Target.read(request[1] == ENQ ? 25 : 6);
                             if (part.length >= 6 && part[0] == '0' && part[2] == ESC && part[part.length - 1] == ETX) {
                                 Target.write(new byte[]{EOT});
-                                Offline = JposConst.JPOS_PS_ONLINE;
+                                Offline = JPOS_PS_ONLINE;
                                 return resp + new String(part);
                             }
                     }
                 }
                 Target.write(new byte[]{EOT});
                 if (!exists())
-                    throw new JposException(JposConst.JPOS_E_NOHARDWARE, "Connection to scale lost");
+                    throw new JposException(JPOS_E_NOHARDWARE, "Connection to scale lost");
             }
         } catch (JposException e) {
-            log(Level.TRACE, getClaimingInstance(ClaimedScale, 0).LogicalName + ": IO error: " + e.getMessage());
+            log(TRACE, getClaimingInstance(ClaimedScale, 0).LogicalName + ": IO error: " + e.getMessage());
         }
-        Offline = JposConst.JPOS_PS_OFF_OFFLINE;
+        Offline = JPOS_PS_OFF_OFFLINE;
         closePort(false);
         InIOError = true;
         return null;

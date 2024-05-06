@@ -23,7 +23,10 @@ import jpos.*;
 import jpos.config.*;
 import java.util.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
 import static java.lang.Math.max;
+import static jpos.GraphicDisplayConst.*;
+import static jpos.JposConst.*;
 
 /**
  * JposDevice based dummy implementation for JavaPOS GraphicDisplay device service implementation.
@@ -47,7 +50,7 @@ import static java.lang.Math.max;
  *     <li>File names shall have the format PPTT[.SS], where PP is one of "OK" or "KO", TT the play or load time in units
  *     of 0.1 seconds and SS an optional suffix, starting with a dot (.). If starting with "OK", the method
  *     call will be successful, if starting with "KO", an error will be generated.</li>
- *     <li>Valid URLs have the form "http://PP:TT[/SS], where PP is one of "OK" or "KO", TT the load time in units
+ *     <li>Valid URLs have the form <u>http://PP:TT[/SS]</u>, where PP is one of "OK" or "KO", TT the load time in units
  *     of 0.1 seconds and SS an optional suffix, starting with a slash (/).</li>
  * </ul>
  * All other file names and URL strings will result in an error event or an error exception.
@@ -60,7 +63,7 @@ public class GraphicDisplayDevice extends JposDevice {
         graphicDisplayInit(1);
         PhysicalDeviceDescription = "Dummy GraphicDisplay simulator";
         PhysicalDeviceName = "Dummy GraphicDisplay Simulator";
-        CapPowerReporting = JposConst.JPOS_PR_NONE;
+        CapPowerReporting = JPOS_PR_NONE;
         }
 
     private String CapAssociatedHardTotalsDevice = "";
@@ -73,8 +76,7 @@ public class GraphicDisplayDevice extends JposDevice {
     @Override
     public void checkProperties(JposEntry entries) throws JposException{
         super.checkProperties(entries);
-        Object o;
-        for (Iterator it = entries.getProps(); it.hasNext(); ) {
+        for (Iterator<?> it = entries.getProps(); it.hasNext(); ) {
             JposEntry.Prop entry = (JposEntry.Prop)it.next();
             try {
                 if (entry.getName().equals("CapAssociatedHardTotalsDevice")) {
@@ -93,7 +95,7 @@ public class GraphicDisplayDevice extends JposDevice {
                 if (entry.getName().equals("CapVolume"))
                     CapVolume = Boolean.parseBoolean(entry.getValue().toString());
             } catch (NumberFormatException e) {
-                throw new JposException(JposConst.JPOS_E_NOSERVICE, "Invalid Property " + entry.getName() + ": " + entry.getValue().toString());
+                throw new JposException(JPOS_E_NOSERVICE, "Invalid Property " + entry.getName() + ": " + entry.getValue().toString());
             }
         }
     }
@@ -105,9 +107,9 @@ public class GraphicDisplayDevice extends JposDevice {
         props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Graphic Display service for sample dummy device";
         if ((props.CapAssociatedHardTotalsDevice = CapAssociatedHardTotalsDevice).length() == 0)
-            props.CapStorage = GraphicDisplayConst.GDSP_CST_HOST_ONLY;
+            props.CapStorage = GDSP_CST_HOST_ONLY;
         else
-            props.CapStorage = GraphicDisplayConst.GDSP_CST_ALL;
+            props.CapStorage = GDSP_CST_ALL;
         props.CapImageType = (props.ImageTypeList = ImageTypeList).length() > 0;
         props.CapVideoType = (props.VideoTypeList = VideoTypeList).length() > 0;
         props.CapBrightness = CapBrightness;
@@ -134,15 +136,16 @@ public class GraphicDisplayDevice extends JposDevice {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public boolean initOnFirstEnable() {
             if (super.initOnFirstEnable()) {
                 String[] parts = ImageTypeList.split(",");
                 ImageType = parts.length > 0 ? parts[0] : "";
                 parts = VideoTypeList.split(",");
                 VideoType = parts[0];
-                Storage = CapStorage == GraphicDisplayConst.GDSP_CST_ALL  ? GraphicDisplayConst.GDSP_ST_HOST_HARDTOTALS : GraphicDisplayConst.GDSP_ST_HOST;
+                Storage = CapStorage == GDSP_CST_ALL  ? GDSP_ST_HOST_HARDTOTALS : GDSP_ST_HOST;
                 Volume = Brightness = 50;
-                DisplayMode = GraphicDisplayConst.GDSP_DMODE_HIDDEN;
+                DisplayMode = GDSP_DMODE_HIDDEN;
                 AsyncMode = true;
                 return true;
             }
@@ -172,7 +175,7 @@ public class GraphicDisplayDevice extends JposDevice {
         }
 
         private int getFileOperationTime(String filename) throws JposException {
-            Integer time;
+            Integer time = null;
             String file = filename;
             int index = max(file.lastIndexOf('\\'), file.lastIndexOf('/'));
             if (index >= 0)
@@ -182,34 +185,40 @@ public class GraphicDisplayDevice extends JposDevice {
             try {
                 index = Integer.parseInt(file.substring(2));
             } catch (Exception e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid Filename: " + filename);
+                throw new JposException(JPOS_E_ILLEGAL, "Invalid Filename: " + filename);
             }
-            time = file.substring(0, 2).toUpperCase().equals("KO") ? -index : (file.substring(0, 2).toUpperCase().equals("OK") ? index : null);
-            check(time == null, JposConst.JPOS_E_ILLEGAL, "Invalid File: " + filename);
+            if (file.substring(0, 2).equalsIgnoreCase("KO"))
+                time = -index;
+            else if (file.substring(0, 2).equalsIgnoreCase("OK"))
+                time = index;
+            check(time == null, JPOS_E_ILLEGAL, "Invalid File: " + filename);
             return time * 100;
         }
 
         private int getUrlOperationTime(String url) throws JposException {
-            Integer time;
+            Integer time = null;
             String uri = url;
             try {
-                check(!uri.substring(0, "http://".length()).equals("http://"), 0, "");
+                check(!uri.startsWith("http://"), 0, "");
                 uri = uri.substring("http://".length());
                 check(uri.charAt(2) != ':', 0, "");
                 if (uri.indexOf('/') > 0)
                     uri = uri.substring(0, uri.indexOf('/'));
                 int index = Integer.parseInt(uri.substring(3));
-                time = uri.substring(0, 2).toUpperCase().equals("KO") ? -index : (uri.substring(0, 2).toUpperCase().equals("OK") ? index : null);
+                if (uri.substring(0, 2).equalsIgnoreCase("KO"))
+                    time = -index;
+                else if (uri.substring(0, 2).equalsIgnoreCase("OK"))
+                    time = index;
             } catch (Exception e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid URL: " + url);
+                throw new JposException(JPOS_E_ILLEGAL, "Invalid URL: " + url);
             }
-            check(time == null, JposConst.JPOS_E_ILLEGAL, "Invalid URL: " + url);
+            check(time == null, JPOS_E_ILLEGAL, "Invalid URL: " + url);
             return time * 100;
         }
 
         @Override
         public void displayMode(int mode) throws JposException {
-            if (mode == GraphicDisplayConst.GDSP_DMODE_HIDDEN) {
+            if (mode == GDSP_DMODE_HIDDEN) {
                 List<JposOutputRequest> imgorvideos = new ArrayList<>();
                 synchronized (AsyncProcessorRunning) {
                     for (JposOutputRequest req : CurrentCommands) {
@@ -233,17 +242,16 @@ public class GraphicDisplayDevice extends JposDevice {
         @Override
         public void loadImage(LoadImage request) throws JposException {
             int time = getFileOperationTime(request.getFileName());
-            handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GraphicDisplayConst.GDSP_SUE_START_IMAGE_LOAD));
+            handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GDSP_SUE_START_IMAGE_LOAD));
             request.Waiting.suspend(time > 0 ? time : -time);
-            handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GraphicDisplayConst.GDSP_SUE_END_IMAGE_LOAD));
-            check(time < 0, JposConst.JPOS_E_FAILURE, "Bad File");
+            handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GDSP_SUE_END_IMAGE_LOAD));
+            check(time < 0, JPOS_E_FAILURE, "Bad File");
         }
 
         @Override
         public PlayVideo playVideo(String filename, boolean loop) throws JposException {
-            GraphicDisplayService srv = (GraphicDisplayService) EventSource;
             synchronized (AsyncProcessorRunning) {
-                check(State == JposConst.JPOS_S_ERROR, JposConst.JPOS_E_ILLEGAL, "Leave Error Condition First");
+                check(State == JPOS_S_ERROR, JPOS_E_ILLEGAL, "Leave Error Condition First");
             }
             getFileOperationTime(filename);
             return new PlayVideo(this, filename, loop);
@@ -252,15 +260,15 @@ public class GraphicDisplayDevice extends JposDevice {
         @Override
         public void playVideo(PlayVideo request) throws JposException {
             int time = getFileOperationTime(request.getFileName());
-            handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GraphicDisplayConst.GDSP_SUE_START_PLAY_VIDEO));
-            request.Waiting.suspend(time > 0 ? (request.getLoop() ? SyncObject.INFINITE : time) : -time);
-            handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GraphicDisplayConst.GDSP_SUE_STOP_PLAY_VIDEO));
-            check(time < 0, JposConst.JPOS_E_FAILURE, "Bad File");
+            handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GDSP_SUE_START_PLAY_VIDEO));
+            request.Waiting.suspend(time > 0 ? (request.getLoop() ? INFINITE : time) : -time);
+            handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource, GDSP_SUE_STOP_PLAY_VIDEO));
+            check(time < 0, JPOS_E_FAILURE, "Bad File");
         }
 
         @Override
         public void stopVideo() throws JposException {
-            List<PlayVideo> videos = new ArrayList<PlayVideo>();
+            List<PlayVideo> videos = new ArrayList<>();
             synchronized (AsyncProcessorRunning) {
                 for (JposOutputRequest req : CurrentCommands) {
                     if (req instanceof PlayVideo)
@@ -277,11 +285,11 @@ public class GraphicDisplayDevice extends JposDevice {
 
         @Override
         public void cancelURLLoading() throws JposException {
-            List<JposOutputRequest> reqs = new ArrayList<JposOutputRequest>();
+            List<JposOutputRequest> reqs = new ArrayList<>();
             synchronized (AsyncProcessorRunning) {
                 for (JposOutputRequest req : CurrentCommands) {
                     if (!(req instanceof PlayVideo || req instanceof LoadImage))
-                        reqs.add((PlayVideo) req);
+                        reqs.add(req);
                 }
             }
             for (JposOutputRequest req : reqs) {
@@ -299,10 +307,10 @@ public class GraphicDisplayDevice extends JposDevice {
         public void loadURL(LoadURL request) throws JposException {
             int time = getUrlOperationTime(request.getURL());
             handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource,
-                    GraphicDisplayConst.GDSP_SUE_START_LOAD_WEBPAGE, request.getURL()));
+                    GDSP_SUE_START_LOAD_WEBPAGE, request.getURL()));
             boolean cancelled = request.Waiting.suspend(time > 0 ? time : -time);
             handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource,
-                    cancelled || time < 0 ? GraphicDisplayConst.GDSP_SUE_CANCEL_LOAD_WEBPAGE : GraphicDisplayConst.GDSP_SUE_FINISH_LOAD_WEBPAGE,
+                    cancelled || time < 0 ? GDSP_SUE_CANCEL_LOAD_WEBPAGE : GDSP_SUE_FINISH_LOAD_WEBPAGE,
                     request.getURL()));
             PreviousURL = CurrentURL;
             NextURL = null;
@@ -312,12 +320,11 @@ public class GraphicDisplayDevice extends JposDevice {
                 CapURLBack = changed;
                 EventSource.logSet("CapURLBack");
             }
-            changed = false;
-            if (CapURLForward != changed) {
-                CapURLForward = changed;
+            if (CapURLForward) {
+                CapURLForward = false;
                 EventSource.logSet("CapURLForward");
             }
-            check(time < 0, JposConst.JPOS_E_FAILURE, "URL Load Error");
+            check(time < 0, JPOS_E_FAILURE, "URL Load Error");
         }
 
         @Override
@@ -327,15 +334,15 @@ public class GraphicDisplayDevice extends JposDevice {
 
         @Override
         public void updateURLPage(UpdateURLPage request) throws JposException {
-            check(CurrentURL == null, JposConst.JPOS_E_ILLEGAL, "No Current URL");
+            check(CurrentURL == null, JPOS_E_ILLEGAL, "No Current URL");
             int time = getUrlOperationTime(CurrentURL);
             handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource,
-                    GraphicDisplayConst.GDSP_SUE_START_LOAD_WEBPAGE, CurrentURL));
+                    GDSP_SUE_START_LOAD_WEBPAGE, CurrentURL));
             boolean cancelled = request.Waiting.suspend(time > 0 ? time : -time);
             handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource,
-                    cancelled || time < 0 ? GraphicDisplayConst.GDSP_SUE_CANCEL_LOAD_WEBPAGE : GraphicDisplayConst.GDSP_SUE_FINISH_LOAD_WEBPAGE,
+                    cancelled || time < 0 ? GDSP_SUE_CANCEL_LOAD_WEBPAGE : GDSP_SUE_FINISH_LOAD_WEBPAGE,
                     CurrentURL));
-            check(time < 0, JposConst.JPOS_E_FAILURE, "URL Load Error");
+            check(time < 0, JPOS_E_FAILURE, "URL Load Error");
         }
 
         @Override
@@ -345,28 +352,27 @@ public class GraphicDisplayDevice extends JposDevice {
 
         @Override
         public void goURLBack(GoURLBack request) throws JposException {
-            check(PreviousURL == null, JposConst.JPOS_E_ILLEGAL, "No Previous URL");
+            check(PreviousURL == null, JPOS_E_ILLEGAL, "No Previous URL");
             int time = getUrlOperationTime(PreviousURL);
             handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource,
-                    GraphicDisplayConst.GDSP_SUE_START_LOAD_WEBPAGE, PreviousURL));
+                    GDSP_SUE_START_LOAD_WEBPAGE, PreviousURL));
             boolean cancelled = request.Waiting.suspend(time > 0 ? time : -time);
             handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource,
-                    cancelled || time < 0 ? GraphicDisplayConst.GDSP_SUE_CANCEL_LOAD_WEBPAGE : GraphicDisplayConst.GDSP_SUE_FINISH_LOAD_WEBPAGE,
+                    cancelled || time < 0 ? GDSP_SUE_CANCEL_LOAD_WEBPAGE : GDSP_SUE_FINISH_LOAD_WEBPAGE,
                     PreviousURL));
             NextURL = CurrentURL;
             CurrentURL = PreviousURL;
             PreviousURL = null;
-            boolean changed = false;
-            if (CapURLBack != changed) {
-                CapURLBack = changed;
+            if (CapURLBack) {
+                CapURLBack = false;
                 EventSource.logSet("CapURLBack");
             }
-            changed = NextURL != null;
+            boolean changed = NextURL != null;
             if (CapURLForward != changed) {
                 CapURLForward = changed;
                 EventSource.logSet("CapURLForward");
             }
-            check(time < 0, JposConst.JPOS_E_FAILURE, "URL Load Error");
+            check(time < 0, JPOS_E_FAILURE, "URL Load Error");
         }
 
         @Override
@@ -376,30 +382,28 @@ public class GraphicDisplayDevice extends JposDevice {
 
         @Override
         public void goURLForward(GoURLForward request) throws JposException {
-            check(NextURL == null, JposConst.JPOS_E_ILLEGAL, "No Next URL");
+            check(NextURL == null, JPOS_E_ILLEGAL, "No Next URL");
             int time = getUrlOperationTime(NextURL);
             handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource,
-                    GraphicDisplayConst.GDSP_SUE_START_LOAD_WEBPAGE, NextURL));
+                    GDSP_SUE_START_LOAD_WEBPAGE, NextURL));
             boolean cancelled = request.Waiting.suspend(time > 0 ? time : -time);
             handleEvent(new GraphicDisplayStatusUpdateEvent(EventSource,
-                    cancelled || time < 0 ? GraphicDisplayConst.GDSP_SUE_CANCEL_LOAD_WEBPAGE : GraphicDisplayConst.GDSP_SUE_FINISH_LOAD_WEBPAGE,
+                    cancelled || time < 0 ? GDSP_SUE_CANCEL_LOAD_WEBPAGE : GDSP_SUE_FINISH_LOAD_WEBPAGE,
                     NextURL));
             PreviousURL = CurrentURL;
             CurrentURL = NextURL;
             NextURL = null;
             CapURLForward = false;
-            CapURLBack = PreviousURL != null;
             boolean changed = PreviousURL != null;
             if (CapURLBack != changed) {
                 CapURLBack = changed;
                 EventSource.logSet("CapURLBack");
             }
-            changed = false;
-            if (CapURLForward != changed) {
-                CapURLForward = changed;
+            if (CapURLForward) {
+                CapURLForward = false;
                 EventSource.logSet("CapURLForward");
             }
-            check(time < 0, JposConst.JPOS_E_FAILURE, "URL Load Error");
+            check(time < 0, JPOS_E_FAILURE, "URL Load Error");
         }
     }
 }

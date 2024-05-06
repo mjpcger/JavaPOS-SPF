@@ -19,7 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.soundplayer;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
 import jpos.JposException;
-import jpos.SoundPlayerConst;
+
+import static jpos.SoundPlayerConst.*;
 
 /**
  * Class containing the sound player specific properties, their default values and default implementations of
@@ -49,7 +50,7 @@ public class SoundPlayerProperties extends JposCommonProperties implements Sound
      * UPOS property CapStorage. Default: CST_HOST_ONLY. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int CapStorage = SoundPlayerConst.SPLY_CST_HOST_ONLY;
+    public int CapStorage = SPLY_CST_HOST_ONLY;
 
     /**
      * UPOS property CapVolume. Default: false. Can be overwritten by objects derived from JposDevice within the
@@ -72,13 +73,13 @@ public class SoundPlayerProperties extends JposCommonProperties implements Sound
     /**
      * Every assess to OutputIDList must be synchronized via OutputIdListSync.
      */
-    public String[] OutputIdListSync = { OutputIDList };
+    public final String[] OutputIdListSync = { OutputIDList };
 
     /**
      * UPOS property Storage. Default: an empty string. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int Storage = SoundPlayerConst.SPLY_ST_HOST;
+    public int Storage = SPLY_ST_HOST;
 
     /**
      * UPOS property Volume. Default: 0. Can be overwritten by objects derived from JposDevice within the
@@ -93,7 +94,6 @@ public class SoundPlayerProperties extends JposCommonProperties implements Sound
      */
     protected SoundPlayerProperties(int dev) {
         super(dev);
-        DeviceServiceVersion = 1016000;
     }
 
     @Override

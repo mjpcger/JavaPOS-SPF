@@ -29,7 +29,7 @@ public class DrawBox extends ClearVideoRegion {
     public int getBordertype() {
         return Bordertype;
     }
-    private int Bordertype;
+    private final int Bordertype;
 
     /**
      * Constructor. Stores given parameters for later use.

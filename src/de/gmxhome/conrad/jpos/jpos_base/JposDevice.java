@@ -61,10 +61,11 @@ import de.gmxhome.conrad.jpos.jpos_base.speechsynthesis.SpeechSynthesisPropertie
 import de.gmxhome.conrad.jpos.jpos_base.toneindicator.ToneIndicatorProperties;
 import de.gmxhome.conrad.jpos.jpos_base.videocapture.VideoCaptureProperties;
 import de.gmxhome.conrad.jpos.jpos_base.voicerecognition.VoiceRecognitionProperties;
-import jpos.*;
+import jpos.JposException;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
+import static jpos.JposConst.JPOS_E_NOSERVICE;
 
 /**
  * Class that contains all device specific implementation interfaces to be derived by device service implementations.
@@ -81,6 +82,7 @@ import java.util.List;
  *         added to <i>DeviceClass</i>s[index].</li>
  * </ul>
  */
+@SuppressWarnings("unused")
 public class JposDevice extends JposBaseDevice {
     /**
      * Constructor. Initialize ID. Derived classes must allocate list of list of property sets
@@ -90,6 +92,20 @@ public class JposDevice extends JposBaseDevice {
      */
     protected JposDevice(String id) {
         super(id);
+    }
+
+    /**
+     * Helper method to create arrays of Maps or lists
+     * @param count   Minimum Dimension of the array.
+     * @param entries Zero or more instances of an object of the type to be stored within the array.
+     * @return  Array of dimension &ge; count, with entries as first element(s), if any.
+     * @param <E> Class of elements of the array.
+     */
+    @SafeVarargs
+    public static <E> E[] getArrayOf(int count, E... entries) {
+        if (count <= entries.length)
+            return entries;
+        return Arrays.copyOf(entries, count);
     }
 
     @Override
@@ -153,7 +169,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by BeltService
      * objects belonging to the same belt.
      */
-    public List<JposCommonProperties>[] Belts = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] Belts = getArrayOf(0);
 
     /**
      * Array of belt property sets, one element for each belt the device service
@@ -172,9 +188,9 @@ public class JposDevice extends JposBaseDevice {
     protected void beltInit(int maxBelt) {
         if (Belts.length == 0 && maxBelt > 0) {
             ClaimedBelt = new BeltProperties[maxBelt];
-            Belts = (List<JposCommonProperties>[])new List[maxBelt];
+            Belts = getArrayOf(maxBelt);
             for (int i = 0; i < maxBelt; i++) {
-                Belts[i] = new ArrayList<JposCommonProperties>(0);
+                Belts[i] = new ArrayList<>(0);
             }
         }
     }
@@ -184,9 +200,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(BeltProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -196,8 +211,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of BeltProperties that matches the requirements of the corresponding device service.
      */
-    public BeltProperties getBeltProperties(int index) {
-        return null;
+    public BeltProperties getBeltProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -211,7 +226,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by BillAcceptorService
      * objects belonging to the same bill acceptor.
      */
-    public List<JposCommonProperties>[] BillAcceptors = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] BillAcceptors = getArrayOf(0);
 
     /**
      * Array of bill acceptor property sets, one element for each bill acceptor the device service
@@ -230,9 +245,9 @@ public class JposDevice extends JposBaseDevice {
     protected void billAcceptorInit(int maxBillAcceptor) {
         if (BillAcceptors.length == 0 && maxBillAcceptor > 0) {
             ClaimedBillAcceptor = new BillAcceptorProperties[maxBillAcceptor];
-            BillAcceptors = (List<JposCommonProperties>[])new List[maxBillAcceptor];
+            BillAcceptors = getArrayOf(maxBillAcceptor);
             for (int i = 0; i < maxBillAcceptor; i++) {
-                BillAcceptors[i] = new ArrayList<JposCommonProperties>(0);
+                BillAcceptors[i] = new ArrayList<>(0);
             }
         }
     }
@@ -242,9 +257,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(BillAcceptorProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -254,8 +268,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of BillAcceptorProperties that matches the requirements of the corresponding device service.
      */
-    public BillAcceptorProperties getBillAcceptorProperties(int index) {
-        return null;
+    public BillAcceptorProperties getBillAcceptorProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -269,7 +283,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by BillDispenserService
      * objects belonging to the same bill dispenser.
      */
-    public List<JposCommonProperties>[] BillDispensers = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] BillDispensers = getArrayOf(0);
 
     /**
      * Array of bill dispenser property sets, one element for each bill dispenser the device service
@@ -288,9 +302,9 @@ public class JposDevice extends JposBaseDevice {
     protected void billDispenserInit(int maxBillDispenser) {
         if (BillDispensers.length == 0 && maxBillDispenser > 0) {
             ClaimedBillDispenser = new BillDispenserProperties[maxBillDispenser];
-            BillDispensers = (List<JposCommonProperties>[])new List[maxBillDispenser];
+            BillDispensers = getArrayOf(maxBillDispenser);
             for (int i = 0; i < maxBillDispenser; i++) {
-                BillDispensers[i] = new ArrayList<JposCommonProperties>(0);
+                BillDispensers[i] = new ArrayList<>(0);
             }
         }
     }
@@ -300,9 +314,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(BillDispenserProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -312,8 +325,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of BillDispenserProperties that matches the requirements of the corresponding device service.
      */
-    public BillDispenserProperties getBillDispenserProperties(int index) {
-        return null;
+    public BillDispenserProperties getBillDispenserProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -327,7 +340,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by BiometricsService
      * objects belonging to the same biometrics instance.
      */
-    public List<JposCommonProperties>[] Biometricss = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] Biometricss = getArrayOf(0);
 
     /**
      * Array of biometrics property sets, one element for each biometrics instance the device service
@@ -346,9 +359,9 @@ public class JposDevice extends JposBaseDevice {
     protected void biometricsInit(int maxBiometrics) {
         if (Biometricss.length == 0 && maxBiometrics > 0) {
             ClaimedBiometrics = new BiometricsProperties[maxBiometrics];
-            Biometricss = (List<JposCommonProperties>[])new List[maxBiometrics];
+            Biometricss = getArrayOf(maxBiometrics);
             for (int i = 0; i < maxBiometrics; i++) {
-                Biometricss[i] = new ArrayList<JposCommonProperties>(0);
+                Biometricss[i] = new ArrayList<>(0);
             }
         }
     }
@@ -358,9 +371,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(BiometricsProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -370,8 +382,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of BiometricsProperties that matches the requirements of the corresponding device service.
      */
-    public BiometricsProperties getBiometricsProperties(int index) {
-        return null;
+    public BiometricsProperties getBiometricsProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -385,7 +397,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by BumpBarService
      * objects belonging to the same bump bar.
      */
-    public List<JposCommonProperties>[] BumpBars = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] BumpBars = getArrayOf(0);
 
     /**
      * Array of bump bar property sets, one element for each bump bar the device service
@@ -404,9 +416,9 @@ public class JposDevice extends JposBaseDevice {
     protected void bumpBarInit(int maxBumpBar) {
         if (BumpBars.length == 0 && maxBumpBar > 0) {
             ClaimedBumpBar = new BumpBarProperties[maxBumpBar];
-            BumpBars = (List<JposCommonProperties>[])new List[maxBumpBar];
+            BumpBars = getArrayOf(maxBumpBar);
             for (int i = 0; i < maxBumpBar; i++) {
-                BumpBars[i] = new ArrayList<JposCommonProperties>(0);
+                BumpBars[i] = new ArrayList<>(0);
             }
         }
     }
@@ -416,9 +428,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(BumpBarProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -428,8 +439,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of BumpBarProperties that matches the requirements of the corresponding device service.
      */
-    public BumpBarProperties getBumpBarProperties(int index) {
-        return null;
+    public BumpBarProperties getBumpBarProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -443,7 +454,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by CashChangerService
      * objects belonging to the same cash changer.
      */
-    public List<JposCommonProperties>[] CashChangers = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] CashChangers = getArrayOf(0);
 
     /**
      * Array of cash changer property sets, one element for each cash changer the device service
@@ -462,9 +473,9 @@ public class JposDevice extends JposBaseDevice {
     protected void cashChangerInit(int maxCashChanger) {
         if (CashChangers.length == 0 && maxCashChanger > 0) {
             ClaimedCashChanger = new CashChangerProperties[maxCashChanger];
-            CashChangers = (List<JposCommonProperties>[])new List[maxCashChanger];
+            CashChangers = getArrayOf(maxCashChanger);
             for (int i = 0; i < maxCashChanger; i++) {
-                CashChangers[i] = new ArrayList<JposCommonProperties>(0);
+                CashChangers[i] = new ArrayList<>(0);
             }
         }
     }
@@ -474,9 +485,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(CashChangerProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -486,8 +496,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of CashChangerProperties that matches the requirements of the corresponding device service.
      */
-    public CashChangerProperties getCashChangerProperties(int index) {
-        return null;
+    public CashChangerProperties getCashChangerProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -501,7 +511,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by CashDrawerService
      * objects belonging to the same cash drawer.
      */
-    public List<JposCommonProperties>[] CashDrawers = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] CashDrawers = getArrayOf(0);
 
     /**
      * Array of drawer property sets, one element for each cash drawer the device service
@@ -517,12 +527,13 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param maxDrawer Maximum number of cash drawers that can be controlled by the physical device
      */
+    @SuppressWarnings("deprecation")
     protected void cashDrawerInit(int maxDrawer) {
         if (CashDrawers.length == 0 && maxDrawer > 0) {
             ClaimedCashDrawer = new CashDrawerProperties[maxDrawer];
-            CashDrawers = (List<JposCommonProperties>[])new List[maxDrawer];
+            CashDrawers = getArrayOf(maxDrawer);
             for (int i = 0; i < maxDrawer; i++) {
-                CashDrawers[i] = new ArrayList<JposCommonProperties>(0);
+                CashDrawers[i] = new ArrayList<>(0);
             }
             DrawerBeepVolume = 100; // The default volume
         }
@@ -533,8 +544,9 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(CashDrawerProperties props) {
-        AllowAlwaysSetProperties = true;
+        DrawerBeepVolume = props.DrawerBeepVolume;
         JposVersion = null;
     }
 
@@ -544,8 +556,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of CashDrawerProperties that matches the requirements of the corresponding device service.
      */
-    public CashDrawerProperties getCashDrawerProperties(int index) {
-        return null;
+    public CashDrawerProperties getCashDrawerProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -559,7 +571,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by CheckScannerService
      * objects belonging to the same check scanner.
      */
-    public List<JposCommonProperties>[] CheckScanners = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] CheckScanners = getArrayOf(0);
 
     /**
      * Array of check scanner property sets, one element for each check scanner the device service
@@ -578,9 +590,9 @@ public class JposDevice extends JposBaseDevice {
     protected void checkScannerInit(int maxCheckScanner) {
         if (CheckScanners.length == 0 && maxCheckScanner > 0) {
             ClaimedCheckScanner = new CheckScannerProperties[maxCheckScanner];
-            CheckScanners = (List<JposCommonProperties>[])new List[maxCheckScanner];
+            CheckScanners = getArrayOf(maxCheckScanner);
             for (int i = 0; i < maxCheckScanner; i++) {
-                CheckScanners[i] = new ArrayList<JposCommonProperties>(0);
+                CheckScanners[i] = new ArrayList<>(0);
             }
         }
     }
@@ -590,9 +602,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(CheckScannerProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -602,8 +613,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of CheckScannerProperties that matches the requirements of the corresponding device service.
      */
-    public CheckScannerProperties getCheckScannerProperties(int index) {
-        return null;
+    public CheckScannerProperties getCheckScannerProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -617,7 +628,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by CoinAcceptorService
      * objects belonging to the same coin acceptor.
      */
-    public List<JposCommonProperties>[] CoinAcceptors = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] CoinAcceptors = getArrayOf(0);
 
     /**
      * Array of coin acceptor property sets, one element for each coin acceptor the device service
@@ -636,9 +647,9 @@ public class JposDevice extends JposBaseDevice {
     protected void coinAcceptorInit(int maxCoinAcceptor) {
         if (CoinAcceptors.length == 0 && maxCoinAcceptor > 0) {
             ClaimedCoinAcceptor = new CoinAcceptorProperties[maxCoinAcceptor];
-            CoinAcceptors = (List<JposCommonProperties>[])new List[maxCoinAcceptor];
+            CoinAcceptors = getArrayOf(maxCoinAcceptor);
             for (int i = 0; i < maxCoinAcceptor; i++) {
-                CoinAcceptors[i] = new ArrayList<JposCommonProperties>(0);
+                CoinAcceptors[i] = new ArrayList<>(0);
             }
         }
     }
@@ -648,9 +659,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(CoinAcceptorProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -660,8 +670,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of CoinAcceptorProperties that matches the requirements of the corresponding device service.
      */
-    public CoinAcceptorProperties getCoinAcceptorProperties(int index) {
-        return null;
+    public CoinAcceptorProperties getCoinAcceptorProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -675,7 +685,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by CATService
      * objects belonging to the same credit authorization terminal.
      */
-    public List<JposCommonProperties>[] CATs = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] CATs = getArrayOf(0);
 
     /**
      * Array of electronic journal property sets, one element for each credit authorization terminal the device service
@@ -689,9 +699,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(CATProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -705,9 +714,9 @@ public class JposDevice extends JposBaseDevice {
     protected void cATInit(int maxCAT) {
         if (CATs.length == 0 && maxCAT > 0) {
             ClaimedCAT = new CATProperties[maxCAT];
-            CATs = (List<JposCommonProperties>[])new List[maxCAT];
+            CATs = getArrayOf(maxCAT);
             for (int i = 0; i < maxCAT; i++) {
-                CATs[i] = new ArrayList<JposCommonProperties>(0);
+                CATs[i] = new ArrayList<>(0);
             }
         }
     }
@@ -718,8 +727,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of CATProperties that matches the requirements of the corresponding device service.
      */
-    public CATProperties getCATProperties(int index) {
-        return null;
+    public CATProperties getCATProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -733,7 +742,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by CoinDispenserService
      * objects belonging to the same coin dispenser.
      */
-    public List<JposCommonProperties>[] CoinDispensers = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] CoinDispensers = getArrayOf(0);
 
     /**
      * Array of coin dispenser property sets, one element for each coin dispenser the device service
@@ -747,8 +756,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(CoinDispenserProperties props) {
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -762,9 +771,9 @@ public class JposDevice extends JposBaseDevice {
     protected void coinDispenserInit(int maxCoinDispenser) {
         if (CoinDispensers.length == 0 && maxCoinDispenser > 0) {
             ClaimedCoinDispenser = new CoinDispenserProperties[maxCoinDispenser];
-            CoinDispensers = (List<JposCommonProperties>[])new List[maxCoinDispenser];
+            CoinDispensers = getArrayOf(maxCoinDispenser);
             for (int i = 0; i < maxCoinDispenser; i++) {
-                CoinDispensers[i] = new ArrayList<JposCommonProperties>(0);
+                CoinDispensers[i] = new ArrayList<>(0);
             }
         }
     }
@@ -775,8 +784,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of CoinDispenserProperties that matches the requirements of the corresponding device service.
      */
-    public CoinDispenserProperties getCoinDispenserProperties(int index) {
-        return null;
+    public CoinDispenserProperties getCoinDispenserProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -790,7 +799,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by DeviceMonitorService
      * objects belonging to the same device monitor.
      */
-    public List<JposCommonProperties>[] DeviceMonitors = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] DeviceMonitors = getArrayOf(0);
 
     /**
      * Array of device monitor property sets, one element for each device monitor the device service
@@ -809,9 +818,9 @@ public class JposDevice extends JposBaseDevice {
     protected void deviceMonitorInit(int maxDeviceMonitor) {
         if (DeviceMonitors.length == 0 && maxDeviceMonitor > 0) {
             ClaimedDeviceMonitor = new DeviceMonitorProperties[maxDeviceMonitor];
-            DeviceMonitors = (List<JposCommonProperties>[])new List[maxDeviceMonitor];
+            DeviceMonitors = getArrayOf(maxDeviceMonitor);
             for (int i = 0; i < maxDeviceMonitor; i++) {
-                DeviceMonitors[i] = new ArrayList<JposCommonProperties>(0);
+                DeviceMonitors[i] = new ArrayList<>(0);
             }
         }
     }
@@ -821,9 +830,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(DeviceMonitorProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -833,8 +841,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of DeviceMonitorProperties that matches the requirements of the corresponding device service.
      */
-    public DeviceMonitorProperties getDeviceMonitorProperties(int index) {
-        return null;
+    public DeviceMonitorProperties getDeviceMonitorProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -848,7 +856,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by ElectronicJournalService
      * objects belonging to the same electronic journal.
      */
-    public List<JposCommonProperties>[] ElectronicJournals = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] ElectronicJournals = getArrayOf(0);
 
     /**
      * Array of electronic journal property sets, one element for each electronic journal the device service
@@ -862,9 +870,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(ElectronicJournalProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -878,9 +885,9 @@ public class JposDevice extends JposBaseDevice {
     protected void electronicJournalInit(int maxElectronicJournal) {
         if (ElectronicJournals.length == 0 && maxElectronicJournal > 0) {
             ClaimedElectronicJournal = new ElectronicJournalProperties[maxElectronicJournal];
-            ElectronicJournals = (List<JposCommonProperties>[])new List[maxElectronicJournal];
+            ElectronicJournals = getArrayOf(maxElectronicJournal);
             for (int i = 0; i < maxElectronicJournal; i++) {
-                ElectronicJournals[i] = new ArrayList<JposCommonProperties>(0);
+                ElectronicJournals[i] = new ArrayList<>(0);
             }
         }
     }
@@ -891,8 +898,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of ElectronicJournalProperties that matches the requirements of the corresponding device service.
      */
-    public ElectronicJournalProperties getElectronicJournalProperties(int index) {
-        return null;
+    public ElectronicJournalProperties getElectronicJournalProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -906,7 +913,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by ElectronicValueRWService
      * objects belonging to the same electronic value reader / writer.
      */
-    public List<JposCommonProperties>[] ElectronicValueRWs = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] ElectronicValueRWs = getArrayOf(0);
 
     /**
      * Array of electronic value reader / writer property sets, one element for each electronic value reader / writer
@@ -921,9 +928,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(ElectronicValueRWProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -938,9 +944,9 @@ public class JposDevice extends JposBaseDevice {
     protected void electronicValueRWInit(int maxElectronicValueRW) {
         if (ElectronicValueRWs.length == 0 && maxElectronicValueRW > 0) {
             ClaimedElectronicValueRW = new ElectronicValueRWProperties[maxElectronicValueRW];
-            ElectronicValueRWs = (List<JposCommonProperties>[])new List[maxElectronicValueRW];
+            ElectronicValueRWs = getArrayOf(maxElectronicValueRW);
             for (int i = 0; i < maxElectronicValueRW; i++) {
-                ElectronicValueRWs[i] = new ArrayList<JposCommonProperties>(0);
+                ElectronicValueRWs[i] = new ArrayList<>(0);
             }
         }
     }
@@ -951,8 +957,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of ElectronicValueRWProperties that matches the requirements of the corresponding device service.
      */
-    public ElectronicValueRWProperties getElectronicValueRWProperties(int index) {
-        return null;
+    public ElectronicValueRWProperties getElectronicValueRWProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -966,7 +972,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by FiscalPrinterService
      * objects belonging to the same fiscal printer.
      */
-    public List<JposCommonProperties>[] FiscalPrinters = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] FiscalPrinters = getArrayOf(0);
 
     /**
      * Array of fiscal printer property sets, one element for each fiscal printer the device service
@@ -980,9 +986,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(FiscalPrinterProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -996,9 +1001,9 @@ public class JposDevice extends JposBaseDevice {
     protected void fiscalPrinterInit(int maxFiscalPrinter) {
         if (FiscalPrinters.length == 0 && maxFiscalPrinter > 0) {
             ClaimedFiscalPrinter = new FiscalPrinterProperties[maxFiscalPrinter];
-            FiscalPrinters = (List<JposCommonProperties>[])new List[maxFiscalPrinter];
+            FiscalPrinters = getArrayOf(maxFiscalPrinter);
             for (int i = 0; i < maxFiscalPrinter; i++) {
-                FiscalPrinters[i] = new ArrayList<JposCommonProperties>(0);
+                FiscalPrinters[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1009,8 +1014,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of FiscalPrinterProperties that matches the requirements of the corresponding device service.
      */
-    public FiscalPrinterProperties getFiscalPrinterProperties(int index) {
-        return null;
+    public FiscalPrinterProperties getFiscalPrinterProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1024,7 +1029,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by GateService
      * objects belonging to the same gate.
      */
-    public List<JposCommonProperties>[] Gates = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] Gates = getArrayOf(0);
 
     /**
      * Array of gate property sets, one element for each gate the device service
@@ -1038,8 +1043,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(GateProperties props) {
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1053,9 +1058,9 @@ public class JposDevice extends JposBaseDevice {
     protected void gateInit(int maxGate) {
         if (Gates.length == 0 && maxGate > 0) {
             ClaimedGate = new GateProperties[maxGate];
-            Gates = (List<JposCommonProperties>[])new List[maxGate];
+            Gates = getArrayOf(maxGate);
             for (int i = 0; i < maxGate; i++) {
-                Gates[i] = new ArrayList<JposCommonProperties>(0);
+                Gates[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1066,8 +1071,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of GateProperties that matches the requirements of the corresponding device service.
      */
-    public GateProperties getGateProperties(int index) {
-        return null;
+    public GateProperties getGateProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1081,7 +1086,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by GestureControlService
      * objects belonging to the same gesture control.
      */
-    public List<JposCommonProperties>[] GestureControls = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] GestureControls = getArrayOf(0);
 
     /**
      * Array of gesture control property sets, one element for each gesture control the device service
@@ -1100,9 +1105,9 @@ public class JposDevice extends JposBaseDevice {
     protected void gestureControlInit(int maxGestureControl) {
         if (GestureControls.length == 0 && maxGestureControl > 0) {
             ClaimedGestureControl = new GestureControlProperties[maxGestureControl];
-            GestureControls = (List<JposCommonProperties>[])new List[maxGestureControl];
+            GestureControls = getArrayOf(maxGestureControl);
             for (int i = 0; i < maxGestureControl; i++) {
-                GestureControls[i] = new ArrayList<JposCommonProperties>(0);
+                GestureControls[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1112,9 +1117,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(GestureControlProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1124,8 +1128,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of GestureControlProperties that matches the requirements of the corresponding device service.
      */
-    public GestureControlProperties getGestureControlProperties(int index) {
-        return null;
+    public GestureControlProperties getGestureControlProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1139,7 +1143,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by GraphicDisplayService
      * objects belonging to the same graphic display.
      */
-    public List<JposCommonProperties>[] GraphicDisplays = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] GraphicDisplays = getArrayOf(0);
 
     /**
      * Array of graphic display property sets, one element for each graphic display the device service
@@ -1158,9 +1162,9 @@ public class JposDevice extends JposBaseDevice {
     protected void graphicDisplayInit(int maxGraphicDisplay) {
         if (GraphicDisplays.length == 0 && maxGraphicDisplay > 0) {
             ClaimedGraphicDisplay = new GraphicDisplayProperties[maxGraphicDisplay];
-            GraphicDisplays = (List<JposCommonProperties>[])new List[maxGraphicDisplay];
+            GraphicDisplays = getArrayOf(maxGraphicDisplay);
             for (int i = 0; i < maxGraphicDisplay; i++) {
-                GraphicDisplays[i] = new ArrayList<JposCommonProperties>(0);
+                GraphicDisplays[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1170,9 +1174,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(GraphicDisplayProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1182,8 +1185,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of GraphicDisplayProperties that matches the requirements of the corresponding device service.
      */
-    public GraphicDisplayProperties getGraphicDisplayProperties(int index) {
-        return null;
+    public GraphicDisplayProperties getGraphicDisplayProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1197,7 +1200,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by HardTotalsService
      * objects belonging to the same hard totals instance.
      */
-    public List<JposCommonProperties>[] HardTotalss = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] HardTotalss = getArrayOf(0);
 
     /**
      * Array of hard totals property sets, one element for each hard totals instance the device service
@@ -1211,8 +1214,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(HardTotalsProperties props) {
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1226,9 +1229,9 @@ public class JposDevice extends JposBaseDevice {
     protected void hardTotalsInit(int maxHardTotals) {
         if (HardTotalss.length == 0 && maxHardTotals > 0) {
             ClaimedHardTotals = new HardTotalsProperties[maxHardTotals];
-            HardTotalss = (List<JposCommonProperties>[])new List[maxHardTotals];
+            HardTotalss = getArrayOf(maxHardTotals);
             for (int i = 0; i < maxHardTotals; i++) {
-                HardTotalss[i] = new ArrayList<JposCommonProperties>(0);
+                HardTotalss[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1239,8 +1242,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of HardTotalsProperties that matches the requirements of the corresponding device service.
      */
-    public HardTotalsProperties getHardTotalsProperties(int index) {
-        return null;
+    public HardTotalsProperties getHardTotalsProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1254,7 +1257,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by ImageScannerService
      * objects belonging to the same image scanner.
      */
-    public List<JposCommonProperties>[] ImageScanners = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] ImageScanners = getArrayOf(0);
 
     /**
      * Array of image scanner property sets, one element for each image scanner the device service
@@ -1268,9 +1271,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(ImageScannerProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1284,9 +1286,9 @@ public class JposDevice extends JposBaseDevice {
     protected void imageScannerInit(int maxImageScanner) {
         if (ImageScanners.length == 0 && maxImageScanner > 0) {
             ClaimedImageScanner = new ImageScannerProperties[maxImageScanner];
-            ImageScanners = (List<JposCommonProperties>[])new List[maxImageScanner];
+            ImageScanners = getArrayOf(maxImageScanner);
             for (int i = 0; i < maxImageScanner; i++) {
-                ImageScanners[i] = new ArrayList<JposCommonProperties>(0);
+                ImageScanners[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1297,8 +1299,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of ImageScannerProperties that matches the requirements of the corresponding device service.
      */
-    public ImageScannerProperties getImageScannerProperties(int index) {
-        return null;
+    public ImageScannerProperties getImageScannerProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1312,7 +1314,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by IndividualRecognitionService
      * objects belonging to the same individual recognition.
      */
-    public List<JposCommonProperties>[] IndividualRecognitions = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] IndividualRecognitions = getArrayOf(0);
 
     /**
      * Array of individual recognition property sets, one element for each individual recognition the device service
@@ -1331,9 +1333,9 @@ public class JposDevice extends JposBaseDevice {
     protected void individualRecognitionInit(int maxIndividualRecognition) {
         if (IndividualRecognitions.length == 0 && maxIndividualRecognition > 0) {
             ClaimedIndividualRecognition = new IndividualRecognitionProperties[maxIndividualRecognition];
-            IndividualRecognitions = (List<JposCommonProperties>[])new List[maxIndividualRecognition];
+            IndividualRecognitions = getArrayOf(maxIndividualRecognition);
             for (int i = 0; i < maxIndividualRecognition; i++) {
-                IndividualRecognitions[i] = new ArrayList<JposCommonProperties>(0);
+                IndividualRecognitions[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1344,9 +1346,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(IndividualRecognitionProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1356,8 +1357,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of IndividualRecognitionProperties that matches the requirements of the corresponding device service.
      */
-    public IndividualRecognitionProperties getIndividualRecognitionProperties(int index) {
-        return null;
+    public IndividualRecognitionProperties getIndividualRecognitionProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1371,7 +1372,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by ItemDispenserService
      * objects belonging to the same item dispenser.
      */
-    public List<JposCommonProperties>[] ItemDispensers = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] ItemDispensers = getArrayOf(0);
 
     /**
      * Array of item dispenser property sets, one element for each item dispenser the device service
@@ -1385,8 +1386,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(ItemDispenserProperties props) {
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1400,9 +1401,9 @@ public class JposDevice extends JposBaseDevice {
     protected void itemDispenserInit(int maxItemDispenser) {
         if (ItemDispensers.length == 0 && maxItemDispenser > 0) {
             ClaimedItemDispenser = new ItemDispenserProperties[maxItemDispenser];
-            ItemDispensers = (List<JposCommonProperties>[])new List[maxItemDispenser];
+            ItemDispensers = getArrayOf(maxItemDispenser);
             for (int i = 0; i < maxItemDispenser; i++) {
-                ItemDispensers[i] = new ArrayList<JposCommonProperties>(0);
+                ItemDispensers[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1413,8 +1414,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of ItemDispenserProperties that matches the requirements of the corresponding device service.
      */
-    public ItemDispenserProperties getItemDispenserProperties(int index) {
-        return null;
+    public ItemDispenserProperties getItemDispenserProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1428,7 +1429,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by KeylockService
      * objects belonging to the same key lock.
      */
-    public List<JposCommonProperties>[] Keylocks = ((List<JposCommonProperties>[])new List[0]);
+    public List<JposCommonProperties>[] Keylocks = getArrayOf(0);
 
     /**
      * Array of key lock property sets, one element for each key lock the device service
@@ -1446,9 +1447,9 @@ public class JposDevice extends JposBaseDevice {
     protected void keylockInit(int maxKeylock) {
         if (Keylocks.length == 0 && maxKeylock > 0) {
             ClaimedKeylock = new KeylockProperties[maxKeylock];
-            Keylocks = (List<JposCommonProperties>[])new List[maxKeylock];
+            Keylocks = getArrayOf(maxKeylock);
             for (int i = 0; i < maxKeylock; i++) {
-                Keylocks[i] = new ArrayList<JposCommonProperties>(0);
+                Keylocks[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1458,8 +1459,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the propperty defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(KeylockProperties props) {
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1469,8 +1470,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of KeylockProperties that matches the requirements of the corresponding device service.
      */
-    public KeylockProperties getKeylockProperties(int index) {
-        return null;
+    public KeylockProperties getKeylockProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1484,7 +1485,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by LightsService
      * objects belonging to the same lights.
      */
-    public List<JposCommonProperties>[] Lightss = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] Lightss = getArrayOf(0);
 
     /**
      * Array of lights property sets, one element for each lights the device service
@@ -1498,8 +1499,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(LightsProperties props) {
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1513,9 +1514,9 @@ public class JposDevice extends JposBaseDevice {
     protected void lightsInit(int maxLights) {
         if (Lightss.length == 0 && maxLights > 0) {
             ClaimedLights = new LightsProperties[maxLights];
-            Lightss = (List<JposCommonProperties>[])new List[maxLights];
+            Lightss = getArrayOf(maxLights);
             for (int i = 0; i < maxLights; i++) {
-                Lightss[i] = new ArrayList<JposCommonProperties>(0);
+                Lightss[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1526,8 +1527,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of LightsProperties that matches the requirements of the corresponding device service.
      */
-    public LightsProperties getLightsProperties(int index) {
-        return null;
+    public LightsProperties getLightsProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1541,7 +1542,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by LineDisplayService
      * objects belonging to the same line display.
      */
-    public List<JposCommonProperties>[] LineDisplays = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] LineDisplays = getArrayOf(0);
 
     /**
      * Array of line display property sets, one element for each line display the device service
@@ -1559,9 +1560,9 @@ public class JposDevice extends JposBaseDevice {
     protected void lineDisplayInit(int maxDisplay) {
         if (LineDisplays.length == 0 && maxDisplay > 0) {
             ClaimedLineDisplay = new LineDisplayProperties[maxDisplay];
-            LineDisplays = (List<JposCommonProperties>[])new List[maxDisplay];
+            LineDisplays = getArrayOf(maxDisplay);
             for (int i = 0; i < maxDisplay; i++) {
-                LineDisplays[i] = new ArrayList<JposCommonProperties>(0);
+                LineDisplays[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1571,9 +1572,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the propperty defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(LineDisplayProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1583,8 +1583,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of LineDisplayProperties that matches the requirements of the corresponding device service.
      */
-    public LineDisplayProperties getLineDisplayProperties(int index) {
-        return null;
+    public LineDisplayProperties getLineDisplayProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1598,7 +1598,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by MICRService
      * objects belonging to the same magnetic ink character recognition reader.
      */
-    public List<JposCommonProperties>[] MICRs = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] MICRs = getArrayOf(0);
 
     /**
      * Array of electronic journal property sets, one element for each magnetic ink character recognition reader the device service
@@ -1612,8 +1612,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(MICRProperties props) {
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1627,9 +1627,9 @@ public class JposDevice extends JposBaseDevice {
     protected void mICRInit(int maxMICR) {
         if (MICRs.length == 0 && maxMICR > 0) {
             ClaimedMICR = new MICRProperties[maxMICR];
-            MICRs = (List<JposCommonProperties>[])new List[maxMICR];
+            MICRs = getArrayOf(maxMICR);
             for (int i = 0; i < maxMICR; i++) {
-                MICRs[i] = new ArrayList<JposCommonProperties>(0);
+                MICRs[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1640,8 +1640,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of MICRProperties that matches the requirements of the corresponding device service.
      */
-    public MICRProperties getMICRProperties(int index) {
-        return null;
+    public MICRProperties getMICRProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1655,7 +1655,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by MotionSensorService
      * objects belonging to the same motion sensor.
      */
-    public List<JposCommonProperties>[] MotionSensors = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] MotionSensors = getArrayOf(0);
 
     /**
      * Array of motion sensor property sets, one element for each motion sensor the device service
@@ -1669,8 +1669,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(MotionSensorProperties props) {
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1684,9 +1684,9 @@ public class JposDevice extends JposBaseDevice {
     protected void motionSensorInit(int maxMotionSensor) {
         if (MotionSensors.length == 0 && maxMotionSensor > 0) {
             ClaimedMotionSensor = new MotionSensorProperties[maxMotionSensor];
-            MotionSensors = (List<JposCommonProperties>[])new List[maxMotionSensor];
+            MotionSensors = getArrayOf(maxMotionSensor);
             for (int i = 0; i < maxMotionSensor; i++) {
-                MotionSensors[i] = new ArrayList<JposCommonProperties>(0);
+                MotionSensors[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1697,8 +1697,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of MotionSensorProperties that matches the requirements of the corresponding device service.
      */
-    public MotionSensorProperties getMotionSensorProperties(int index) {
-        return null;
+    public MotionSensorProperties getMotionSensorProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1712,7 +1712,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by MSRService
      * objects belonging to the same magnetic stripe reader.
      */
-    public List<JposCommonProperties>[] MSRs = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] MSRs = getArrayOf(0);
 
     /**
      * Array of msr property sets, one element for each MSR the device service
@@ -1726,9 +1726,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(MSRProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1742,9 +1741,9 @@ public class JposDevice extends JposBaseDevice {
     protected void mSRInit(int maxMsr) {
         if (MSRs.length == 0 && maxMsr > 0) {
             ClaimedMSR = new MSRProperties[maxMsr];
-            MSRs = (List<JposCommonProperties>[])new List[maxMsr];
+            MSRs = getArrayOf(maxMsr);
             for (int i = 0; i < maxMsr; i++) {
-                MSRs[i] = new ArrayList<JposCommonProperties>(0);
+                MSRs[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1755,8 +1754,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of MSRProperties that matches the requirements of the corresponding device service.
      */
-    public MSRProperties getMSRProperties(int index) {
-        return null;
+    public MSRProperties getMSRProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1770,7 +1769,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by PINPadService
      * objects belonging to the same PIN pad.
      */
-    public List<JposCommonProperties>[] PINPads = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] PINPads = getArrayOf(0);
 
     /**
      * Array of PIN pad property sets, one element for each PIN pad the device service
@@ -1784,9 +1783,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(PINPadProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1800,9 +1798,9 @@ public class JposDevice extends JposBaseDevice {
     protected void pINPadInit(int maxPINPad) {
         if (PINPads.length == 0 && maxPINPad > 0) {
             ClaimedPINPad = new PINPadProperties[maxPINPad];
-            PINPads = (List<JposCommonProperties>[])new List[maxPINPad];
+            PINPads = getArrayOf(maxPINPad);
             for (int i = 0; i < maxPINPad; i++) {
-                PINPads[i] = new ArrayList<JposCommonProperties>(0);
+                PINPads[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1813,8 +1811,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of PINPadProperties that matches the requirements of the corresponding device service.
      */
-    public PINPadProperties getPINPadProperties(int index) {
-        return null;
+    public PINPadProperties getPINPadProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1828,7 +1826,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by PointCardRWService
      * objects belonging to the same point card reader / writer.
      */
-    public List<JposCommonProperties>[] PointCardRWs = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] PointCardRWs = getArrayOf(0);
 
     /**
      * Array of point card reader / writer property sets, one element for each point card reader / writer the device service
@@ -1842,9 +1840,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(PointCardRWProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1858,9 +1855,9 @@ public class JposDevice extends JposBaseDevice {
     protected void pointCardRWInit(int maxPointCardRW) {
         if (PointCardRWs.length == 0 && maxPointCardRW > 0) {
             ClaimedPointCardRW = new PointCardRWProperties[maxPointCardRW];
-            PointCardRWs = (List<JposCommonProperties>[])new List[maxPointCardRW];
+            PointCardRWs = getArrayOf(maxPointCardRW);
             for (int i = 0; i < maxPointCardRW; i++) {
-                PointCardRWs[i] = new ArrayList<JposCommonProperties>(0);
+                PointCardRWs[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1871,8 +1868,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of PointCardRWProperties that matches the requirements of the corresponding device service.
      */
-    public PointCardRWProperties getPointCardRWProperties(int index) {
-        return null;
+    public PointCardRWProperties getPointCardRWProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1886,7 +1883,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by POSKeyboardService
      * objects belonging to the same keyboard.
      */
-    public List<JposCommonProperties>[] POSKeyboards = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] POSKeyboards = getArrayOf(0);
 
     /**
      * Array of keyboard property sets, one element for each POS keyboard the device service
@@ -1904,9 +1901,9 @@ public class JposDevice extends JposBaseDevice {
     protected void pOSKeyboardInit(int maxKeyboard) {
         if (POSKeyboards.length == 0 && maxKeyboard > 0) {
             ClaimedPOSKeyboard = new POSKeyboardProperties[maxKeyboard];
-            POSKeyboards = (List<JposCommonProperties>[])new List[maxKeyboard];
+            POSKeyboards = getArrayOf(maxKeyboard);
             for (int i = 0; i < maxKeyboard; i++) {
-                POSKeyboards[i] = new ArrayList<JposCommonProperties>(0);
+                POSKeyboards[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1916,9 +1913,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the propperty defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(POSKeyboardProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1928,8 +1924,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of POSKeyboardProperties that matches the requirements of the corresponding device service.
      */
-    public POSKeyboardProperties getPOSKeyboardProperties(int index) {
-        return null;
+    public POSKeyboardProperties getPOSKeyboardProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -1943,7 +1939,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by POSPowerService
      * objects belonging to the same POS power device.
      */
-    public List<JposCommonProperties>[] POSPowers = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] POSPowers = getArrayOf(0);
 
     /**
      * Array of POS power property sets, one element for each POS power device the device service
@@ -1962,9 +1958,9 @@ public class JposDevice extends JposBaseDevice {
     protected void pOSPowerInit(int maxPower) {
         if (POSPowers.length == 0 && maxPower > 0) {
             ClaimedPOSPower = new POSPowerProperties[maxPower];
-            POSPowers = (List<JposCommonProperties>[])new List[maxPower];
+            POSPowers = getArrayOf(maxPower);
             for (int i = 0; i < maxPower; i++) {
-                POSPowers[i] = new ArrayList<JposCommonProperties>(0);
+                POSPowers[i] = new ArrayList<>(0);
             }
         }
     }
@@ -1974,8 +1970,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the propperty defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(POSPowerProperties props) {
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -1985,8 +1981,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of POSPowerProperties that matches the requirements of the corresponding device service.
      */
-    public POSPowerProperties getPOSPowerProperties(int index) {
-        return null;
+    public POSPowerProperties getPOSPowerProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -2000,7 +1996,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by POSPrinterService
      * objects belonging to the same POS printer.
      */
-    public List<JposCommonProperties>[] POSPrinters = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] POSPrinters = getArrayOf(0);
 
     /**
      * Array of POS printer property sets, one element for each POS printer the device service
@@ -2014,9 +2010,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(POSPrinterProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -2030,9 +2025,9 @@ public class JposDevice extends JposBaseDevice {
     protected void pOSPrinterInit(int maxPrinters) {
         if (POSPrinters.length == 0 && maxPrinters > 0) {
             ClaimedPOSPrinter = new POSPrinterProperties[maxPrinters];
-            POSPrinters = (List<JposCommonProperties>[])new List[maxPrinters];
+            POSPrinters = getArrayOf(maxPrinters);
             for (int i = 0; i < maxPrinters; i++) {
-                POSPrinters[i] = new ArrayList<JposCommonProperties>(0);
+                POSPrinters[i] = new ArrayList<>(0);
             }
         }
     }
@@ -2043,8 +2038,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of POSPrinterProperties that matches the requirements of the corresponding device service.
      */
-    public POSPrinterProperties getPOSPrinterProperties(int index) {
-        return null;
+    public POSPrinterProperties getPOSPrinterProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -2058,7 +2053,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by RemoteOrderDisplayService
      * objects belonging to the same remote order display.
      */
-    public List<JposCommonProperties>[] RemoteOrderDisplays = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] RemoteOrderDisplays = getArrayOf(0);
 
     /**
      * Array of remote order display property sets, one element for each remote order display the device service
@@ -2072,9 +2067,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(RemoteOrderDisplayProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -2088,9 +2082,9 @@ public class JposDevice extends JposBaseDevice {
     protected void remoteOrderDisplayInit(int maxRODisplay) {
         if (RemoteOrderDisplays.length == 0 && maxRODisplay > 0) {
             ClaimedRemoteOrderDisplay = new RemoteOrderDisplayProperties[maxRODisplay];
-            RemoteOrderDisplays = (List<JposCommonProperties>[])new List[maxRODisplay];
+            RemoteOrderDisplays = getArrayOf(maxRODisplay);
             for (int i = 0; i < maxRODisplay; i++) {
-                RemoteOrderDisplays[i] = new ArrayList<JposCommonProperties>(0);
+                RemoteOrderDisplays[i] = new ArrayList<>(0);
             }
         }
     }
@@ -2101,8 +2095,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of RemoteOrderDisplayProperties that matches the requirements of the corresponding device service.
      */
-    public RemoteOrderDisplayProperties getRemoteOrderDisplayProperties(int index) {
-        return null;
+    public RemoteOrderDisplayProperties getRemoteOrderDisplayProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -2116,7 +2110,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by RFIDScannerService
      * objects belonging to the same RFID scanner.
      */
-    public List<JposCommonProperties>[] RFIDScanners = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] RFIDScanners = getArrayOf(0);
 
     /**
      * Array of RFID scanner property sets, one element for each RFID scanner the device service
@@ -2130,8 +2124,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(RFIDScannerProperties props) {
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -2145,9 +2139,9 @@ public class JposDevice extends JposBaseDevice {
     protected void rFIDScannerInit(int maxRFIDScanner) {
         if (RFIDScanners.length == 0 && maxRFIDScanner > 0) {
             ClaimedRFIDScanner = new RFIDScannerProperties[maxRFIDScanner];
-            RFIDScanners = (List<JposCommonProperties>[])new List[maxRFIDScanner];
+            RFIDScanners = getArrayOf(maxRFIDScanner);
             for (int i = 0; i < maxRFIDScanner; i++) {
-                RFIDScanners[i] = new ArrayList<JposCommonProperties>(0);
+                RFIDScanners[i] = new ArrayList<>(0);
             }
         }
     }
@@ -2158,8 +2152,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of RFIDScannerProperties that matches the requirements of the corresponding device service.
      */
-    public RFIDScannerProperties getRFIDScannerProperties(int index) {
-        return null;
+    public RFIDScannerProperties getRFIDScannerProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -2173,7 +2167,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by ScaleService
      * objects belonging to the same scale.
      */
-    public List<JposCommonProperties>[] Scales = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] Scales = getArrayOf(0);
 
     /**
      * Array of Scale property sets, one element for each scale the device service
@@ -2187,9 +2181,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(ScaleProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -2203,9 +2196,9 @@ public class JposDevice extends JposBaseDevice {
     protected void scaleInit(int maxScales) {
         if (Scales.length == 0 && maxScales > 0) {
             ClaimedScale = new ScaleProperties[maxScales];
-            Scales = (List<JposCommonProperties>[])new List[maxScales];
+            Scales = getArrayOf(maxScales);
             for (int i = 0; i < maxScales; i++) {
-                Scales[i] = new ArrayList<JposCommonProperties>(0);
+                Scales[i] = new ArrayList<>(0);
             }
         }
     }
@@ -2216,8 +2209,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of ScaleProperties that matches the requirements of the corresponding device service.
      */
-    public ScaleProperties getScaleProperties(int index) {
-        return null;
+    public ScaleProperties getScaleProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -2231,7 +2224,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by ScannerService
      * objects belonging to the same scanner.
      */
-    public List<JposCommonProperties>[] Scanners = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] Scanners = getArrayOf(0);
 
     /**
      * Array of scanner property sets, one element for each scanner the device service
@@ -2249,9 +2242,9 @@ public class JposDevice extends JposBaseDevice {
     protected void scannerInit(int maxScanner) {
         if (Scanners.length == 0 && maxScanner > 0) {
             ClaimedScanner = new ScannerProperties[maxScanner];
-            Scanners = (List<JposCommonProperties>[])new List[maxScanner];
+            Scanners = getArrayOf(maxScanner);
             for (int i = 0; i < maxScanner; i++) {
-                Scanners[i] = new ArrayList<JposCommonProperties>(0);
+                Scanners[i] = new ArrayList<>(0);
             }
         }
     }
@@ -2261,9 +2254,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the propperty defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(ScannerProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -2273,8 +2265,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of ScannerProperties that matches the requirements of the corresponding device service.
      */
-    public ScannerProperties getScannerProperties(int index) {
-        return null;
+    public ScannerProperties getScannerProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -2288,7 +2280,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by SignatureCaptureService
      * objects belonging to the same signature capture device.
      */
-    public List<JposCommonProperties>[] SignatureCaptures = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] SignatureCaptures = getArrayOf(0);
 
     /**
      * Array of signature capture property sets, one element for each signature capture device the device service
@@ -2302,9 +2294,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(SignatureCaptureProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -2318,9 +2309,9 @@ public class JposDevice extends JposBaseDevice {
     protected void signatureCaptureInit(int maxSignatureCapture) {
         if (SignatureCaptures.length == 0 && maxSignatureCapture > 0) {
             ClaimedSignatureCapture = new SignatureCaptureProperties[maxSignatureCapture];
-            SignatureCaptures = (List<JposCommonProperties>[])new List[maxSignatureCapture];
+            SignatureCaptures = getArrayOf(maxSignatureCapture);
             for (int i = 0; i < maxSignatureCapture; i++) {
-                SignatureCaptures[i] = new ArrayList<JposCommonProperties>(0);
+                SignatureCaptures[i] = new ArrayList<>(0);
             }
         }
     }
@@ -2331,8 +2322,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of SignatureCaptureProperties that matches the requirements of the corresponding device service.
      */
-    public SignatureCaptureProperties getSignatureCaptureProperties(int index) {
-        return null;
+    public SignatureCaptureProperties getSignatureCaptureProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -2346,7 +2337,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by SmartCardRWService
      * objects belonging to the same smart card reader / writer.
      */
-    public List<JposCommonProperties>[] SmartCardRWs = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] SmartCardRWs = getArrayOf(0);
 
     /**
      * Array of smart card reader / writer property sets, one element for each smart card reader / writer the device service
@@ -2360,8 +2351,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(SmartCardRWProperties props) {
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -2375,9 +2366,9 @@ public class JposDevice extends JposBaseDevice {
     protected void smartCardRWInit(int maxSmartCardRW) {
         if (SmartCardRWs.length == 0 && maxSmartCardRW > 0) {
             ClaimedSmartCardRW = new SmartCardRWProperties[maxSmartCardRW];
-            SmartCardRWs = (List<JposCommonProperties>[])new List[maxSmartCardRW];
+            SmartCardRWs = getArrayOf(maxSmartCardRW);
             for (int i = 0; i < maxSmartCardRW; i++) {
-                SmartCardRWs[i] = new ArrayList<JposCommonProperties>(0);
+                SmartCardRWs[i] = new ArrayList<>(0);
             }
         }
     }
@@ -2388,8 +2379,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of SmartCardRWProperties that matches the requirements of the corresponding device service.
      */
-    public SmartCardRWProperties getSmartCardRWProperties(int index) {
-        return null;
+    public SmartCardRWProperties getSmartCardRWProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -2403,7 +2394,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by SoundPlayerService
      * objects belonging to the same sound player.
      */
-    public List<JposCommonProperties>[] SoundPlayers = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] SoundPlayers = getArrayOf(0);
 
     /**
      * Array of sound player property sets, one element for each sound player the device service
@@ -2422,9 +2413,9 @@ public class JposDevice extends JposBaseDevice {
     protected void soundPlayerInit(int maxSoundPlayer) {
         if (SoundPlayers.length == 0 && maxSoundPlayer > 0) {
             ClaimedSoundPlayer = new SoundPlayerProperties[maxSoundPlayer];
-            SoundPlayers = (List<JposCommonProperties>[])new List[maxSoundPlayer];
+            SoundPlayers = getArrayOf(maxSoundPlayer);
             for (int i = 0; i < maxSoundPlayer; i++) {
-                SoundPlayers[i] = new ArrayList<JposCommonProperties>(0);
+                SoundPlayers[i] = new ArrayList<>(0);
             }
         }
     }
@@ -2434,9 +2425,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(SoundPlayerProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -2446,8 +2436,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of SoundPlayerProperties that matches the requirements of the corresponding device service.
      */
-    public SoundPlayerProperties getSoundPlayerProperties(int index) {
-        return null;
+    public SoundPlayerProperties getSoundPlayerProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -2461,7 +2451,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by SoundRecorderService
      * objects belonging to the same sound recorder.
      */
-    public List<JposCommonProperties>[] SoundRecorders = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] SoundRecorders = getArrayOf(0);
 
     /**
      * Array of sound recorder property sets, one element for each sound recorder the device service
@@ -2480,9 +2470,9 @@ public class JposDevice extends JposBaseDevice {
     protected void soundRecorderInit(int maxSoundRecorder) {
         if (SoundRecorders.length == 0 && maxSoundRecorder > 0) {
             ClaimedSoundRecorder = new SoundRecorderProperties[maxSoundRecorder];
-            SoundRecorders = (List<JposCommonProperties>[])new List[maxSoundRecorder];
+            SoundRecorders = getArrayOf(maxSoundRecorder);
             for (int i = 0; i < maxSoundRecorder; i++) {
-                SoundRecorders[i] = new ArrayList<JposCommonProperties>(0);
+                SoundRecorders[i] = new ArrayList<>(0);
             }
         }
     }
@@ -2492,9 +2482,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(SoundRecorderProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -2504,8 +2493,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of SoundRecorderProperties that matches the requirements of the corresponding device service.
      */
-    public SoundRecorderProperties getSoundRecorderProperties(int index) {
-        return null;
+    public SoundRecorderProperties getSoundRecorderProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -2519,7 +2508,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by SpeechSynthesisService
      * objects belonging to the same speech synthesis.
      */
-    public List<JposCommonProperties>[] SpeechSynthesiss = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] SpeechSynthesiss = getArrayOf(0);
 
     /**
      * Array of speech synthesis property sets, one element for each speech synthesis the device service
@@ -2538,9 +2527,9 @@ public class JposDevice extends JposBaseDevice {
     protected void speechSynthesisInit(int maxSpeechSynthesis) {
         if (SpeechSynthesiss.length == 0 && maxSpeechSynthesis > 0) {
             ClaimedSpeechSynthesis = new SpeechSynthesisProperties[maxSpeechSynthesis];
-            SpeechSynthesiss = (List<JposCommonProperties>[])new List[maxSpeechSynthesis];
+            SpeechSynthesiss = getArrayOf(maxSpeechSynthesis);
             for (int i = 0; i < maxSpeechSynthesis; i++) {
-                SpeechSynthesiss[i] = new ArrayList<JposCommonProperties>(0);
+                SpeechSynthesiss[i] = new ArrayList<>(0);
             }
         }
     }
@@ -2550,9 +2539,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(SpeechSynthesisProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -2562,8 +2550,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of SpeechSynthesisProperties that matches the requirements of the corresponding device service.
      */
-    public SpeechSynthesisProperties getSpeechSynthesisProperties(int index) {
-        return null;
+    public SpeechSynthesisProperties getSpeechSynthesisProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -2577,7 +2565,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by ToneIndicatorService
      * objects belonging to the same tone indicator.
      */
-    public List<JposCommonProperties>[] ToneIndicators = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] ToneIndicators = getArrayOf(0);
 
     /**
      * Array of tone indicator property sets, one element for each tone indicator the device service
@@ -2595,9 +2583,9 @@ public class JposDevice extends JposBaseDevice {
     protected void toneIndicatorInit(int maxToneIndicator) {
         if (ToneIndicators.length == 0 && maxToneIndicator > 0) {
             ClaimedToneIndicator = new ToneIndicatorProperties[maxToneIndicator];
-            ToneIndicators = (List<JposCommonProperties>[])new List[maxToneIndicator];
+            ToneIndicators = getArrayOf(maxToneIndicator);
             for (int i = 0; i < maxToneIndicator; i++) {
-                ToneIndicators[i] = new ArrayList<JposCommonProperties>(0);
+                ToneIndicators[i] = new ArrayList<>(0);
             }
         }
     }
@@ -2607,8 +2595,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(ToneIndicatorProperties props) {
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -2618,8 +2606,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of ToneIndicatorProperties that matches the requirements of the corresponding device service.
      */
-    public ToneIndicatorProperties getToneIndicatorProperties(int index) {
-        return null;
+    public ToneIndicatorProperties getToneIndicatorProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -2633,7 +2621,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by VideoCaptureService
      * objects belonging to the same video capture.
      */
-    public List<JposCommonProperties>[] VideoCaptures = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] VideoCaptures = getArrayOf(0);
 
     /**
      * Array of video capture property sets, one element for each video capture the device service
@@ -2652,9 +2640,9 @@ public class JposDevice extends JposBaseDevice {
     protected void videoCaptureInit(int maxVideoCapture) {
         if (VideoCaptures.length == 0 && maxVideoCapture > 0) {
             ClaimedVideoCapture = new VideoCaptureProperties[maxVideoCapture];
-            VideoCaptures = (List<JposCommonProperties>[])new List[maxVideoCapture];
+            VideoCaptures = getArrayOf(maxVideoCapture);
             for (int i = 0; i < maxVideoCapture; i++) {
-                VideoCaptures[i] = new ArrayList<JposCommonProperties>(0);
+                VideoCaptures[i] = new ArrayList<>(0);
             }
         }
     }
@@ -2664,9 +2652,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(VideoCaptureProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -2676,8 +2663,8 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of VideoCaptureProperties that matches the requirements of the corresponding device service.
      */
-    public VideoCaptureProperties getVideoCaptureProperties(int index) {
-        return null;
+    public VideoCaptureProperties getVideoCaptureProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 
     /*
@@ -2691,7 +2678,7 @@ public class JposDevice extends JposBaseDevice {
      * list element contains a list of all property sets owned by VoiceRecognitionService
      * objects belonging to the same voice recognition.
      */
-    public List<JposCommonProperties>[] VoiceRecognitions = (List<JposCommonProperties>[])new List[0];
+    public List<JposCommonProperties>[] VoiceRecognitions = getArrayOf(0);
 
     /**
      * Array of voice recognition property sets, one element for each voice recognition the device service
@@ -2710,9 +2697,9 @@ public class JposDevice extends JposBaseDevice {
     protected void voiceRecognitionInit(int maxVoiceRecognition) {
         if (VoiceRecognitions.length == 0 && maxVoiceRecognition > 0) {
             ClaimedVoiceRecognition = new VoiceRecognitionProperties[maxVoiceRecognition];
-            VoiceRecognitions = (List<JposCommonProperties>[])new List[maxVoiceRecognition];
+            VoiceRecognitions = getArrayOf(maxVoiceRecognition);
             for (int i = 0; i < maxVoiceRecognition; i++) {
-                VoiceRecognitions[i] = new ArrayList<JposCommonProperties>(0);
+                VoiceRecognitions[i] = new ArrayList<>(0);
             }
         }
     }
@@ -2722,9 +2709,8 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param props Property set for setting the property defaults
      */
+    @SuppressWarnings("deprecation")
     public void changeDefaults(VoiceRecognitionProperties props) {
-        props.AllowAlwaysSetProperties = AllowAlwaysSetProperties;
-        AllowAlwaysSetProperties = true;
         JposVersion = null;
     }
 
@@ -2734,7 +2720,7 @@ public class JposDevice extends JposBaseDevice {
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of VoiceRecognitionProperties that matches the requirements of the corresponding device service.
      */
-    public VoiceRecognitionProperties getVoiceRecognitionProperties(int index) {
-        return null;
+    public VoiceRecognitionProperties getVoiceRecognitionProperties(int index) throws JposException {
+        throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
     }
 }

@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.cat;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.CATConst.*;
+
 /**
  * Class containing the CAT specific properties, their default values and default implementations of
  * CATInterface.
@@ -106,7 +108,7 @@ public class CATProperties extends JposCommonProperties implements CATInterface 
      * UPOS property CapDailyLog. Default: DL_NONE. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapDailyLog = CATConst.CAT_DL_NONE;
+    public int CapDailyLog = CAT_DL_NONE;
 
     /**
      * UPOS property CapInstallments. Default: false. Can be overwritten
@@ -176,13 +178,13 @@ public class CATProperties extends JposCommonProperties implements CATInterface 
      * UPOS property LogStatus. Default: LOGSTATUS_OK. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int LogStatus = CATConst.CAT_LOGSTATUS_OK;
+    public int LogStatus = CAT_LOGSTATUS_OK;
 
     /**
      * UPOS property PaymentCondition. Default: PAYMENT_DEBIT. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int PaymentCondition = CATConst.CAT_PAYMENT_DEBIT;
+    public int PaymentCondition = CAT_PAYMENT_DEBIT;
 
     /**
      * UPOS property PaymentDetail.
@@ -242,7 +244,7 @@ public class CATProperties extends JposCommonProperties implements CATInterface 
         CardCompanyID = "";
         CenterResultCode = "";
         PaymentDetail = "";
-        PaymentMedia = CATConst.CAT_MEDIA_UNSPECIFIED;
+        PaymentMedia = CAT_MEDIA_UNSPECIFIED;
         SequenceNumber = 0;
         SlipNumber = "";
         TrainingMode = false;

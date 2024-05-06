@@ -18,11 +18,13 @@
 package de.gmxhome.conrad.jpos.jpos_base.devicemonitor;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.*;
+
+import static jpos.DeviceMonitorConst.*;
 
 /**
  * Status update event implementation for DeviceMonitor devices.
  */
+@SuppressWarnings("unused")
 public class DeviceMonitorStatusUpdateEvent extends JposStatusUpdateEvent {
     /**
      * Constructor, Parameters passed to base class unchanged.
@@ -36,14 +38,10 @@ public class DeviceMonitorStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        if (ret.length() > 0)
-            return ret;
-        switch (getStatus()) {
-            case DeviceMonitorConst.DMON_SUE_START_MONITORING:
-                return "DeviceMonitor Start Monitoring";
-            case DeviceMonitorConst.DMON_SUE_STOP_MONITORING:
-                return "DeviceMonitor Stop Monitoring";
-        }
-        return "Unknown GraphicDisplay Status Change: " + getStatus();
+        return ret.length() > 0 ? ret : switch (getStatus()) {
+            case DMON_SUE_START_MONITORING -> "DeviceMonitor Start Monitoring";
+            case DMON_SUE_STOP_MONITORING -> "DeviceMonitor Stop Monitoring";
+            default -> "Unknown GraphicDisplay Status Change: " + getStatus();
+        };
     }
 }

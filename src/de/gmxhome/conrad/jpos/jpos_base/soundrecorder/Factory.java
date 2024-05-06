@@ -19,7 +19,10 @@ package de.gmxhome.conrad.jpos.jpos_base.soundrecorder;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.config.JposEntry;
+import jpos.config.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of SoundRecorder factory for JPOS devices using this framework.
@@ -36,10 +39,8 @@ public class Factory extends JposDeviceFactory {
      */
     public SoundRecorderService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         SoundRecorderProperties props = dev.getSoundRecorderProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getSoundRecorderProperties()");
+        validateJposConfiguration(props, dev, dev.ClaimedSoundRecorder, entry);
         SoundRecorderService service = (SoundRecorderService) (props.EventSource = new SoundRecorderService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedSoundRecorder;
         dev.changeDefaults(props);
         props.addProperties(dev.SoundRecorders);
         service.DeviceInterface = service.SoundRecorder = props;

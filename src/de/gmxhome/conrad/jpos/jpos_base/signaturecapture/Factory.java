@@ -17,10 +17,12 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.signaturecapture;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.JposDeviceFactory;
-import jpos.JposConst;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of SignatureCapture factory for JPOS devices using this framework.
@@ -31,19 +33,30 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults. Returns SignatureCaptureService object.
      * @param index SignatureCapture property set index.
      * @param dev   SignatureCapture implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return SignatureCaptureService object.
      * @throws jpos.JposException If property set could not be retrieved.
      */
-    public SignatureCaptureService addDevice(int index, JposDevice dev) throws JposException {
-        SignatureCaptureProperties drw = dev.getSignatureCaptureProperties(index);
-        SignatureCaptureService service;
-        JposDevice.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getSignatureCaptureProperties()");
-        service = (SignatureCaptureService) (drw.EventSource = new SignatureCaptureService(drw, dev));
-        drw.Device = dev;
-        drw.Claiming = dev.ClaimedSignatureCapture;
-        dev.changeDefaults(drw);
-        drw.addProperties(dev.SignatureCaptures);
-        service.DeviceInterface = service.SignatureCaptureInterface = drw;
+    public SignatureCaptureService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
+        SignatureCaptureProperties props = dev.getSignatureCaptureProperties(index);
+        validateJposConfiguration(props, dev, dev.ClaimedSignatureCapture, entry);
+        SignatureCaptureService service = (SignatureCaptureService) (props.EventSource = new SignatureCaptureService(props, dev));
+        dev.changeDefaults(props);
+        props.addProperties(dev.SignatureCaptures);
+        service.DeviceInterface = service.SignatureCaptureInterface = props;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults. Returns SignatureCaptureService object.
+     * @param index SignatureCapture property set index.
+     * @param dev   SignatureCapture implementation instance derived from JposDevice to be used by the service.
+     * @return SignatureCaptureService object.
+     * @throws jpos.JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public SignatureCaptureService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

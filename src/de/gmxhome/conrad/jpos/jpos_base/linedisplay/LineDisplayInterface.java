@@ -250,6 +250,7 @@ public interface LineDisplayInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapBitmap is true,</li>
+     *     <li>fileName is neither null nor an empty string,</li>
      *     <li>width is &gt; 0 or DISP_BM_ASIS,</li>
      *     <li>alignmentX is DISP_BM_LEFT, DISP_BM_CENTER or DISP_BM_RIGHT,</li>
      *     <li>alignmentY is DISP_BM_TOP, DISP_BM_CENTER or DISP_BM_BOTTOM.</li>
@@ -270,6 +271,7 @@ public interface LineDisplayInterface extends JposBaseInterface {
      *     <li>Device is enabled,</li>
      *     <li>CapBitmap is true,</li>
      *     <li>bitmapNumber is between 1 and 100,</li>
+     *     <li>fileName is neither null nor an empty string,</li>
      *     <li>width is &gt; 0 or DISP_BM_ASIS,</li>
      *     <li>alignmentX is DISP_BM_LEFT, DISP_BM_CENTER or DISP_BM_RIGHT,</li>
      *     <li>alignmentY is DISP_BM_TOP, DISP_BM_CENTER or DISP_BM_BOTTOM.</li>
@@ -305,7 +307,8 @@ public interface LineDisplayInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>CapReadBack is true.</li>
+     *     <li>CapReadBack is true,</li>
+     *     <li>cursorData is of type int[1].</li>
      * </ul>
      *
      * @param cursorData The character read from the display.
@@ -380,6 +383,7 @@ public interface LineDisplayInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
+     *     <li>data is not null,</li>
      *     <li>MarqueeType equals DISP_MT_NONE or DISP_MT_INIT.</li>
      * </ul>
      * In addition to validation, this method must update CursorRow and CursorColumn on success if InterCharacterWait

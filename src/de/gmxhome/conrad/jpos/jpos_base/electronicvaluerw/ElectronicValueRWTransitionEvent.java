@@ -27,14 +27,14 @@ public class ElectronicValueRWTransitionEvent extends JposTransitionEvent {
      * Value for Balance property to be set before firing transition event with EventNumber TE_CONFIRM_REMAINDER_SUBTRACTION.
      * If null (the default), Balance property will not be changed by this event.
      */
-    protected Long Balance = null;
+    protected final Long Balance;
 
     /**
      * Value for AdditionalSecurityInformation property to be set before firing transition event with EventNumber
      * TE_CONFIRM_DEVICE_DATA, TE_CONFIRM_SEARCH_TABLE or TE_CONFIRM_AUTHORIZE.
      * If null (the default), AdditionalSecurityInformation property will not be changed by this event.
      */
-    protected String AdditionalSecurityInformation = null;
+    protected final String AdditionalSecurityInformation;
 
     /**
      * Constructor. Parameters passed to base class unchanged.
@@ -47,6 +47,8 @@ public class ElectronicValueRWTransitionEvent extends JposTransitionEvent {
      */
     public ElectronicValueRWTransitionEvent(JposBase source, int eventNumber, int pData, String pString) {
         super(source, eventNumber, pData, pString);
+        Balance = null;
+        AdditionalSecurityInformation = null;
     }
 
     /**
@@ -62,6 +64,7 @@ public class ElectronicValueRWTransitionEvent extends JposTransitionEvent {
     public ElectronicValueRWTransitionEvent(JposBase source, int eventNumber, int pData, String pString, long balance) {
         super(source, eventNumber, pData, pString);
         Balance = balance;
+        AdditionalSecurityInformation = null;
     }
 
     /**
@@ -76,6 +79,7 @@ public class ElectronicValueRWTransitionEvent extends JposTransitionEvent {
      */
     public ElectronicValueRWTransitionEvent(JposBase source, int eventNumber, int pData, String pString, String additionalSecurityInformation) {
         super(source, eventNumber, pData, pString);
+        Balance = null;
         AdditionalSecurityInformation = additionalSecurityInformation;
     }
 

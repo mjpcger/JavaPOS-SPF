@@ -18,14 +18,16 @@
 package de.gmxhome.conrad.jpos.jpos_base.scale;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.JposConst;
-import jpos.JposException;
+import jpos.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * Input request executor for Scale method DoPriceCalculating.
  */
 public class DoPriceCalculating extends ReadLiveWeightWithTare {
-    private int WeightUnitX;
+    private final int WeightUnitX;
 
     /**
      * Scale method DoPriceCalculating parameter weightUnitX, see UPOS specification.
@@ -36,7 +38,7 @@ public class DoPriceCalculating extends ReadLiveWeightWithTare {
         return WeightUnitX;
     }
 
-    private int WeightNumeratorX;
+    private final int WeightNumeratorX;
 
     /**
      * Scale method DoPriceCalculating parameter weightNumeratorX, see UPOS specification.
@@ -47,7 +49,7 @@ public class DoPriceCalculating extends ReadLiveWeightWithTare {
         return WeightNumeratorX;
     }
 
-    private int WeightDenominatorX;
+    private final int WeightDenominatorX;
 
     /**
      * Scale method DoPriceCalculating parameter weightDenominatorX, see UPOS specification.
@@ -63,7 +65,7 @@ public class DoPriceCalculating extends ReadLiveWeightWithTare {
      */
     public long UnitPrice;
 
-    private long UnitPriceX;
+    private final long UnitPriceX;
 
     /**
      * Scale method DoPriceCalculating parameter unitPriceX, see UPOS specification.
@@ -100,10 +102,9 @@ public class DoPriceCalculating extends ReadLiveWeightWithTare {
 
     @Override
     public void invoke() throws JposException {
-        Props.Device.check(getTimeout() < 0  && getTimeout() != JposConst.JPOS_FOREVER && EndSync != null, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + getTimeout());
+        check(getTimeout() < 0  && getTimeout() != JPOS_FOREVER && EndSync != null, JPOS_E_ILLEGAL, "Invalid timeout: " + getTimeout());
         ((ScaleService)Props.EventSource).ScaleInterface.doPriceCalculating(this);
         if (EndSync == null) {
-            ScaleProperties data = (ScaleProperties) Props;
             Props.Device.handleEvent(new ScaleDataEvent(Props.EventSource, WeightData, Tare, SalesPrice, UnitPrice));
         }
     }

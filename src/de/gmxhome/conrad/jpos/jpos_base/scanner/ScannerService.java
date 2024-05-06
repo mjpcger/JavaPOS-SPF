@@ -26,14 +26,14 @@ import java.util.Arrays;
  * Scanner service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class ScannerService extends JposBase implements ScannerService115 {
+public class ScannerService extends JposBase implements ScannerService116 {
     /**
      * Instance of a class implementing the ScannerInterface for scanner specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public ScannerInterface ScannerInterface;
 
-    private ScannerProperties Data;
+    private final ScannerProperties Data;
 
     /**
      * Constructor. Stores property set and device driver implementation

@@ -27,8 +27,19 @@ import de.gmxhome.conrad.jpos.jpos_base.coinacceptor.*;
 import de.gmxhome.conrad.jpos.jpos_base.coindispenser.*;
 import jpos.*;
 
-import javax.swing.*;
 import java.util.*;
+
+
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static javax.swing.JOptionPane.*;
+import static jpos.BeltConst.*;
+import static jpos.BillAcceptorConst.*;
+import static jpos.BillDispenserConst.*;
+import static jpos.CashChangerConst.*;
+import static jpos.CashDrawerConst.*;
+import static jpos.CoinAcceptorConst.*;
+import static jpos.CoinDispenserConst.*;
+import static jpos.JposConst.*;
 
 /**
  * JposDevice based implementation of some JavaPOS device service implementations for the
@@ -95,6 +106,7 @@ import java.util.*;
  * <br> Multiple commands can be sent in a single frame, separated by comma (,). The corresponding responses will
  * be sent in one frame, separated by comma as well.
  */
+@SuppressWarnings("unused")
 public class BeltCashboxDrawer extends Device {
     /**
      * Constructor. id specifies the server to be connected in format host:port.
@@ -110,8 +122,8 @@ public class BeltCashboxDrawer extends Device {
         cashChangerInit(1);
         coinAcceptorInit(1);
         coinDispenserInit(1);
-        for (int i = 0; i < CashSlots.length; i++) {
-            CashSlotIndex.put(CashSlots[i][0], i);
+        for (int i = 0; i < CashSlots[0].length; i++) {
+            CashSlotIndex.put(CashSlots[0][i][0], i);
         }
         Toolsets = new CommonSubDeviceToolset[]{
                 new DrawerSubDeviceToolset(),
@@ -169,11 +181,10 @@ public class BeltCashboxDrawer extends Device {
                 try {
                     JposCommonProperties props = getPropertySetInstance(CashDrawers, 0, 0);
                     if (props != null) {
-                        int state = DrawerOpen ? CashDrawerConst.CASH_SUE_DRAWEROPEN : CashDrawerConst.CASH_SUE_DRAWERCLOSED;
+                        int state = DrawerOpen ? CASH_SUE_DRAWEROPEN : CASH_SUE_DRAWERCLOSED;
                         handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, state));
                     }
-                } catch (JposException e) {
-                }
+                } catch (JposException ignored) {}
                 signalStatusWaits(CashDrawers[0]);
             }
         }
@@ -183,8 +194,8 @@ public class BeltCashboxDrawer extends Device {
             JposCommonProperties props = getPropertySetInstance(CashDrawers, 0, 0);
             if (props != null) {
                 try {
-                    handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_ONLINE));
-                } catch (JposException e) {}
+                    handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_ONLINE));
+                } catch (JposException ignored) {}
             }
             return super.statusPowerOnlineProcessing();
         }
@@ -194,8 +205,8 @@ public class BeltCashboxDrawer extends Device {
             JposCommonProperties props = getPropertySetInstance(CashDrawers, 0, 0);
             if (props != null) {
                 try {
-                    handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE));
-                } catch (JposException e) {}
+                    handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_OFF_OFFLINE));
+                } catch (JposException ignored) {}
             }
             signalStatusWaits(CashDrawers[0]);
         }
@@ -218,7 +229,7 @@ public class BeltCashboxDrawer extends Device {
 
         @Override
         public void handlePowerStateOnEnable() throws JposException {
-            handleEvent(new JposStatusUpdateEvent(EventSource, Offline ? JposConst.JPOS_SUE_POWER_OFF_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE));
+            handleEvent(new JposStatusUpdateEvent(EventSource, Offline ? JPOS_SUE_POWER_OFF_OFFLINE : JPOS_SUE_POWER_ONLINE));
         }
 
         @Override
@@ -226,9 +237,9 @@ public class BeltCashboxDrawer extends Device {
             if (enable) {
                 if (!Claimed) {
                     startPolling(this);
-                    if (Offline && PowerNotify == JposConst.JPOS_PN_DISABLED) {
+                    if (Offline && PowerNotify == JPOS_PN_DISABLED) {
                         stopPolling();
-                        throw new JposException(JposConst.JPOS_E_OFFLINE, "Communication with device disrupted");
+                        throw new JposException(JPOS_E_OFFLINE, "Communication with device disrupted");
                     }
                 }
             } else {
@@ -242,9 +253,9 @@ public class BeltCashboxDrawer extends Device {
         @Override
         public void claim(int timeout) throws JposException {
             startPolling(this);
-            if (Offline && PowerNotify == JposConst.JPOS_PN_DISABLED) {
+            if (Offline && PowerNotify == JPOS_PN_DISABLED) {
                 stopPolling();
-                throw new JposException(JposConst.JPOS_E_OFFLINE, "Communication with device disrupted");
+                throw new JposException(JPOS_E_OFFLINE, "Communication with device disrupted");
             }
             super.claim(timeout);
         }
@@ -256,16 +267,17 @@ public class BeltCashboxDrawer extends Device {
         }
 
         @Override
+        @SuppressWarnings("AssignmentUsedAsCondition")
         public void checkHealth(int level) throws JposException {
-            String how = level == JposConst.JPOS_CH_INTERNAL ? "Internal" : (level == JposConst.JPOS_CH_EXTERNAL ? "External" : "Interactive");
+            String how = level == JPOS_CH_INTERNAL ? "Internal" : (level == JPOS_CH_EXTERNAL ? "External" : "Interactive");
             if (Offline)
                 CheckHealthText = how + " Checkhealth: Offline";
             else {
                 CheckHealthText = how + " Checkhealth: OK";
-                if (level != JposConst.JPOS_CH_INTERNAL) {
+                if (level != JPOS_CH_INTERNAL) {
                     boolean interactive;
-                    if (interactive = (level == JposConst.JPOS_CH_INTERACTIVE))
-                        synchronizedMessageBox("Press OK to start health test.", "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+                    if (interactive = (level == JPOS_CH_INTERACTIVE))
+                        synchronizedMessageBox("Press OK to start health test.", "CheckHealth", INFORMATION_MESSAGE);
                     try {
                         openDrawer();
                         if (!DrawerOpened)
@@ -274,7 +286,7 @@ public class BeltCashboxDrawer extends Device {
                         CheckHealthText = how + "Checkhealth: Offline";
                     }
                     if (interactive)
-                        synchronizedMessageBox("CheckHealth result:\n" + CheckHealthText, "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+                        synchronizedMessageBox("CheckHealth result:\n" + CheckHealthText, "CheckHealth", INFORMATION_MESSAGE);
                 }
             }
         }
@@ -285,10 +297,10 @@ public class BeltCashboxDrawer extends Device {
             String state = sendResp("DRAWER:Open");
             if (!DrawerOpened && !Offline) {
                 PollWaiter.signal();
-                waitWaiter(RequestTimeout * MaxRetry);
+                waitWaiter((long)RequestTimeout * MaxRetry);
             }
             releaseWaiter();
-            check(state == null, JposConst.JPOS_E_OFFLINE, "Communication failure");
+            check(state == null, JPOS_E_OFFLINE, "Communication failure");
             super.openDrawer();
         }
 
@@ -296,10 +308,10 @@ public class BeltCashboxDrawer extends Device {
         public void waitForDrawerClose() throws JposException {
             attachWaiter();
             while (DrawerOpen && !Offline && DeviceEnabled)
-                waitWaiter(SyncObject.INFINITE);
+                waitWaiter(INFINITE);
             releaseWaiter();
-            check(Offline, JposConst.JPOS_E_OFFLINE, "Device offline");
-            check(!DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device not enabled");
+            check(Offline, JPOS_E_OFFLINE, "Device offline");
+            check(!DeviceEnabled, JPOS_E_ILLEGAL, "Device not enabled");
             super.waitForDrawerClose();
         }
     }
@@ -339,7 +351,7 @@ public class BeltCashboxDrawer extends Device {
         public int check(String[] command, String[] response) {
             int rc = super.check(command, response);
             if (0 == rc) {
-                if (0 == rc && command[0].equals("BELT")) {
+                if (command[0].equals("BELT")) {
                     String[] validcommands = {
                             "GetState",
                             "Speed"
@@ -367,14 +379,14 @@ public class BeltCashboxDrawer extends Device {
         }
 
         private char[] OldBeltState;
-        private int FirstCommand;
 
         @Override
         public void saveCurrentStatusInformation(String[][] commands) {
             super.saveCurrentStatusInformation(null);
             OldBeltState = BeltState;
-            commands[0] = Arrays.copyOf(commands[0], (FirstCommand = commands[0].length) + 1);
-            commands[0][FirstCommand] = "BELT:GetState";
+            int firstCommand = commands[0].length;
+            commands[0] = Arrays.copyOf(commands[0], firstCommand + 1);
+            commands[0][firstCommand] = "BELT:GetState";
         }
 
         @Override
@@ -399,14 +411,14 @@ public class BeltCashboxDrawer extends Device {
                             sendMotorHealthEvent(belt);
                         }
                         else if (OldBeltState[BeltSpeed] != BeltOff && BeltState[BeltSpeed] == BeltOff) {
-                            int state = belt.AutoStopForward ? BeltConst.BELT_SUE_AUTO_STOP : BeltConst.BELT_SUE_TIMEOUT_STOP;
+                            int state = belt.AutoStopForward ? BELT_SUE_AUTO_STOP : BELT_SUE_TIMEOUT_STOP;
                             handleEvent(new BeltStatusUpdateEvent(belt.EventSource, state));
                             if (BeltState[BeltMotor] == BeltMotorOK && BeltState[BeltSecurityFlap] == BeltSecurityFlapClosed &&
                                     BeltState[BeltLightBarrier] == BeltLightBarrierInterrupted)
                                 sendResp("BELT:Speed0");
                         }
                     }
-                } catch (JposException e) {}
+                } catch (JposException ignored) {}
             }
         }
 
@@ -414,13 +426,13 @@ public class BeltCashboxDrawer extends Device {
             int state;
             if (BeltState[BeltMotor] != BeltMotorOK) {
                 state = BeltState[BeltMotor] == BeltMotorOverheat ?
-                        BeltConst.BELT_SUE_MOTOR_OVERHEATING :
-                        BeltConst.BELT_SUE_MOTOR_FUSE_DEFECT;
+                        BELT_SUE_MOTOR_OVERHEATING :
+                        BELT_SUE_MOTOR_FUSE_DEFECT;
             }
             else {
                 state = BeltState[BeltSecurityFlap] == BeltSecurityFlapOpen ?
-                        BeltConst.BELT_SUE_EMERGENCY_STOP :
-                        BeltConst.BELT_SUE_SAFETY_STOP;
+                        BELT_SUE_EMERGENCY_STOP :
+                        BELT_SUE_SAFETY_STOP;
             }
             handleEvent(new BeltStatusUpdateEvent(belt.EventSource, state));
             signalStatusWaits(Belts[0]);
@@ -428,15 +440,15 @@ public class BeltCashboxDrawer extends Device {
 
         private void sendSecurityFlapEvent(BeltProperties belt) throws JposException {
             int state = BeltState[BeltSecurityFlap] == BeltSecurityFlapOpen ?
-                    BeltConst.BELT_SUE_SECURITY_FLAP_FORWARD_OPENED :
-                    BeltConst.BELT_SUE_SECURITY_FLAP_FORWARD_CLOSED;
+                    BELT_SUE_SECURITY_FLAP_FORWARD_OPENED :
+                    BELT_SUE_SECURITY_FLAP_FORWARD_CLOSED;
             handleEvent(new BeltStatusUpdateEvent(belt.EventSource, state));
         }
 
         private void sendLightBarrierEvent(BeltProperties belt) throws JposException {
             int state = BeltState[BeltLightBarrier] == BeltLightBarrierInterrupted ?
-                    BeltConst.BELT_SUE_LIGHT_BARRIER_FORWARD_INTERRUPTED :
-                    BeltConst.BELT_SUE_LIGHT_BARRIER_FORWARD_OK;
+                    BELT_SUE_LIGHT_BARRIER_FORWARD_INTERRUPTED :
+                    BELT_SUE_LIGHT_BARRIER_FORWARD_OK;
             handleEvent(new BeltStatusUpdateEvent(belt.EventSource, state));
         }
 
@@ -445,8 +457,8 @@ public class BeltCashboxDrawer extends Device {
             JposCommonProperties props = getClaimingInstance(ClaimedBelt, 0);
             if (props != null) {
                 try {
-                    handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_ONLINE));
-                } catch (JposException e) {}
+                    handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_ONLINE));
+                } catch (JposException ignored) {}
             }
             return super.statusPowerOnlineProcessing();
         }
@@ -456,8 +468,8 @@ public class BeltCashboxDrawer extends Device {
             JposCommonProperties props = getClaimingInstance(ClaimedBelt, 0);
             if (props != null) {
                 try {
-                    handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE));
-                } catch (JposException e) {}
+                    handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_OFF_OFFLINE));
+                } catch (JposException ignored) {}
             }
             signalStatusWaits(Belts[0]);
         }
@@ -491,28 +503,28 @@ public class BeltCashboxDrawer extends Device {
                     LightBarrierForwardInterrupted = BeltState[BeltLightBarrier] == BeltLightBarrierInterrupted;
                     SecurityFlapForwardOpened = BeltState[BeltSecurityFlap] == BeltSecurityFlapOpen;
                     if (BeltState[BeltSpeed] != BeltOff)
-                        MotionStatus = BeltConst.BELT_MT_FORWARD;
+                        MotionStatus = BELT_MT_FORWARD;
                     else if (BeltState[BeltMotor] != BeltMotorOK)
-                        MotionStatus = BeltConst.BELT_MT_MOTOR_FAULT;
+                        MotionStatus = BELT_MT_MOTOR_FAULT;
                     else if (BeltState[BeltSecurityFlap] == BeltSecurityFlapOpen)
-                        MotionStatus = BeltConst.BELT_MT_EMERGENCY;
+                        MotionStatus = BELT_MT_EMERGENCY;
                     else
-                        MotionStatus = BeltConst.BELT_MT_STOPPED;
+                        MotionStatus = BELT_MT_STOPPED;
                 }
             }
         }
 
         @Override
         public void handlePowerStateOnEnable() throws JposException {
-            handleEvent(new JposStatusUpdateEvent(EventSource, Offline ? JposConst.JPOS_SUE_POWER_OFF_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE));
+            handleEvent(new JposStatusUpdateEvent(EventSource, Offline ? JPOS_SUE_POWER_OFF_OFFLINE : JPOS_SUE_POWER_ONLINE));
         }
 
         @Override
         public void claim(int timeout) throws JposException {
             startPolling(this);
-            if (Offline && PowerNotify == JposConst.JPOS_PN_DISABLED) {
+            if (Offline && PowerNotify == JPOS_PN_DISABLED) {
                 stopPolling();
-                throw new JposException(JposConst.JPOS_E_OFFLINE, "Communication with device disrupted");
+                throw new JposException(JPOS_E_OFFLINE, "Communication with device disrupted");
             }
             super.claim(timeout);
         }
@@ -524,77 +536,78 @@ public class BeltCashboxDrawer extends Device {
         }
 
         @Override
+        @SuppressWarnings("AssignmentUsedAsCondition")
         public void checkHealth(int level) throws JposException {
-            String how = level == JposConst.JPOS_CH_INTERNAL ? "Internal" : (level == JposConst.JPOS_CH_EXTERNAL ? "External" : "Interactive");
+            String how = level == JPOS_CH_INTERNAL ? "Internal" : (level == JPOS_CH_EXTERNAL ? "External" : "Interactive");
             if (Offline)
                 CheckHealthText = how + " Checkhealth: Offline";
             else {
                 CheckHealthText = how + " Checkhealth: OK";
-                if (level != JposConst.JPOS_CH_INTERNAL) {
+                if (level != JPOS_CH_INTERNAL) {
                     boolean interactive;
-                    if (interactive = (level == JposConst.JPOS_CH_INTERACTIVE))
-                        synchronizedMessageBox("Press OK to start health test.", "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+                    if (interactive = (level == JPOS_CH_INTERACTIVE))
+                        synchronizedMessageBox("Press OK to start health test.", "CheckHealth", INFORMATION_MESSAGE);
                     try {
                         moveForward(CapSpeedStepsForward);
-                        if (MotionStatus != BeltConst.BELT_MT_FORWARD)
+                        if (MotionStatus != BELT_MT_FORWARD)
                             CheckHealthText = how + "Checkhealth: Starting Belt failed";
                     } catch (JposException e) {
                         CheckHealthText = how + "Checkhealth: Error: " + e.getMessage();
                     }
                     if (interactive)
-                        synchronizedMessageBox("CheckHealth result:\n" + CheckHealthText, "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+                        synchronizedMessageBox("CheckHealth result:\n" + CheckHealthText, "CheckHealth", INFORMATION_MESSAGE);
                 }
             }
         }
 
         @Override
         public void moveForward(int speed) throws JposException {
-            Device.check(BeltState[BeltMotor] != BeltMotorOK || BeltState[BeltSecurityFlap] == BeltSecurityFlapOpen, JposConst.JPOS_E_FAILURE, "Hardware not in operational state");
-            Device.check(BeltState[BeltLightBarrier] != BeltLightBarrierFree, JposConst.JPOS_E_ILLEGAL, "Not allowed in current state");
+            check(BeltState[BeltMotor] != BeltMotorOK || BeltState[BeltSecurityFlap] == BeltSecurityFlapOpen, JPOS_E_FAILURE, "Hardware not in operational state");
+            check(BeltState[BeltLightBarrier] != BeltLightBarrierFree, JPOS_E_ILLEGAL, "Not allowed in current state");
             String[] cmd = {"BELT:Speed1", "BELT:Speed2"};
             attachWaiter();
             char[] prevState = BeltState;
             sendResp(cmd[speed - 1]);
             if ((prevState[BeltSpeed] == BeltFast) != (speed == CapSpeedStepsForward)) {
                 PollWaiter.signal();
-                waitWaiter(RequestTimeout * MaxRetry);
+                waitWaiter((long)RequestTimeout * MaxRetry);
             }
             releaseWaiter();
             prevState = BeltState;
-            check(prevState == null , JposConst.JPOS_E_OFFLINE, "Communication failure");
-            check((prevState[BeltSpeed] == BeltFast) != (speed == CapSpeedStepsForward), JposConst.JPOS_E_FAILURE, "Speed " + speed + " could not be set");
+            check(prevState == null , JPOS_E_OFFLINE, "Communication failure");
+            check((prevState[BeltSpeed] == BeltFast) != (speed == CapSpeedStepsForward), JPOS_E_FAILURE, "Speed " + speed + " could not be set");
         }
 
         @Override
         public void resetBelt() throws JposException {
-            Device.check(BeltState[BeltMotor] != BeltMotorOK || BeltState[BeltSecurityFlap] == BeltSecurityFlapOpen, JposConst.JPOS_E_FAILURE, "Hardware not in operational state");
+            check(BeltState[BeltMotor] != BeltMotorOK || BeltState[BeltSecurityFlap] == BeltSecurityFlapOpen, JPOS_E_FAILURE, "Hardware not in operational state");
             attachWaiter();
             char[] prevState = BeltState;
             sendResp("BELT:Speed0");
             if (prevState[BeltSpeed] != BeltOff) {
                 PollWaiter.signal();
-                waitWaiter(RequestTimeout * MaxRetry);
+                waitWaiter((long)RequestTimeout * MaxRetry);
             }
             releaseWaiter();
             prevState = BeltState;
-            check(prevState == null , JposConst.JPOS_E_OFFLINE, "Communication failure");
-            check(prevState[BeltSpeed] != BeltOff, JposConst.JPOS_E_FAILURE, "Belt could not be stopped");
+            check(prevState == null , JPOS_E_OFFLINE, "Communication failure");
+            check(prevState[BeltSpeed] != BeltOff, JPOS_E_FAILURE, "Belt could not be stopped");
         }
 
         @Override
         public void stopBelt() throws JposException {
-            Device.check(BeltState[BeltMotor] != BeltMotorOK || BeltState[BeltSecurityFlap] == BeltSecurityFlapOpen, JposConst.JPOS_E_FAILURE, "Hardware not in operational state");
+            check(BeltState[BeltMotor] != BeltMotorOK || BeltState[BeltSecurityFlap] == BeltSecurityFlapOpen, JPOS_E_FAILURE, "Hardware not in operational state");
             attachWaiter();
             char[] prevState = BeltState;
             sendResp("BELT:Speed0");
             if (prevState[BeltSpeed] != BeltOff) {
                 PollWaiter.signal();
-                waitWaiter(RequestTimeout * MaxRetry);
+                waitWaiter((long)RequestTimeout * MaxRetry);
             }
             releaseWaiter();
             prevState = BeltState;
-            check(prevState == null , JposConst.JPOS_E_OFFLINE, "Communication failure");
-            check(prevState[BeltSpeed] != BeltOff, JposConst.JPOS_E_FAILURE, "Belt could not be stopped");
+            check(prevState == null , JPOS_E_OFFLINE, "Communication failure");
+            check(prevState[BeltSpeed] != BeltOff, JPOS_E_FAILURE, "Belt could not be stopped");
         }
     }
 
@@ -609,7 +622,7 @@ public class BeltCashboxDrawer extends Device {
     /**
      * Synchronization object for cash deposit operations.
      */
-    int[] CashDepositSync = {0};
+    final int[] CashDepositSync = {0};
 
     /**
      * Device state for bill slots.
@@ -692,7 +705,7 @@ public class BeltCashboxDrawer extends Device {
      * and the count of cash pieces in the second element. The two-dimensional arrays are sorted in
      * ascending order by minimum cash unit element.
      */
-    int[][] CashSlots = copySlots(CashInitialSlots);
+    final int[][][] CashSlots = {copySlots(CashInitialSlots)};
 
     /**
      * Initial cash slot values. Same structure as property CashSlots, but the count for all cash pieces
@@ -728,7 +741,7 @@ public class BeltCashboxDrawer extends Device {
      *     <li>a bill dispensing device property set (for CashChanger or BillDispenser).</li>
      * </ul>
      */
-    JposCommonProperties[] CashInstances = {null, null, null};
+    final JposCommonProperties[] CashInstances = {null, null, null};
 
     /**
      * Index of cash accepting device property set in property CashInstances (0).
@@ -749,7 +762,7 @@ public class BeltCashboxDrawer extends Device {
      * Map that contains the slot index for any cash piece's value in minimum units. As result, for any value x,
      * CashSlotIndex.containsKey(x) is false or CashSlot[CashSlotIndex.get(x)][0] equals x.
      */
-    Map<Integer, Integer> CashSlotIndex = new HashMap<Integer, Integer>();
+    Map<Integer, Integer> CashSlotIndex = new HashMap<>();
 
     @Override
     public void changeDefaults(BillAcceptorProperties props) {
@@ -853,9 +866,9 @@ public class BeltCashboxDrawer extends Device {
                     String current = command[1].substring(0, prefix);
                     if (current.equals("GetSlots") || current.equals("AddSlots")) {
                         int[][] values = string2Slots(response[1]);
-                        if (values.length == CashSlots.length) {
+                        if (values.length == CashSlots[0].length) {
                             for (int i = 0; i < values.length; i++) {
-                                if (values[i][0] != CashSlots[i][0])
+                                if (values[i][0] != CashSlots[0][i][0])
                                     return -1;
                             }
                             return 1;
@@ -887,7 +900,7 @@ public class BeltCashboxDrawer extends Device {
             commands[0][FirstCommand + 1] = "CASHBOX:GetSlots";
             OldBillState = CashBillState;
             OldCoinState = CashCoinState;
-            OldSlots = CashSlots;
+            OldSlots = CashSlots[0];
             prepareSignalStatusWaits(BillAcceptors[0]);
             prepareSignalStatusWaits(BillDispensers[0]);
             prepareSignalStatusWaits(CashChangers[0]);
@@ -900,11 +913,11 @@ public class BeltCashboxDrawer extends Device {
             super.setNewStatusInformation(resps);
             char[]cashState = resps[FirstCommand].toCharArray();
             synchronized (CashSlots) {
-                CashSlots = string2Slots(resps[FirstCommand + 1]);
+                CashSlots[0] = string2Slots(resps[FirstCommand + 1]);
                 CashCoinState = Arrays.copyOf(cashState, cashState.length);
                 CashBillState = cashState;
-                setCashState(CashCoinState, cashState, Arrays.copyOf(CashSlots, CashMinBillIndex));
-                setCashState(CashBillState, cashState, Arrays.copyOfRange(CashSlots, CashMinBillIndex, CashSlots.length));
+                setCashState(CashCoinState, cashState, Arrays.copyOf(CashSlots[0], CashMinBillIndex));
+                setCashState(CashBillState, cashState, Arrays.copyOfRange(CashSlots[0], CashMinBillIndex, CashSlots[0].length));
             }
         }
 
@@ -925,7 +938,7 @@ public class BeltCashboxDrawer extends Device {
         @Override
         public void statusUpdateProcessing() {
             if (!Arrays.equals(getCashStates(OldBillState, OldCoinState), getCashStates(CashBillState, CashCoinState))
-                    || !compareSlots(OldSlots, CashSlots)
+                    || slotsDifferent(OldSlots, CashSlots[0])
             ) {
                 statusCashProcessing(OldBillState, OldCoinState, OldSlots);
             }
@@ -946,7 +959,7 @@ public class BeltCashboxDrawer extends Device {
             if ((oldBillState[CashOperationState] > CashFinishInput) != (CashBillState[CashOperationState] > CashFinishInput)) {
                 sendCashJamEvent(CashBillState[CashOperationState] > CashFinishInput);
             }
-            if (!compareSlots(oldSlots, CashSlots)) {
+            if (slotsDifferent(oldSlots, CashSlots[0])) {
                 sendDataEvents();
             }
         }
@@ -984,17 +997,17 @@ public class BeltCashboxDrawer extends Device {
                 } else if (props instanceof SampleUdpDeviceCashChangerProperties) {
                     handleEvent(new CashChangerDataEvent(props.EventSource, 0, coinamount + billamount, coincounts + billcounts));
                 }
-            } catch (JposException e) {}
+            } catch (JposException ignored) {}
         }
 
         private void sendCashJamEvent(boolean b) {
             try {
                 int[][] states = {
-                        {BillAcceptorConst.BACC_STATUS_JAM, BillAcceptorConst.BACC_STATUS_JAMOK},
-                        {BillDispenserConst.BDSP_STATUS_JAM, BillDispenserConst.BDSP_STATUS_JAMOK},
-                        {CashChangerConst.CHAN_STATUS_JAM, CashChangerConst.CHAN_STATUS_JAMOK},
-                        {CoinAcceptorConst.CACC_STATUS_JAM, CoinAcceptorConst.CACC_STATUS_JAMOK},
-                        {CoinDispenserConst.COIN_STATUS_JAM, CoinDispenserConst.COIN_STATUS_OK}
+                        {BACC_STATUS_JAM, BACC_STATUS_JAMOK},
+                        {BDSP_STATUS_JAM, BDSP_STATUS_JAMOK},
+                        {CHAN_STATUS_JAM, CHAN_STATUS_JAMOK},
+                        {CACC_STATUS_JAM, CACC_STATUS_JAMOK},
+                        {COIN_STATUS_JAM, COIN_STATUS_OK}
                 };
                 int i = b ? 0 : 1;
                 int j = CashBillState[CashEmptyState] - '0';
@@ -1004,16 +1017,16 @@ public class BeltCashboxDrawer extends Device {
                 }
                 props = getClaimingInstance(ClaimedBillDispenser, 0);
                 if (props != null) {
-                    int[] devstate = {BillDispenserConst.BDSP_STATUS_EMPTY, BillDispenserConst.BDSP_STATUS_NEAREMPTY, BillDispenserConst.BDSP_STATUS_OK};
+                    int[] devstate = {BDSP_STATUS_EMPTY, BDSP_STATUS_NEAREMPTY, BDSP_STATUS_OK};
                     if (b)
-                        devstate[j] = BillDispenserConst.BDSP_STATUS_JAM;
+                        devstate[j] = BDSP_STATUS_JAM;
                     handleEvent(new SampleUdpDeviceBillDispenserStatusUpdateEvent(props.EventSource, states[0][i], devstate[j]));
                 }
                 props = getClaimingInstance(ClaimedCashChanger, 0);
                 if (props != null) {
-                    int[] devstate = {CashChangerConst.CHAN_STATUS_EMPTY, CashChangerConst.CHAN_STATUS_NEAREMPTY, CashChangerConst.CHAN_STATUS_OK};
-                    if (((SampleUdpDeviceCashChangerProperties) props).DepositStatus != CashChangerConst.CHAN_STATUS_DEPOSIT_END) {
-                        devstate[j] = CashChangerConst.CHAN_STATUS_DEPOSIT_END;
+                    int[] devstate = {CHAN_STATUS_EMPTY, CHAN_STATUS_NEAREMPTY, CHAN_STATUS_OK};
+                    if (((SampleUdpDeviceCashChangerProperties) props).DepositStatus != CHAN_STATUS_DEPOSIT_END) {
+                        devstate[j] = CHAN_STATUS_DEPOSIT_END;
                     }
                     handleEvent(new SampleUdpDeviceCashChangerStatusUpdateEvent(props.EventSource, states[0][i], devstate[j]));
                 }
@@ -1023,58 +1036,56 @@ public class BeltCashboxDrawer extends Device {
                 }
                 props = getClaimingInstance(ClaimedCoinDispenser, 0);
                 if (props != null) {
-                    int[] devstate = {CoinDispenserConst.COIN_STATUS_EMPTY, CoinDispenserConst.COIN_STATUS_NEAREMPTY, CoinDispenserConst.COIN_STATUS_OK};
+                    int[] devstate = {COIN_STATUS_EMPTY, COIN_STATUS_NEAREMPTY, COIN_STATUS_OK};
                     if (b)
-                        devstate[j] = CoinDispenserConst.COIN_STATUS_JAM;
+                        devstate[j] = COIN_STATUS_JAM;
                     handleEvent(new SampleUdpDeviceCoinDispenserStatusUpdateEvent(props.EventSource, devstate[j]));
                 }
-            } catch (JposException e) {
-            }
+            } catch (JposException ignored) {}
         }
 
         private void sendCashEmptyEvents(char[] oldBillState, char[] oldCoinState) {
             try {
                 int[][] states = {
-                        {BillDispenserConst.BDSP_STATUS_EMPTY, BillDispenserConst.BDSP_STATUS_NEAREMPTY, BillDispenserConst.BDSP_STATUS_EMPTYOK},
-                        {CashChangerConst.CHAN_STATUS_EMPTY, CashChangerConst.CHAN_STATUS_NEAREMPTY, CashChangerConst.CHAN_STATUS_EMPTYOK},
-                        {CoinDispenserConst.COIN_STATUS_EMPTY, CoinDispenserConst.COIN_STATUS_NEAREMPTY, CoinDispenserConst.COIN_STATUS_OK}
+                        {BDSP_STATUS_EMPTY, BDSP_STATUS_NEAREMPTY, BDSP_STATUS_EMPTYOK},
+                        {CHAN_STATUS_EMPTY, CHAN_STATUS_NEAREMPTY, CHAN_STATUS_EMPTYOK},
+                        {COIN_STATUS_EMPTY, COIN_STATUS_NEAREMPTY, COIN_STATUS_OK}
                 };
                 char[] cashstate = getCashStates(CashBillState, CashCoinState);
                 JposCommonProperties props = getClaimingInstance(ClaimedBillDispenser, 0);
                 if (props != null && CashBillState[CashEmptyState] != oldBillState[CashEmptyState]) {
                     int i = CashBillState[CashEmptyState] - '0';
-                    int[] devstate = {BillDispenserConst.BDSP_STATUS_EMPTY, BillDispenserConst.BDSP_STATUS_NEAREMPTY, BillDispenserConst.BDSP_STATUS_OK};
+                    int[] devstate = {BDSP_STATUS_EMPTY, BDSP_STATUS_NEAREMPTY, BDSP_STATUS_OK};
                     if (CashBillState[CashOperationState] > CashInput)
-                        devstate[i] = BillDispenserConst.BDSP_STATUS_JAM;
+                        devstate[i] = BDSP_STATUS_JAM;
                     handleEvent(new SampleUdpDeviceBillDispenserStatusUpdateEvent(props.EventSource, states[0][i], devstate[i]));
                 }
                 props = getClaimingInstance(ClaimedCashChanger, 0);
                 if (props != null && cashstate[CashEmptyState] != getCashStates(oldBillState, oldCoinState)[CashEmptyState]) {
                     int i = cashstate[CashEmptyState] - '0';
-                    int[] devstate = {CashChangerConst.CHAN_STATUS_EMPTY, CashChangerConst.CHAN_STATUS_NEAREMPTY, CashChangerConst.CHAN_STATUS_OK};
-                    if (((SampleUdpDeviceCashChangerProperties)props).DepositStatus == CashChangerConst.CHAN_STATUS_DEPOSIT_END &&
+                    int[] devstate = {CHAN_STATUS_EMPTY, CHAN_STATUS_NEAREMPTY, CHAN_STATUS_OK};
+                    if (((SampleUdpDeviceCashChangerProperties)props).DepositStatus == CHAN_STATUS_DEPOSIT_END &&
                             CashBillState[CashOperationState] > CashInput)
-                        devstate[i] = CashChangerConst.CHAN_STATUS_JAM;
+                        devstate[i] = CHAN_STATUS_JAM;
                     handleEvent(new SampleUdpDeviceCashChangerStatusUpdateEvent(props.EventSource, states[0][i], devstate[i]));
                 }
                 props = getClaimingInstance(ClaimedCoinDispenser, 0);
                 if (props != null && CashCoinState[CashEmptyState] != oldCoinState[CashEmptyState]) {
                     int i = CashCoinState[CashEmptyState] - '0';
-                    int[] devstate = {CoinDispenserConst.COIN_STATUS_EMPTY, CoinDispenserConst.COIN_STATUS_NEAREMPTY, CoinDispenserConst.COIN_STATUS_OK};
+                    int[] devstate = {COIN_STATUS_EMPTY, COIN_STATUS_NEAREMPTY, COIN_STATUS_OK};
                     if (CashCoinState[CashOperationState] > CashInput)
-                        devstate[i] = CoinDispenserConst.COIN_STATUS_JAM;
+                        devstate[i] = COIN_STATUS_JAM;
                     handleEvent(new SampleUdpDeviceCoinDispenserStatusUpdateEvent(props.EventSource, devstate[i]));
                 }
-            } catch (JposException e) {
-            }
+            } catch (JposException ignored) {}
         }
 
         private void sendCashFullEvents(char[] oldBillState, char[] oldCoinState) {
             try {
                 int[][] states = {
-                        {BillAcceptorConst.BACC_STATUS_FULL, BillAcceptorConst.BACC_STATUS_NEARFULL, BillAcceptorConst.BACC_STATUS_FULLOK},
-                        {CashChangerConst.CHAN_STATUS_FULL, CashChangerConst.CHAN_STATUS_NEARFULL, CashChangerConst.CHAN_STATUS_FULLOK},
-                        {CoinAcceptorConst.CACC_STATUS_FULL, CoinAcceptorConst.CACC_STATUS_NEARFULL, CoinAcceptorConst.CACC_STATUS_FULLOK}
+                        {BACC_STATUS_FULL, BACC_STATUS_NEARFULL, BACC_STATUS_FULLOK},
+                        {CHAN_STATUS_FULL, CHAN_STATUS_NEARFULL, CHAN_STATUS_FULLOK},
+                        {CACC_STATUS_FULL, CACC_STATUS_NEARFULL, CACC_STATUS_FULLOK}
                 };
                 JposCommonProperties props = getClaimingInstance(ClaimedBillAcceptor, 0);
                 char[] cashstate = getCashStates(CashBillState, CashCoinState);
@@ -1092,8 +1103,7 @@ public class BeltCashboxDrawer extends Device {
                     int i = CashCoinState[CashFullState] - '0';
                     handleEvent(new SampleUdpDeviceCoinAcceptorStatusUpdateEvent(props.EventSource, states[2][i]));
                 }
-            } catch (JposException e) {
-            }
+            } catch (JposException ignored) {}
         }
 
         @Override
@@ -1101,17 +1111,16 @@ public class BeltCashboxDrawer extends Device {
             try {
                 JposCommonProperties props = getClaimingInstance(ClaimedBillAcceptor, 0);
                 if ((props) != null)
-                    handleEvent(new SampleUdpDeviceBillAcceptorStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_ONLINE));
+                    handleEvent(new SampleUdpDeviceBillAcceptorStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_ONLINE));
                 if ((props = getClaimingInstance(ClaimedBillDispenser, 0)) != null)
-                    handleEvent(new SampleUdpDeviceBillDispenserStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_ONLINE));
+                    handleEvent(new SampleUdpDeviceBillDispenserStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_ONLINE));
                 if ((props = getClaimingInstance(ClaimedCashChanger, 0)) != null)
-                    handleEvent(new SampleUdpDeviceCashChangerStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_ONLINE));
+                    handleEvent(new SampleUdpDeviceCashChangerStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_ONLINE));
                 if ((props = getClaimingInstance(ClaimedCoinDispenser, 0)) != null)
-                    handleEvent(new SampleUdpDeviceCoinDispenserStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_ONLINE));
+                    handleEvent(new SampleUdpDeviceCoinDispenserStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_ONLINE));
                 if ((props = getClaimingInstance(ClaimedCoinAcceptor, 0)) != null)
-                    handleEvent(new SampleUdpDeviceCoinAcceptorStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_ONLINE));
-            } catch (JposException e) {
-            }
+                    handleEvent(new SampleUdpDeviceCoinAcceptorStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_ONLINE));
+            } catch (JposException ignored) {}
             return super.statusPowerOnlineProcessing();
         }
 
@@ -1120,17 +1129,16 @@ public class BeltCashboxDrawer extends Device {
             try {
                 JposCommonProperties props = getClaimingInstance(ClaimedBillAcceptor, 0);
                 if ((props) != null)
-                    handleEvent(new SampleUdpDeviceBillAcceptorStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE));
+                    handleEvent(new SampleUdpDeviceBillAcceptorStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_OFF_OFFLINE));
                 if ((props = getClaimingInstance(ClaimedBillDispenser, 0)) != null)
-                    handleEvent(new SampleUdpDeviceBillDispenserStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE));
+                    handleEvent(new SampleUdpDeviceBillDispenserStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_OFF_OFFLINE));
                 if ((props = getClaimingInstance(ClaimedCashChanger, 0)) != null)
-                    handleEvent(new SampleUdpDeviceCashChangerStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE));
+                    handleEvent(new SampleUdpDeviceCashChangerStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_OFF_OFFLINE));
                 if ((props = getClaimingInstance(ClaimedCoinDispenser, 0)) != null)
-                    handleEvent(new SampleUdpDeviceCoinDispenserStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE));
+                    handleEvent(new SampleUdpDeviceCoinDispenserStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_OFF_OFFLINE));
                 if ((props = getClaimingInstance(ClaimedCoinAcceptor, 0)) != null)
-                    handleEvent(new SampleUdpDeviceCoinAcceptorStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE));
-            } catch (JposException e) {
-            }
+                    handleEvent(new SampleUdpDeviceCoinAcceptorStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_OFF_OFFLINE));
+            } catch (JposException ignored) {}
             signalStatusWaiters();
         }
     }
@@ -1149,16 +1157,16 @@ public class BeltCashboxDrawer extends Device {
         return result;
     }
 
-    private boolean compareSlots(int[][] slot1, int[][] slot2) {
+    private boolean slotsDifferent(int[][] slot1, int[][] slot2) {
         if (slot1 == null || slot2 == null)
-            return slot1 == slot2;
+            return slot1 != slot2;
         if (slot1.length != slot2.length)
-            return false;
+            return true;
         for (int i = slot1.length - 1; i >= 0; --i) {
             if (!Arrays.equals(slot1[i], slot2[i]))
-                return false;
+                return true;
         }
-        return true;
+        return false;
     }
 
     /**
@@ -1194,7 +1202,7 @@ public class BeltCashboxDrawer extends Device {
     int[][] depositDelta() {
         int[][] result = null;
         if (CashDepositStartSlots != null) {
-            result = copySlots(CashSlots);
+            result = copySlots(CashSlots[0]);
             for (int i = 0; i < result.length; i++) {
                 result[i][1] -= CashDepositStartSlots[i][1];
             }
@@ -1216,17 +1224,17 @@ public class BeltCashboxDrawer extends Device {
         int[][] boundaries = {{0, CashMinBillIndex}, {CashMinBillIndex, slots.length}};
         int[][] validIndices = {{0, 1}, {0}, {1}};
         if (validIndices[what].length == 1)
-            check(cashtypestr[1 - validIndices[what][0]].length() > 0, JposConst.JPOS_E_ILLEGAL, cashCounts + " contains invalid cashCount");
+            check(cashtypestr[1 - validIndices[what][0]].length() > 0, JPOS_E_ILLEGAL, cashCounts + " contains invalid cashCount");
         for (int type : validIndices[what]) {
             if (type < cashtypestr.length && cashtypestr[type].length() > 0) {
                 String[] countsstr = cashtypestr[type].split(",");
-                for (int i = 0; i < countsstr.length; i++) {
-                    String[] parts = countsstr[i].split(":");
+                for (String s : countsstr) {
+                    String[] parts = s.split(":");
                     int value = Integer.parseInt(parts[0]);
-                    check(!CashSlotIndex.containsKey(value), JposConst.JPOS_E_ILLEGAL, "Invalid cashCount component: " + countsstr[i]);
+                    check(!CashSlotIndex.containsKey(value), JPOS_E_ILLEGAL, "Invalid cashCount component: " + s);
                     value = CashSlotIndex.get(value);
-                    check(value < boundaries[type][0] || boundaries[type][1] <= value, JposConst.JPOS_E_ILLEGAL,
-                            "Invalid cashCount type component: " + countsstr[i]);
+                    check(value < boundaries[type][0] || boundaries[type][1] <= value, JPOS_E_ILLEGAL,
+                            "Invalid cashCount type component: " + s);
                     slots[value][1] += Integer.parseInt(parts[1]);
                 }
             }
@@ -1265,11 +1273,11 @@ public class BeltCashboxDrawer extends Device {
             props.attachWaiter();
             sendResp("CASHBOX:CancelInput");
             PollWaiter.signal();
-            props.waitWaiter(RequestTimeout * MaxRetry);
+            props.waitWaiter((long)RequestTimeout * MaxRetry);
             props.releaseWaiter();
             synchronized(CashSlots) {
                 state = CashBillState[CashOperationState];
-                check(Offline || (state == CashInput || state == CashFinishInput), JposConst.JPOS_E_FAILURE, "Unable to cancel deposit operation");
+                check(Offline || (state == CashInput || state == CashFinishInput), JPOS_E_FAILURE, "Unable to cancel deposit operation");
             }
         }
     }
@@ -1285,11 +1293,11 @@ public class BeltCashboxDrawer extends Device {
      *              specification.
      */
     Object[] getCountsAmount(int[][] slots, int from, int to) {
-        Integer amount = 0;
-        String counts = "";
+        int amount = 0;
+        StringBuilder counts = new StringBuilder();
         for (int i = from; i < to; i++) {
             amount += slots[i][0] * slots[i][1];
-            counts += "," + slots[i][0] + ":" + slots[i][1];
+            counts.append(",").append(slots[i][0]).append(":").append(slots[i][1]);
         }
         return new Object[]{ amount, (from == 0 ? "" : ";") + counts.substring(1) };
     }
@@ -1314,7 +1322,7 @@ public class BeltCashboxDrawer extends Device {
 
         @Override
         public void handlePowerStateOnEnable() throws JposException {
-            handleEvent(new JposStatusUpdateEvent(EventSource, Offline ? JposConst.JPOS_SUE_POWER_OFF_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE));
+            handleEvent(new JposStatusUpdateEvent(EventSource, Offline ? JPOS_SUE_POWER_OFF_OFFLINE : JPOS_SUE_POWER_ONLINE));
         }
 
         @Override
@@ -1323,16 +1331,15 @@ public class BeltCashboxDrawer extends Device {
                 synchronized (CashSlots) {
                     char[] state = getCashStates();
                     char opstate = state[CashOperationState];
-                    char lowstate = state[CashEmptyState];
                     char histate = state[CashFullState];
                     if (Offline || opstate == CashJam || opstate == CashOpened) {
-                        DepositStatusDef = BillAcceptorConst.BACC_STATUS_DEPOSIT_JAM;
-                        FullStatusDef = BillAcceptorConst.BACC_STATUS_FULL;
+                        DepositStatusDef = BACC_STATUS_DEPOSIT_JAM;
+                        FullStatusDef = BACC_STATUS_FULL;
                     } else {
-                        FullStatusDef = histate == CashFull ? BillAcceptorConst.BACC_STATUS_FULL
-                                : (histate == CashNearlyFull ? BillAcceptorConst.BACC_STATUS_NEARFULL : BillAcceptorConst.BACC_STATUS_OK);
-                        DepositStatusDef = opstate == CashIdle ? BillAcceptorConst.BACC_STATUS_DEPOSIT_END
-                                : (opstate == CashInput ? BillAcceptorConst.BACC_STATUS_DEPOSIT_START : BillAcceptorConst.BACC_STATUS_DEPOSIT_COUNT);
+                        FullStatusDef = histate == CashFull ? BACC_STATUS_FULL
+                                : (histate == CashNearlyFull ? BACC_STATUS_NEARFULL : BACC_STATUS_OK);
+                        DepositStatusDef = opstate == CashIdle ? BACC_STATUS_DEPOSIT_END
+                                : (opstate == CashInput ? BACC_STATUS_DEPOSIT_START : BACC_STATUS_DEPOSIT_COUNT);
                     }
                 }
             }
@@ -1343,16 +1350,16 @@ public class BeltCashboxDrawer extends Device {
         public void claim(int timeout) throws JposException {
             synchronized (CashInstances) {
                 check(CashInstances[CashAcceptInstance] != null && !(CashInstances[CashAcceptInstance] instanceof BillAcceptorProperties),
-                        JposConst.JPOS_E_CLAIMED, "Device claimed by other cash accepting instance");
+                        JPOS_E_CLAIMED, "Device claimed by other cash accepting instance");
                 CashInstances[CashAcceptInstance] = this;
             }
             startPolling(this);
-            if (Offline && PowerNotify == JposConst.JPOS_PN_DISABLED) {
+            if (Offline && PowerNotify == JPOS_PN_DISABLED) {
                 stopPolling();
                 synchronized(CashInstances) {
                     CashInstances[CashAcceptInstance] = null;
                 }
-                throw new JposException(JposConst.JPOS_E_OFFLINE, "Communication with device disrupted");
+                throw new JposException(JPOS_E_OFFLINE, "Communication with device disrupted");
             }
             super.claim(timeout);
         }
@@ -1367,16 +1374,17 @@ public class BeltCashboxDrawer extends Device {
         }
 
         @Override
+        @SuppressWarnings("AssignmentUsedAsCondition")
         public void checkHealth(int level) throws JposException {
-            String how = level == JposConst.JPOS_CH_INTERNAL ? "Internal" : (level == JposConst.JPOS_CH_EXTERNAL ? "External" : "Interactive");
+            String how = level == JPOS_CH_INTERNAL ? "Internal" : (level == JPOS_CH_EXTERNAL ? "External" : "Interactive");
             if (Offline)
                 CheckHealthText = how + " Checkhealth: Offline";
             else {
                 CheckHealthText = how + " Checkhealth: OK";
-                if (level != JposConst.JPOS_CH_INTERNAL) {
+                if (level != JPOS_CH_INTERNAL) {
                     boolean interactive;
-                    if (interactive = (level == JposConst.JPOS_CH_INTERACTIVE))
-                        synchronizedMessageBox("Press OK to start health test.", "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+                    if (interactive = (level == JPOS_CH_INTERACTIVE))
+                        synchronizedMessageBox("Press OK to start health test.", "CheckHealth", INFORMATION_MESSAGE);
                     try {
                         String[] counts = {""};
                         boolean[] diff = {false};
@@ -1385,7 +1393,7 @@ public class BeltCashboxDrawer extends Device {
                         CheckHealthText = how + "Checkhealth: Error: " + e.getMessage();
                     }
                     if (interactive)
-                        synchronizedMessageBox("CheckHealth result:\n" + CheckHealthText, "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+                        synchronizedMessageBox("CheckHealth result:\n" + CheckHealthText, "CheckHealth", INFORMATION_MESSAGE);
                 }
             }
         }
@@ -1393,42 +1401,42 @@ public class BeltCashboxDrawer extends Device {
         @Override
         public void adjustCashCounts(String cashCounts) throws JposException {
             synchronized (CashSlots) {
-                check(CashDepositStartSlots != null, JposConst.JPOS_E_ILLEGAL, "Cash acceptance in progress");
+                check(CashDepositStartSlots != null, JPOS_E_ILLEGAL, "Cash acceptance in progress");
             }
             int[][] slots = cashCounts2ints(cashCounts, 2);
             boolean doit = false;
             synchronized (CashSlots) {
                 for (int i = CashMinBillIndex; i < slots.length; i++) {
-                    if ((slots[i][1] -= CashSlots[i][1]) != 0)
+                    if ((slots[i][1] -= CashSlots[0][i][1]) != 0)
                         doit = true;
                 }
             }
             if (doit) {
-                String list = "";
+                StringBuilder list = new StringBuilder();
                 for (int i = CashMinBillIndex; i < slots.length; i++) {
                     if (slots[i][1] != 0)
-                        list += " " + slots[i][0] + " " + slots[i][1];
+                        list.append(" ").append(slots[i][0]).append(" ").append(slots[i][1]);
                 }
                 String result = sendResp("CASHBOX:AddSlots" + list.substring(1));
-                check(result == null || Offline, JposConst.JPOS_E_FAILURE, "Communication error");
+                check(result == null || Offline, JPOS_E_FAILURE, "Communication error");
             }
         }
 
         @Override
         public void beginDeposit() throws JposException {
-            check(DepositStatus != BillAcceptorConst.BACC_STATUS_DEPOSIT_END, JposConst.JPOS_E_ILLEGAL, "Bad deposit state");
+            check(DepositStatus != BACC_STATUS_DEPOSIT_END, JPOS_E_ILLEGAL, "Bad deposit state");
             attachWaiter();
             String[] result = sendResp(new String[]{"CASHBOX:StartInput2", "CASHBOX:GetSlots"});
             Object[] deposit;
             if (result != null) {
                 PollWaiter.signal();
-                waitWaiter(RequestTimeout * MaxRetry);
+                waitWaiter((long)RequestTimeout * MaxRetry);
             }
             releaseWaiter();
-            check(result == null, JposConst.JPOS_E_OFFLINE, "Could not start deposit operation");
+            check(result == null, JPOS_E_OFFLINE, "Could not start deposit operation");
             synchronized (CashSlots) {
                 CashDepositStartSlots = string2Slots(result[1]);
-                deposit = getCountsAmount(depositDelta(), CashMinBillIndex, CashSlots.length);
+                deposit = getCountsAmount(depositDelta(), CashMinBillIndex, CashSlots[0].length);
             }
             synchronized (CashDepositSync) {
                 DepositAmount = (Integer) deposit[0];
@@ -1442,14 +1450,14 @@ public class BeltCashboxDrawer extends Device {
         public void fixDeposit() throws JposException {
             attachWaiter();
             String depositstr = sendResp("CASHBOX:StopInput");
-            check(depositstr == null, JposConst.JPOS_E_FAILURE, "Cannot stop cash input");
+            check(depositstr == null, JPOS_E_FAILURE, "Cannot stop cash input");
             PollWaiter.signal();
-            waitWaiter(RequestTimeout * MaxRetry);
+            waitWaiter((long)RequestTimeout * MaxRetry);
             releaseWaiter();
             Object[] deposit;
             synchronized(CashSlots) {
-                deposit = getCountsAmount(depositDelta(), CashMinBillIndex, CashSlots.length);
-                check(Integer.parseInt(depositstr) != (Integer)deposit[0], JposConst.JPOS_E_FAILURE, "Deposit amount mismatch");
+                deposit = getCountsAmount(depositDelta(), CashMinBillIndex, CashSlots[0].length);
+                check(Integer.parseInt(depositstr) != (Integer)deposit[0], JPOS_E_FAILURE, "Deposit amount mismatch");
             }
             synchronized (CashDepositSync) {
                 CashCreateDataEvents = false;
@@ -1468,14 +1476,14 @@ public class BeltCashboxDrawer extends Device {
                 int[][] delta = depositDelta();
                 if (delta == null)
                     delta = CashInitialSlots;
-                deposit = getCountsAmount(delta, CashMinBillIndex, CashSlots.length);
+                deposit = getCountsAmount(delta, CashMinBillIndex, CashSlots[0].length);
                 CashDepositStartSlots = null;
             }
             synchronized (CashDepositSync) {
                 DepositAmount = (Integer)deposit[0];
                 DepositCounts = (String) deposit[1];
-                if (DepositStatus != BillAcceptorConst.BACC_STATUS_DEPOSIT_JAM)
-                    DepositStatus = BillAcceptorConst.BACC_STATUS_DEPOSIT_END;
+                if (DepositStatus != BACC_STATUS_DEPOSIT_JAM)
+                    DepositStatus = BACC_STATUS_DEPOSIT_END;
             }
         }
 
@@ -1483,30 +1491,30 @@ public class BeltCashboxDrawer extends Device {
         public void endDeposit(int success) throws JposException {
             String depositstr = sendResp("CASHBOX:EndInput");
             synchronized (CashDepositSync) {
-                check(depositstr == null, JposConst.JPOS_E_FAILURE, "Deposit end failure");
+                check(depositstr == null, JPOS_E_FAILURE, "Deposit end failure");
             }
-            check(Integer.parseInt(depositstr) != DepositAmount, JposConst.JPOS_E_FAILURE, "Deposit amount mismatch");
+            check(Integer.parseInt(depositstr) != DepositAmount, JPOS_E_FAILURE, "Deposit amount mismatch");
             synchronized (CashSlots) {
                 CashDepositStartSlots = null;
             }
             synchronized (CashDepositSync) {
-                if (DepositStatus != BillAcceptorConst.BACC_STATUS_DEPOSIT_JAM)
+                if (DepositStatus != BACC_STATUS_DEPOSIT_JAM)
                     super.endDeposit(success);
             }
         }
 
         @Override
         public void readCashCounts(String[] cashCounts, boolean[] discrepancy) throws JposException {
-            check(Offline, JposConst.JPOS_E_OFFLINE, "Device is offline");
+            check(Offline, JPOS_E_OFFLINE, "Device is offline");
             attachWaiter();
             PollWaiter.signal();
-            waitWaiter(RequestTimeout * MaxRetry);
+            waitWaiter((long)RequestTimeout * MaxRetry);
             releaseWaiter();
-            check(Offline, JposConst.JPOS_E_OFFLINE, "Device is offline");
+            check(Offline, JPOS_E_OFFLINE, "Device is offline");
             cashCounts[0] = "";
             int[][] slots;
             synchronized (CashSlots) {
-                slots = CashDepositStartSlots == null ? CashSlots : CashDepositStartSlots;
+                slots = CashDepositStartSlots == null ? CashSlots[0] : CashDepositStartSlots;
                 cashCounts[0] = (String) (getCountsAmount(slots, CashMinBillIndex, slots.length)[1]);
             }
             discrepancy[0] = false;
@@ -1538,7 +1546,7 @@ public class BeltCashboxDrawer extends Device {
 
         @Override
         public void handlePowerStateOnEnable() throws JposException {
-            handleEvent(new JposStatusUpdateEvent(EventSource, Offline ? JposConst.JPOS_SUE_POWER_OFF_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE));
+            handleEvent(new JposStatusUpdateEvent(EventSource, Offline ? JPOS_SUE_POWER_OFF_OFFLINE : JPOS_SUE_POWER_ONLINE));
         }
 
         @Override
@@ -1547,16 +1555,15 @@ public class BeltCashboxDrawer extends Device {
                 synchronized (CashSlots) {
                     char[] state = getCashStates();
                     char opstate = state[CashOperationState];
-                    char lowstate = state[CashEmptyState];
                     char histate = state[CashFullState];
                     if (Offline || opstate == CashJam || opstate == CashOpened) {
-                        DepositStatusDef = CoinAcceptorConst.CACC_STATUS_DEPOSIT_JAM;
-                        FullStatusDef = CoinAcceptorConst.CACC_STATUS_FULL;
+                        DepositStatusDef = CACC_STATUS_DEPOSIT_JAM;
+                        FullStatusDef = CACC_STATUS_FULL;
                     } else {
-                        FullStatusDef = histate == CashFull ? CoinAcceptorConst.CACC_STATUS_FULL
-                                : (histate == CashNearlyFull ? CoinAcceptorConst.CACC_STATUS_NEARFULL : CoinAcceptorConst.CACC_STATUS_OK);
-                        DepositStatusDef = opstate == CashIdle ? CoinAcceptorConst.CACC_STATUS_DEPOSIT_END
-                                : (opstate == CashInput ? CoinAcceptorConst.CACC_STATUS_DEPOSIT_START : CoinAcceptorConst.CACC_STATUS_DEPOSIT_COUNT);
+                        FullStatusDef = histate == CashFull ? CACC_STATUS_FULL
+                                : (histate == CashNearlyFull ? CACC_STATUS_NEARFULL : CACC_STATUS_OK);
+                        DepositStatusDef = opstate == CashIdle ? CACC_STATUS_DEPOSIT_END
+                                : (opstate == CashInput ? CACC_STATUS_DEPOSIT_START : CACC_STATUS_DEPOSIT_COUNT);
                     }
                 }
             }
@@ -1567,16 +1574,16 @@ public class BeltCashboxDrawer extends Device {
         public void claim(int timeout) throws JposException {
             synchronized (CashInstances) {
                 check(CashInstances[CashAcceptInstance] != null && !(CashInstances[CashAcceptInstance] instanceof CoinAcceptorProperties),
-                        JposConst.JPOS_E_CLAIMED, "Device claimed by other cash accepting instance");
+                        JPOS_E_CLAIMED, "Device claimed by other cash accepting instance");
                 CashInstances[CashAcceptInstance] = this;
             }
             startPolling(this);
-            if (Offline && PowerNotify == JposConst.JPOS_PN_DISABLED) {
+            if (Offline && PowerNotify == JPOS_PN_DISABLED) {
                 stopPolling();
                 synchronized (CashInstances) {
                     CashInstances[CashAcceptInstance] = null;
                 }
-                throw new JposException(JposConst.JPOS_E_OFFLINE, "Communication with device disrupted");
+                throw new JposException(JPOS_E_OFFLINE, "Communication with device disrupted");
             }
             super.claim(timeout);
         }
@@ -1591,16 +1598,17 @@ public class BeltCashboxDrawer extends Device {
         }
 
         @Override
+        @SuppressWarnings("AssignmentUsedAsCondition")
         public void checkHealth(int level) throws JposException {
-            String how = level == JposConst.JPOS_CH_INTERNAL ? "Internal" : (level == JposConst.JPOS_CH_EXTERNAL ? "External" : "Interactive");
+            String how = level == JPOS_CH_INTERNAL ? "Internal" : (level == JPOS_CH_EXTERNAL ? "External" : "Interactive");
             if (Offline)
                 CheckHealthText = how + " Checkhealth: Offline";
             else {
                 CheckHealthText = how + " Checkhealth: OK";
-                if (level != JposConst.JPOS_CH_INTERNAL) {
+                if (level != JPOS_CH_INTERNAL) {
                     boolean interactive;
-                    if (interactive = (level == JposConst.JPOS_CH_INTERACTIVE))
-                        synchronizedMessageBox("Press OK to start health test.", "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+                    if (interactive = (level == JPOS_CH_INTERACTIVE))
+                        synchronizedMessageBox("Press OK to start health test.", "CheckHealth", INFORMATION_MESSAGE);
                     try {
                         String[] counts = {""};
                         boolean[] diff = {false};
@@ -1609,7 +1617,7 @@ public class BeltCashboxDrawer extends Device {
                         CheckHealthText = how + "Checkhealth: Error: " + e.getMessage();
                     }
                     if (interactive)
-                        synchronizedMessageBox("CheckHealth result:\n" + CheckHealthText, "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+                        synchronizedMessageBox("CheckHealth result:\n" + CheckHealthText, "CheckHealth", INFORMATION_MESSAGE);
                 }
             }
         }
@@ -1617,45 +1625,45 @@ public class BeltCashboxDrawer extends Device {
         @Override
         public void adjustCashCounts(String cashCounts) throws JposException {
             synchronized (CashSlots) {
-                check(CashDepositStartSlots != null, JposConst.JPOS_E_ILLEGAL, "Cash acceptance in progress");
+                check(CashDepositStartSlots != null, JPOS_E_ILLEGAL, "Cash acceptance in progress");
             }
             int[][] slots = cashCounts2ints(cashCounts, 1);
             boolean doit = false;
             synchronized (CashSlots) {
                 for (int i = 0; i < CashMinBillIndex; i++) {
-                    if ((slots[i][1] -= CashSlots[i][1]) != 0)
+                    if ((slots[i][1] -= CashSlots[0][i][1]) != 0)
                         doit = true;
                 }
             }
             if (doit) {
-                String list = "";
+                StringBuilder list = new StringBuilder();
                 for (int i = 0; i < CashMinBillIndex; i++) {
                     if (slots[i][1] != 0)
-                        list += " " + slots[i][0] + " " + slots[i][1];
+                        list.append(" ").append(slots[i][0]).append(" ").append(slots[i][1]);
                 }
                 String result = sendResp("CASHBOX:AddSlots" + list.substring(1));
-                check(result == null || Offline, JposConst.JPOS_E_FAILURE, "Communication error");
+                check(result == null || Offline, JPOS_E_FAILURE, "Communication error");
             }
         }
 
         @Override
         public void beginDeposit() throws JposException {
-            check(DepositStatus != CoinAcceptorConst.CACC_STATUS_DEPOSIT_END, JposConst.JPOS_E_ILLEGAL, "Bad deposit state");
+            check(DepositStatus != CACC_STATUS_DEPOSIT_END, JPOS_E_ILLEGAL, "Bad deposit state");
             attachWaiter();
             String[] result = sendResp(new String[]{"CASHBOX:StartInput1", "CASHBOX:GetSlots"});
             Object[] deposit;
             if (result != null) {
                 PollWaiter.signal();
-                waitWaiter(RequestTimeout * MaxRetry);
+                waitWaiter((long)RequestTimeout * MaxRetry);
             }
             releaseWaiter();
-            check(result == null, JposConst.JPOS_E_OFFLINE, "Could not start deposit operation");
+            check(result == null, JPOS_E_OFFLINE, "Could not start deposit operation");
             synchronized (CashSlots) {
                 CashDepositStartSlots = string2Slots(result[1]);
                 deposit = getCountsAmount(depositDelta(), 0, CashMinBillIndex);
             }
             synchronized (CashDepositSync) {
-                check(DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_JAM, JposConst.JPOS_E_FAILURE, "JAM condition");
+                check(DepositStatus == CACC_STATUS_DEPOSIT_JAM, JPOS_E_FAILURE, "JAM condition");
                 DepositAmount = (Integer) deposit[0];
                 DepositCounts = (String) deposit[1];
                 super.beginDeposit();
@@ -1667,14 +1675,14 @@ public class BeltCashboxDrawer extends Device {
         public void fixDeposit() throws JposException {
             attachWaiter();
             String depositstr = sendResp("CASHBOX:StopInput");
-            check(depositstr == null, JposConst.JPOS_E_FAILURE, "Cannot stop cash input");
+            check(depositstr == null, JPOS_E_FAILURE, "Cannot stop cash input");
             PollWaiter.signal();
-            waitWaiter(RequestTimeout * MaxRetry);
+            waitWaiter((long)RequestTimeout * MaxRetry);
             releaseWaiter();
             Object[] deposit;
             synchronized(CashSlots) {
                 deposit = getCountsAmount(depositDelta(), 0, CashMinBillIndex);
-                check(Integer.parseInt(depositstr) != (Integer)deposit[0], JposConst.JPOS_E_FAILURE, "Deposit amount mismatch");
+                check(Integer.parseInt(depositstr) != (Integer)deposit[0], JPOS_E_FAILURE, "Deposit amount mismatch");
             }
             synchronized (CashDepositSync) {
                 CashCreateDataEvents = false;
@@ -1699,8 +1707,8 @@ public class BeltCashboxDrawer extends Device {
             synchronized (CashDepositSync) {
                 DepositAmount = (Integer)deposit[0];
                 DepositCounts = (String) deposit[1];
-                if (DepositStatus != CoinAcceptorConst.CACC_STATUS_DEPOSIT_JAM)
-                    DepositStatus = CoinAcceptorConst.CACC_STATUS_DEPOSIT_END;
+                if (DepositStatus != CACC_STATUS_DEPOSIT_JAM)
+                    DepositStatus = CACC_STATUS_DEPOSIT_END;
             }
         }
 
@@ -1708,30 +1716,30 @@ public class BeltCashboxDrawer extends Device {
         public void endDeposit(int success) throws JposException {
             String depositstr = sendResp("CASHBOX:EndInput");
             synchronized (CashDepositSync) {
-                check(depositstr == null, JposConst.JPOS_E_FAILURE, "Deposit end failure");
+                check(depositstr == null, JPOS_E_FAILURE, "Deposit end failure");
             }
-            check(Integer.parseInt(depositstr) != DepositAmount, JposConst.JPOS_E_FAILURE, "Deposit amount mismatch");
+            check(Integer.parseInt(depositstr) != DepositAmount, JPOS_E_FAILURE, "Deposit amount mismatch");
             synchronized (CashSlots) {
                 CashDepositStartSlots = null;
             }
             synchronized (CashDepositSync) {
-                if (DepositStatus != CoinAcceptorConst.CACC_STATUS_DEPOSIT_JAM)
+                if (DepositStatus != CACC_STATUS_DEPOSIT_JAM)
                     super.endDeposit(success);
             }
         }
 
         @Override
         public void readCashCounts(String[] cashCounts, boolean[] discrepancy) throws JposException {
-            check(Offline, JposConst.JPOS_E_OFFLINE, "Device is offline");
+            check(Offline, JPOS_E_OFFLINE, "Device is offline");
             attachWaiter();
             PollWaiter.signal();
-            waitWaiter(RequestTimeout * MaxRetry);
+            waitWaiter((long)RequestTimeout * MaxRetry);
             releaseWaiter();
-            check(Offline, JposConst.JPOS_E_OFFLINE, "Device is offline");
+            check(Offline, JPOS_E_OFFLINE, "Device is offline");
             cashCounts[0] = "";
             int[][] slots;
             synchronized (CashSlots) {
-                slots = CashDepositStartSlots == null ? CashSlots : CashDepositStartSlots;
+                slots = CashDepositStartSlots == null ? CashSlots[0] : CashDepositStartSlots;
                 cashCounts[0] = (String) (getCountsAmount(slots, 0, CashMinBillIndex)[1]);
             }
             discrepancy[0] = false;
@@ -1807,7 +1815,7 @@ public class BeltCashboxDrawer extends Device {
 
         @Override
         public void handlePowerStateOnEnable() throws JposException {
-            handleEvent(new JposStatusUpdateEvent(EventSource, Offline ? JposConst.JPOS_SUE_POWER_OFF_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE));
+            handleEvent(new JposStatusUpdateEvent(EventSource, Offline ? JPOS_SUE_POWER_OFF_OFFLINE : JPOS_SUE_POWER_ONLINE));
         }
 
         @Override
@@ -1817,12 +1825,11 @@ public class BeltCashboxDrawer extends Device {
                     char[] state = getCashStates();
                     char opstate = state[CashOperationState];
                     char lowstate = state[CashEmptyState];
-                    char histate = state[CashFullState];
                     if (Offline || opstate == CashJam || opstate == CashOpened) {
-                        DispenserStatus = CoinDispenserConst.COIN_STATUS_JAM;
+                        DispenserStatus = COIN_STATUS_JAM;
                     } else {
-                        DispenserStatus = lowstate == CashEmpty ? CoinDispenserConst.COIN_STATUS_EMPTY
-                                : (lowstate == CashNearEmpty ? CoinDispenserConst.COIN_STATUS_NEAREMPTY : CoinDispenserConst.COIN_STATUS_OK);
+                        DispenserStatus = lowstate == CashEmpty ? COIN_STATUS_EMPTY
+                                : (lowstate == CashNearEmpty ? COIN_STATUS_NEAREMPTY : COIN_STATUS_OK);
                     }
                 }
             }
@@ -1833,16 +1840,16 @@ public class BeltCashboxDrawer extends Device {
         public void claim(int timeout) throws JposException {
             synchronized (CashInstances) {
                 check(CashInstances[CashCoinInstance] != null && !(CashInstances[CashCoinInstance] instanceof SampleUdpDeviceCashChangerProperties),
-                        JposConst.JPOS_E_CLAIMED, "Device claimed by other coin dispensing instance");
+                        JPOS_E_CLAIMED, "Device claimed by other coin dispensing instance");
                 CashInstances[CashCoinInstance] = this;
             }
             startPolling(this);
-            if (Offline && PowerNotify == JposConst.JPOS_PN_DISABLED) {
+            if (Offline && PowerNotify == JPOS_PN_DISABLED) {
                 stopPolling();
                 synchronized (CashInstances) {
                     CashInstances[CashCoinInstance] = null;
                 }
-                throw new JposException(JposConst.JPOS_E_OFFLINE, "Communication with device disrupted");
+                throw new JposException(JPOS_E_OFFLINE, "Communication with device disrupted");
             }
             super.claim(timeout);
         }
@@ -1857,16 +1864,17 @@ public class BeltCashboxDrawer extends Device {
         }
 
         @Override
+        @SuppressWarnings("AssignmentUsedAsCondition")
         public void checkHealth(int level) throws JposException {
-            String how = level == JposConst.JPOS_CH_INTERNAL ? "Internal" : (level == JposConst.JPOS_CH_EXTERNAL ? "External" : "Interactive");
+            String how = level == JPOS_CH_INTERNAL ? "Internal" : (level == JPOS_CH_EXTERNAL ? "External" : "Interactive");
             if (Offline)
                 CheckHealthText = how + " Checkhealth: Offline";
             else {
                 CheckHealthText = how + " Checkhealth: OK";
-                if (level != JposConst.JPOS_CH_INTERNAL) {
+                if (level != JPOS_CH_INTERNAL) {
                     boolean interactive;
-                    if (interactive = (level == JposConst.JPOS_CH_INTERACTIVE))
-                        synchronizedMessageBox("Press OK to start health test.", "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+                    if (interactive = (level == JPOS_CH_INTERACTIVE))
+                        synchronizedMessageBox("Press OK to start health test.", "CheckHealth", INFORMATION_MESSAGE);
                     try {
                         String[] counts = {""};
                         boolean[] diff = {false};
@@ -1875,7 +1883,7 @@ public class BeltCashboxDrawer extends Device {
                         CheckHealthText = how + "Checkhealth: Error: " + e.getMessage();
                     }
                     if (interactive)
-                        synchronizedMessageBox("CheckHealth result:\n" + CheckHealthText, "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+                        synchronizedMessageBox("CheckHealth result:\n" + CheckHealthText, "CheckHealth", INFORMATION_MESSAGE);
                 }
             }
         }
@@ -1883,39 +1891,39 @@ public class BeltCashboxDrawer extends Device {
         @Override
         public void adjustCashCounts(String cashCounts) throws JposException {
             synchronized (CashSlots) {
-                check(CashDepositStartSlots != null, JposConst.JPOS_E_ILLEGAL, "Cash acceptance in progress");
+                check(CashDepositStartSlots != null, JPOS_E_ILLEGAL, "Cash acceptance in progress");
             }
             int[][] slots = cashCounts2ints(cashCounts, 1);
             boolean doit = false;
             synchronized (CashSlots) {
                 for (int i = 0; i < CashMinBillIndex; i++) {
-                    if ((slots[i][1] -= CashSlots[i][1]) != 0)
+                    if ((slots[i][1] -= CashSlots[0][i][1]) != 0)
                         doit = true;
                 }
             }
             if (doit) {
-                String list = "";
+                StringBuilder list = new StringBuilder();
                 for (int i = 0; i < CashMinBillIndex; i++) {
                     if (slots[i][1] != 0)
-                        list += " " + slots[i][0] + " " + slots[i][1];
+                        list.append(" ").append(slots[i][0]).append(" ").append(slots[i][1]);
                 }
                 String result = sendResp("CASHBOX:AddSlots" + list.substring(1));
-                check(result == null || Offline, JposConst.JPOS_E_FAILURE, "Communication error");
+                check(result == null || Offline, JPOS_E_FAILURE, "Communication error");
             }
         }
 
         @Override
         public void readCashCounts(String[] cashCounts, boolean[] discrepancy) throws JposException {
-            check(Offline, JposConst.JPOS_E_OFFLINE, "Device is offline");
+            check(Offline, JPOS_E_OFFLINE, "Device is offline");
             attachWaiter();
             PollWaiter.signal();
-            waitWaiter(RequestTimeout * MaxRetry);
+            waitWaiter((long)RequestTimeout * MaxRetry);
             releaseWaiter();
-            check(Offline, JposConst.JPOS_E_OFFLINE, "Device is offline");
+            check(Offline, JPOS_E_OFFLINE, "Device is offline");
             cashCounts[0] = "";
             int[][] slots;
             synchronized (CashSlots) {
-                slots = Arrays.copyOf(CashDepositStartSlots == null ? CashSlots : CashDepositStartSlots, CashSlots.length);
+                slots = Arrays.copyOf(CashDepositStartSlots == null ? CashSlots[0] : CashDepositStartSlots, CashSlots[0].length);
             }
             cashCounts[0] = (String) (getCountsAmount(slots, 0, CashMinBillIndex)[1]);
             discrepancy[0] = false;
@@ -1926,11 +1934,11 @@ public class BeltCashboxDrawer extends Device {
             char[] status;
             int[][] currentslots;
             synchronized(CashSlots) {
-                check(CashDepositStartSlots != null, JposConst.JPOS_E_ILLEGAL, "Cash acceptance in progress");
+                check(CashDepositStartSlots != null, JPOS_E_ILLEGAL, "Cash acceptance in progress");
                 status = Arrays.copyOf(CashCoinState, CashCoinState.length);
-                currentslots = copySlots(CashSlots);
+                currentslots = copySlots(CashSlots[0]);
             }
-            check(status[CashOperationState] != CashIdle, JposConst.JPOS_E_FAILURE, "CoinDispenser not operational");
+            check(status[CashOperationState] != CashIdle, JPOS_E_FAILURE, "CoinDispenser not operational");
             int amount = dispenseAmount;
             for (int i = CashMinBillIndex; i >= 0; --i) {
                 if (currentslots[i][0] <= amount) {
@@ -1940,10 +1948,10 @@ public class BeltCashboxDrawer extends Device {
                         amount -= currentslots[i][0] * currentslots[i][1];
                 }
             }
-            check(amount > 0, JposConst.JPOS_E_ILLEGAL, "Cannot dispense " + dispenseAmount + " with coins");
+            check(amount > 0, JPOS_E_ILLEGAL, "Cannot dispense " + dispenseAmount + " with coins");
             String dispensed = sendResp("CASHBOX:OutputC" + dispenseAmount);
-            check (dispensed == null || Offline, JposConst.JPOS_E_FAILURE, "Dispenser communication error");
-            checkext(Integer.parseInt(dispensed) != dispenseAmount, CashChangerConst.JPOS_ECHAN_OVERDISPENSE,
+            check (dispensed == null || Offline, JPOS_E_FAILURE, "Dispenser communication error");
+            checkext(Integer.parseInt(dispensed) != dispenseAmount, JPOS_ECHAN_OVERDISPENSE,
                     "Dispenser difference: " + (dispenseAmount - Integer.parseInt(dispensed)));
         }
     }

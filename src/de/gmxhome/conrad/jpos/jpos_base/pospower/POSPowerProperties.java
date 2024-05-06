@@ -20,9 +20,7 @@ package de.gmxhome.conrad.jpos.jpos_base.pospower;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
-import javax.swing.*;
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
+import static jpos.POSPowerConst.*;
 
 /**
  * Class containing the POS Power specific properties, their default values and default implementations of
@@ -30,7 +28,7 @@ import java.lang.reflect.Method;
  * For details about properties, methods and method parameters, see UPOS specification, chapter POS Power.
  */
 public class POSPowerProperties extends JposCommonProperties implements POSPowerInterface {
-    public int NewSueValue = POSPowerConst.PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS;
+    public int NewSueValue = PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS;
     /**
      * UPOS property CapBatteryCapacityRemaining. Default: false. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
@@ -131,7 +129,7 @@ public class POSPowerProperties extends JposCommonProperties implements POSPower
      * UPOS property PowerSource. Default: SOURCE_NA. Should be initialized by objects derived from JposDevice within the
      * open method.
      */
-    public int PowerSource = POSPowerConst.PWR_SOURCE_NA;
+    public int PowerSource = PWR_SOURCE_NA;
 
     /**
      * UPOS property QuickChargeMode. Default: false. Should be overwritten by objects derived from JposDevice within the
@@ -206,7 +204,6 @@ public class POSPowerProperties extends JposCommonProperties implements POSPower
      */
     protected POSPowerProperties(int dev) {
         super(dev);
-        DeviceServiceVersion = 1016000;
         ExclusiveUse = ExclusiveAllowed;
         FlagWhenIdleStatusValue = -1;   // To avoid FlagWhenIdle handling for CASH_SUE_DRAWERCLOSED
     }

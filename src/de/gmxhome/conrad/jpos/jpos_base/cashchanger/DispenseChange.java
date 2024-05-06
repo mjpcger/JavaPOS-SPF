@@ -17,13 +17,10 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.cashchanger;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import de.gmxhome.conrad.jpos.jpos_base.JposErrorEvent;
-import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
-import de.gmxhome.conrad.jpos.jpos_base.JposStatusUpdateEvent;
-import jpos.CashChangerConst;
-import jpos.JposConst;
+import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.JposException;
+
+import static jpos.CashChangerConst.*;
 
 /**
  * Output request executor for CashChanger method DispenseChange.
@@ -36,7 +33,7 @@ public class DispenseChange extends JposOutputRequest {
     public int getAmount() {
         return Amount;
     }
-    private int Amount;
+    private final int Amount;
 
     /**
      * Gets CurrentExit property at the time when the request has been created.
@@ -45,7 +42,7 @@ public class DispenseChange extends JposOutputRequest {
     public int getCurrentExit() {
         return CurrentExit;
     }
-    private int CurrentExit;
+    private final int CurrentExit;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -74,6 +71,6 @@ public class DispenseChange extends JposOutputRequest {
 
     @Override
     public JposStatusUpdateEvent createIdleEvent() {
-        return new CashChangerStatusUpdateEvent(Props.EventSource, CashChangerConst.CHAN_STATUS_ASYNC, TheException);
+        return new CashChangerStatusUpdateEvent(Props.EventSource, CHAN_STATUS_ASYNC, TheException);
     }
 }

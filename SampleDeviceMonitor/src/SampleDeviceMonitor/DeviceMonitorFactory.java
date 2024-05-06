@@ -23,6 +23,9 @@ import jpos.*;
 import jpos.config.*;
 import jpos.loader.*;
 
+import static jpos.JposConst.*;
+
+@SuppressWarnings("unused")
 public class DeviceMonitorFactory extends Factory implements JposServiceInstanceFactory {
     @Override
     public JposServiceInstance createInstance(String s, JposEntry jposEntry) throws JposException {
@@ -37,7 +40,7 @@ public class DeviceMonitorFactory extends Factory implements JposServiceInstance
                     if (create) {
                         dev = new Device("SampleDeviceMonitor");
                     } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: SampleDeviceMonitor");
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: SampleDeviceMonitor");
                     else {
                         dev = (Device) any;
                     }
@@ -48,11 +51,11 @@ public class DeviceMonitorFactory extends Factory implements JposServiceInstance
                     return srv;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

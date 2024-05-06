@@ -22,7 +22,7 @@ import jpos.*;
  * Output request executor for FiscalPrinter method PrintRecItemFuel.
  */
 public class PrintRecItemFuel extends PrintRecItem {
-    private long SpecialTax;
+    private final long SpecialTax;
 
     /**
      * FiscalPrinter method PrintRecItemFuel parameter specialTax, see UPOS specification.
@@ -32,7 +32,7 @@ public class PrintRecItemFuel extends PrintRecItem {
         return SpecialTax;
     }
 
-    private String SpecialTaxName;
+    private final String SpecialTaxName;
 
     /**
      * FiscalPrinter method PrintRecItemFuel parameter specialTaxName, see UPOS specification.

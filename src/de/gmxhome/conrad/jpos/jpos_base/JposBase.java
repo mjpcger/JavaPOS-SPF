@@ -16,17 +16,20 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
-import jpos.JposConst;
 import jpos.JposException;
 import jpos.services.BaseService;
 import jpos.services.EventCallbacks;
-import net.bplaced.conrad.log4jpos.Level;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
-import static de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest.JposRequestThread.ActiveMessageBoxes;
+import static de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties.*;
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest.JposRequestThread.*;
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static jpos.JposConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * Base class for all UPOS device services using this framework. Each service owns a
@@ -75,24 +78,7 @@ public class JposBase implements BaseService {
     public JposBase(JposCommonProperties props, JposDevice device) {
         Props = props;
         Device = device;
-        MaximumConfirmationEventWaitingTime = device.MaximumConfirmationEventWaitingTime;
-        StrictFIFOEventHandling = device.StrictFIFOEventHandling;
-        device.StrictFIFOEventHandling = false;
-        device.MaximumConfirmationEventWaitingTime = JposConst.JPOS_FOREVER;
     }
-
-    /**
-     * Maximum time in milliseconds an event callback may block event processing (default: FOREVER). Only conforms to
-     * UPOS specification if FOREVER. lower values can lead to concurrent processing of event coroutines.
-     */
-    int MaximumConfirmationEventWaitingTime;
-
-    /**
-     * Specifies whether event handling conforms strictly to UPOS specification (all events handled in a first-in-first-out
-     * mammer) or not (data and input error can be bypassed by other events as long as DataEventEnabled is false). Since
-     * strict UPOS conformance is impractical, the default is false.
-     */
-    boolean StrictFIFOEventHandling;
 
     /**
      * Deletes the service instance. Called to perform cleanup operations.
@@ -100,7 +86,7 @@ public class JposBase implements BaseService {
      */
     public void deleteInstance() throws JposException {
         logPreCall("DeleteInstance");
-        if (Props.State != JposConst.JPOS_S_CLOSED)
+        if (Props.State != JPOS_S_CLOSED)
             close();
         Device.removePropertySet(Props);
         synchronized (ActiveMessageBoxes) {
@@ -132,9 +118,9 @@ public class JposBase implements BaseService {
      */
     public void logGet(Object obj, String propertyName) {
         try {
-            Device.log(Level.DEBUG, Props.LogicalName + ": " + propertyName + ": " + getPropertyString(obj, propertyName));
+            Device.log(DEBUG, Props.LogicalName + ": " + propertyName + ": " + getPropertyString(obj, propertyName));
         } catch (Exception e) {
-            Device.log(Level.DEBUG, Props.LogicalName + ": Cannot access property " + propertyName);
+            Device.log(DEBUG, Props.LogicalName + ": Cannot access property " + propertyName);
         }
     }
 
@@ -211,7 +197,7 @@ public class JposBase implements BaseService {
      * @param propertyName Name of property to be set.
      */
     public void logPreSet(String propertyName) {
-        Device.log(Level.DEBUG, Props.LogicalName + ": Enter set" + propertyName + "...");
+        Device.log(DEBUG, Props.LogicalName + ": Enter set" + propertyName + "...");
     }
 
     /**
@@ -220,9 +206,9 @@ public class JposBase implements BaseService {
      */
     public void logSet(String propertyName) {
         try {
-            Device.log(Level.INFO, Props.LogicalName + ": " + propertyName + " <- " + getPropertyString(Props, propertyName));
+            Device.log(INFO, Props.LogicalName + ": " + propertyName + " <- " + getPropertyString(Props, propertyName));
         } catch (Exception e) {
-            Device.log(Level.INFO, Props.LogicalName + ": Cannot access property " + propertyName);
+            Device.log(INFO, Props.LogicalName + ": Cannot access property " + propertyName);
         }
     }
 
@@ -232,7 +218,7 @@ public class JposBase implements BaseService {
      * @param args String specifying the parameters passed to the method.
      */
     public void logPreCall(String method, String args) {
-        Device.log(Level.DEBUG, Props.LogicalName + ": Enter " + method + "(" + args + ")...");
+        Device.log(DEBUG, Props.LogicalName + ": Enter " + method + "(" + args + ")...");
     }
 
     /**
@@ -240,7 +226,7 @@ public class JposBase implements BaseService {
      * @param method Method name.
      */
     public void logPreCall(String method) {
-        Device.log(Level.DEBUG, Props.LogicalName + ": Enter " + method + "()...");
+        Device.log(DEBUG, Props.LogicalName + ": Enter " + method + "()...");
     }
 
     /**
@@ -249,7 +235,7 @@ public class JposBase implements BaseService {
      * @param args   empty string or comma separated list of arguments.
      */
     public void logCall(String method, String args) {
-        Device.log(Level.INFO, Props.LogicalName + ": " + method + "(" + args + ") successful.");
+        Device.log(INFO, Props.LogicalName + ": " + method + "(" + args + ") successful.");
     }
 
     /**
@@ -257,7 +243,7 @@ public class JposBase implements BaseService {
      * @param method Method name.
      */
     public void logCall(String method) {
-        Device.log(Level.INFO, Props.LogicalName + ": " + method + " successful.");
+        Device.log(INFO, Props.LogicalName + ": " + method + " successful.");
     }
 
     /**
@@ -265,7 +251,7 @@ public class JposBase implements BaseService {
      * @param method Method name.
      */
     public void logAsyncCall(String method) {
-        Device.log(Level.INFO, Props.LogicalName + ": " + method + " enqueued successfully.");
+        Device.log(INFO, Props.LogicalName + ": " + method + " enqueued successfully.");
     }
 
     /**
@@ -416,12 +402,12 @@ public class JposBase implements BaseService {
     public void setPowerNotify(int powerNotify) throws JposException {
         logPreSet("PowerNotify");
         checkOpened();
-        Device.check(Props.DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device just enabled");
-        Device.check(Props.Device.CapPowerReporting == JposConst.JPOS_PR_NONE && powerNotify != JposConst.JPOS_PN_DISABLED, JposConst.JPOS_E_ILLEGAL, "PowerReporting not supported");
-        Device.checkMember(powerNotify, new long[]{JposConst.JPOS_PN_DISABLED, JposConst.JPOS_PN_ENABLED}, JposConst.JPOS_E_ILLEGAL, "Illegal value for PowerNotify");
+        check(Props.DeviceEnabled, JPOS_E_ILLEGAL, "Device just enabled");
+        check(Props.Device.CapPowerReporting == JPOS_PR_NONE && powerNotify != JPOS_PN_DISABLED, JPOS_E_ILLEGAL, "PowerReporting not supported");
+        checkMember(powerNotify, new long[]{JPOS_PN_DISABLED, JPOS_PN_ENABLED}, JPOS_E_ILLEGAL, "Illegal value for PowerNotify");
         DeviceInterface.powerNotify(powerNotify);
-        if (powerNotify == JposConst.JPOS_PN_DISABLED && Props.PowerState != JposConst.JPOS_PS_UNKNOWN) {
-            Props.PowerState = JposConst.JPOS_PS_UNKNOWN;
+        if (powerNotify == JPOS_PN_DISABLED && Props.PowerState != JPOS_PS_UNKNOWN) {
+            Props.PowerState = JPOS_PS_UNKNOWN;
             logSet("PowerState");
         }
         logSet("PowerNotify");
@@ -468,7 +454,7 @@ public class JposBase implements BaseService {
      */
     public void checkEnabled() throws JposException {
         checkClaimed();
-        Device.check(!Props.DeviceEnabled, JposConst.JPOS_E_DISABLED, "Device not enabled");
+        check(!Props.DeviceEnabled, JPOS_E_DISABLED, "Device not enabled");
     }
 
     /**
@@ -478,7 +464,7 @@ public class JposBase implements BaseService {
      */
     public void checkBusy() throws JposException {
         checkEnabled();
-        Device.check(Props.State == JposConst.JPOS_S_BUSY, JposConst.JPOS_E_BUSY, "Device is busy");
+        check(Props.State == JPOS_S_BUSY, JPOS_E_BUSY, "Device is busy");
     }
 
     /**
@@ -489,7 +475,7 @@ public class JposBase implements BaseService {
     public void checkEnabledUnclaimed() throws JposException {
         checkEnabled();
         JposCommonProperties claimer = Props.getClaimingInstance();
-        Device.check(claimer != null && claimer != Props, JposConst.JPOS_E_CLAIMED, "Device claimed by other instance");
+        check(claimer != null && claimer != Props, JPOS_E_CLAIMED, "Device claimed by other instance");
     }
 
     /**
@@ -499,7 +485,7 @@ public class JposBase implements BaseService {
      */
     public void checkFirstEnabled() throws JposException {
         checkOpened();
-        Device.check(!Props.FirstEnableHappened, JposConst.JPOS_E_ILLEGAL, "Device never enabled");
+        check(!Props.FirstEnableHappened, JPOS_E_ILLEGAL, "Device never enabled");
     }
 
     /**
@@ -510,9 +496,9 @@ public class JposBase implements BaseService {
     public void checkClaimed() throws JposException {
         checkOpened();
         JposCommonProperties claiming = Props.getClaimingInstance();
-        if (Props.ExclusiveUse == JposCommonProperties.ExclusiveYes) {
-            JposDevice.check(claiming == null, JposConst.JPOS_E_NOTCLAIMED, "Device not claimed");
-            JposDevice.check(claiming != Props, JposConst.JPOS_E_CLAIMED, "Device claimed by other instance");
+        if (Props.ExclusiveUse == ExclusiveYes) {
+            check(claiming == null, JPOS_E_NOTCLAIMED, "Device not claimed");
+            check(claiming != Props, JPOS_E_CLAIMED, "Device claimed by other instance");
         }
     }
 
@@ -522,7 +508,7 @@ public class JposBase implements BaseService {
      * @throws JposException Will be thrown whenever the device has not been opened or has been closed.
      */
     public void checkOpened() throws JposException {
-        Device.check(Props.State == JposConst.JPOS_S_CLOSED, JposConst.JPOS_E_CLOSED, "Device not opened");
+        check(Props.State == JPOS_S_CLOSED, JPOS_E_CLOSED, "Device not opened");
     }
 
     /**
@@ -542,24 +528,36 @@ public class JposBase implements BaseService {
             change = !Arrays.equals((Object[]) oldval, (Object[]) newval);
         else
             change = !oldval.equals(newval);
-        if (change && !Device.AllowAlwaysSetProperties && Props.ExclusiveUse == JposCommonProperties.ExclusiveYes)
-            Device.check(!Props.Claimed, JposConst.JPOS_E_NOTCLAIMED, "Device not claimed");
+        if (change && !Props.AllowAlwaysSetProperties && Props.ExclusiveUse == ExclusiveYes)
+            check(!Props.Claimed, JPOS_E_NOTCLAIMED, "Device not claimed");
     }
 
     /**
-     * Check method for device classes that support a subsystem of up to 32 units.
-     * Checks condition and if true, sets error properties and throws JposException. This method may only be used if
-     * it is absolutely clear that the check is made within a synchronous UPOS method. If this is not the case, use
-     * method <i>check</i>with additional parameter <i>synchrone</i>. This is almost always the case in methods that
-     * have one parameter derived from JposOutputRequest. You can check whether property <i>EndSync</i> of the request
-     * equals null (asynchronous call) or not (synchronous call).
-     * @param condition Error condition.
-     * @param units     Units to be filled in ErrorUnits.
-     * @param error     Error code.
-     * @param ext       Extended error code.
-     * @param message   Error message, same message for ErrorString and JposException.
-     * @throws JposException If Error condition is true.
+     * To allow calling JposDevice method check without JposDevice. prefix, we pass all parameters to JposDevice.check unchanged.
+     * @param condition Same condition as in JposDevice.
+     * @param err       Same error code as in JposDevice.
+     * @param errtxt    Same text as in JposDevice.
+     * @throws JposException If condition is true.
      */
+    public static void check(boolean condition, int err, String errtxt) throws JposException {
+        JposDevice.check(condition, err, errtxt);
+    }
+
+
+        /**
+         * Check method for device classes that support a subsystem of up to 32 units.
+         * Checks condition and if true, sets error properties and throws JposException. This method may only be used if
+         * it is absolutely clear that the check is made within a synchronous UPOS method. If this is not the case, use
+         * method <i>check</i>with additional parameter <i>synchrone</i>. This is almost always the case in methods that
+         * have one parameter derived from JposOutputRequest. You can check whether property <i>EndSync</i> of the request
+         * equals null (asynchronous call) or not (synchronous call).
+         * @param condition Error condition.
+         * @param units     Units to be filled in ErrorUnits.
+         * @param error     Error code.
+         * @param ext       Extended error code.
+         * @param message   Error message, same message for ErrorString and JposException.
+         * @throws JposException If Error condition is true.
+         */
     public void check(boolean condition, int units, int error, int ext, String message) throws JposException {
         check(condition, units, error, ext, message, true);
     }
@@ -644,11 +642,11 @@ public class JposBase implements BaseService {
     public void compareFirmwareVersion(String firmwareFileName, int[] result) throws JposException {
         logPreCall("compareFirmwareVersion");
         checkEnabled();
-        Device.check(!Device.CapCompareFirmwareVersion, JposConst.JPOS_E_ILLEGAL, "Device does not support compare firmware version");
-        Device.check(firmwareFileName == null, JposConst.JPOS_E_ILLEGAL, "Missing firmwareFileName");
-        Device.check(result == null || result.length <= 0, JposConst.JPOS_E_ILLEGAL, "Missing result");
+        check(!Device.CapCompareFirmwareVersion, JPOS_E_ILLEGAL, "Device does not support compare firmware version");
+        check(firmwareFileName == null, JPOS_E_ILLEGAL, "Missing firmwareFileName");
+        check(result == null || result.length == 0, JPOS_E_ILLEGAL, "Missing result");
         DeviceInterface.compareFirmwareVersion(firmwareFileName, result);
-        logCall("compareFirmwareVersion", firmwareFileName + ", " + result[0]);
+        logCall("compareFirmwareVersion", removeOuterArraySpecifier(new Object[]{firmwareFileName, result}, Device.MaxArrayStringElements));
     }
 
     /**
@@ -657,10 +655,10 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, method updateFirmware
      */
     public void updateFirmware(String firmwareFileName) throws JposException {
-        logPreCall("UpdateFirmware", firmwareFileName == null ? "" : firmwareFileName);
+        logPreCall("UpdateFirmware", removeOuterArraySpecifier(new Object[]{firmwareFileName}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Device.CapUpdateFirmware, JposConst.JPOS_E_ILLEGAL, "Device does not support update firmware");
-        Device.check(firmwareFileName == null, JposConst.JPOS_E_ILLEGAL, "Missing firmwareFileName");
+        check(!Device.CapUpdateFirmware, JPOS_E_ILLEGAL, "Device does not support update firmware");
+        check(firmwareFileName == null, JPOS_E_ILLEGAL, "Missing firmwareFileName");
         UpdateFirmware request = DeviceInterface.updateFirmware(firmwareFileName);
         if (request != null) {
             request.enqueue();
@@ -678,11 +676,11 @@ public class JposBase implements BaseService {
     public void resetStatistics(String statisticsBuffer) throws JposException {
         if (statisticsBuffer == null)
             statisticsBuffer = "";
-        logPreCall("ResetStatistics");
+        logPreCall("ResetStatistics", removeOuterArraySpecifier(new Object[]{statisticsBuffer}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Props.CapUpdateStatistics || !Props.CapStatisticsReporting, JposConst.JPOS_E_ILLEGAL, "Device does not support resetting statistics");
+        check(!Props.CapUpdateStatistics || !Props.CapStatisticsReporting, JPOS_E_ILLEGAL, "Device does not support resetting statistics");
         DeviceInterface.resetStatistics(statisticsBuffer);
-        logPreCall("ResetStatistics", statisticsBuffer);
+        logCall("ResetStatistics");
     }
 
     /**
@@ -691,14 +689,14 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, method retrieveStatistics
      */
     public void retrieveStatistics(String[] statisticsBuffer) throws JposException {
+        logPreCall("RetrieveStatistics", removeOuterArraySpecifier(new Object[]{"..."}, Device.MaxArrayStringElements));
         if (statisticsBuffer != null && statisticsBuffer[0] == null)
             statisticsBuffer[0] = "";
-        logPreCall("RetrieveStatistics", statisticsBuffer == null ? "" : statisticsBuffer[0]);
         checkEnabled();
-        Device.check(!Props.CapStatisticsReporting, JposConst.JPOS_E_ILLEGAL, "Device does not support retrieving statistics");
-        Device.check(statisticsBuffer == null, JposConst.JPOS_E_ILLEGAL, "Missing statisticsBuffer");
+        check(!Props.CapStatisticsReporting, JPOS_E_ILLEGAL, "Device does not support retrieving statistics");
+        check(statisticsBuffer == null, JPOS_E_ILLEGAL, "Missing statisticsBuffer");
         DeviceInterface.retrieveStatistics(statisticsBuffer);
-        logCall("RetrieveStatistics", statisticsBuffer[0]);
+        logCall("RetrieveStatistics", removeOuterArraySpecifier(new Object[]{statisticsBuffer[0]}, Device.MaxArrayStringElements));
     }
 
     /**
@@ -707,11 +705,11 @@ public class JposBase implements BaseService {
      * @throws JposException See UPOS specification, method updateStatistics
      */
     public void updateStatistics(String statisticsBuffer) throws JposException {
+        logPreCall("UpdateStatistics", removeOuterArraySpecifier(new Object[]{statisticsBuffer}, Device.MaxArrayStringElements));
         if (statisticsBuffer == null)
             statisticsBuffer = "";
-        logPreCall("UpdateStatistics", statisticsBuffer);
         checkEnabled();
-        Device.check(!Props.CapUpdateStatistics || !Props.CapStatisticsReporting, JposConst.JPOS_E_ILLEGAL, "Device does not support updating statistics");
+        check(!Props.CapUpdateStatistics || !Props.CapStatisticsReporting, JPOS_E_ILLEGAL, "Device does not support updating statistics");
         DeviceInterface.updateStatistics(statisticsBuffer);
         logCall("UpdateStatistics");
     }
@@ -752,7 +750,7 @@ public class JposBase implements BaseService {
 
     @Override
     public String getCheckHealthText() throws JposException {
-        Device.check(Props.CheckHealthText == null, JposConst.JPOS_E_CLOSED, "Device not opened");
+        check(Props.CheckHealthText == null, JPOS_E_CLOSED, "Device not opened");
         logGet("CheckHealthText");
         return Props.CheckHealthText;
     }
@@ -775,15 +773,15 @@ public class JposBase implements BaseService {
     public void setDeviceEnabled(boolean enable) throws JposException {
         logPreSet("DeviceEnabled");
         checkClaimed();
-        Device.check(!Props.DeviceEnabled && !enable, JposConst.JPOS_E_DISABLED, "Device just disabled");
-        Device.check(Props.DeviceEnabled && enable, JposConst.JPOS_E_ILLEGAL, "Device just enabled");
+        check(!Props.DeviceEnabled && !enable, JPOS_E_DISABLED, "Device just disabled");
+        check(Props.DeviceEnabled && enable, JPOS_E_ILLEGAL, "Device just enabled");
         DeviceInterface.deviceEnabled(enable);
         logSet("DeviceEnabled");
-        if (Props.PowerNotify == JposConst.JPOS_PN_ENABLED) {
+        if (Props.PowerNotify == JPOS_PN_ENABLED) {
             if (enable)
                 DeviceInterface.handlePowerStateOnEnable();
             else {
-                Props.PowerState = JposConst.JPOS_PS_UNKNOWN;
+                Props.PowerState = JPOS_PS_UNKNOWN;
                 logSet("PowerState");
             }
         }
@@ -791,7 +789,7 @@ public class JposBase implements BaseService {
 
     @Override
     public String getDeviceServiceDescription() throws JposException {
-        Device.check(Props.DeviceServiceDescription == null, JposConst.JPOS_E_CLOSED, "Device not opened");
+        check(Props.DeviceServiceDescription == null, JPOS_E_CLOSED, "Device not opened");
         logGet("DeviceServiceDescription");
         return Props.DeviceServiceDescription;
     }
@@ -838,23 +836,22 @@ public class JposBase implements BaseService {
 
     @Override
     public void claim(int timeout) throws JposException {
-        logPreCall("Claim", "" + timeout);
+        logPreCall("Claim", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkOpened();
-        JposDevice.check(Props.Claimed, JposConst.JPOS_E_CLAIMED, "Device just claimed");
-        JposDevice.check(Props.ExclusiveUse == JposCommonProperties.ExclusiveNo, JposConst.JPOS_E_ILLEGAL, "Device always shareable");
-        JposDevice.check(timeout != JposConst.JPOS_FOREVER && timeout < 0, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value");
+        check(Props.Claimed, JPOS_E_CLAIMED, "Device just claimed");
+        check(Props.ExclusiveUse == ExclusiveNo, JPOS_E_ILLEGAL, "Device always shareable");
+        check(timeout != JPOS_FOREVER && timeout < 0, JPOS_E_ILLEGAL, "Invalid timeout value");
         long start = System.currentTimeMillis();
         JposCommonProperties props;
         while (true) {
             SyncObject waiter = new SyncObject();
             props = startClaiming(waiter);
-            if (props == null) break;
-            if (props != null) {
-                if (timeout == JposConst.JPOS_FOREVER || (timeout > 0 && System.currentTimeMillis() - start < timeout)) {
-                    waiter.suspend(timeout == JposConst.JPOS_FOREVER ? SyncObject.INFINITE : timeout);
-                } else
-                    throw new JposException(JposConst.JPOS_E_TIMEOUT, "Claim timed out");
-            }
+            if (props == null)
+                break;
+            if (timeout == JPOS_FOREVER || (timeout > 0 && System.currentTimeMillis() - start < timeout))
+                waiter.suspend(timeout == JPOS_FOREVER ? INFINITE : timeout);
+            else
+                throw new JposException(JPOS_E_TIMEOUT, "Claim timed out");
         }
         try {
             DeviceInterface.claim(timeout);
@@ -873,6 +870,7 @@ public class JposBase implements BaseService {
      * @param waiter    SyncOject to be used for synchronization with currently claiming instance, if any.
      * @return          null on success, property set of currently claiming instance otherwise.
      */
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     public JposCommonProperties startClaiming(SyncObject waiter) {
         JposCommonProperties props;
         synchronized (Props.Claiming) {
@@ -890,6 +888,7 @@ public class JposBase implements BaseService {
      * Signals release after claim. Should be called whenever a claimed device becomes unclaimed to wake up any other
      * waiting instances.
      */
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     public void signalRelease() {
         synchronized (Props.Claiming) {
             Props.Claiming[Props.Index] = null;
@@ -912,7 +911,7 @@ public class JposBase implements BaseService {
 
     @Override
     public void checkHealth(int level) throws JposException {
-        logPreCall("CheckHealth", "" + level);
+        logPreCall("CheckHealth", removeOuterArraySpecifier(new Object[]{level}, Device.MaxArrayStringElements));
         checkEnabled();
         DeviceInterface.checkHealth(level);
         logCall("CheckHealth");
@@ -921,7 +920,7 @@ public class JposBase implements BaseService {
     @Override
     public void directIO(int command, int[] data, Object object) throws JposException {
         logPreCall("DirectIO", removeOuterArraySpecifier(new Object[]{command, data, object}, Device.MaxArrayStringElements));
-        JposDevice.check(data != null && data.length != 1, JposConst.JPOS_E_ILLEGAL, "Data invalid, must be int[1]: " + deepToString(data, 5));
+        check(data != null && data.length != 1, JPOS_E_ILLEGAL, "Data invalid, must be int[1]: " + deepToString(data, 5));
         DirectIO request = DeviceInterface.directIO(command, data, object);
         if (request != null) {
             request.enqueue();
@@ -933,7 +932,7 @@ public class JposBase implements BaseService {
 
     @Override
     public void open(String logicalName, EventCallbacks eventCallbacks) throws JposException {
-        Device.log(Level.DEBUG, logicalName + ": Enter Open()...");
+        Device.log(DEBUG, removeOuterArraySpecifier(new Object[]{logicalName, eventCallbacks.getClass().getName()}, Device.MaxArrayStringElements));
         Props.LogicalName = logicalName;
         Props.EventCB = eventCallbacks;
         try {
@@ -942,7 +941,7 @@ public class JposBase implements BaseService {
             deleteInstance();
             if (e instanceof JposException)
                 throw e;
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, e.getMessage(), e);
+            throw new JposException(JPOS_E_NOSERVICE, e.getMessage(), e);
         }
         logCall("Open");
     }
@@ -951,8 +950,8 @@ public class JposBase implements BaseService {
     public void release() throws JposException {
         logPreCall("Release");
         checkOpened();
-        Device.check(!Props.Claimed, JposConst.JPOS_E_NOTCLAIMED, "Device not claimed");
-        if (Props.DeviceEnabled && Props.ExclusiveUse == JposCommonProperties.ExclusiveYes)
+        check(!Props.Claimed, JPOS_E_NOTCLAIMED, "Device not claimed");
+        if (Props.DeviceEnabled && Props.ExclusiveUse == ExclusiveYes)
             setDeviceEnabled(false);
         DeviceInterface.release();
         signalRelease();

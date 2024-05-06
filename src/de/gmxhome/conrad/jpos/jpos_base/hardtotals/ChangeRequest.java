@@ -30,7 +30,7 @@ public class ChangeRequest extends JposOutputRequest {
     public int getHTotalsFile() {
         return HTotalsFile;
     }
-    private int HTotalsFile;
+    private final int HTotalsFile;
 
     /**
      * Constructor, stores given parameters for later use of SetAll or Write operation.

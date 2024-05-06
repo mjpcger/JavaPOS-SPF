@@ -18,7 +18,7 @@ package SampleCombiDevice;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.toneindicator.*;
-import jpos.JposConst;
+import static jpos.JposConst.*;
 import jpos.JposException;
 import jpos.config.JposEntry;
 import jpos.loader.JposServiceInstance;
@@ -42,23 +42,23 @@ public class ToneIndicatorFactory extends Factory implements JposServiceInstance
                     if (create) {
                         dev = new Device(port);
                     } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: " + port);
                     else {
                         dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
-                    JposServiceInstance tone = addDevice(0, dev);
+                    JposServiceInstance tone = addDevice(0, dev, jposEntry);
                     if (create) {
                         putDevice(port, dev);
                     }
                     return tone;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

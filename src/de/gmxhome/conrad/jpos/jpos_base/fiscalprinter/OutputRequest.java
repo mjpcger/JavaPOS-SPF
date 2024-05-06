@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.FiscalPrinterConst.*;
+
 /**
  * Output request class for fiscal printers.
  */
@@ -42,9 +44,9 @@ public class OutputRequest extends JposOutputRequest {
      */
     public OutputRequest(FiscalPrinterProperties props) {
         super(props);
-        Level = FiscalPrinterConst.FPTR_EL_RECOVERABLE;
-        Station = props.CapFiscalReceiptStation && props.FiscalReceiptStation == FiscalPrinterConst.FPTR_RS_SLIP ?
-                FiscalPrinterConst.FPTR_S_SLIP : FiscalPrinterConst.FPTR_S_RECEIPT;
+        Level = FPTR_EL_RECOVERABLE;
+        Station = props.CapFiscalReceiptStation && props.FiscalReceiptStation == FPTR_RS_SLIP ?
+                FPTR_S_SLIP : FPTR_S_RECEIPT;
     }
 
     /**
@@ -58,8 +60,7 @@ public class OutputRequest extends JposOutputRequest {
     @Override
     public JposErrorEvent createErrorEvent(JposException ex) {
         FiscalPrinterProperties props = (FiscalPrinterProperties) Props;
-        if (ex instanceof FiscalPrinterException) {
-            FiscalPrinterException fex = (FiscalPrinterException) ex;
+        if (ex instanceof FiscalPrinterException fex) {
             return new FiscalPrinterErrorEvent(Props.EventSource, ex.getErrorCode(), ex.getErrorCodeExtended(), fex.Level, OutputID, fex.State, fex.Station, ex.getMessage());
         }
         return new FiscalPrinterErrorEvent(Props.EventSource, ex.getErrorCode(), ex.getErrorCodeExtended(), Level, OutputID, props.PrinterState, Station, ex.getMessage());
@@ -92,6 +93,7 @@ public class OutputRequest extends JposOutputRequest {
      * @param dev   Device to be used.
      * @return      SyncObject to wait for idle, if not idle. null if device is idle.
      */
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     static public SyncObject setIdleWaiter(JposDevice dev) {
         synchronized (dev.AsyncProcessorRunning) {
             synchronized(dev.ClaimedFiscalPrinter) {

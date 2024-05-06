@@ -19,7 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.coinacceptor;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposBase;
 import de.gmxhome.conrad.jpos.jpos_base.JposDataEvent;
-import jpos.CoinAcceptorConst;
+
+import static jpos.CoinAcceptorConst.*;
 
 /**
  * Data event implementation for CoinAcceptor devices.
@@ -29,13 +30,13 @@ public class CoinAcceptorDataEvent extends JposDataEvent {
      * Holds the total of the cash accepted by the CoinAcceptor. See UPOS specification, Chapter Coin Acceptor -
      * Properties - DepositCounts for details.
      */
-    public String Counts;
+    public final String Counts;
 
     /**
      * The total amount of deposited cash. See UPOS specification, Chapter Coin Acceptor - Properties - DepositAmount
      * for details.
      */
-    public int Amount;
+    public final int Amount;
 
     /**
      * Constructor. Parameters passed to base class unchanged.
@@ -55,7 +56,7 @@ public class CoinAcceptorDataEvent extends JposDataEvent {
     public void setDataProperties() {
         super.setDataProperties();
         CoinAcceptorProperties props = (CoinAcceptorProperties) getPropertySet();
-        if (props.DepositStatus == CoinAcceptorConst.CACC_STATUS_DEPOSIT_START) {
+        if (props.DepositStatus == CACC_STATUS_DEPOSIT_START) {
             props.DepositAmount = Amount;
             props.EventSource.logSet("DepositAmount");
             props.DepositCounts = Counts;

@@ -25,17 +25,17 @@ public class ScaleDataEvent extends JposDataEvent {
     /**
      * Unit price updated by DoPriceCalculation or 0 if not supported
      */
-    public long UnitPrice;
+    public final long UnitPrice;
 
     /**
      * Price set of readWeight or DoPriceCalculation.
      */
-    public long Price;
+    public final long Price;
 
     /**
      * Tara updated of ReadLifeWeightWithTare and DoPriceCalculation or 0 if CapTareWeight is false.
      */
-    public int TareWeight;
+    public final int TareWeight;
 
     /**
      * Constructor. Parameters passed to base class unchanged.

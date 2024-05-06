@@ -17,7 +17,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.scale;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.*;
+
+import static jpos.ScaleConst.*;
 
 /**
  * Status update event implementation for Scale devices.
@@ -39,82 +40,47 @@ public class ScaleStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         ScaleProperties props = (ScaleProperties)getPropertySet();
         switch (getStatus()) {
-            default:
-                if (getStatus() != ScaleConst.SCAL_SUE_WEIGHT_UNDERWEIGHT)
-                    break;
-            case ScaleConst.SCAL_SUE_STABLE_WEIGHT:
-            case ScaleConst.SCAL_SUE_WEIGHT_UNSTABLE:
-            case ScaleConst.SCAL_SUE_WEIGHT_ZERO:
-            case ScaleConst.SCAL_SUE_WEIGHT_OVERWEIGHT:
-            case ScaleConst.SCAL_SUE_NOT_READY:
-            case ScaleConst.SCAL_SUE_WEIGHT_UNDER_ZERO:
+            case SCAL_SUE_STABLE_WEIGHT, SCAL_SUE_WEIGHT_UNSTABLE, SCAL_SUE_WEIGHT_ZERO, SCAL_SUE_WEIGHT_OVERWEIGHT,
+                    SCAL_SUE_NOT_READY, SCAL_SUE_WEIGHT_UNDER_ZERO, SCAL_SUE_WEIGHT_UNDERWEIGHT -> {
                 props.signalWaiter();
                 return true;
+            }
         }
         return false;
     }
 
     @Override
     public boolean checkStatusCorresponds() {
-        if (super.checkStatusCorresponds())
-            return true;
-        switch (getStatus()) {
-            default:
-                if (getStatus() != ScaleConst.SCAL_SUE_WEIGHT_UNDERWEIGHT)
-                    break;
-            case ScaleConst.SCAL_SUE_STABLE_WEIGHT:
-            case ScaleConst.SCAL_SUE_WEIGHT_UNSTABLE:
-            case ScaleConst.SCAL_SUE_WEIGHT_ZERO:
-            case ScaleConst.SCAL_SUE_WEIGHT_OVERWEIGHT:
-            case ScaleConst.SCAL_SUE_NOT_READY:
-            case ScaleConst.SCAL_SUE_WEIGHT_UNDER_ZERO:
-                return true;
-        }
-        return false;
+        return  super.checkStatusCorresponds() || switch (getStatus()) {
+            case SCAL_SUE_WEIGHT_UNDERWEIGHT, SCAL_SUE_STABLE_WEIGHT, SCAL_SUE_WEIGHT_UNSTABLE, SCAL_SUE_WEIGHT_ZERO,
+                    SCAL_SUE_WEIGHT_OVERWEIGHT, SCAL_SUE_NOT_READY, SCAL_SUE_WEIGHT_UNDER_ZERO ->
+                    true;
+            default -> false;
+        };
     }
 
     @Override
     public boolean setAndCheckStatusProperties() {
-        ScaleProperties props = (ScaleProperties)getPropertySet();
-        if (super.setAndCheckStatusProperties())
-            return true;
-        switch (getStatus()) {
-            default:
-                if (getStatus() != ScaleConst.SCAL_SUE_WEIGHT_UNDERWEIGHT)
-                    break;
-            case ScaleConst.SCAL_SUE_STABLE_WEIGHT:
-            case ScaleConst.SCAL_SUE_WEIGHT_UNSTABLE:
-            case ScaleConst.SCAL_SUE_WEIGHT_ZERO:
-            case ScaleConst.SCAL_SUE_WEIGHT_OVERWEIGHT:
-            case ScaleConst.SCAL_SUE_NOT_READY:
-            case ScaleConst.SCAL_SUE_WEIGHT_UNDER_ZERO:
-                return true;
-        }
-        return false;
+        return super.setAndCheckStatusProperties() || switch (getStatus()) {
+            case SCAL_SUE_WEIGHT_UNDERWEIGHT, SCAL_SUE_STABLE_WEIGHT, SCAL_SUE_WEIGHT_UNSTABLE,
+                    SCAL_SUE_WEIGHT_ZERO, SCAL_SUE_WEIGHT_OVERWEIGHT, SCAL_SUE_NOT_READY, SCAL_SUE_WEIGHT_UNDER_ZERO ->
+                    true;
+            default -> false;
+        };
     }
 
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        if (ret.length() > 0)
-            return ret;
-        switch (getStatus()) {
-            case ScaleConst.SCAL_SUE_STABLE_WEIGHT:
-                return "Weight stable";
-            case ScaleConst.SCAL_SUE_WEIGHT_UNSTABLE:
-                return "Weight unstable";
-            case ScaleConst.SCAL_SUE_WEIGHT_ZERO:
-                return "Weight zero";
-            case ScaleConst.SCAL_SUE_WEIGHT_OVERWEIGHT:
-                return "Weight too high";
-            case ScaleConst.SCAL_SUE_NOT_READY:
-                return "Scale not ready";
-            case ScaleConst.SCAL_SUE_WEIGHT_UNDER_ZERO:
-                return "Weight under zero";
-            default:
-                if (getStatus() == ScaleConst.SCAL_SUE_WEIGHT_UNDERWEIGHT)
-                    return "Under weight";
-        }
-        return "Unknown Status Change: "+ getStatus();
+        return ret.length() > 0 ?  ret : switch (getStatus()) {
+            case SCAL_SUE_STABLE_WEIGHT -> "Weight stable";
+            case SCAL_SUE_WEIGHT_UNSTABLE -> "Weight unstable";
+            case SCAL_SUE_WEIGHT_ZERO -> "Weight zero";
+            case SCAL_SUE_WEIGHT_OVERWEIGHT -> "Weight too high";
+            case SCAL_SUE_NOT_READY -> "Scale not ready";
+            case SCAL_SUE_WEIGHT_UNDER_ZERO -> "Weight under zero";
+            case SCAL_SUE_WEIGHT_UNDERWEIGHT -> "Under weight";
+            default -> "Unknown Status Change: " + getStatus();
+        };
     }
 }

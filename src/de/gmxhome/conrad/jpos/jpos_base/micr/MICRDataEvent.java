@@ -25,7 +25,7 @@ public class MICRDataEvent extends JposDataEvent {
     /**
      * Data containing values for data fields belonging to this data event.
      */
-    Data Data;
+    final Data Data;
 
     /**
      * Constructor. Parameters passed to base class unchanged.

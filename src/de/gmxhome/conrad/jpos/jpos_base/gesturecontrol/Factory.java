@@ -21,6 +21,9 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.config.JposEntry;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * General part of GestureControl factory for JPOS devices using this framework.
  */
@@ -36,10 +39,8 @@ public class Factory extends JposDeviceFactory {
      */
     public GestureControlService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         GestureControlProperties props = dev.getGestureControlProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getGestureControlProperties()");
+        validateJposConfiguration(props, dev, dev.ClaimedGestureControl, entry);
         GestureControlService service = (GestureControlService) (props.EventSource = new GestureControlService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedGestureControl;
         dev.changeDefaults(props);
         props.addProperties(dev.GestureControls);
         service.DeviceInterface = service.GestureControl = props;

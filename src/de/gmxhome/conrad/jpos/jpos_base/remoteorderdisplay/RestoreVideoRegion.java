@@ -16,8 +16,10 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay;
 
-import de.gmxhome.conrad.jpos.jpos_base.UnitOutputRequest;
+import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+
+import static jpos.JposConst.*;
 
 /**
  * Output request executor for RemoteOrderDisplay method RestoreVideoRegion.
@@ -30,7 +32,7 @@ public class RestoreVideoRegion extends UnitOutputRequest {
     public int getTargetRow() {
         return TargetRow;
     }
-    private int TargetRow;
+    private final int TargetRow;
 
     /**
      * Retrieves parameter targetColumn of method RestoreVideoRegion. See UPOS specification for further information.
@@ -39,7 +41,7 @@ public class RestoreVideoRegion extends UnitOutputRequest {
     public int getTargetColumn() {
         return TargetColumn;
     }
-    private int TargetColumn;
+    private final int TargetColumn;
 
     /**
      * Retrieves parameter bufferId of method RestoreVideoRegion. See UPOS specification for further information.
@@ -48,7 +50,7 @@ public class RestoreVideoRegion extends UnitOutputRequest {
     public int getBufferId() {
         return BufferId;
     }
-    private int BufferId;
+    private final int BufferId;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -72,9 +74,9 @@ public class RestoreVideoRegion extends UnitOutputRequest {
         if (EndSync == null) {
             checkUnitsOnline();
             int errorunits = svc.validateCoordinates(getUnits(), getTargetRow(), getTargetColumn());
-            svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits, EndSync != null);
+            svc.check(errorunits != 0, errorunits, JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits, EndSync != null);
             errorunits = svc.validateBufferID(getUnits(), getBufferId());
-            svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + getBufferId() + " for units specified by " + errorunits, EndSync != null);
+            svc.check(errorunits != 0, errorunits, JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + getBufferId() + " for units specified by " + errorunits, EndSync != null);
         }
         svc.RemoteOrderDisplayInterface.restoreVideoRegion(this);
     }

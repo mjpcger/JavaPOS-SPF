@@ -19,7 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.videocapture;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
 import jpos.JposException;
-import jpos.VideoCaptureConst;
+
+import static jpos.VideoCaptureConst.*;
 
 /**
  * Class containing the video capture specific properties, their default values and default implementations of
@@ -379,7 +380,6 @@ public class VideoCaptureProperties extends JposCommonProperties implements Vide
      */
     protected VideoCaptureProperties(int dev) {
         super(dev);
-        DeviceServiceVersion = 1016000;
     }
 
     @Override
@@ -388,7 +388,7 @@ public class VideoCaptureProperties extends JposCommonProperties implements Vide
         DataEventEnabled = true;
         if (CapStorage == null)
             CapStorage = CapAssociatedHardTotalsDevice.length() == 0 ?
-                    VideoCaptureConst.VCAP_CST_HOST_ONLY : VideoCaptureConst.VCAP_CST_ALL;
+                    VCAP_CST_HOST_ONLY : VCAP_CST_ALL;
         if (PhotoColorSpace == null)
             PhotoColorSpace = PhotoColorSpaceList.split(",")[0];
         if (PhotoResolution == null)
@@ -396,10 +396,10 @@ public class VideoCaptureProperties extends JposCommonProperties implements Vide
         if (PhotoType == null)
             PhotoType = PhotoTypeList.split(",")[0];
         if (Storage == null)
-            Storage = CapStorage == VideoCaptureConst.VCAP_CST_HARDTOTALS_ONLY ?
-                    VideoCaptureConst.VCAP_ST_HARDTOTALS : VideoCaptureConst.VCAP_ST_HOST;
+            Storage = CapStorage == VCAP_CST_HARDTOTALS_ONLY ?
+                    VCAP_ST_HARDTOTALS : VCAP_ST_HOST;
         if (VideoCaptureMode == null)
-            VideoCaptureMode = CapVideo ? VideoCaptureConst.VCAP_VCMODE_VIDEO : VideoCaptureConst.VCAP_VCMODE_PHOTO;
+            VideoCaptureMode = CapVideo ? VCAP_VCMODE_VIDEO : VCAP_VCMODE_PHOTO;
         if (VideoColorSpace == null)
             VideoColorSpace = VideoColorSpaceList.split(",")[0];
         if (VideoResolution == null)
@@ -408,12 +408,20 @@ public class VideoCaptureProperties extends JposCommonProperties implements Vide
             VideoType = VideoTypeList.split(",")[0];
     }
 
-    private long RecordingStartTime = 0;    // Recording start system time in milliseconds.
-    private int  RecordingTimeInSec = 0;    // Recording time as given in recording start method.
+    @Override
+    public void initOnEnable(boolean enable) {
+        if (enable) {
+            RecordingTimeInSec = RemainingRecordingTimeInSec = 0;
+            RecordingStartTime = System.currentTimeMillis();
+        }
+    }
+
+    private long RecordingStartTime;    // Recording start system time in milliseconds.
+    private int  RecordingTimeInSec;    // Recording time as given in recording start method.
 
     public void updateRemainingRecordingTimeInSec() {
-        int deltaInSeconds = (int)((System.currentTimeMillis() - RecordingStartTime) / 1000);
-        RemainingRecordingTimeInSec = RecordingTimeInSec - deltaInSeconds > 0 ? RecordingTimeInSec - deltaInSeconds : 0;
+        int deltaInSeconds = (int) ((System.currentTimeMillis() - RecordingStartTime) / 1000);
+        RemainingRecordingTimeInSec = Math.max(RecordingTimeInSec - deltaInSeconds, 0);
     }
 
     @Override

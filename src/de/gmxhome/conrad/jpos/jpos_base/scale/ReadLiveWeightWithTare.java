@@ -18,8 +18,10 @@
 package de.gmxhome.conrad.jpos.jpos_base.scale;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.JposConst;
-import jpos.JposException;
+import jpos.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * Input request executor for Scale method ReadLiveWeightWithTare.
@@ -46,10 +48,9 @@ public class ReadLiveWeightWithTare extends ReadWeight {
 
     @Override
     public void invoke() throws JposException {
-        Props.Device.check(getTimeout() < 0  && getTimeout() != JposConst.JPOS_FOREVER && EndSync != null, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + getTimeout());
+        check(getTimeout() < 0  && getTimeout() != JPOS_FOREVER && EndSync != null, JPOS_E_ILLEGAL, "Invalid timeout: " + getTimeout());
         ((ScaleService)Props.EventSource).ScaleInterface.readLiveWeightWithTare(this);
         if (EndSync == null) {
-            ScaleProperties data = (ScaleProperties) Props;
             Props.Device.handleEvent(new ScaleDataEvent(Props.EventSource, WeightData, Tare, SalesPrice, -1));
         }
     }

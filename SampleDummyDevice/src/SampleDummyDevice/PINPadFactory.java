@@ -23,6 +23,8 @@ import jpos.*;
 import jpos.config.*;
 import jpos.loader.*;
 
+import static jpos.JposConst.*;
+
 /**
  * Factory class for sample PINPad device implementation
  */
@@ -40,22 +42,22 @@ public class PINPadFactory extends Factory implements JposServiceInstanceFactory
                     if (create) {
                         dev = new PINPadDevice("SamplePINPad");
                     } else if (!(any instanceof PINPadDevice))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: SampleRFIDScanner");
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: SampleRFIDScanner");
                     else {
                         dev = (PINPadDevice) any;
                     }
                     dev.checkProperties(jposEntry);
-                    PINPadService srv = addDevice(0, dev);
+                    PINPadService srv = addDevice(0, dev, jposEntry);
                     if (create)
                         putDevice("SamplePINPad", dev);
                     return srv;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

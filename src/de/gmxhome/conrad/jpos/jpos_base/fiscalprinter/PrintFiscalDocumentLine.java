@@ -18,11 +18,13 @@ package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
 
 import jpos.*;
 
+import static jpos.FiscalPrinterConst.*;
+
 /**
  * Output request executor for FiscalPrinter method PrintFiscalDocumentLine.
  */
 public class PrintFiscalDocumentLine extends OutputRequest {
-    private String DocumentLine;
+    private final String DocumentLine;
 
     /**
      * FiscalPrinter method PrintFiscalDocumentLine parameter documentLine, see UPOS specification.
@@ -47,7 +49,7 @@ public class PrintFiscalDocumentLine extends OutputRequest {
     public void invoke() throws JposException {
         FiscalPrinterService svc = (FiscalPrinterService)Props.EventSource;
         if (EndSync == null) {
-            svc.checkCoverPaper(FiscalPrinterConst.FPTR_S_SLIP);
+            svc.checkCoverPaper(FPTR_S_SLIP);
         }
         svc.FiscalPrinterInterface.printFiscalDocumentLine(this);
         super.invoke();

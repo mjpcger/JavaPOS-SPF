@@ -32,7 +32,7 @@ public class SyncObject {
     /**
      * Object used for synchronisation
      */
-    private Semaphore TheSemaphore;
+    private final Semaphore TheSemaphore;
 
     /**
      * Constructor, initializes Semaphore used for synchronization.
@@ -47,6 +47,7 @@ public class SyncObject {
      * @param milliseconds Timeout (-1: without timeout).
      * @return true: SyncObject has been signalled, false otherwise.
      */
+    @SuppressWarnings("AssignmentUsedAsCondition")
     public boolean suspend(long milliseconds) {
         boolean ret = true;
         if (milliseconds == INFINITE) {
@@ -59,7 +60,7 @@ public class SyncObject {
                 try {
                     if (ret = TheSemaphore.tryAcquire(milliseconds - (currenttime - starttime), TimeUnit.MILLISECONDS))
                         break;
-                } catch (Exception e) {}
+                } catch (Exception ignored) {}
             }
         }
         return ret;
@@ -70,5 +71,15 @@ public class SyncObject {
      */
     public void signal() {
         TheSemaphore.release();
+    }
+
+    /**
+     * Reset object to an unsignalled state
+     */
+    public void reset() {
+        while(true) {
+            if (!suspend(0))
+                break;
+        }
     }
 }

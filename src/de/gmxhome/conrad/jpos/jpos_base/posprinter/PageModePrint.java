@@ -19,8 +19,10 @@ package de.gmxhome.conrad.jpos.jpos_base.posprinter;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * Output request executor for POSPrinter method PageModePrint.
@@ -34,12 +36,12 @@ public class PageModePrint extends OutputRequest {
         return Control;
     }
 
-    private int Control;
+    private final int Control;
 
     /**
      * List holds all outstanding output requests.
      */
-    private List<OutputRequest> PageModeCommands = new ArrayList<OutputRequest>();
+    private final List<OutputRequest> PageModeCommands = new ArrayList<>();
 
     /**
      * Adds an output request to the request queue.
@@ -47,7 +49,7 @@ public class PageModePrint extends OutputRequest {
      * @throws JposException if request is null (specifying synchronous method implementation).
      */
     public synchronized void addMethod(OutputRequest request) throws JposException {
-        Props.Device.check(request == null, JposConst.JPOS_E_FAILURE, "Pagemode not supported for synchronous implementation");
+        check(request == null, JPOS_E_FAILURE, "Pagemode not supported for synchronous implementation");
         PageModeCommands.add(request);
     }
 
@@ -70,7 +72,7 @@ public class PageModePrint extends OutputRequest {
         }
         svc.POSPrinterInterface.pageModePrint(this);
         for (OutputRequest request : PageModeCommands) {
-            Device.check (Abort != null, JposConst.JPOS_E_FAILURE, "Page mode interrupted");
+            check (Abort != null, JPOS_E_FAILURE, "Page mode interrupted");
             request.invoke();
         }
     }

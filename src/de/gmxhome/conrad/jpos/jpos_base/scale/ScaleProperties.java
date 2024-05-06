@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.scale;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.ScaleConst.*;
+
 /**
  * Class containing the scales specific properties, their default values and default implementations of
  * ScaleInterface.
@@ -122,10 +124,10 @@ public class ScaleProperties extends JposCommonProperties implements ScaleInterf
     public int TareWeightDef = 0;
 
     /**
-     * UPOS property WeightUnit. Default: ScaleConst.SCAL_WU_KILOGRAM. Can be overwritten
+     * UPOS property WeightUnit. Default: SCAL_WU_KILOGRAM. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int WeightUnit = ScaleConst.SCAL_WU_KILOGRAM;
+    public int WeightUnit = SCAL_WU_KILOGRAM;
 
     /**
      * UPOS property SalesPrice.
@@ -169,9 +171,8 @@ public class ScaleProperties extends JposCommonProperties implements ScaleInterf
     @Override
     public void initOnOpen() {
         super.initOnOpen();
-        StatusNotify = ScaleConst.SCAL_SN_DISABLED;
+        StatusNotify = SCAL_SN_DISABLED;
         ZeroValid = false;
-        ScaleService srv = (ScaleService)EventSource;
     }
 
     @Override

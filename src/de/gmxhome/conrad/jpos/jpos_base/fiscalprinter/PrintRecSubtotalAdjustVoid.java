@@ -23,7 +23,7 @@ import jpos.*;
  * PrintRecSubtotalAdjustment.
  */
 public class PrintRecSubtotalAdjustVoid extends SimpleAmountOutputRequest {
-    private int AdjustmentType;
+    private final int AdjustmentType;
 
     /**
      * FiscalPrinter method parameter vatInfo, see method .

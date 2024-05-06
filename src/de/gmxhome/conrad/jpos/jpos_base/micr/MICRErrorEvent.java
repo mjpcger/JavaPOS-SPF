@@ -17,7 +17,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.micr;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.JposConst;
+
+import static jpos.JposConst.*;
 
 /**
  * MICR error events, work partly similar to data events, depending on error level
@@ -26,7 +27,7 @@ public class MICRErrorEvent extends JposErrorEvent {
     /**
      * Data containing values for data fields belonging to this data event.
      */
-    Data Data;
+    final Data Data;
 
     /**
      * Constructor. Parameters passed to base class unchanged.
@@ -38,7 +39,7 @@ public class MICRErrorEvent extends JposErrorEvent {
      */
 
     public MICRErrorEvent(JposBase source, int errorcode, int extended, Data data) {
-        super(source, errorcode, extended, JposConst.JPOS_EL_INPUT);
+        super(source, errorcode, extended, JPOS_EL_INPUT);
         Data = data;
     }
 

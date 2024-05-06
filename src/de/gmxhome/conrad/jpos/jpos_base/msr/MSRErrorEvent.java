@@ -17,7 +17,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.msr;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.JposConst;
+
+import static jpos.JposConst.*;
 
 /**
  * MSR error events, work partly similar to data events, depending on error level
@@ -27,7 +28,7 @@ public class MSRErrorEvent extends JposErrorEvent {
      * Object that contains all data that are necessary to fill data fields
      * before event is really fired. Used when ErrorReportingType = MSR_ERT_TRACK.
      */
-    public Object TrackData;
+    public final Object TrackData;
 
     /**
      * Constructor. Parameters passed to base class unchanged.
@@ -38,7 +39,7 @@ public class MSRErrorEvent extends JposErrorEvent {
      * @param data track data object
      */
     public MSRErrorEvent(JposBase source, int errorcode, int extended, Object data) {
-        super(source, errorcode, extended, JposConst.JPOS_EL_INPUT);
+        super(source, errorcode, extended, JPOS_EL_INPUT);
         TrackData = data;
     }
 

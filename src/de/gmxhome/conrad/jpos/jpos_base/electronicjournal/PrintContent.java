@@ -30,7 +30,7 @@ public class PrintContent extends JposOutputRequest {
     public String getFromMarker() {
         return FromMarker;
     }
-    private String FromMarker;
+    private final String FromMarker;
 
     /**
      * ElectronicJournal method PrintContent parameter toMarker, see UPOS specification.
@@ -39,7 +39,7 @@ public class PrintContent extends JposOutputRequest {
     public String getToMarker() {
         return ToMarker;
     }
-    private String ToMarker;
+    private final String ToMarker;
 
     /**
      * Constructor. Stores given parameters for later use.

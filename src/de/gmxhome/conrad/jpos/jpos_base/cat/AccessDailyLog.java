@@ -27,7 +27,7 @@ public class AccessDailyLog extends CheckCard {
      * @return Type of daily log.
      */
     public int getType() { return Type; }
-    private int Type;
+    private final int Type;
 
     /**
      * Constructor. Stores given parameters for later use.

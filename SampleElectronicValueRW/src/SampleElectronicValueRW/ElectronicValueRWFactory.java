@@ -19,11 +19,11 @@ package SampleElectronicValueRW;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw.*;
-import jpos.JposConst;
-import jpos.JposException;
+import jpos.*;
 import jpos.config.JposEntry;
-import jpos.loader.JposServiceInstance;
-import jpos.loader.JposServiceInstanceFactory;
+import jpos.loader.*;
+
+import static jpos.JposConst.*;
 
 /**
  * Factory class for ElectronicValueRW sample service implementation
@@ -43,7 +43,7 @@ public class ElectronicValueRWFactory extends Factory implements JposServiceInst
                     if (!created) {
                         dev = new Device(port);
                     } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
+                        throw new JposException(JPOS_E_NOSERVICE, "Port " + port + " used by " + any.getClass().getName());
                     else {
                         dev = (Device) any;
                     }
@@ -54,12 +54,12 @@ public class ElectronicValueRWFactory extends Factory implements JposServiceInst
                     return srv;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

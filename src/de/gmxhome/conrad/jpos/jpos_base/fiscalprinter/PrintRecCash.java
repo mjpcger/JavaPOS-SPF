@@ -22,7 +22,7 @@ import jpos.*;
  * Output request executor for FiscalPrinter method PrintRecCash.
  */
 public class PrintRecCash extends OutputRequest {
-    private long Amount;
+    private final long Amount;
 
     /**
      * FiscalPrinter method PrintRecCash parameter amount, see UPOS specification.

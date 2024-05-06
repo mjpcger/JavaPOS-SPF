@@ -18,10 +18,9 @@
 package de.gmxhome.conrad.jpos.jpos_base.billdispenser;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.BillDispenser;
-import jpos.BillDispenserConst;
-import jpos.JposConst;
 import jpos.JposException;
+
+import static jpos.BillDispenserConst.*;
 
 /**
  * Output request executor for BillDispenser method DispenseCash.
@@ -34,7 +33,7 @@ public class DispenseCash extends JposInputRequest {
     public String getCashCounts() {
         return CashCounts;
     }
-    private String CashCounts;
+    private final String CashCounts;
 
     /**
      * Gets CurrentExit property at the time when the request has been created.
@@ -43,7 +42,7 @@ public class DispenseCash extends JposInputRequest {
     public int getCurrentExit() {
         return CurrentExit;
     }
-    private int CurrentExit;
+    private final int CurrentExit;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -72,6 +71,6 @@ public class DispenseCash extends JposInputRequest {
 
     @Override
     public JposStatusUpdateEvent createIdleEvent() {
-        return new BillDispenserStatusUpdateEvent(Props.EventSource, BillDispenserConst.BDSP_STATUS_ASYNC, TheException);
+        return new BillDispenserStatusUpdateEvent(Props.EventSource, BDSP_STATUS_ASYNC, TheException);
     }
 }

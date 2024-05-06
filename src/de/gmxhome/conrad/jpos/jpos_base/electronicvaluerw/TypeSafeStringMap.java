@@ -17,8 +17,6 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-
 import java.lang.reflect.*;
 import java.math.*;
 import java.security.InvalidParameterException;
@@ -48,10 +46,10 @@ import java.util.*;
  */
 public class TypeSafeStringMap implements Map<String,String>, Cloneable {
     private HashMap<String,Object> Me;
-    private static Map<String,Object> Types = new HashMap<>();
-    private boolean UseEnumeratedValues, StrongEnumerationCheck;
+    private static final Map<String,Object> Types = new HashMap<>();
+    private final boolean UseEnumeratedValues, StrongEnumerationCheck;
 
-    private class TSSEntry implements Entry<String,String> {
+    private static class TSSEntry implements Entry<String,String> {
         String Key, Value;
 
         TSSEntry(String key, String value) {
@@ -113,8 +111,14 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
 
     @Override
     public TypeSafeStringMap clone() {
-        TypeSafeStringMap ret = emptyClone();
-        ret.Me = (HashMap<String, Object>) Me.clone();
+        TypeSafeStringMap ret;
+        try {
+            ret = (TypeSafeStringMap) super.clone();
+        } catch (Exception ignored) {
+            ret = emptyClone();
+            ret.Me = new HashMap<>();
+            ret.Me.putAll(Me);
+        }
         return ret;
     }
 
@@ -140,8 +144,7 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
     public static void addTagType(String key, Object type) {
         if (key.length() > 0) {
             if (type != null) {
-                if (type instanceof Field[]) {
-                    Field[] constants = (Field[])type;
+                if (type instanceof Field[] constants) {
                     SIVals[] validvalues = new SIVals[constants.length];
                     for (int i = 0; i < constants.length; i++) {
                         try {
@@ -169,7 +172,7 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
         Object o = Types.get(key);
         if (o != null)
             throw new RuntimeException("Invalid type for tag " + key + ": String");
-        return (String) Me.get(o.toString());
+        return (String) Me.get(key);
     }
 
     /**
@@ -255,10 +258,10 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
      * @throws RuntimeException if the tag is not of type String.
      */
     public String putString(String key, String value) {
-        Object o = Types.get(key.toString());
+        Object o = Types.get(key);
         if (o != null)
             throw new RuntimeException("Invalid type for tag " + key + ": String");
-        return (String)Me.put(key, value.toString());
+        return (String)Me.put(key, value);
     }
 
     /**
@@ -270,7 +273,7 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
      * @throws RuntimeException if the tag is not of type Number.
      */
     public Integer putNumber(String key, int value) {
-        Object o = Types.get(key.toString());
+        Object o = Types.get(key);
         if (o != Integer.class)
             throw new RuntimeException("Invalid type for tag " + key + ": Number");
         return (Integer) Me.put(key, value);
@@ -285,7 +288,7 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
      * @throws RuntimeException if the tag is not of type Currency.
      */
     public Long putCurrency(String key, long value) {
-        Object o = Types.get(key.toString());
+        Object o = Types.get(key);
         if (o != Long.class)
             throw new RuntimeException("Invalid type for tag " + key + ": Currency");
         return (Long) Me.put(key, value);
@@ -301,11 +304,11 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
      * @throws ParseException if value has invalid format.
      */
     public String putDatetime(String key, String value) throws ParseException {
-        Object o = Types.get(key.toString());
+        Object o = Types.get(key);
         if (o != String.class)
             throw new RuntimeException("Invalid type for tag " + key + ": Datetime");
-        Date date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").parse(value);
-        return (String) Me.put(key, value.toString());
+        new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").parse(value);
+        return (String) Me.put(key, value);
     }
 
     /**
@@ -317,7 +320,7 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
      * @throws RuntimeException if the tag has not type Boolean.
      */
     public Boolean putBoolean(String key, boolean value) {
-        Object o = Types.get(key.toString());
+        Object o = Types.get(key);
         if (o != Boolean.class)
             throw new RuntimeException("Invalid type for tag " + key + ": Boolean");
         return (Boolean) Me.put(key, value);
@@ -333,17 +336,17 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
      *                              enumeration value.
      */
     public Integer putEnumerated(String key, int value) {
-        Object o = Types.get(key.toString());
+        Object o = Types.get(key);
         if (o instanceof int[]) {
             int[] valid = (int[]) o;
-            for (int i = 0; i < valid.length; i++) {
-                if (value == valid[i])
+            for (int j : valid) {
+                if (value == j)
                     return (Integer) Me.put(key, value);
             }
         } else if (o instanceof SIVals[]) {
             SIVals[] valid = (SIVals[]) o;
-            for (int i = 0; i < valid.length; i++) {
-                if (value == valid[i].Value)
+            for (SIVals siVals : valid) {
+                if (value == siVals.Value)
                     return (Integer) Me.put(key, value);
             }
         } else
@@ -376,11 +379,8 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
     @Override
     @Deprecated
     public String get(Object key) {
-        if (((String)key).length() >= 0) {
-            Object val = Me.get(key);
-            return getString(key, val);
-        }
-        return null;
+        Object val = Me.get(key);
+        return getString(key, val);
     }
 
     private String getString(Object key, Object val) {
@@ -395,7 +395,7 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
         else {                              // Number or Enumerated
             if (UseEnumeratedValues)
                 return Integer.toString((Integer) val);
-            Object type = Types.get(key);
+            Object type = Types.get(key.toString());
             if (type == null)
                 return Integer.toString((Integer) val);
             else if (type instanceof SIVals[]) { // Enumerated with named elements
@@ -409,75 +409,71 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
     }
 
     @Override
-    @Deprecated
+    @SuppressWarnings("AssignmentUsedAsCondition")
     public String put(String key, String value) {
-        if (((String)key).length() >= 0) {
-            String ret = get(key);
-            Object type = Types.get(key);
-            if (type == null || value == null) {        // String type
-                if (value == null)
-                    Me.remove(key);
-                else
+        String ret = get(key);
+        Object type = Types.get(key);
+        if (type == null || value == null) {        // String type
+            if (value == null)
+                Me.remove(key);
+            else
+                Me.put(key, value);
+        } else {
+            try {
+                if (type == String.class) {         // Datetime
+                    new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").parse(value);
                     Me.put(key, value);
-            } else {
-                try {
-                    if (type == String.class) {         // Datetime
-                        Date date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").parse(value);
-                        Me.put(key, value);
-                    } else if (type == Boolean.class) { // Boolen
-                        value = value.toLowerCase();
-                        boolean val;
-                        if (!(val = value.equals("true")) && !value.equals("false"))
-                            val = ((String)null).length() == 0; // Generate NullPointerException
-                        Me.put(key, val);
-                    } else if (type == Integer.class) { // Number
-                        Me.put(key, Integer.parseInt(value));
-                    } else if (type == Long.class) {    // Currency
-                        Me.put(key, new BigDecimal(value).scaleByPowerOfTen(4).longValueExact());
-                    } else if (type instanceof int[]) { // Enumerated, no symbols
-                        int val = Integer.parseInt(value);
-                        if (StrongEnumerationCheck) {
-                            boolean valid = false;
-                            for (int v : (int[]) type) {
-                                if (valid = v == val)
-                                    break;
-                            }
-                            if (!valid)
-                                val = ((Integer)null).intValue(); // Generate NullPointerException
+                } else if (type == Boolean.class) { // Boolen
+                    boolean val = value.equalsIgnoreCase("true");
+                    if (!val && !value.equalsIgnoreCase("false"))
+                        throw new NullPointerException();
+                    Me.put(key, val);
+                } else if (type == Integer.class) { // Number
+                    Me.put(key, Integer.parseInt(value));
+                } else if (type == Long.class) {    // Currency
+                    Me.put(key, new BigDecimal(value).scaleByPowerOfTen(4).longValueExact());
+                } else if (type instanceof int[] intArray) { // Enumerated, no symbols
+                    int val = Integer.parseInt(value);
+                    if (StrongEnumerationCheck) {
+                        boolean valid = false;
+                        for (int v : intArray) {
+                            if (valid = v == val)
+                                break;
                         }
-                        Me.put(key, val);
-                    } else {    // SIVals[]              // Enumerated, symbols
-                        Integer val = null;
-                        if (UseEnumeratedValues) {
-                            int v = Integer.parseInt(value);
-                            if (StrongEnumerationCheck) {
-                                for (SIVals fld : (SIVals[]) type) {
-                                    if (fld.Value == v) {
-                                        val = v;
-                                        break;
-                                    }
-                                }
-                            } else
-                                val = v;
-                        } else {
-                            for (SIVals fld : (SIVals[]) type) {
-                                if (value.equals(fld.Key)) {
-                                    val = fld.Value;
-                                    break;
-                                }
-                            }
-                            if (!StrongEnumerationCheck && val == null)
-                                val = Integer.parseInt(value);
-                        }
-                        Me.put(key, val.intValue());
+                        if (!valid)
+                            throw new NullPointerException();
                     }
-                } catch (Exception e) {
-                    throw new RuntimeException("Bad format for tag " + key + ": " + value);
+                    Me.put(key, val);
+                } else {    // SIVals[]              // Enumerated, symbols
+                    Integer val = null;
+                    if (UseEnumeratedValues) {
+                        int v = Integer.parseInt(value);
+                        if (StrongEnumerationCheck) {
+                            for (SIVals fld : (SIVals[]) type) {
+                                if (fld.Value == v) {
+                                    val = v;
+                                    break;
+                                }
+                            }
+                        } else
+                            val = v;
+                    } else {
+                        for (SIVals fld : (SIVals[]) type) {
+                            if (value.equals(fld.Key)) {
+                                val = fld.Value;
+                                break;
+                            }
+                        }
+                        if (!StrongEnumerationCheck && val == null)
+                            val = Integer.parseInt(value);
+                    }
+                    Me.put(key, val);
                 }
+            } catch (Exception e) {
+                throw new RuntimeException("Bad format for tag " + key + ": " + value);
             }
-            return ret;
         }
-        return null;
+        return ret;
     }
 
     @Override
@@ -525,7 +521,7 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
     @Override
     @Deprecated
     public Set<Entry<String, String>> entrySet() {
-        Set<Entry<String, String>> ret = new HashSet<Entry<String,String>>(Me.size());
+        Set<Entry<String, String>> ret = new HashSet<>(Me.size());
         for (Entry<String,Object> source : Me.entrySet())
             ret.add(new TSSEntry(source.getKey(), getString(source.getKey(), source.getValue())));
         return ret;
@@ -540,8 +536,9 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     public boolean equals(Object o) {
-        return (o instanceof Map ) ? entrySet().equals(((Map)o).entrySet()) : false;
+        return o instanceof Map && entrySet().equals(((Map) o).entrySet());
     }
 
     @Override

@@ -18,6 +18,10 @@ package de.gmxhome.conrad.jpos.jpos_base.motionsensor;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of MotionSensor factory for JPOS devices using this framework.
@@ -28,19 +32,30 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults. Returns MotionSensorService object.
      * @param index MotionSensor property set index.
      * @param dev   MotionSensor implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return MotionSensorService object.
      * @throws JposException If property set could not be retrieved.
      */
-    public MotionSensorService addDevice(int index, JposDevice dev) throws JposException {
-        MotionSensorProperties drw = dev.getMotionSensorProperties(index);
-        MotionSensorService service;
-        JposDevice.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getMotionSensorProperties()");
-        service = (MotionSensorService) (drw.EventSource = new MotionSensorService(drw, dev));
-        drw.Device = dev;
-        drw.Claiming = dev.ClaimedMotionSensor;
-        dev.changeDefaults(drw);
-        drw.addProperties(dev.MotionSensors);
-        service.DeviceInterface = service.MotionSensorInterface = drw;
+    public MotionSensorService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
+        MotionSensorProperties props = dev.getMotionSensorProperties(index);
+        validateJposConfiguration(props, dev, dev.ClaimedMotionSensor, entry);
+        MotionSensorService service = (MotionSensorService) (props.EventSource = new MotionSensorService(props, dev));
+        dev.changeDefaults(props);
+        props.addProperties(dev.MotionSensors);
+        service.DeviceInterface = service.MotionSensorInterface = props;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults. Returns MotionSensorService object.
+     * @param index MotionSensor property set index.
+     * @param dev   MotionSensor implementation instance derived from JposDevice to be used by the service.
+     * @return MotionSensorService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public MotionSensorService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

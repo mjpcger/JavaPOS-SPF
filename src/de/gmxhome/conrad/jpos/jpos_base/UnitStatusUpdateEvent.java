@@ -23,7 +23,7 @@ public class UnitStatusUpdateEvent extends JposStatusUpdateEvent {
     /**
      * Target units of the corresponding status change.
      */
-    public int Units;
+    public final int Units;
 
     /**
      * Constructor, Parameters passed to base class unchanged.

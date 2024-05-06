@@ -23,28 +23,25 @@ import jpos.services.*;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.ElectronicJournalConst.*;
+import static jpos.JposConst.*;
+
 /**
  * ElectronicJournal service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class ElectronicJournalService extends JposBase implements ElectronicJournalService115 {
+public class ElectronicJournalService extends JposBase implements ElectronicJournalService116 {
     /**
      * Instance of a class implementing the ElectronicJournalInterface for electronic journal specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public ElectronicJournalInterface ElectronicJournalInterface;
 
-    private ElectronicJournalProperties Data;
+    private final ElectronicJournalProperties Data;
 
-    static private long MarkerTypesNormal[] = new long[]{
-            ElectronicJournalConst.EJ_MT_SESSION_BEG,
-            ElectronicJournalConst.EJ_MT_SESSION_END,
-            ElectronicJournalConst.EJ_MT_DOCUMENT
-    };
-    static private long MarkerTypesSpecial[] = new long[]{
-            ElectronicJournalConst.EJ_MT_HEAD,
-            ElectronicJournalConst.EJ_MT_TAIL
-    };
+    static private final long[] MarkerTypesNormal = { EJ_MT_SESSION_BEG, EJ_MT_SESSION_END, EJ_MT_DOCUMENT };
+    static private final long[] MarkerTypesSpecial = { EJ_MT_HEAD, EJ_MT_TAIL };
 
     /**
      * Constructor. Stores given property set and device implementation object.
@@ -216,7 +213,7 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
     public void setStation(int station) throws JposException {
         logPreSet("Station");
         checkOpened();
-        Device.check((station & ~Data.CapStation) != 0, JposConst.JPOS_E_ILLEGAL, "Invalid station: " + station);
+        check((station & ~Data.CapStation) != 0, JPOS_E_ILLEGAL, "Invalid station: " + station);
         checkNoChangedOrClaimed(Data.Station, station);
         ElectronicJournalInterface.station(station);
         logSet("Station");
@@ -233,7 +230,7 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
     public void setStorageEnabled(boolean flag) throws JposException {
         logPreSet("StorageEnabled");
         checkEnabled();
-        Device.check(!Data.CapStorageEnabled && !flag, JposConst.JPOS_E_ILLEGAL, "Storage cannot be disabled for device");
+        check(!Data.CapStorageEnabled && !flag, JPOS_E_ILLEGAL, "Storage cannot be disabled for device");
         ElectronicJournalInterface.storageEnabled(flag);
         logSet("StorageEnabled");
     }
@@ -256,7 +253,7 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
     public void setWaterMark(boolean flag) throws JposException {
         logPreSet("WaterMark");
         checkOpened();
-        Device.check(!Data.CapWaterMark && flag, JposConst.JPOS_E_ILLEGAL, "No watermark support for device");
+        check(!Data.CapWaterMark && flag, JPOS_E_ILLEGAL, "No watermark support for device");
         checkNoChangedOrClaimed(Data.WaterMark, flag);
         ElectronicJournalInterface.waterMark(flag);
         logSet("WaterMark");
@@ -264,9 +261,9 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
 
     @Override
     public void addMarker(String marker) throws JposException {
-        logPreCall("AddMarker", "" + marker);
+        logPreCall("AddMarker", removeOuterArraySpecifier(new Object[]{marker}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapAddMarker, JposConst.JPOS_E_ILLEGAL, "Device does not support AddMarker method");
+        check(!Data.CapAddMarker, JPOS_E_ILLEGAL, "Device does not support AddMarker method");
         ElectronicJournalInterface.addMarker(marker);
         logCall("AddMarker");
     }
@@ -275,8 +272,8 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
     public void cancelPrintContent() throws JposException {
         logPreCall("CancelPrintContent");
         checkEnabled();
-        Device.check(!Data.CapSuspendPrintContent, JposConst.JPOS_E_ILLEGAL, "Device does not support CancelPrintContent method");
-        Device.check(!Data.Suspended, JposConst.JPOS_E_ILLEGAL, "Device not suspended");
+        check(!Data.CapSuspendPrintContent, JPOS_E_ILLEGAL, "Device does not support CancelPrintContent method");
+        check(!Data.Suspended, JPOS_E_ILLEGAL, "Device not suspended");
         ElectronicJournalInterface.cancelPrintContent();
         logCall("CancelPrintContent");
     }
@@ -285,8 +282,8 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
     public void cancelQueryContent() throws JposException {
         logPreCall("CancelQueryContent");
         checkEnabled();
-        Device.check(!Data.CapSuspendQueryContent, JposConst.JPOS_E_ILLEGAL, "Device does not support CancelQueryContent method");
-        Device.check(!Data.Suspended, JposConst.JPOS_E_ILLEGAL, "Device not suspended");
+        check(!Data.CapSuspendQueryContent, JPOS_E_ILLEGAL, "Device does not support CancelQueryContent method");
+        check(!Data.Suspended, JPOS_E_ILLEGAL, "Device not suspended");
         ElectronicJournalInterface.cancelQueryContent();
         logCall("CancelQueryContent");
     }
@@ -295,8 +292,8 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
     public void eraseMedium() throws JposException {
         logPreCall("EraseMedium");
         checkEnabled();
-        Device.check(!Data.CapErasableMedium, JposConst.JPOS_E_ILLEGAL, "EraseMedium not supported");
-        Device.check(Data.CapMediumIsAvailable && !Data.MediumIsAvailable, JposConst.JPOS_E_FAILURE, "Medium not available");
+        check(!Data.CapErasableMedium, JPOS_E_ILLEGAL, "EraseMedium not supported");
+        check(Data.CapMediumIsAvailable && !Data.MediumIsAvailable, JPOS_E_FAILURE, "Medium not available");
         callIt(ElectronicJournalInterface.eraseMedium(), "EraseMedium");
     }
 
@@ -309,38 +306,38 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
 
     @Override
     public void initializeMedium(String mediumID) throws JposException {
-        Device.check(mediumID == null, JposConst.JPOS_E_ILLEGAL, "Invalid mediumID parameter: [null]");
-        logPreCall("InitializeMedium", mediumID);
+        logPreCall("InitializeMedium", removeOuterArraySpecifier(new Object[]{mediumID}, Device.MaxArrayStringElements));
+        check(mediumID == null, JPOS_E_ILLEGAL, "Invalid mediumID parameter: [null]");
         checkEnabled();
-        Device.check(!Data.CapInitializeMedium, JposConst.JPOS_E_ILLEGAL, "InitializeMedium not supported");
+        check(!Data.CapInitializeMedium, JPOS_E_ILLEGAL, "InitializeMedium not supported");
         callIt(ElectronicJournalInterface.initializeMedium(mediumID), "InitializeMedium");
     }
 
     @Override
     public void printContent(String fromMarker, String toMarker) throws JposException {
-        Device.check(fromMarker == null, JposConst.JPOS_E_ILLEGAL, "Invalid fromMarker parameter: [null]");
-        Device.check(toMarker == null, JposConst.JPOS_E_ILLEGAL, "Invalid toMarker parameter: [null]");
-        logPreCall("PrintContent", fromMarker + ", " + toMarker);
+        logPreCall("PrintContent", removeOuterArraySpecifier(new Object[]{fromMarker, toMarker}, Device.MaxArrayStringElements));
+        check(fromMarker == null, JPOS_E_ILLEGAL, "Invalid fromMarker parameter: [null]");
+        check(toMarker == null, JPOS_E_ILLEGAL, "Invalid toMarker parameter: [null]");
         checkEnabled();
-        Device.check(!Data.CapPrintContent, JposConst.JPOS_E_ILLEGAL, "PrintContent not supported");
+        check(!Data.CapPrintContent, JPOS_E_ILLEGAL, "PrintContent not supported");
         callIt(ElectronicJournalInterface.printContent(fromMarker, toMarker), "PrintContent");
     }
 
     @Override
     public void printContentFile(String fileName) throws JposException {
-        Device.check(fileName == null, JposConst.JPOS_E_ILLEGAL, "Invalid fileName parameter: [null]");
-        logPreCall("PrintContentFile", fileName);
+        logPreCall("PrintContentFile", removeOuterArraySpecifier(new Object[]{fileName}, Device.MaxArrayStringElements));
+        check(fileName == null, JPOS_E_ILLEGAL, "Invalid fileName parameter: [null]");
         checkEnabled();
-        Device.check(!Data.CapPrintContentFile, JposConst.JPOS_E_ILLEGAL, "PrintContentFile not supported");
+        check(!Data.CapPrintContentFile, JPOS_E_ILLEGAL, "PrintContentFile not supported");
         callIt(ElectronicJournalInterface.printContentFile(fileName), "PrintContentFile");
     }
 
     @Override
     public void queryContent(String fileName, String fromMarker, String toMarker) throws JposException {
-        Device.check(fileName == null, JposConst.JPOS_E_ILLEGAL, "Invalid fileName parameter: [null]");
-        Device.check(fromMarker == null, JposConst.JPOS_E_ILLEGAL, "Invalid fromMarker parameter: [null]");
-        Device.check(toMarker == null, JposConst.JPOS_E_ILLEGAL, "Invalid toMarker parameter: [null]");
-        logPreCall("QueryContent");
+        logPreCall("QueryContent", removeOuterArraySpecifier(new Object[]{fileName, fromMarker, toMarker}, Device.MaxArrayStringElements));
+        check(fileName == null, JPOS_E_ILLEGAL, "Invalid fileName parameter: [null]");
+        check(fromMarker == null, JPOS_E_ILLEGAL, "Invalid fromMarker parameter: [null]");
+        check(toMarker == null, JPOS_E_ILLEGAL, "Invalid toMarker parameter: [null]");
         checkEnabled();
         callIt(ElectronicJournalInterface.queryContent(fileName, fromMarker, toMarker), "QueryContent");
     }
@@ -349,8 +346,8 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
     public void resumePrintContent() throws JposException {
         logPreCall("ResumePrintContent");
         checkEnabled();
-        Device.check(!Data.CapSuspendPrintContent, JposConst.JPOS_E_ILLEGAL, "Device does not support ResumePrintContent method");
-        Device.check(!Data.Suspended, JposConst.JPOS_E_ILLEGAL, "Device not suspended");
+        check(!Data.CapSuspendPrintContent, JPOS_E_ILLEGAL, "Device does not support ResumePrintContent method");
+        check(!Data.Suspended, JPOS_E_ILLEGAL, "Device not suspended");
         ElectronicJournalInterface.resumePrintContent();
         logCall("ResumePrintContent");
     }
@@ -359,43 +356,43 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
     public void resumeQueryContent() throws JposException {
         logPreCall("ResumeQueryContent");
         checkEnabled();
-        Device.check(!Data.CapSuspendQueryContent, JposConst.JPOS_E_ILLEGAL, "Device does not support ResumeQueryContent method");
-        Device.check(!Data.Suspended, JposConst.JPOS_E_ILLEGAL, "Device not suspended");
+        check(!Data.CapSuspendQueryContent, JPOS_E_ILLEGAL, "Device does not support ResumeQueryContent method");
+        check(!Data.Suspended, JPOS_E_ILLEGAL, "Device not suspended");
         ElectronicJournalInterface.resumeQueryContent();
         logCall("ResumeQueryContent");
     }
 
     @Override
     public void retrieveCurrentMarker(int markerType, String[] marker) throws JposException {
-        logPreCall("RetrieveCurrentMarker", "" + markerType);
-        Device.check(marker == null || marker.length != 1, JposConst.JPOS_E_ILLEGAL, "Marker must be a String array with length 1");
+        logPreCall("RetrieveCurrentMarker", removeOuterArraySpecifier(new Object[]{markerType}, Device.MaxArrayStringElements));
+        check(marker == null || marker.length != 1, JPOS_E_ILLEGAL, "Marker must be a String array with length 1");
         checkEnabled();
-        Device.check(!Data.CapRetrieveCurrentMarker, JposConst.JPOS_E_ILLEGAL, "Device does not support RetrieveCurrentMarker method");
-        Device.check(!Device.member(markerType, MarkerTypesNormal) && !Device.member(markerType, MarkerTypesSpecial), JposConst.JPOS_E_ILLEGAL, "Bad marker type: "+ markerType);
+        check(!Data.CapRetrieveCurrentMarker, JPOS_E_ILLEGAL, "Device does not support RetrieveCurrentMarker method");
+        check(!member(markerType, MarkerTypesNormal) && !member(markerType, MarkerTypesSpecial), JPOS_E_ILLEGAL, "Bad marker type: "+ markerType);
         ElectronicJournalInterface.retrieveCurrentMarker(markerType, marker);
-        logCall("RetrieveCurrentMarker", marker[0]);
+        logCall("RetrieveCurrentMarker", removeOuterArraySpecifier(new Object[]{markerType, marker[0]}, Device.MaxArrayStringElements));
     }
 
     @Override
     public void retrieveMarker(int markerType, int sessionNumber, int documentNumber, String[] marker) throws JposException {
-        logPreCall("RetrieveMarker", "" + markerType + ", " + sessionNumber + ", " + documentNumber);
-        Device.check(marker == null || marker.length != 1, JposConst.JPOS_E_ILLEGAL, "Marker must be a String array with length 1");
+        logPreCall("RetrieveMarker", removeOuterArraySpecifier(new Object[]{markerType, sessionNumber, documentNumber}, Device.MaxArrayStringElements));
+        check(marker == null || marker.length != 1, JPOS_E_ILLEGAL, "Marker must be a String array with length 1");
         checkEnabled();
-        Device.check(!Data.CapRetrieveMarker, JposConst.JPOS_E_ILLEGAL, "Device does not support RetrieveMarker method");
-        Device.checkMember(markerType, MarkerTypesNormal, JposConst.JPOS_E_ILLEGAL, "Bad marker type: "+ markerType);
-        Device.check(documentNumber < 0, JposConst.JPOS_E_ILLEGAL, "Illegal document number: " + documentNumber);
+        check(!Data.CapRetrieveMarker, JPOS_E_ILLEGAL, "Device does not support RetrieveMarker method");
+        checkMember(markerType, MarkerTypesNormal, JPOS_E_ILLEGAL, "Bad marker type: "+ markerType);
+        check(documentNumber < 0, JPOS_E_ILLEGAL, "Illegal document number: " + documentNumber);
         ElectronicJournalInterface.retrieveMarker(markerType, sessionNumber, documentNumber, marker);
-        logCall("RetrieveMarker", marker[0]);
+        logCall("RetrieveMarker", removeOuterArraySpecifier(new Object[]{markerType, marker[0]}, Device.MaxArrayStringElements));
     }
 
     @Override
     public void retrieveMarkerByDateTime(int markerType, String dateTime, String markerNumber, String[] marker) throws JposException {
-        Device.check(dateTime == null, JposConst.JPOS_E_ILLEGAL, "Invalid dateTime parameter: [null]");
-        Device.check(markerNumber == null, JposConst.JPOS_E_ILLEGAL, "Invalid markerNumber parameter: [null]");
-        logPreCall("RetrieveMarkerByDateTime", "" + markerType + ", " + dateTime + ", " + markerNumber);
-        Device.check(marker == null || marker.length != 1, JposConst.JPOS_E_ILLEGAL, "Marker must be a String array with length 1");
+        logPreCall("RetrieveMarkerByDateTime", removeOuterArraySpecifier(new Object[]{markerType, dateTime, markerNumber}, Device.MaxArrayStringElements));
+        check(dateTime == null, JPOS_E_ILLEGAL, "Invalid dateTime parameter: [null]");
+        check(markerNumber == null, JPOS_E_ILLEGAL, "Invalid markerNumber parameter: [null]");
+        check(marker == null || marker.length != 1, JPOS_E_ILLEGAL, "Marker must be a String array with length 1");
         checkEnabled();
-        Device.check(!Data.CapRetrieveMarkerByDateTime, JposConst.JPOS_E_ILLEGAL, "Device does not support RetrieveMarkerByDateTime method");
+        check(!Data.CapRetrieveMarkerByDateTime, JPOS_E_ILLEGAL, "Device does not support RetrieveMarkerByDateTime method");
         try {
             SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
             format.setLenient(false);
@@ -404,38 +401,38 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
             validDate = validDate && (dateTime.length() < 10 || (Integer.parseInt(dateTime.substring(8, 10)) >= 0 && Integer.parseInt(dateTime.substring(8, 10)) <= 23));
             validDate = validDate && (dateTime.length() < 12 || (Integer.parseInt(dateTime.substring(10, 12)) >= 0 && Integer.parseInt(dateTime.substring(10, 12)) <= 59));
             validDate = validDate && (dateTime.length() < 14 || (Integer.parseInt(dateTime.substring(12, 14)) >= 0 && Integer.parseInt(dateTime.substring(12, 14)) <= 59));
-            Device.check(!validDate, JposConst.JPOS_E_ILLEGAL, "Invalid dateTime value: " + dateTime);
-            Device.check(Integer.parseInt(markerNumber) < 1, JposConst.JPOS_E_ILLEGAL, "Illegal markerNumber format, must be numeric >= 1: " + markerNumber);
+            check(!validDate, JPOS_E_ILLEGAL, "Invalid dateTime value: " + dateTime);
+            check(Integer.parseInt(markerNumber) < 1, JPOS_E_ILLEGAL, "Illegal markerNumber format, must be numeric >= 1: " + markerNumber);
         } catch (NumberFormatException e) {
-            Device.check(true, JposConst.JPOS_E_ILLEGAL, "Format for markerNumber and dateTime must be numeric: " + e.getMessage());
+            throw new JposException(JPOS_E_ILLEGAL, "Format for markerNumber and dateTime must be numeric: " + e.getMessage());
         }
         ElectronicJournalInterface.retrieveMarkerByDateTime(markerType, dateTime, markerNumber, marker);
-        logCall("RetrieveMarkerByDateTime", marker[0]);
+        logCall("RetrieveMarkerByDateTime", removeOuterArraySpecifier(new Object[]{markerType, marker[0]}, Device.MaxArrayStringElements));
     }
 
     @Override
     public void retrieveMarkersDateTime(String marker, String[] dateTime) throws JposException {
-        Device.check(marker == null, JposConst.JPOS_E_ILLEGAL, "Invalid marker parameter: [null]");
-        logPreCall("RetrieveMarkersDateTime", "" + marker);
-        Device.check(dateTime == null || dateTime.length != 1, JposConst.JPOS_E_ILLEGAL, "DateTime must be a String array with length 1");
+        logPreCall("RetrieveMarkersDateTime", removeOuterArraySpecifier(new Object[]{marker}, Device.MaxArrayStringElements));
+        check(marker == null, JPOS_E_ILLEGAL, "Invalid marker parameter: [null]");
+        check(dateTime == null || dateTime.length != 1, JPOS_E_ILLEGAL, "DateTime must be a String array with length 1");
         checkEnabled();
-        Device.check(!Data.CapRetrieveMarkersDateTime, JposConst.JPOS_E_ILLEGAL, "Device does not support RetrieveMarkersDateTime method");
+        check(!Data.CapRetrieveMarkersDateTime, JPOS_E_ILLEGAL, "Device does not support RetrieveMarkersDateTime method");
         ElectronicJournalInterface.retrieveMarkersDateTime(marker, dateTime);
-        logCall("RetrieveMarkersDateTime", dateTime[0]);
+        logCall("RetrieveMarkersDateTime", removeOuterArraySpecifier(new Object[]{marker, dateTime[0]}, Device.MaxArrayStringElements));
     }
 
     @Override
     public void suspendPrintContent() throws JposException {
         logPreCall("SuspendPrintContent");
         checkEnabled();
-        Device.check(!Data.CapSuspendPrintContent, JposConst.JPOS_E_ILLEGAL, "Device does not support SuspendPrintContent method");
+        check(!Data.CapSuspendPrintContent, JPOS_E_ILLEGAL, "Device does not support SuspendPrintContent method");
         synchronized (Device.AsyncProcessorRunning) {
             JposOutputRequest effective = Device.CurrentCommand;
             if (Device.CurrentCommand == null && Device.PendingCommands.size() > 0)
                 effective = Device.PendingCommands.get(0);
-            Device.check(effective == null || (!(effective instanceof PrintContent) && !(effective instanceof PrintContentFile)), JposConst.JPOS_E_ILLEGAL, "Device not printing");
+            check((!(effective instanceof PrintContent) && !(effective instanceof PrintContentFile)), JPOS_E_ILLEGAL, "Device not printing");
         }
-        Device.check(Data.Suspended, JposConst.JPOS_E_ILLEGAL, "Device just suspended");
+        check(Data.Suspended, JPOS_E_ILLEGAL, "Device just suspended");
         ElectronicJournalInterface.suspendPrintContent();
         logCall("SuspendPrintContent");
     }
@@ -444,14 +441,14 @@ public class ElectronicJournalService extends JposBase implements ElectronicJour
     public void suspendQueryContent() throws JposException {
         logPreCall("SuspendQueryContent");
         checkEnabled();
-        Device.check(!Data.CapSuspendQueryContent, JposConst.JPOS_E_ILLEGAL, "Device does not support SuspendQueryContent method");
+        check(!Data.CapSuspendQueryContent, JPOS_E_ILLEGAL, "Device does not support SuspendQueryContent method");
         synchronized (Device.AsyncProcessorRunning) {
             JposOutputRequest effective = Device.CurrentCommand;
             if (Device.CurrentCommand == null && Device.PendingCommands.size() > 0)
                 effective = Device.PendingCommands.get(0);
-            Device.check(effective == null || !(effective instanceof QueryContent), JposConst.JPOS_E_ILLEGAL, "Device not querying content");
+            check(!(effective instanceof QueryContent), JPOS_E_ILLEGAL, "Device not querying content");
         }
-        Device.check(Data.Suspended, JposConst.JPOS_E_ILLEGAL, "Device just suspended");
+        check(Data.Suspended, JPOS_E_ILLEGAL, "Device just suspended");
         ElectronicJournalInterface.suspendQueryContent();
         logCall("SuspendQueryContent");
     }

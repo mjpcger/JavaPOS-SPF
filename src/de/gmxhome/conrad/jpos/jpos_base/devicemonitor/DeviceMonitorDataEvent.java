@@ -22,6 +22,7 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 /**
  * Data event implementation for DeviceMonitor devices.
  */
+@SuppressWarnings("unused")
 public class DeviceMonitorDataEvent extends JposDataEvent {
     /**
      * DeviceData contents belonging to this data event.
@@ -29,7 +30,7 @@ public class DeviceMonitorDataEvent extends JposDataEvent {
     public String getDeviceData() {
         return DeviceData;
     }
-    private String DeviceData;
+    private final String DeviceData;
     /**
      * Constructor. Parameters passed to base class unchanged.
      *

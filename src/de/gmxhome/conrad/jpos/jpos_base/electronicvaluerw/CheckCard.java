@@ -26,14 +26,14 @@ public class CheckCard extends OutputRequest {
      * @return Sequence number.
      */
     public int getSequenceNumber() { return SequenceNumber; }
-    private int SequenceNumber;
+    private final int SequenceNumber;
 
     /**
      * Get the maximum waiting time (in milliseconds) until the response is received from the ElectronicValueRW device.
      * @return The maximum waiting time (in milliseconds) until the response is received from the ElectronicValueRW device.
      */
     public int getTimeout() { return Timeout; }
-    private int Timeout;
+    private final int Timeout;
 
     /**
      * Constructor. Stores given parameters for later use.

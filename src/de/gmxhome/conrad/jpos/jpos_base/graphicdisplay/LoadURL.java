@@ -42,7 +42,7 @@ public class LoadURL extends JposOutputRequest {
     public String getURL() {
         return URL;
     }
-    private String URL;
+    private final String URL;
 
     @Override
     public void invoke() throws JposException {

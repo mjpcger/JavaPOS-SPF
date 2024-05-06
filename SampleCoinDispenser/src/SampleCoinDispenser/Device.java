@@ -16,13 +16,13 @@
 
 package SampleCoinDispenser;
 
-import jpos.CoinDispenserConst;
-import jpos.JposConst;
 import jpos.JposException;
 import jpos.config.JposEntry;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.coindispenser.*;
-import net.bplaced.conrad.log4jpos.Level;;
+import static jpos.CoinDispenserConst.*;
+import static jpos.JposConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * Base of a JposDevice based implementation of a JavaPOS CoinDispenser device service implementation for the
@@ -125,12 +125,12 @@ public class Device extends JposDevice implements Runnable{
     /**
      * The status watcher thread.
      */
-    Thread StateWatcher;
+    ThreadHandler StateWatcher;
 
     /**
      * A synchronization object used for timing.
      */
-    SyncObject WaitObj;
+    final SyncObject WaitObj;
 
     /**
      * A synchronization object used to wait until startup has been finished.
@@ -138,19 +138,14 @@ public class Device extends JposDevice implements Runnable{
     SyncObject WaitInitialized;
 
     /**
-     * Termination flag, set when state watcher shall finish.
-     */
-    boolean ToBeFinished;
-
-    /**
      * Coin counts per virtual slot.
      */
-    int SlotCount[] = new int[8];                   // ( slots (1, 2, 5, 10, 20, 50, 100 and 200 cent)
+    final int[] SlotCount = new int[8];                   // ( slots (1, 2, 5, 10, 20, 50, 100 and 200 cent)
 
     /**
      * Coin values of hardware slots
      */
-    int HWSlotCount[] = new int[12];
+    int[] HWSlotCount = new int[12];
 
     /**
      * Maximum response length.
@@ -160,12 +155,12 @@ public class Device extends JposDevice implements Runnable{
     /**
      * Dispenser state, valid if coin dispenser is online.
      */
-    int DispenserState = CoinDispenserConst.COIN_STATUS_OK;
+    int DispenserState = COIN_STATUS_OK;
 
     /**
      * Offline state, true if dispenser is offline.
      */
-    int Offline = JposConst.JPOS_PS_UNKNOWN;
+    int Offline = JPOS_PS_UNKNOWN;
 
     /**
      * Indicates whether we are in error recovery state
@@ -185,7 +180,7 @@ public class Device extends JposDevice implements Runnable{
     /**
      * Coin values for indexed virtual slots
      */
-    final long[] SlotCoinValues = new long[]{1, 2, 5, 10, 20, 50, 100, 200};
+    final long[] SlotCoinValues = {1, 2, 5, 10, 20, 50, 100, 200};
 
     /**
      * Hardware slot index 1 minimum unit
@@ -252,7 +247,7 @@ public class Device extends JposDevice implements Runnable{
         coinDispenserInit(1);
         PhysicalDeviceDescription = "Coin Dispenser Simulator for TCP";
         PhysicalDeviceName = "Coin Dispenser Simulator";
-        CapPowerReporting = JposConst.JPOS_PR_STANDARD;
+        CapPowerReporting = JPOS_PR_STANDARD;
         WaitObj = new SyncObject();
         WaitInitialized = null;
     }
@@ -279,7 +274,7 @@ public class Device extends JposDevice implements Runnable{
             if ((o = entry.getPropertyValue("MinClaimTimeout")) != null)
                 MinClaimTimeout = Integer.parseInt(o.toString());
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property", e);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property", e);
         }
     }
 
@@ -298,7 +293,7 @@ public class Device extends JposDevice implements Runnable{
      */
     public void run() {
         int offline = Offline;
-        while (!ToBeFinished) {
+        while (!StateWatcher.ToBeFinished) {
             String[] response;
             synchronized (SlotCount) {
                 try {
@@ -328,8 +323,8 @@ public class Device extends JposDevice implements Runnable{
         try {
             JposCommonProperties props = getClaimingInstance(ClaimedCoinDispenser, 0);
             if (props != null && (dispenserState != DispenserState || Offline != offline)) {
-                if (offline != Offline && Offline == JposConst.JPOS_PS_ONLINE) {
-                    handleEvent(new JposStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_ONLINE));
+                if (offline != Offline && Offline == JPOS_PS_ONLINE) {
+                    handleEvent(new JposStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_ONLINE));
                     offline = Offline;
                 }
                 if (dispenserState != DispenserState) {
@@ -337,11 +332,11 @@ public class Device extends JposDevice implements Runnable{
                     handleEvent(new CoinDispenserStatusUpdateEvent(props.EventSource, DispenserState));
                 }
                 if (offline != Offline) {
-                    handleEvent(new JposStatusUpdateEvent(props.EventSource, JposConst.JPOS_SUE_POWER_OFF_OFFLINE));
+                    handleEvent(new JposStatusUpdateEvent(props.EventSource, JPOS_SUE_POWER_OFF_OFFLINE));
                     offline = Offline;
                 }
             }
-        } catch (JposException e) {}
+        } catch (JposException ignored) {}
         return offline;
     }
 
@@ -351,10 +346,10 @@ public class Device extends JposDevice implements Runnable{
      * @return  New device status.
      */
     int handleResponse(String[] response) {
-        int state = CoinDispenserConst.COIN_STATUS_JAM;
+        int state = COIN_STATUS_JAM;
         if (response != null && response.length == 12 && response[0].equals("OK")) {
-            Offline = JposConst.JPOS_PS_ONLINE;
-            state = CoinDispenserConst.COIN_STATUS_OK;
+            Offline = JPOS_PS_ONLINE;
+            state = COIN_STATUS_OK;
             SlotCount[Slot1] = HWSlotCount[HWSlot1] = Short.parseShort(response[HWSlot1]);
             SlotCount[Slot2] = (HWSlotCount[HWSlot2a] = Short.parseShort(response[HWSlot2a])) + (HWSlotCount[HWSlot2b] = Short.parseShort(response[HWSlot2b]));
             SlotCount[Slot5] = HWSlotCount[HWSlot5] = Short.parseShort(response[HWSlot5]);
@@ -365,18 +360,18 @@ public class Device extends JposDevice implements Runnable{
             SlotCount[Slot200] = (HWSlotCount[HWSlot200a] = Short.parseShort(response[HWSlot200a])) + (HWSlotCount[HWSlot200b] = Short.parseShort(response[HWSlot200b]));
             for (int i = HWSlotCount.length - 1; i > 0; --i) {
                 if (HWSlotCount[i] == 0) {
-                    state = CoinDispenserConst.COIN_STATUS_EMPTY;
+                    state = COIN_STATUS_EMPTY;
                     break;
                 }
                 else if (HWSlotCount[i] <= NearLimit) {
-                    state = CoinDispenserConst.COIN_STATUS_NEAREMPTY;
+                    state = COIN_STATUS_NEAREMPTY;
                 }
             }
         }
         else if(response != null && response.length == 1 && response[0].equals("KO"))
-            Offline = JposConst.JPOS_PS_ONLINE;
+            Offline = JPOS_PS_ONLINE;
         else
-            Offline = JposConst.JPOS_PS_OFF_OFFLINE;
+            Offline = JPOS_PS_OFF_OFFLINE;
         return state;
     }
 
@@ -385,6 +380,7 @@ public class Device extends JposDevice implements Runnable{
      * @param command Command data to be sent
      * @return Array of string components of response, null in error case.
      */
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     protected String[] sendCommand(String command) {
         if (OutStream == null) {
             JposException e = initPort();
@@ -408,11 +404,11 @@ public class Device extends JposDevice implements Runnable{
                 String result = new String(response,0, i);
                 return result.split(" ");
             }
-            log(Level.TRACE, getClaimingInstance(ClaimedCoinDispenser, 0).LogicalName + ": No coin dispenser response");
+            log(TRACE, getClaimingInstance(ClaimedCoinDispenser, 0).LogicalName + ": No coin dispenser response");
         } catch (JposException e) {
-            log(Level.TRACE, getClaimingInstance(ClaimedCoinDispenser, 0).LogicalName + ": IO error: " + e.getMessage());
+            log(TRACE, getClaimingInstance(ClaimedCoinDispenser, 0).LogicalName + ": IO error: " + e.getMessage());
         }
-        JposException ee = closePort(false);
+        closePort(false);
         InIOError = true;
         return null;
     }
@@ -427,6 +423,7 @@ public class Device extends JposDevice implements Runnable{
      * @param doFlush Specifies whether the output stream shall be flushed befor close.
      * @return In case of an IO error, the corresponding exception. Otherwise null
      */
+    @SuppressWarnings("UnusedReturnValue")
     JposException closePort(boolean doFlush) {
         JposException e = null;
         if (OutStream != null) {

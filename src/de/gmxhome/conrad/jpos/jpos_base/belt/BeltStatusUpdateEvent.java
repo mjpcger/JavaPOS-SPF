@@ -17,11 +17,9 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.belt;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposBase;
-import de.gmxhome.conrad.jpos.jpos_base.JposStatusUpdateEvent;
-import jpos.BeltConst;
+import de.gmxhome.conrad.jpos.jpos_base.*;
 
-import java.util.Arrays;
+import static jpos.BeltConst.*;
 
 /**
  * Status update event implementation for Belt devices.
@@ -48,79 +46,40 @@ public class BeltStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         BeltProperties props = (BeltProperties)getPropertySet();
         switch (getStatus()) {
-            case BeltConst.BELT_SUE_AUTO_STOP:
-            case BeltConst.BELT_SUE_EMERGENCY_STOP:
-            case BeltConst.BELT_SUE_SAFETY_STOP:
-            case BeltConst.BELT_SUE_TIMEOUT_STOP:
-                props.MotionStatus = BeltConst.BELT_MT_STOPPED;
-                return true;
-            case BeltConst.BELT_SUE_MOTOR_FUSE_DEFECT:
-                props.MotionStatus = BeltConst.BELT_MT_MOTOR_FAULT;
-                return true;
-            case BeltConst.BELT_SUE_MOTOR_OVERHEATING:
-                props.MotionStatus = BeltConst.BELT_MT_MOTOR_FAULT;
-                return true;
-            case BeltConst.BELT_SUE_LIGHT_BARRIER_BACKWARD_INTERRUPTED:
-                props.LightBarrierBackwardInterrupted = true;
-                return true;
-            case BeltConst.BELT_SUE_LIGHT_BARRIER_BACKWARD_OK:
-                props.LightBarrierBackwardInterrupted = false;
-                return true;
-            case BeltConst.BELT_SUE_LIGHT_BARRIER_FORWARD_INTERRUPTED:
-                props.LightBarrierForwardInterrupted = true;
-                return true;
-            case BeltConst.BELT_SUE_LIGHT_BARRIER_FORWARD_OK:
-                props.LightBarrierForwardInterrupted = false;
-                return true;
-            case BeltConst.BELT_SUE_SECURITY_FLAP_BACKWARD_CLOSED:
-                props.SecurityFlapBackwardOpened = false;
-                return true;
-            case BeltConst.BELT_SUE_SECURITY_FLAP_BACKWARD_OPENED:
-                props.SecurityFlapBackwardOpened = true;
-                return true;
-            case BeltConst.BELT_SUE_SECURITY_FLAP_FORWARD_CLOSED:
-                props.SecurityFlapForwardOpened = false;
-                return true;
-            case BeltConst.BELT_SUE_SECURITY_FLAP_FORWARD_OPENED:
-                props.SecurityFlapForwardOpened = true;
-                return true;
+            case BELT_SUE_AUTO_STOP, BELT_SUE_EMERGENCY_STOP, BELT_SUE_SAFETY_STOP, BELT_SUE_TIMEOUT_STOP -> props.MotionStatus = BELT_MT_STOPPED;
+            case BELT_SUE_MOTOR_FUSE_DEFECT, BELT_SUE_MOTOR_OVERHEATING -> props.MotionStatus = BELT_MT_MOTOR_FAULT;
+            case BELT_SUE_LIGHT_BARRIER_BACKWARD_INTERRUPTED -> props.LightBarrierBackwardInterrupted = true;
+            case BELT_SUE_LIGHT_BARRIER_BACKWARD_OK -> props.LightBarrierBackwardInterrupted = false;
+            case BELT_SUE_LIGHT_BARRIER_FORWARD_INTERRUPTED -> props.LightBarrierForwardInterrupted = true;
+            case BELT_SUE_LIGHT_BARRIER_FORWARD_OK -> props.LightBarrierForwardInterrupted = false;
+            case BELT_SUE_SECURITY_FLAP_BACKWARD_CLOSED -> props.SecurityFlapBackwardOpened = false;
+            case BELT_SUE_SECURITY_FLAP_BACKWARD_OPENED -> props.SecurityFlapBackwardOpened = true;
+            case BELT_SUE_SECURITY_FLAP_FORWARD_CLOSED -> props.SecurityFlapForwardOpened = false;
+            case BELT_SUE_SECURITY_FLAP_FORWARD_OPENED -> props.SecurityFlapForwardOpened = true;
+            default -> {
+                return false;
+            }
         }
-        return false;
+        return true;
     }
 
     @Override
     public boolean checkStatusCorresponds() {
-        if (super.checkStatusCorresponds())
-            return true;
         BeltProperties props = (BeltProperties)getPropertySet();
-        switch (getStatus()) {
-            case BeltConst.BELT_SUE_AUTO_STOP:
-            case BeltConst.BELT_SUE_SAFETY_STOP:
-            case BeltConst.BELT_SUE_TIMEOUT_STOP:
-                return props.MotionStatus == BeltConst.BELT_MT_STOPPED;
-            case BeltConst.BELT_SUE_EMERGENCY_STOP:
-                return props.MotionStatus == BeltConst.BELT_MT_EMERGENCY;
-            case BeltConst.BELT_SUE_MOTOR_FUSE_DEFECT:
-            case BeltConst.BELT_SUE_MOTOR_OVERHEATING:
-                return props.MotionStatus == BeltConst.BELT_MT_MOTOR_FAULT;
-            case BeltConst.BELT_SUE_LIGHT_BARRIER_BACKWARD_INTERRUPTED:
-                return props.LightBarrierBackwardInterrupted == true;
-            case BeltConst.BELT_SUE_LIGHT_BARRIER_BACKWARD_OK:
-                return props.LightBarrierBackwardInterrupted == false;
-            case BeltConst.BELT_SUE_LIGHT_BARRIER_FORWARD_INTERRUPTED:
-                return props.LightBarrierForwardInterrupted == true;
-            case BeltConst.BELT_SUE_LIGHT_BARRIER_FORWARD_OK:
-                return props.LightBarrierForwardInterrupted == false;
-            case BeltConst.BELT_SUE_SECURITY_FLAP_BACKWARD_CLOSED:
-                return props.SecurityFlapBackwardOpened == false;
-            case BeltConst.BELT_SUE_SECURITY_FLAP_BACKWARD_OPENED:
-                return props.SecurityFlapBackwardOpened == true;
-            case BeltConst.BELT_SUE_SECURITY_FLAP_FORWARD_CLOSED:
-                return props.SecurityFlapForwardOpened == false;
-            case BeltConst.BELT_SUE_SECURITY_FLAP_FORWARD_OPENED:
-                return props.SecurityFlapForwardOpened == true;
-        }
-        return false;
+        return super.checkStatusCorresponds() || switch (getStatus()) {
+            case BELT_SUE_AUTO_STOP, BELT_SUE_SAFETY_STOP, BELT_SUE_TIMEOUT_STOP -> props.MotionStatus == BELT_MT_STOPPED;
+            case BELT_SUE_EMERGENCY_STOP -> props.MotionStatus == BELT_MT_EMERGENCY;
+            case BELT_SUE_MOTOR_FUSE_DEFECT, BELT_SUE_MOTOR_OVERHEATING -> props.MotionStatus == BELT_MT_MOTOR_FAULT;
+            case BELT_SUE_LIGHT_BARRIER_BACKWARD_INTERRUPTED -> props.LightBarrierBackwardInterrupted;
+            case BELT_SUE_LIGHT_BARRIER_BACKWARD_OK -> !props.LightBarrierBackwardInterrupted;
+            case BELT_SUE_LIGHT_BARRIER_FORWARD_INTERRUPTED -> props.LightBarrierForwardInterrupted;
+            case BELT_SUE_LIGHT_BARRIER_FORWARD_OK -> !props.LightBarrierForwardInterrupted;
+            case BELT_SUE_SECURITY_FLAP_BACKWARD_CLOSED -> !props.SecurityFlapBackwardOpened;
+            case BELT_SUE_SECURITY_FLAP_BACKWARD_OPENED -> props.SecurityFlapBackwardOpened;
+            case BELT_SUE_SECURITY_FLAP_FORWARD_CLOSED -> !props.SecurityFlapForwardOpened;
+            case BELT_SUE_SECURITY_FLAP_FORWARD_OPENED -> props.SecurityFlapForwardOpened;
+            default -> false;
+        };
     }
 
     @Override
@@ -133,46 +92,28 @@ public class BeltStatusUpdateEvent extends JposStatusUpdateEvent {
                 "MotionStatus"
         };
         Object[] oldvals = getPropertyValues(propnames);
-        if (super.setAndCheckStatusProperties())
-            return true;
-        return propertiesHaveBeenChanged(propnames, oldvals);
+        return super.setAndCheckStatusProperties() || propertiesHaveBeenChanged(propnames, oldvals);
     }
 
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        if (ret.length() > 0)
-            return ret;
-        switch (getStatus()) {
-            case BeltConst.BELT_SUE_AUTO_STOP:
-                return "Belt Auto Stop";
-            case BeltConst.BELT_SUE_EMERGENCY_STOP:
-                return "Belt Emergency Stop";
-            case BeltConst.BELT_SUE_SAFETY_STOP:
-                return "Belt Safety Stop";
-            case BeltConst.BELT_SUE_TIMEOUT_STOP:
-                return "Belt Motor Timeout Stop";
-            case BeltConst.BELT_SUE_LIGHT_BARRIER_BACKWARD_INTERRUPTED:
-                return "Belt Backward Light Barrier Interrupted";
-            case BeltConst.BELT_SUE_LIGHT_BARRIER_BACKWARD_OK:
-                return "Belt Backward Light Barrier Free";
-            case BeltConst.BELT_SUE_LIGHT_BARRIER_FORWARD_INTERRUPTED:
-                return "Belt Forward Light Barrier Interrupted";
-            case BeltConst.BELT_SUE_LIGHT_BARRIER_FORWARD_OK:
-                return "Belt Forward Light Barrier Free";
-            case BeltConst.BELT_SUE_MOTOR_FUSE_DEFECT:
-                return "Belt Motor Fuse Defect";
-            case BeltConst.BELT_SUE_MOTOR_OVERHEATING:
-                return "Belt Motor Overheating";
-            case BeltConst.BELT_SUE_SECURITY_FLAP_BACKWARD_CLOSED:
-                return "Belt Backward Security Flap Closed";
-            case BeltConst.BELT_SUE_SECURITY_FLAP_BACKWARD_OPENED:
-                return "Belt Backward Security Flap Open";
-            case BeltConst.BELT_SUE_SECURITY_FLAP_FORWARD_CLOSED:
-                return "Belt Forward Security Flap Closed";
-            case BeltConst.BELT_SUE_SECURITY_FLAP_FORWARD_OPENED:
-                return "Belt Forward Security Flap Open";
-        }
-        return "Unknown Belt Status Change: " + getStatus();
+        return ret.length() > 0 ? ret : switch (getStatus()) {
+            case BELT_SUE_AUTO_STOP -> "Belt Auto Stop";
+            case BELT_SUE_EMERGENCY_STOP -> "Belt Emergency Stop";
+            case BELT_SUE_SAFETY_STOP -> "Belt Safety Stop";
+            case BELT_SUE_TIMEOUT_STOP -> "Belt Motor Timeout Stop";
+            case BELT_SUE_LIGHT_BARRIER_BACKWARD_INTERRUPTED -> "Belt Backward Light Barrier Interrupted";
+            case BELT_SUE_LIGHT_BARRIER_BACKWARD_OK -> "Belt Backward Light Barrier Free";
+            case BELT_SUE_LIGHT_BARRIER_FORWARD_INTERRUPTED -> "Belt Forward Light Barrier Interrupted";
+            case BELT_SUE_LIGHT_BARRIER_FORWARD_OK -> "Belt Forward Light Barrier Free";
+            case BELT_SUE_MOTOR_FUSE_DEFECT -> "Belt Motor Fuse Defect";
+            case BELT_SUE_MOTOR_OVERHEATING -> "Belt Motor Overheating";
+            case BELT_SUE_SECURITY_FLAP_BACKWARD_CLOSED -> "Belt Backward Security Flap Closed";
+            case BELT_SUE_SECURITY_FLAP_BACKWARD_OPENED -> "Belt Backward Security Flap Open";
+            case BELT_SUE_SECURITY_FLAP_FORWARD_CLOSED -> "Belt Forward Security Flap Closed";
+            case BELT_SUE_SECURITY_FLAP_FORWARD_OPENED -> "Belt Forward Security Flap Open";
+            default -> "Unknown Belt Status Change: " + getStatus();
+        };
     }
 }

@@ -23,18 +23,21 @@ import jpos.services.*;
 
 import java.util.Arrays;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * Biometrics service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class BiometricsService extends JposBase implements BiometricsService115 {
+public class BiometricsService extends JposBase implements BiometricsService116 {
     /**
      * Instance of a class implementing the BiometricsInterface for biometrics specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public BiometricsInterface Biometrics;
 
-    private BiometricsProperties Data;
+    private final BiometricsProperties Data;
     /**
      * Constructor. Stores given property set and device implementation object.
      *
@@ -84,7 +87,7 @@ public class BiometricsService extends JposBase implements BiometricsService115 
     @Override
     public int getCapSensorType() throws JposException {
         checkEnabled();
-        Device.check(Data.CapSensorType == null, JposConst.JPOS_E_FAILURE, "CapSensorType not initialized by device");
+        check(Data.CapSensorType == null, JPOS_E_FAILURE, "CapSensorType not initialized by device");
         logGet("CapSensorType");
         return Data.CapSensorType;
     }
@@ -99,7 +102,7 @@ public class BiometricsService extends JposBase implements BiometricsService115 
     @Override
     public int getAlgorithm() throws JposException {
         checkClaimed();
-        Device.check(Data.Algorithm == null, JposConst.JPOS_E_FAILURE, "Algorithm not initialized by device");
+        check(Data.Algorithm == null, JPOS_E_FAILURE, "Algorithm not initialized by device");
         logGet("Algorithm");
         return Data.Algorithm;
     }
@@ -108,9 +111,9 @@ public class BiometricsService extends JposBase implements BiometricsService115 
     public void setAlgorithm(int newAlgorithm) throws JposException {
         logPreSet("Algorithm");
         checkClaimed();
-        Device.check(Data.DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device enabled");
-        Device.checkRange(newAlgorithm, 0, Data.AlgorithmList.split(",").length, JposConst.JPOS_E_ILLEGAL, "Algorithm out of range: " + newAlgorithm);
-        Device.check(newAlgorithm > 0 && Data.AlgorithmList.length() == 0, JposConst.JPOS_E_ILLEGAL, "Only default algorithm allowed");
+        check(Data.DeviceEnabled, JPOS_E_ILLEGAL, "Device enabled");
+        checkRange(newAlgorithm, 0, Data.AlgorithmList.split(",").length, JPOS_E_ILLEGAL, "Algorithm out of range: " + newAlgorithm);
+        check(newAlgorithm > 0 && Data.AlgorithmList.length() == 0, JPOS_E_ILLEGAL, "Only default algorithm allowed");
         Biometrics.algorithm(newAlgorithm);
         logSet("Algorithm");
     }
@@ -125,7 +128,7 @@ public class BiometricsService extends JposBase implements BiometricsService115 
     @Override
     public byte[] getBIR() throws JposException {
         checkEnabled();
-        Device.check(Data.BIR == null, JposConst.JPOS_E_ILLEGAL, "BIR currently not available");
+        check(Data.BIR == null, JPOS_E_ILLEGAL, "BIR currently not available");
         logGet("BIR");
         return Arrays.copyOf(Data.BIR, Data.BIR.length);
     }
@@ -133,7 +136,7 @@ public class BiometricsService extends JposBase implements BiometricsService115 
     @Override
     public byte[] getRawSensorData() throws JposException {
         checkEnabled();
-        Device.check(Data.RawSensorData == null, JposConst.JPOS_E_ILLEGAL, "RawSensorData currently not available");
+        check(Data.RawSensorData == null, JPOS_E_ILLEGAL, "RawSensorData currently not available");
         logGet("RawSensorData");
         return Arrays.copyOf(Data.RawSensorData, Data.RawSensorData.length);
     }
@@ -149,7 +152,7 @@ public class BiometricsService extends JposBase implements BiometricsService115 
     public void setRealTimeDataEnabled(boolean newRealTimeDataEnabled) throws JposException {
         logPreSet("RealTimeDataEnabled");
         checkOpened();
-        Device.check(newRealTimeDataEnabled && !Data.CapRealTimeData, JposConst.JPOS_E_ILLEGAL, "RealTimeData not supported");
+        check(newRealTimeDataEnabled && !Data.CapRealTimeData, JPOS_E_ILLEGAL, "RealTimeData not supported");
         checkNoChangedOrClaimed(Data.RealTimeDataEnabled, newRealTimeDataEnabled);
         Biometrics.realTimeDataEnabled(newRealTimeDataEnabled);
         logSet("RealTimeDataEnabled");
@@ -173,7 +176,7 @@ public class BiometricsService extends JposBase implements BiometricsService115 
     public void setSensorColor(int newSensorColor) throws JposException {
         logPreSet("SensorColor");
         checkOpened();
-        Device.check(!Data.validateSensorColor(newSensorColor), JposConst.JPOS_E_ILLEGAL, "SensorColor invalid: " + newSensorColor);
+        check(Data.validateSensorColor(newSensorColor), JPOS_E_ILLEGAL, "SensorColor invalid: " + newSensorColor);
         checkNoChangedOrClaimed(Data.SensorColor, newSensorColor);
         Biometrics.sensorColor(newSensorColor);
         logSet("SensorColor");
@@ -189,7 +192,7 @@ public class BiometricsService extends JposBase implements BiometricsService115 
     @Override
     public int getSensorOrientation() throws JposException {
         checkClaimed();
-        Device.check(Data.SensorOrientation == null, JposConst.JPOS_E_ILLEGAL, "SensorOrientation not initialized by device");
+        check(Data.SensorOrientation == null, JPOS_E_ILLEGAL, "SensorOrientation not initialized by device");
         logGet("SensorOrientation");
         return Data.SensorOrientation;
     }
@@ -198,8 +201,8 @@ public class BiometricsService extends JposBase implements BiometricsService115 
     public void setSensorOrientation(int newSensorOrientation) throws JposException {
         logPreSet("SensorOrientation");
         checkClaimed();
-        Device.check(Data.DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device enabled");
-        Device.check(!Data.validateSensorOrientation(newSensorOrientation), JposConst.JPOS_E_ILLEGAL, "SensorOrientation invalid: " + newSensorOrientation);
+        check(Data.DeviceEnabled, JPOS_E_ILLEGAL, "Device enabled");
+        check(!Data.validateSensorOrientation(newSensorOrientation), JPOS_E_ILLEGAL, "SensorOrientation invalid: " + newSensorOrientation);
         Biometrics.sensorOrientation(newSensorOrientation);
         logSet("SensorOrientation");
     }
@@ -207,7 +210,7 @@ public class BiometricsService extends JposBase implements BiometricsService115 
     @Override
     public int getSensorType() throws JposException {
         checkEnabled();
-        Device.check(Data.SensorType == null, JposConst.JPOS_E_ILLEGAL, "SensorType not initialized by device");
+        check(Data.SensorType == null, JPOS_E_ILLEGAL, "SensorType not initialized by device");
         logGet("SensorType");
         return Data.SensorType;
     }
@@ -216,7 +219,7 @@ public class BiometricsService extends JposBase implements BiometricsService115 
     public void setSensorType(int newSensorType) throws JposException {
         logPreSet("SensorType");
         checkEnabled();
-        Device.check(!Data.validateSensorType(newSensorType), JposConst.JPOS_E_ILLEGAL, "SensorType invalid: " + newSensorType);
+        check(!Data.validateSensorType(newSensorType), JPOS_E_ILLEGAL, "SensorType invalid: " + newSensorType);
         Biometrics.sensorType(newSensorType);
         logSet("SensorType");
     }
@@ -229,33 +232,33 @@ public class BiometricsService extends JposBase implements BiometricsService115 
     }
 
     private String bytes2String(byte[] data) {
-        String ret = "";
+        StringBuilder ret = new StringBuilder();
         for (byte date : data)
-            ret += ", " + (int) date;
+            ret.append(", ").append((int) date);
         return ret.length() == 0 ? "{}" : "{" + ret.substring(2) + "}";
     }
 
     private String ints2String(int[] data) {
-        String ret = "";
+        StringBuilder ret = new StringBuilder();
         if (data == null)
             return "null";
         for (int date : data)
-            ret += ", " + ((long)date & (((long)1 << Integer.SIZE) - 1));
+            ret.append(", ").append((long) date & (((long) 1 << Integer.SIZE) - 1));
         return ret.length() == 0 ? "{}" : "{" + ret.substring(2) + "}";
     }
 
     private Object[] bytes2String(byte[][] datas) {
-        String ret = "";
-        Boolean validBIR = true;
+        StringBuilder ret = new StringBuilder();
+        boolean validBIR = true;
         for (byte[] data : datas) {
             if (data == null) {
-                ret += ", null";
+                ret.append(", null");
                 validBIR = false;
             }
             else {
                 if (!Data.checkBIRPurpose(data, null))
                     validBIR = false;
-                ret += ", " + bytes2String(data);
+                ret.append(", ").append(bytes2String(data));
             }
         }
         return new Object[]{ret.length() == 0 ? "{}" : "{" + ret.substring(2) + "}", validBIR};
@@ -268,7 +271,7 @@ public class BiometricsService extends JposBase implements BiometricsService115 
         if (payload == null)
             payload = new byte[0];
         logPreCall("BeginEnrollCapture", bytes2String(referenceBIR) + ", " + bytes2String(payload));
-        Device.check(!Data.CapTemplateAdaptation && !Data.isDataEmpty(referenceBIR, true), JposConst.JPOS_E_FAILURE, "Adaption of referenceBIR not supported");
+        check(!Data.CapTemplateAdaptation && !Data.isDataEmpty(referenceBIR, true), JPOS_E_FAILURE, "Adaption of referenceBIR not supported");
         checkEnabled();
         Biometrics.beginEnrollCapture(referenceBIR, payload);
         logCall("BeginEnrollCapture");
@@ -296,20 +299,20 @@ public class BiometricsService extends JposBase implements BiometricsService115 
         if (referenceBIRPopulation == null)
             referenceBIRPopulation = new byte[0][];
         Object[] refBIR = bytes2String(referenceBIRPopulation);
-        logPreCall("Identify", "" + maxFARRequested + ", " + maxFRRRequested + ", " + fARPrecedence + ", " +
-                refBIR[0].toString() + ", ..., " + timeout);
+        logPreCall("Identify", removeOuterArraySpecifier(new Object[]{
+                maxFARRequested, maxFRRRequested, fARPrecedence,refBIR[0].toString(), "...", timeout }, Device.MaxArrayStringElements));
         checkEnabled();
         Data.checkFARorFRRLimit(maxFARRequested, "maxFARRequested");
         Data.checkFARorFRRLimit(maxFRRRequested, "maxFRRRequested");
-        Device.check(referenceBIRPopulation.length == 0, JposConst.JPOS_E_ILLEGAL, "No reference BIR");
-        Device.check(!(Boolean)refBIR[1], JposConst.JPOS_E_ILLEGAL, "At least one invalid reference BIR");
-        Device.check(candidateRanking == null || candidateRanking.length != 1, JposConst.JPOS_E_ILLEGAL,
+        check(referenceBIRPopulation.length == 0, JPOS_E_ILLEGAL, "No reference BIR");
+        check(!(Boolean)refBIR[1], JPOS_E_ILLEGAL, "At least one invalid reference BIR");
+        check(candidateRanking == null || candidateRanking.length != 1, JPOS_E_ILLEGAL,
                 "Reference candidateRanking invalid, must be int[1][]");
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         Biometrics.identify(maxFARRequested, maxFRRRequested, fARPrecedence, referenceBIRPopulation, candidateRanking, timeout);
         if (candidateRanking[0] == null)
             candidateRanking[0] = new int[0];
-        logCall("Identify", "...," + ints2String(candidateRanking[0]) + ", ...");
+        logCall("Identify", removeOuterArraySpecifier(new Object[]{"...", ints2String(candidateRanking[0]), "..."}, Device.MaxArrayStringElements));
     }
 
     @Override
@@ -320,20 +323,21 @@ public class BiometricsService extends JposBase implements BiometricsService115 
         if (sampleBIR == null)
             sampleBIR = new byte[0];
         Object[] refBIR = bytes2String(referenceBIRPopulation);
-        logPreCall("IdentifyMatch", "" + maxFARRequested + ", " + maxFRRRequested + ", " + fARPrecedence + ", " +
-                bytes2String(sampleBIR) + ", " + refBIR[0].toString() + ", ...");
+        logPreCall("IdentifyMatch", removeOuterArraySpecifier(new Object[]{
+                        maxFARRequested, maxFRRRequested, fARPrecedence, bytes2String(sampleBIR), refBIR[0].toString(), "..."
+                }, Device.MaxArrayStringElements));
         checkEnabled();
         Data.checkFARorFRRLimit(maxFARRequested, "maxFARRequested");
         Data.checkFARorFRRLimit(maxFRRRequested, "maxFRRRequested");
-        Device.check(Data.isDataEmpty(sampleBIR, true), JposConst.JPOS_E_ILLEGAL, "Empty sampleBIR");
-        Device.check(referenceBIRPopulation.length == 0, JposConst.JPOS_E_ILLEGAL, "No reference BIR");
-        Device.check(!(Boolean)refBIR[1], JposConst.JPOS_E_ILLEGAL, "At least one invalid reference BIR");
-        Device.check(candidateRanking == null || candidateRanking.length != 1, JposConst.JPOS_E_ILLEGAL,
+        check(Data.isDataEmpty(sampleBIR, true), JPOS_E_ILLEGAL, "Empty sampleBIR");
+        check(referenceBIRPopulation.length == 0, JPOS_E_ILLEGAL, "No reference BIR");
+        check(!(Boolean)refBIR[1], JPOS_E_ILLEGAL, "At least one invalid reference BIR");
+        check(candidateRanking == null || candidateRanking.length != 1, JPOS_E_ILLEGAL,
                 "Reference candidateRanking invalid, must be int[1][]");
         Biometrics.identifyMatch(maxFARRequested, maxFRRRequested, fARPrecedence, sampleBIR, referenceBIRPopulation, candidateRanking);
         if (candidateRanking[0] == null)
             candidateRanking[0] = new int[0];
-        logCall("IdentifyMatch", "..., " + ints2String(candidateRanking[0]));
+        logCall("IdentifyMatch", removeOuterArraySpecifier(new Object[]{"...", ints2String(candidateRanking[0])}, Device.MaxArrayStringElements));
     }
 
     @Override
@@ -342,17 +346,19 @@ public class BiometricsService extends JposBase implements BiometricsService115 
             prematchDataBIR = new byte[0];
         if (sampleBIR == null)
             sampleBIR = new byte[0];
-        logPreCall("ProcessPrematchData", bytes2String(sampleBIR) + ", " + bytes2String(prematchDataBIR) + ", ...");
+        logPreCall("ProcessPrematchData", removeOuterArraySpecifier(new Object[]{
+                bytes2String(sampleBIR), bytes2String(prematchDataBIR), "..."}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapPrematchData, JposConst.JPOS_E_ILLEGAL, "PrematchData not supported");
-        Device.check(Data.isDataEmpty(sampleBIR, true), JposConst.JPOS_E_ILLEGAL, "Empty sampleBIR");
-        Device.check(Data.isDataEmpty(prematchDataBIR, true), JposConst.JPOS_E_ILLEGAL, "Empty prematchDataBIR");
-        Device.check(processedBIR == null || processedBIR.length != 1, JposConst.JPOS_E_ILLEGAL,
+        check(!Data.CapPrematchData, JPOS_E_ILLEGAL, "PrematchData not supported");
+        check(Data.isDataEmpty(sampleBIR, true), JPOS_E_ILLEGAL, "Empty sampleBIR");
+        check(Data.isDataEmpty(prematchDataBIR, true), JPOS_E_ILLEGAL, "Empty prematchDataBIR");
+        check(processedBIR == null || processedBIR.length != 1, JPOS_E_ILLEGAL,
                 "Reference processedBIR invalid, must be byte[1][]");
         Biometrics.processPrematchData(sampleBIR, prematchDataBIR, processedBIR);
         if (processedBIR[0] == null)
             processedBIR[0] = new byte[0];
-        logCall("ProcessPrematchData", "..., " + bytes2String(processedBIR[0]));
+        logCall("ProcessPrematchData", removeOuterArraySpecifier(new Object[]{
+                "...", bytes2String(processedBIR[0])}, Device.MaxArrayStringElements));
     }
 
     @Override
@@ -361,26 +367,29 @@ public class BiometricsService extends JposBase implements BiometricsService115 
                        int timeout) throws JposException {
         if (referenceBIR == null)
             referenceBIR = new byte[0];
-        logPreCall("Verify", "" + maxFARRequested + ", " + maxFRRRequested + ", " + fARPrecedence + ", "
-                + bytes2String(referenceBIR) + ", " + bytes2String(adaptedBIR) + ", ..., " + timeout);
+        logPreCall("Verify", removeOuterArraySpecifier(new Object[]{
+                maxFARRequested, maxFRRRequested, fARPrecedence, bytes2String(referenceBIR),
+                adaptedBIR == null ? null : bytes2String(adaptedBIR)[0], "...", timeout
+        }, Device.MaxArrayStringElements));
         checkEnabled();
         Data.checkFARorFRRLimit(maxFARRequested, "maxFARRequested");
         Data.checkFARorFRRLimit(maxFRRRequested, "maxFRRRequested");
-        Device.check(!Data.checkBIRPurpose(referenceBIR, null), JposConst.JPOS_E_ILLEGAL, "Invalid referenceBIR");
-        Device.check(adaptedBIR == null || adaptedBIR.length != 1, JposConst.JPOS_E_ILLEGAL,
+        check(!Data.checkBIRPurpose(referenceBIR, null), JPOS_E_ILLEGAL, "Invalid referenceBIR");
+        check(adaptedBIR == null || adaptedBIR.length != 1, JPOS_E_ILLEGAL,
                 "Reference adaptedBIR invalid, must be byte[1][]");
-        Device.check(result == null || result.length != 1, JposConst.JPOS_E_ILLEGAL,
+        check(result == null || result.length != 1, JPOS_E_ILLEGAL,
                 "Reference result invalid, must be boolean[1]");
-        Device.check(fARAchieved == null || fARAchieved.length != 1, JposConst.JPOS_E_ILLEGAL,
+        check(fARAchieved == null || fARAchieved.length != 1, JPOS_E_ILLEGAL,
                 "Reference FARAchieved invalid, must be int[1]");
-        Device.check(fRRAchieved == null || fRRAchieved.length != 1, JposConst.JPOS_E_ILLEGAL,
+        check(fRRAchieved == null || fRRAchieved.length != 1, JPOS_E_ILLEGAL,
                 "Reference FRRAchieved invalid, must be int[1]");
-        Device.check(payload == null || payload.length != 1, JposConst.JPOS_E_ILLEGAL,
+        check(payload == null || payload.length != 1, JPOS_E_ILLEGAL,
                 "Reference payload invalid, must be byte[1][]");
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         Biometrics.verify(maxFARRequested, maxFRRRequested, fARPrecedence, referenceBIR, adaptedBIR, result, fARAchieved, fRRAchieved, payload, timeout);
-        logCall("Verify", "..., " + bytes2String(adaptedBIR) + ", " + result[0] + ", " + fARAchieved[0] + ", " +
-                fRRAchieved[0] + ", " + bytes2String(payload) + ",...");
+        logCall("Verify", removeOuterArraySpecifier(new Object[]{
+                "...", bytes2String(adaptedBIR)[0], result[0], fARAchieved[0], fRRAchieved[0], bytes2String(payload)[0], "..."
+        }, Device.MaxArrayStringElements));
     }
 
     @Override
@@ -389,25 +398,30 @@ public class BiometricsService extends JposBase implements BiometricsService115 
                             byte[][]payload) throws JposException {
         if (sampleBIR == null)
             sampleBIR = new byte[0];
-        logPreCall("VerifyMatch", "" + maxFARRequested + ", " + maxFRRRequested + ", " + fARPrecedence + ", " +
-                bytes2String(sampleBIR) + ", " + bytes2String(referenceBIR) + ", " + bytes2String(adaptedBIR) + ", ...");
+        if (referenceBIR == null)
+            referenceBIR = new byte[0];
+        logPreCall("VerifyMatch", removeOuterArraySpecifier(new Object[]{
+                maxFARRequested, maxFRRRequested, fARPrecedence, bytes2String(sampleBIR), bytes2String(referenceBIR),
+                adaptedBIR == null ? null : bytes2String(adaptedBIR)[0], "..."
+        }, Device.MaxArrayStringElements));
         checkEnabled();
         Data.checkFARorFRRLimit(maxFARRequested, "maxFARRequested");
         Data.checkFARorFRRLimit(maxFRRRequested, "maxFRRRequested");
-        Device.check(Data.isDataEmpty(sampleBIR, true), JposConst.JPOS_E_ILLEGAL, "Empty sampleBIR");
-        Device.check(!Data.checkBIRPurpose(referenceBIR, null), JposConst.JPOS_E_ILLEGAL, "Invalid referenceBIR");
-        Device.check(adaptedBIR == null || adaptedBIR.length != 1, JposConst.JPOS_E_ILLEGAL,
+        check(Data.isDataEmpty(sampleBIR, true), JPOS_E_ILLEGAL, "Empty sampleBIR");
+        check(!Data.checkBIRPurpose(referenceBIR, null), JPOS_E_ILLEGAL, "Invalid referenceBIR");
+        check(adaptedBIR == null || adaptedBIR.length != 1, JPOS_E_ILLEGAL,
                 "Reference adaptedBIR invalid, must be byte[1][]");
-        Device.check(result == null || result.length != 1, JposConst.JPOS_E_ILLEGAL,
+        check(result == null || result.length != 1, JPOS_E_ILLEGAL,
                 "Reference result invalid, must be boolean[1]");
-        Device.check(fARAchieved == null || fARAchieved.length != 1, JposConst.JPOS_E_ILLEGAL,
+        check(fARAchieved == null || fARAchieved.length != 1, JPOS_E_ILLEGAL,
                 "Reference FARAchieved invalid, must be int[1]");
-        Device.check(fRRAchieved == null || fRRAchieved.length != 1, JposConst.JPOS_E_ILLEGAL,
+        check(fRRAchieved == null || fRRAchieved.length != 1, JPOS_E_ILLEGAL,
                 "Reference FRRAchieved invalid, must be int[1]");
-        Device.check(payload == null || payload.length != 1, JposConst.JPOS_E_ILLEGAL,
+        check(payload == null || payload.length != 1, JPOS_E_ILLEGAL,
                 "Reference payload invalid, must be byte[1][]");
         Biometrics.verifyMatch(maxFARRequested, maxFRRRequested, fARPrecedence, sampleBIR, referenceBIR, adaptedBIR, result, fARAchieved, fRRAchieved, payload);
-        logCall("VerifyMatch", "..., " + bytes2String(adaptedBIR) + ", " + result[0] + ", " + fARAchieved[0] + ", " +
-                fRRAchieved[0] + ", " + bytes2String(payload));
+        logCall("VerifyMatch", removeOuterArraySpecifier(new Object[]{
+                "...", bytes2String(adaptedBIR)[0], result[0], fARAchieved[0], fRRAchieved[0], bytes2String(payload)[0]
+        }, Device.MaxArrayStringElements));
     }
 }

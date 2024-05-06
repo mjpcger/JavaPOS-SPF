@@ -18,10 +18,14 @@ package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
 
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
-import java.text.NumberFormat;
 import java.util.Map;
+
+import static jpos.FiscalPrinterConst.*;
+import static jpos.JposConst.*;
 
 /**
  * Class containing the FiscalPrinter specific properties, their default values and default implementations of
@@ -688,14 +692,27 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
     public boolean TrainingModeActive;
 
     /**
+     * Specified whether string values representing a currency value will be stored with decimal point. Default: true.
+     * For example, a currency value of 12.23, internally stored as 123400, will have a string representation of "12.34"
+     * if CurrencyStringWithDecimalPoint is true and a string representation of "123400" otherwise.
+     */
+    public boolean CurrencyStringWithDecimalPoint = true;
+    /**
      * Constructor.
      *
      * @param dev Device index
      */
     public FiscalPrinterProperties(int dev) {
         super(dev);
-        DeviceServiceVersion = 1015000;
-        FlagWhenIdleStatusValue = FiscalPrinterConst.FPTR_SUE_IDLE;
+        FlagWhenIdleStatusValue = FPTR_SUE_IDLE;
+    }
+
+    @Override
+    public void checkProperties(JposEntry entry) throws JposException {
+        super.checkProperties(entry);
+        Object o = entry.getPropertyValue("CurrencyStringWithDecimalPoint");
+        if (o != null)
+            CurrencyStringWithDecimalPoint = Boolean.parseBoolean(o.toString());
     }
 
     @Override
@@ -704,14 +721,14 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
         ChangeDue = "";
         CheckTotal = true;
         DuplicateReceipt = false;
-        ErrorLevel = FiscalPrinterConst.FPTR_EL_NONE;
+        ErrorLevel = FPTR_EL_NONE;
         ErrorOutID = 0;
         ErrorState = 0;
         ErrorStation = 0;
         ErrorString = "";
-        MessageType = FiscalPrinterConst.FPTR_MT_FREE_TEXT;
+        MessageType = FPTR_MT_FREE_TEXT;
         // Next line: Must be initialized here because relevant for ErrorStation
-        FiscalReceiptStation = FiscalPrinterConst.FPTR_RS_RECEIPT;
+        FiscalReceiptStation = FPTR_RS_RECEIPT;
     }
 
     @Override
@@ -723,7 +740,7 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
             PreLine = "";
             QuantityDecimalPlaces = QuantityDecimalPlacesDef;
             QuantityLength = QuantityLengthDef;
-            TotalizerType = FiscalPrinterConst.FPTR_TT_DAY;
+            TotalizerType = FPTR_TT_DAY;
             TrainingModeActive = TrainingModeActiveDef;
             return false;
         }
@@ -732,7 +749,7 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
 
     @Override
     public void initOnClaim() {
-        SlipSelection = FiscalPrinterConst.FPTR_SS_FULL_LENGTH;
+        SlipSelection = FPTR_SS_FULL_LENGTH;
     }
 
     @Override
@@ -743,11 +760,11 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
             AdditionalHeader = "";
             AdditionalTrailer = "";
             AmountDecimalPlaces = AmountDecimalPlacesDef;
-            ContractorId = FiscalPrinterConst.FPTR_CID_SINGLE;
+            ContractorId = FPTR_CID_SINGLE;
             CoverOpen = CoverOpenDef;
-            DateType = FiscalPrinterConst.FPTR_DT_RTC;
+            DateType = FPTR_DT_RTC;
             DayOpened = DayOpenedDef;
-            FiscalReceiptType = FiscalPrinterConst.FPTR_RT_SALES;
+            FiscalReceiptType = FPTR_RT_SALES;
             JrnEmpty = JrnEmptyDef;
             JrnNearEnd = JrnNearEndDef;
             MessageLength = MessageLengthDef;
@@ -849,7 +866,7 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
     public void beginFiscalDocument(int documentAmount) throws JposException {
         DayOpened = true;
         EventSource.logSet("DayOpened");
-        PrinterState = FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT;
+        PrinterState = FPTR_PS_FISCAL_RECEIPT;
         EventSource.logSet("PrinterState");
     }
 
@@ -857,13 +874,13 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
     public void beginFiscalReceipt(boolean printHeader) throws JposException {
         DayOpened = true;
         EventSource.logSet("DayOpened");
-        PrinterState = FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT;
+        PrinterState = FPTR_PS_FISCAL_RECEIPT;
         EventSource.logSet("PrinterState");
     }
 
     @Override
     public void beginFixedOutput(int station, int documentType) throws JposException {
-        PrinterState = FiscalPrinterConst.FPTR_PS_FIXED_OUTPUT;
+        PrinterState = FPTR_PS_FIXED_OUTPUT;
         EventSource.logSet("PrinterState");
     }
 
@@ -873,13 +890,13 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
 
     @Override
     public void beginItemList(int vatID) throws JposException {
-        PrinterState = FiscalPrinterConst.FPTR_PS_ITEM_LIST;
+        PrinterState = FPTR_PS_ITEM_LIST;
         EventSource.logSet("PrinterState");
     }
 
     @Override
     public void beginNonFiscal() throws JposException {
-        PrinterState = FiscalPrinterConst.FPTR_PS_NONFISCAL;
+        PrinterState = FPTR_PS_NONFISCAL;
         EventSource.logSet("PrinterState");
     }
 
@@ -899,13 +916,13 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
 
     @Override
     public void endFiscalDocument() throws JposException {
-        PrinterState = FiscalPrinterConst.FPTR_PS_MONITOR;
+        PrinterState = FPTR_PS_MONITOR;
         EventSource.logSet("PrinterState");
     }
 
     @Override
     public void endFiscalReceipt(boolean printHeader) throws JposException {
-        PrinterState = FiscalPrinterConst.FPTR_PS_MONITOR;
+        PrinterState = FPTR_PS_MONITOR;
         EventSource.logSet("PrinterState");
         if (DuplicateReceipt) {
             DuplicateReceipt = false;
@@ -915,7 +932,7 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
 
     @Override
     public void endFixedOutput() throws JposException {
-        PrinterState = FiscalPrinterConst.FPTR_PS_MONITOR;
+        PrinterState = FPTR_PS_MONITOR;
         EventSource.logSet("PrinterState");
     }
 
@@ -925,13 +942,13 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
 
     @Override
     public void endItemList() throws JposException {
-        PrinterState = FiscalPrinterConst.FPTR_PS_MONITOR;
+        PrinterState = FPTR_PS_MONITOR;
         EventSource.logSet("PrinterState");
     }
 
     @Override
     public void endNonFiscal() throws JposException {
-        PrinterState = FiscalPrinterConst.FPTR_PS_MONITOR;
+        PrinterState = FPTR_PS_MONITOR;
         EventSource.logSet("PrinterState");
     }
 
@@ -963,7 +980,7 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
         try {
             data[0] = Integer.parseInt(datastr[0]);
         } catch (NumberFormatException | NullPointerException e) {
-            throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid totalizer for " + datastr[0] + ": " + e.getMessage(), e);
+            throw new JposException(JPOS_E_FAILURE, "Invalid totalizer for " + datastr[0] + ": " + e.getMessage(), e);
         }
     }
 
@@ -982,7 +999,7 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
         try {
             data[0] = new BigDecimal(datastr[0]).scaleByPowerOfTen(4).longValueExact();
         } catch (NumberFormatException | NullPointerException e) {
-            throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid totalizer for " + datastr[0] + ": " + e.getMessage(), e);
+            throw new JposException(JPOS_E_FAILURE, "Invalid totalizer for " + datastr[0] + ": " + e.getMessage(), e);
         }
     }
 
@@ -991,6 +1008,7 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
     }
 
     @Override
+    @Deprecated
     public void getTotalizer(int vatID, int optArgs, String[] data) throws JposException {
     }
 
@@ -1008,7 +1026,7 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
         try {
             data[0] = new BigDecimal(datastr[0]).scaleByPowerOfTen(4).longValueExact();
         } catch (NumberFormatException | NullPointerException e) {
-            throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid totalizer for " + datastr[0] + ": " + e.getMessage(), e);
+            throw new JposException(JPOS_E_FAILURE, "Invalid totalizer for " + datastr[0] + ": " + e.getMessage(), e);
         }
     }
 
@@ -1050,8 +1068,8 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
 
     @Override
     public void resetPrinter() throws JposException {
-        if (PrinterState != FiscalPrinterConst.FPTR_PS_MONITOR) {
-            PrinterState = FiscalPrinterConst.FPTR_PS_MONITOR;
+        if (PrinterState != FPTR_PS_MONITOR) {
+            PrinterState = FPTR_PS_MONITOR;
             EventSource.logSet("PrinterState");
         }
         if (TrainingModeActive) {
@@ -1066,11 +1084,8 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
 
     @Override
     public void setCurrency(int newCurrency) throws JposException {
-        int[][] valuelinktable = new int[][]{
-                new int[]{  // Valid values for newCurrency and corresponding value for property ActualCurrency.
-                        FiscalPrinterConst.FPTR_SC_EURO, FiscalPrinterConst.FPTR_AC_EUR
-                }
-        };
+        // Valid values for newCurrency and corresponding value for property ActualCurrency.
+        int[][] valuelinktable = {{ FPTR_SC_EURO, FPTR_AC_EUR }};
         for (int[] valpair : valuelinktable) {
             if (newCurrency == valpair[0]) {
                 if (ActualCurrency != valpair[1]) {
@@ -1252,13 +1267,14 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
 
     @Override
     public void printRecNotPaid(PrintRecNotPaid request) throws JposException {
-        if (PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT_ENDING) {
-            PrinterState = FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT_ENDING;
+        if (PrinterState != FPTR_PS_FISCAL_RECEIPT_ENDING) {
+            PrinterState = FPTR_PS_FISCAL_RECEIPT_ENDING;
             EventSource.logSet("PrinterState");
         }
     }
 
     @Override
+    @Deprecated
     public PrintRecPackageAdjustment printRecPackageAdjustment(int adjustmentType, String description, String vatAdjustment) throws JposException {
         PrintRecPackageAdjustment request = new PrintRecPackageAdjustment(this, adjustmentType, description, vatAdjustment);
         PreLine = "";
@@ -1277,6 +1293,7 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
     }
 
     @Override
+    @Deprecated
     public PrintRecPackageAdjustVoid printRecPackageAdjustVoid(int adjustmentType, String vatAdjustment) throws JposException {
         PrintRecPackageAdjustVoid request = new PrintRecPackageAdjustVoid(this, adjustmentType, vatAdjustment);
         PreLine = "";
@@ -1298,7 +1315,7 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
     public PrintRecRefund printRecRefund(String description, long amount, int vatInfo) throws JposException {
         PrintRecRefund request = new PrintRecRefund(this, description, amount, vatInfo);
         PreLine = "";
-        return null;
+        return request;
     }
 
     @Override
@@ -1374,8 +1391,8 @@ public class FiscalPrinterProperties extends JposCommonProperties implements Fis
 
     @Override
     public void printRecVoid(PrintRecVoid request) throws JposException {
-        if (PrinterState != FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT_ENDING) {
-            PrinterState = FiscalPrinterConst.FPTR_PS_FISCAL_RECEIPT_ENDING;
+        if (PrinterState != FPTR_PS_FISCAL_RECEIPT_ENDING) {
+            PrinterState = FPTR_PS_FISCAL_RECEIPT_ENDING;
             EventSource.logSet("PrinterState");
         }
     }

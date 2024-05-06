@@ -23,18 +23,22 @@ import jpos.services.*;
 
 import java.util.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.PINPadConst.*;
+
 /**
  * PINPad service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class PINPadService extends JposBase implements PINPadService115 {
+public class PINPadService extends JposBase implements PINPadService116 {
     /**
      * Instance of a class implementing the PINPadInterface for PIN pad specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public PINPadInterface PINPad;
 
-    private PINPadProperties Data;
+    private final PINPadProperties Data;
     private boolean EFTTransactionStarted = false;
 
     /**
@@ -237,7 +241,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
         if (accountNumber == null)
             accountNumber = "";
         checkOpened();
-        JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        check(EFTTransactionStarted, JPOS_E_ILLEGAL, "EFT Transaction in Progress");
         checkNoChangedOrClaimed(Data.AccountNumber, accountNumber);
         PINPad.setAccountNumber(accountNumber);
         logSet("AccountNumber");
@@ -247,8 +251,8 @@ public class PINPadService extends JposBase implements PINPadService115 {
     public void setAmount(long amount) throws JposException {
         logPreSet("AccountNumber");
         checkOpened();
-        JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
-        JposDevice.check(amount < 0, JposConst.JPOS_E_ILLEGAL, "Negative Amount invalid");
+        check(EFTTransactionStarted, JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        check(amount < 0, JPOS_E_ILLEGAL, "Negative Amount invalid");
         checkNoChangedOrClaimed(Data.Amount, amount);
         PINPad.setAmount(amount);
         logSet("AccountNumber");
@@ -258,8 +262,8 @@ public class PINPadService extends JposBase implements PINPadService115 {
     public void setMaximumPINLength(int maximumPINLength) throws JposException {
         logPreSet("MaximumPINLength");
         checkOpened();
-        JposDevice.check(Data.PINEntryEnabled, JposConst.JPOS_E_ILLEGAL, "MaximumPINLength cannot be changed while PIN entry enabled");
-        JposDevice.check(maximumPINLength <= 0, JposConst.JPOS_E_ILLEGAL, "MaximumPINLength must be greater than zero");
+        check(Data.PINEntryEnabled, JPOS_E_ILLEGAL, "MaximumPINLength cannot be changed while PIN entry enabled");
+        check(maximumPINLength <= 0, JPOS_E_ILLEGAL, "MaximumPINLength must be greater than zero");
         checkNoChangedOrClaimed(Data.MaximumPINLength, maximumPINLength);
         PINPad.setMaximumPINLength(maximumPINLength);
         logSet("MaximumPINLength");
@@ -271,7 +275,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
         if(merchantID == null)
             merchantID = "";
         checkOpened();
-        JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        check(EFTTransactionStarted, JPOS_E_ILLEGAL, "EFT Transaction in Progress");
         checkNoChangedOrClaimed(Data.MerchantID, merchantID);
         PINPad.setMerchantID(merchantID);
         logSet("MerchantID");
@@ -281,8 +285,8 @@ public class PINPadService extends JposBase implements PINPadService115 {
     public void setMinimumPINLength(int minimumPINLength) throws JposException {
         logPreSet("MinimumPINLength");
         checkOpened();
-        JposDevice.check(Data.PINEntryEnabled, JposConst.JPOS_E_ILLEGAL, "MinimumPINLength cannot be changed while PIN entry enabled");
-        JposDevice.check(minimumPINLength < 0, JposConst.JPOS_E_ILLEGAL, "MinimumPINLength must be a positive value");
+        check(Data.PINEntryEnabled, JPOS_E_ILLEGAL, "MinimumPINLength cannot be changed while PIN entry enabled");
+        check(minimumPINLength < 0, JPOS_E_ILLEGAL, "MinimumPINLength must be a positive value");
         checkNoChangedOrClaimed(Data.MinimumPINLength, minimumPINLength);
         PINPad.setMinimumPINLength(minimumPINLength);
         logSet("MinimumPINLength");
@@ -290,16 +294,12 @@ public class PINPadService extends JposBase implements PINPadService115 {
 
     @Override
     public void setPrompt(int prompt) throws JposException {
-        long[] valid = {
-                PINPadConst.PPAD_DISP_PINRESTRICTED,
-                PINPadConst.PPAD_DISP_RESTRICTED_LIST,
-                PINPadConst.PPAD_DISP_RESTRICTED_ORDER
-        };
+        long[] valid = { PPAD_DISP_PINRESTRICTED, PPAD_DISP_RESTRICTED_LIST, PPAD_DISP_RESTRICTED_ORDER };
         logPreSet("Prompt");
         checkOpened();
-        JposDevice.checkMember(Data.CapDisplay,valid, JposConst.JPOS_E_ILLEGAL, "Setting Prompt invalid for display type " + Data.CapDisplay);
-        JposDevice.check(Data.CapDisplay == PINPadConst.PPAD_DISP_PINRESTRICTED && !Data.PINEntryEnabled,
-                JposConst.JPOS_E_ILLEGAL, "Setting Prompt invalid while PIN entry not enabled for display type " + Data.CapDisplay);
+        checkMember(Data.CapDisplay,valid, JPOS_E_ILLEGAL, "Setting Prompt invalid for display type " + Data.CapDisplay);
+        check(Data.CapDisplay == PPAD_DISP_PINRESTRICTED && !Data.PINEntryEnabled,
+                JPOS_E_ILLEGAL, "Setting Prompt invalid while PIN entry not enabled for display type " + Data.CapDisplay);
         String[] supported = Data.AvailablePromptsList.split(",");
         for (String s : supported) {
             if (prompt == Integer.parseInt(s)) {
@@ -309,7 +309,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
                 return;
             }
         }
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Prompt not supported: " + prompt);
+        throw new JposException(JPOS_E_ILLEGAL, "Prompt not supported: " + prompt);
     }
 
     @Override
@@ -318,10 +318,10 @@ public class PINPadService extends JposBase implements PINPadService115 {
         if (promptLanguage == null)
             promptLanguage = "";
         checkOpened();
-        JposDevice.check(Data.CapLanguage == PINPadConst.PPAD_LANG_NONE, JposConst.JPOS_E_ILLEGAL, "No language support");
-        JposDevice.check(Data.CapLanguage == PINPadConst.PPAD_LANG_ONE && !Data.PromptLanguage.equals(promptLanguage),
-                JposConst.JPOS_E_ILLEGAL, "Changing language not supported");
-        JposDevice.check(Data.CapLanguage == PINPadConst.PPAD_LANG_PINRESTRICTED && Data.PINEntryEnabled, JposConst.JPOS_E_BUSY,
+        check(Data.CapLanguage == PPAD_LANG_NONE, JPOS_E_ILLEGAL, "No language support");
+        check(Data.CapLanguage == PPAD_LANG_ONE && !Data.PromptLanguage.equals(promptLanguage),
+                JPOS_E_ILLEGAL, "Changing language not supported");
+        check(Data.CapLanguage == PPAD_LANG_PINRESTRICTED && Data.PINEntryEnabled, JPOS_E_BUSY,
                 "Changing language not supported during PIN entry");
         String[] prompts = Data.AvailableLanguagesList.split(";");
         for (String promptstr : prompts) {
@@ -333,7 +333,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
                 return;
             }
         }
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Prompt language not supported: " + promptLanguage);
+        throw new JposException(JPOS_E_ILLEGAL, "Prompt language not supported: " + promptLanguage);
     }
 
     @Override
@@ -342,7 +342,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
         if (terminalID == null)
             terminalID = "";
         checkOpened();
-        JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        check(EFTTransactionStarted, JPOS_E_ILLEGAL, "EFT Transaction in Progress");
         checkNoChangedOrClaimed(Data.TerminalID, terminalID);
         PINPad.setTerminalID(terminalID);
         logSet("TerminalID");
@@ -354,7 +354,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
         if (track1Data == null)
             track1Data = new byte[0];
         checkOpened();
-        JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        check(EFTTransactionStarted, JPOS_E_ILLEGAL, "EFT Transaction in Progress");
         checkNoChangedOrClaimed(Data.Track1Data, track1Data);
         PINPad.setTrack1Data(track1Data);
         logSet("Track1Data");
@@ -366,7 +366,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
         if (track2Data == null)
             track2Data = new byte[0];
         checkOpened();
-        JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        check(EFTTransactionStarted, JPOS_E_ILLEGAL, "EFT Transaction in Progress");
         checkNoChangedOrClaimed(Data.Track2Data, track2Data);
         PINPad.setTrack2Data(track2Data);
         logSet("Track2Data");
@@ -378,7 +378,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
         if (track3Data == null)
             track3Data = new byte[0];
         checkOpened();
-        JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        check(EFTTransactionStarted, JPOS_E_ILLEGAL, "EFT Transaction in Progress");
         checkNoChangedOrClaimed(Data.Track3Data, track3Data);
         PINPad.setTrack3Data(track3Data);
         logSet("Track3Data");
@@ -390,7 +390,7 @@ public class PINPadService extends JposBase implements PINPadService115 {
         if (track4Data == null)
             track4Data = new byte[0];
         checkOpened();
-        JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        check(EFTTransactionStarted, JPOS_E_ILLEGAL, "EFT Transaction in Progress");
         checkNoChangedOrClaimed(Data.Track4Data, track4Data);
         PINPad.setTrack4Data(track4Data);
         logSet("Track4Data");
@@ -398,17 +398,11 @@ public class PINPadService extends JposBase implements PINPadService115 {
 
     @Override
     public void setTransactionType(int transactionType) throws JposException {
-        long[] valid = {
-                PINPadConst.PPAD_TRANS_DEBIT,
-                PINPadConst.PPAD_TRANS_CREDIT,
-                PINPadConst.PPAD_TRANS_INQ,
-                PINPadConst.PPAD_TRANS_RECONCILE,
-                PINPadConst.PPAD_TRANS_ADMIN
-        };
+        long[] valid = { PPAD_TRANS_DEBIT, PPAD_TRANS_CREDIT, PPAD_TRANS_INQ, PPAD_TRANS_RECONCILE, PPAD_TRANS_ADMIN };
         logPreSet("TransactionType");
         checkOpened();
-        JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_ILLEGAL, "EFT Transaction in Progress");
-        JposDevice.checkMember(transactionType, valid, JposConst.JPOS_E_ILLEGAL, "Invalid transaction type: " + transactionType);
+        check(EFTTransactionStarted, JPOS_E_ILLEGAL, "EFT Transaction in Progress");
+        checkMember(transactionType, valid, JPOS_E_ILLEGAL, "Invalid transaction type: " + transactionType);
         checkNoChangedOrClaimed(Data.TransactionType, transactionType);
         PINPad.setTransactionType(transactionType);
         logSet("TransactionType");
@@ -416,13 +410,13 @@ public class PINPadService extends JposBase implements PINPadService115 {
 
     @Override
     public void beginEFTTransaction(String pinPadSystem, int transactionHost) throws JposException {
+        logPreCall("BeginEFTTransaction", removeOuterArraySpecifier(new Object[]{pinPadSystem, transactionHost}, Device.MaxArrayStringElements));
         if (pinPadSystem == null)
             pinPadSystem = "";
-        logPreCall("BeginEFTTransaction", pinPadSystem + ", " + transactionHost);
         checkEnabled();
-        JposDevice.check(EFTTransactionStarted, JposConst.JPOS_E_BUSY, "EFT Transaction in Progress");
-        JposDevice.check(!JposDevice.member(pinPadSystem, Data.SupportedPINPadSystems.split(",")),
-                JposConst.JPOS_E_ILLEGAL, "Unsupported PINPad system: " + pinPadSystem);
+        check(EFTTransactionStarted, JPOS_E_BUSY, "EFT Transaction in Progress");
+        check(!member(pinPadSystem, Data.SupportedPINPadSystems.split(",")),
+                JPOS_E_ILLEGAL, "Unsupported PINPad system: " + pinPadSystem);
         PINPad.beginEFTTransaction(pinPadSystem, transactionHost);
         logCall("BeginEFTTransaction");
         EFTTransactionStarted = true;
@@ -430,43 +424,38 @@ public class PINPadService extends JposBase implements PINPadService115 {
 
     @Override
     public void computeMAC(String inMsg, String[] outMsg) throws JposException {
+        logPreCall("ComputeMAC", removeOuterArraySpecifier(new Object[]{inMsg, outMsg}, Device.MaxArrayStringElements));
         if (inMsg == null)
             inMsg = "";
         if (outMsg == null)
             outMsg = new String[0];
-        logPreCall("ComputeMAC", inMsg);
         checkEnabled();
-        JposDevice.check(!EFTTransactionStarted, JposConst.JPOS_E_DISABLED, "EFT Transaction not started");
-        JposDevice.check(!Data.CapMACCalculation, JposConst.JPOS_E_ILLEGAL, "MAC calculation not supported");
-        JposDevice.check(Data.PINEntryEnabled, JposConst.JPOS_E_BUSY, "PIN entry active");
-        JposDevice.check(outMsg.length != 1, JposConst.JPOS_E_ILLEGAL, "Type of outMsg must be String[1]");
+        check(!EFTTransactionStarted, JPOS_E_DISABLED, "EFT Transaction not started");
+        check(!Data.CapMACCalculation, JPOS_E_ILLEGAL, "MAC calculation not supported");
+        check(Data.PINEntryEnabled, JPOS_E_BUSY, "PIN entry active");
+        check(outMsg.length != 1, JPOS_E_ILLEGAL, "Type of outMsg must be String[1]");
         PINPad.computeMAC(inMsg, outMsg);
-        if (outMsg[0] == null)
-            logCall("ComputeMAC", "null");
-        else
-            logCall("ComputeMAC", outMsg[0]);
+        logCall("ComputeMAC", removeOuterArraySpecifier(new Object[]{outMsg[0]}, Device.MaxArrayStringElements));
     }
 
     @Override
     public void enablePINEntry() throws JposException {
         logPreCall("EnablePINEntry");
         checkEnabled();
-        JposDevice.check(!EFTTransactionStarted, JposConst.JPOS_E_DISABLED, "EFT Transaction not started");
-        JposDevice.check(Data.PINEntryEnabled, JposConst.JPOS_E_ILLEGAL, "PIN entry active");
-        JposDevice.check(Data.MaximumPINLength < Data.MinimumPINLength, JposConst.JPOS_E_ILLEGAL, "Invalid PIN length limits");
+        check(!EFTTransactionStarted, JPOS_E_DISABLED, "EFT Transaction not started");
+        check(Data.PINEntryEnabled, JPOS_E_ILLEGAL, "PIN entry active");
+        check(Data.MaximumPINLength < Data.MinimumPINLength, JPOS_E_ILLEGAL, "Invalid PIN length limits");
         PINPad.enablePINEntry();
         logCall("EnablePINEntry");
     }
 
     @Override
     public void endEFTTransaction(int completionCode) throws JposException {
-        long[] valid = {
-                PINPadConst.PPAD_EFT_NORMAL, PINPadConst.PPAD_EFT_ABNORMAL
-        };
-        logPreCall("EndEFTTransaction", "" + completionCode);
+        logPreCall("EndEFTTransaction", removeOuterArraySpecifier(new Object[]{completionCode}, Device.MaxArrayStringElements));
+        long[] valid = { PPAD_EFT_NORMAL, PPAD_EFT_ABNORMAL };
         checkEnabled();
-        JposDevice.check(!EFTTransactionStarted, JposConst.JPOS_E_DISABLED, "EFT Transaction not started");
-        JposDevice.checkMember(completionCode, valid, JposConst.JPOS_E_ILLEGAL, "Invalid completion code: " + completionCode);
+        check(!EFTTransactionStarted, JPOS_E_DISABLED, "EFT Transaction not started");
+        checkMember(completionCode, valid, JPOS_E_ILLEGAL, "Invalid completion code: " + completionCode);
         PINPad.endEFTTransaction(completionCode);
         logCall("EndEFTTransaction");
         EFTTransactionStarted = false;
@@ -474,14 +463,14 @@ public class PINPadService extends JposBase implements PINPadService115 {
 
     @Override
     public void updateKey(int keyNum, String key) throws JposException {
+        logPreCall("UpdateKey", removeOuterArraySpecifier(new Object[]{keyNum, key}, Device.MaxArrayStringElements));
         if (key == null)
             key = "";
-        logPreCall("UpdateKey", "" + keyNum + ", " + key);
         checkEnabled();
-        JposDevice.check(!EFTTransactionStarted, JposConst.JPOS_E_DISABLED, "EFT Transaction not started");
-        JposDevice.check((key.length() & 1) != 0, JposConst.JPOS_E_ILLEGAL, "Must be even number of hexadecimal digits");
+        check(!EFTTransactionStarted, JPOS_E_DISABLED, "EFT Transaction not started");
+        check((key.length() & 1) != 0, JPOS_E_ILLEGAL, "Must be even number of hexadecimal digits");
         for (int i = key.length() - 1; i >= 0; --i) {
-            JposDevice.check("0123456789ABCDEFabcdef".indexOf(key.charAt(i)) < 0, JposConst.JPOS_E_ILLEGAL, "Invalid key: " + key);
+            check("0123456789ABCDEFabcdef".indexOf(key.charAt(i)) < 0, JPOS_E_ILLEGAL, "Invalid key: " + key);
         }
         PINPad.updateKey(keyNum, key.toUpperCase());
         logCall("UpdateKey");
@@ -489,13 +478,13 @@ public class PINPadService extends JposBase implements PINPadService115 {
 
     @Override
     public void verifyMAC(String message) throws JposException {
+        logPreCall("VerifyMAC", removeOuterArraySpecifier(new Object[]{message}, Device.MaxArrayStringElements));
         if (message == null)
             message = "";
-        logPreCall("VerifyMAC", message);
         checkEnabled();
-        JposDevice.check(!EFTTransactionStarted, JposConst.JPOS_E_DISABLED, "EFT Transaction not started");
-        JposDevice.check(!Data.CapMACCalculation, JposConst.JPOS_E_ILLEGAL, "MAC calculation not supported");
-        JposDevice.check(Data.PINEntryEnabled, JposConst.JPOS_E_BUSY, "PIN entry active");
+        check(!EFTTransactionStarted, JPOS_E_DISABLED, "EFT Transaction not started");
+        check(!Data.CapMACCalculation, JPOS_E_ILLEGAL, "MAC calculation not supported");
+        check(Data.PINEntryEnabled, JPOS_E_BUSY, "PIN entry active");
         PINPad.verifyMAC(message);
         logCall("VerifyMAC");
     }

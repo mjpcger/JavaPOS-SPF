@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.coindispenser;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.CoinDispenserConst.*;
+
 /**
  * Status update event implementation for CoinDispenser devices.
  */
@@ -37,33 +39,25 @@ public class CoinDispenserStatusUpdateEvent extends JposStatusUpdateEvent {
     public boolean setStatusProperties() {
         if (super.setStatusProperties())
             return true;
-        CoinDispenserProperties props = (CoinDispenserProperties)getPropertySet();
+        CoinDispenserProperties props = (CoinDispenserProperties) getPropertySet();
         int status = getStatus();
         switch (status) {
-            case CoinDispenserConst.COIN_STATUS_OK:
-            case CoinDispenserConst.COIN_STATUS_EMPTY:
-            case CoinDispenserConst.COIN_STATUS_NEAREMPTY:
-            case CoinDispenserConst.COIN_STATUS_JAM:
-                props.DispenserStatus = status;
-                return true;
+            case COIN_STATUS_OK, COIN_STATUS_EMPTY, COIN_STATUS_NEAREMPTY, COIN_STATUS_JAM -> props.DispenserStatus = status;
+            default -> {
+                return false;
+            }
         }
-        return false;
+        return true;
     }
 
     @Override
     public boolean checkStatusCorresponds() {
-        if (super.checkStatusCorresponds())
-            return true;
-        CoinDispenserProperties props = (CoinDispenserProperties)getPropertySet();
+        CoinDispenserProperties props = (CoinDispenserProperties) getPropertySet();
         int status = getStatus();
-        switch (status) {
-            case CoinDispenserConst.COIN_STATUS_OK:
-            case CoinDispenserConst.COIN_STATUS_EMPTY:
-            case CoinDispenserConst.COIN_STATUS_NEAREMPTY:
-            case CoinDispenserConst.COIN_STATUS_JAM:
-                return props.DispenserStatus == status;
-        }
-        return false;
+        return super.checkStatusCorresponds() || switch (status) {
+            case COIN_STATUS_OK, COIN_STATUS_EMPTY, COIN_STATUS_NEAREMPTY, COIN_STATUS_JAM -> props.DispenserStatus == status;
+            default -> false;
+        };
     }
 
     @Override
@@ -82,18 +76,12 @@ public class CoinDispenserStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        if (ret.length() > 0)
-            return ret;
-        switch (getStatus()) {
-            case CoinDispenserConst.COIN_STATUS_OK:
-                return "Coin Dispenser OK";
-            case CoinDispenserConst.COIN_STATUS_EMPTY:
-                return "Coin Dispenser Empty";
-            case CoinDispenserConst.COIN_STATUS_NEAREMPTY:
-                return "Coin Dispenser Near Empty";
-            case CoinDispenserConst.COIN_STATUS_JAM:
-                return "Coin Dispenser Jam";
-        }
-        return "Unknown Coin Dispenser Status Change: " + getStatus();
+        return ret.length() > 0 ? ret : switch (getStatus()) {
+            case COIN_STATUS_OK -> "Coin Dispenser OK";
+            case COIN_STATUS_EMPTY -> "Coin Dispenser Empty";
+            case COIN_STATUS_NEAREMPTY -> "Coin Dispenser Near Empty";
+            case COIN_STATUS_JAM -> "Coin Dispenser Jam";
+            default -> "Unknown Coin Dispenser Status Change: " + getStatus();
+        };
     }
 }

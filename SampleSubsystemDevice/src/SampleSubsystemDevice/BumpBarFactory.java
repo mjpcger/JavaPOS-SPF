@@ -16,13 +16,13 @@
 
 package SampleSubsystemDevice;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.bumpbar.Factory;
-import jpos.JposConst;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import de.gmxhome.conrad.jpos.jpos_base.bumpbar.*;
+import jpos.*;
 import jpos.config.JposEntry;
-import jpos.loader.JposServiceInstance;
-import jpos.loader.JposServiceInstanceFactory;
+import jpos.loader.*;
+
+import static jpos.JposConst.*;
 
 /**
  * Factory class for BumpBar Device of sample implementation.
@@ -42,22 +42,22 @@ public class BumpBarFactory extends Factory implements JposServiceInstanceFactor
                     if (!created) {
                         dev = new Device(port);
                     } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
+                        throw new JposException(JPOS_E_NOSERVICE, "Port " + port + " used by " + any.getClass().getName());
                     else {
                         dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
-                    JposServiceInstance srv = addDevice(0, dev);
+                    JposServiceInstance srv = addDevice(0, dev, jposEntry);
                     if (!created)
                         putDevice(port, dev);
                     return srv;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

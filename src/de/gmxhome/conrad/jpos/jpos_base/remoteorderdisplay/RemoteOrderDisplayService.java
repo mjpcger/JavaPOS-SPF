@@ -19,7 +19,11 @@ package de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
-import net.bplaced.conrad.log4jpos.Level;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.RemoteOrderDisplayConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * RemoteOrderDisplay service implementation. For more details about getter, setter and method implementations,
@@ -28,36 +32,19 @@ import net.bplaced.conrad.log4jpos.Level;
  * property for remote order displays, two commands have been added to the UPOS standard. See the description of
  * method DirectIO for details.
  */
-public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDisplayService115 {
-    private RemoteOrderDisplayProperties Data;
+public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDisplayService116 {
+    private final RemoteOrderDisplayProperties Data;
 
-    private static final long[] validUnitIDs = new long[] {
-            RemoteOrderDisplayConst.ROD_UID_1, RemoteOrderDisplayConst.ROD_UID_2,
-            RemoteOrderDisplayConst.ROD_UID_3, RemoteOrderDisplayConst.ROD_UID_4,
-            RemoteOrderDisplayConst.ROD_UID_5, RemoteOrderDisplayConst.ROD_UID_6,
-            RemoteOrderDisplayConst.ROD_UID_7, RemoteOrderDisplayConst.ROD_UID_8,
-            RemoteOrderDisplayConst.ROD_UID_9, RemoteOrderDisplayConst.ROD_UID_10,
-            RemoteOrderDisplayConst.ROD_UID_11, RemoteOrderDisplayConst.ROD_UID_12,
-            RemoteOrderDisplayConst.ROD_UID_13, RemoteOrderDisplayConst.ROD_UID_14,
-            RemoteOrderDisplayConst.ROD_UID_15, RemoteOrderDisplayConst.ROD_UID_16,
-            RemoteOrderDisplayConst.ROD_UID_17, RemoteOrderDisplayConst.ROD_UID_18,
-            RemoteOrderDisplayConst.ROD_UID_19, RemoteOrderDisplayConst.ROD_UID_20,
-            RemoteOrderDisplayConst.ROD_UID_21, RemoteOrderDisplayConst.ROD_UID_22,
-            RemoteOrderDisplayConst.ROD_UID_23, RemoteOrderDisplayConst.ROD_UID_24,
-            RemoteOrderDisplayConst.ROD_UID_25, RemoteOrderDisplayConst.ROD_UID_26,
-            RemoteOrderDisplayConst.ROD_UID_27, RemoteOrderDisplayConst.ROD_UID_28,
-            RemoteOrderDisplayConst.ROD_UID_29, RemoteOrderDisplayConst.ROD_UID_30,
-            RemoteOrderDisplayConst.ROD_UID_31, RemoteOrderDisplayConst.ROD_UID_32
+    private static final long[] validUnitIDs = {
+            ROD_UID_1, ROD_UID_2, ROD_UID_3, ROD_UID_4, ROD_UID_5, ROD_UID_6, ROD_UID_7, ROD_UID_8,
+            ROD_UID_9, ROD_UID_10, ROD_UID_11, ROD_UID_12, ROD_UID_13, ROD_UID_14, ROD_UID_15, ROD_UID_16,
+            ROD_UID_17, ROD_UID_18, ROD_UID_19, ROD_UID_20, ROD_UID_21, ROD_UID_22, ROD_UID_23, ROD_UID_24,
+            ROD_UID_25, ROD_UID_26, ROD_UID_27, ROD_UID_28, ROD_UID_29, ROD_UID_30, ROD_UID_31, ROD_UID_32
     };
-    private static final long[] validEventTypes = new long[] {
-            0,
-            RemoteOrderDisplayConst.ROD_DE_TOUCH_UP,
-            RemoteOrderDisplayConst.ROD_DE_TOUCH_DOWN,
-            RemoteOrderDisplayConst.ROD_DE_TOUCH_UP|RemoteOrderDisplayConst.ROD_DE_TOUCH_DOWN,
-            RemoteOrderDisplayConst.ROD_DE_TOUCH_MOVE,
-            RemoteOrderDisplayConst.ROD_DE_TOUCH_MOVE|RemoteOrderDisplayConst.ROD_DE_TOUCH_UP,
-            RemoteOrderDisplayConst.ROD_DE_TOUCH_MOVE|RemoteOrderDisplayConst.ROD_DE_TOUCH_DOWN,
-            RemoteOrderDisplayConst.ROD_DE_TOUCH_MOVE|RemoteOrderDisplayConst.ROD_DE_TOUCH_UP|RemoteOrderDisplayConst.ROD_DE_TOUCH_DOWN
+    private static final long[] validEventTypes = {
+            0, ROD_DE_TOUCH_UP, ROD_DE_TOUCH_DOWN, ROD_DE_TOUCH_UP|ROD_DE_TOUCH_DOWN, ROD_DE_TOUCH_MOVE,
+            ROD_DE_TOUCH_MOVE|ROD_DE_TOUCH_UP, ROD_DE_TOUCH_MOVE|ROD_DE_TOUCH_DOWN,
+            ROD_DE_TOUCH_MOVE|ROD_DE_TOUCH_UP|ROD_DE_TOUCH_DOWN
     };
 
     /**
@@ -72,21 +59,6 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     public RemoteOrderDisplayInterface RemoteOrderDisplayInterface;
 
     /**
-     * DirectIO command as replacement for FlagWhenIdle property set.
-     */
-    public final static int REMOTE_ORDER_DISPLAY_SET_FLAG_WHEN_IDLE = 200;
-
-    /**
-     * DirectIO command to set status value for StatusUpdateEvent signalling idle state after FlagWhenIdle has been set.
-     */
-    public final static int REMOTE_ORDER_DISPLAY_FLAG_WHEN_IDLE_STATUS_VALUE = 201;
-
-    /**
-     * Framework specific FlagWhenIdle default value.
-     */
-    public final static int ROD_SUE_IDLE = 1001;
-
-    /**
      * Constructor. Stores given property set and device implementation object.
      *
      * @param props  Property set.
@@ -95,74 +67,6 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     public RemoteOrderDisplayService(RemoteOrderDisplayProperties props, JposDevice device) {
         super(props, device);
         Data = props;
-    }
-
-    /**
-     * Framework specific handling of remote order display devices:
-     * <ul>
-     *     <li>REMOTE_ORDER_DISPLAY_SET_FLAG_WHEN_IDLE: Function to set or reset the internally used FlagWhenIdle property.</li>
-     *     <li>REMOTE_ORDER_DISPLAY_FLAG_WHEN_IDLE_STATUS_VALUE: Function to set the status value to be used whenever
-     *     the device reaches idle state after FlagWhenIdle has been set.</li>
-     * </ul>
-     * For more details about FlagWhenIdle handling, see FlagWhenIdle handling for ElectronicJournel, FiscalPrinter or POSPrinter.
-     *
-     * @param command   Must be REMOTE_ORDER_DISPLAY_SET_FLAG_WHEN_IDLE or REMOTE_ORDER_DISPLAY_FLAG_WHEN_IDLE_STATUS_VALUE.
-     * @param data      In case of REMOTE_ORDER_DISPLAY_SET_FLAG_WHEN_IDLE, data[0] must be 0 to set the internal FlagWhenIdle
-     *                  property to false and any other value to set FlagWhenIdle to true.<br>
-     *                  In case of REMOTE_ORDER_DISPLAY_FLAG_WHEN_IDLE_STATUS_VALUE, data[0] specifies the status value
-     *                  to be used to signal idle state. data[0] must not be any of the standard status values.<br>
-     *                  The default FlagWhenIdle status value is ROD_SUE_IDLE.
-     * @param object    any value
-     * @throws JposException    E_DISABLED if device is not enabled, E_ILLEGAL if command is not SAMPLEROD_DIO_SET_FLAG_WHEN_IDLE
-     *                          or data is null or has length 0.
-     */
-    @Override
-    public void directIO(int command, int[] data, Object object) throws JposException {
-        logPreCall("DirectIO", removeOuterArraySpecifier(new Object[]{command, data, object}, Device.MaxArrayStringElements));
-        JposDevice.check(data != null && data.length != 1, JposConst.JPOS_E_ILLEGAL, "Data invalid, must be int[1]: " + deepToString(data, 5));
-        switch (command) {
-            case REMOTE_ORDER_DISPLAY_SET_FLAG_WHEN_IDLE:
-                setFlagWhenIdle(data[0]);
-                break;
-            case REMOTE_ORDER_DISPLAY_FLAG_WHEN_IDLE_STATUS_VALUE:
-                setFlagWhenIdleStatusValue(data[0]);
-                break;
-            default:
-                DirectIO request = DeviceInterface.directIO(command, data, object);
-                if (request != null) {
-                    request.enqueue();
-                    logAsyncCall("DirectIO");
-                    return;
-                }
-        }
-        logCall("DirectIO", removeOuterArraySpecifier(new Object[]{command, data, object}, Device.MaxArrayStringElements));
-    }
-
-    private void setFlagWhenIdle(int data) throws JposException {
-        check(!Data.DeviceEnabled, 0, JposConst.JPOS_E_DISABLED, 0, "Device not enabled");
-        RemoteOrderDisplayInterface.flagWhenIdle(data != 0 ? true : false);
-    }
-
-    private void setFlagWhenIdleStatusValue(int data) throws JposException {
-        long[] powerstates = new long[]{
-                JposConst.JPOS_SUE_POWER_ONLINE,
-                JposConst.JPOS_SUE_POWER_OFF,
-                JposConst.JPOS_SUE_POWER_OFFLINE,
-                JposConst.JPOS_SUE_POWER_OFF_OFFLINE
-        };
-        long[] firmwarestates = new long[]{
-                JposConst.JPOS_SUE_UF_COMPLETE,
-                JposConst.JPOS_SUE_UF_FAILED_DEV_OK,
-                JposConst.JPOS_SUE_UF_FAILED_DEV_UNRECOVERABLE,
-                JposConst.JPOS_SUE_UF_FAILED_DEV_NEEDS_FIRMWARE,
-                JposConst.JPOS_SUE_UF_FAILED_DEV_UNKNOWN,
-                JposConst.JPOS_SUE_UF_COMPLETE_DEV_NOT_RESTORED
-        };
-        check(!Data.DeviceEnabled, 0, JposConst.JPOS_E_DISABLED, 0, "Device not enabled");
-        check(Device.member(data, powerstates), Data.UnitsOnline, JposConst.JPOS_E_ILLEGAL, 0, "Power state value not allowed as FlagWhenIdle status value: " + data);
-        check(Device.member(data, firmwarestates), Data.UnitsOnline, JposConst.JPOS_E_ILLEGAL, 0, "Firmware update state value not allowed as FlagWhenIdle status value: " + data);
-        check(data > JposConst.JPOS_SUE_UF_PROGRESS && data < JposConst.JPOS_SUE_UF_COMPLETE, Data.UnitsOnline, JposConst.JPOS_E_ILLEGAL, 0, "Firmware update progress state not allowed as FlagWhenIdle status value: " + data);
-        Props.FlagWhenIdleStatusValue = data;
     }
 
     @Override
@@ -191,7 +95,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     public void setAutoToneDuration(int i) throws JposException {
         logPreSet("AutoToneDuration");
         checkOnline(Data.CurrentUnitID);
-        check(i < 0, Data.CurrentUnitID, JposConst.JPOS_E_ILLEGAL, 0, "AutoToneDuration " + i + " invalid for unit " + Data.unitsToFirstIndex(Data.CurrentUnitID));
+        check(i < 0, Data.CurrentUnitID, JPOS_E_ILLEGAL, 0, "AutoToneDuration " + i + " invalid for unit " + Data.unitsToFirstIndex(Data.CurrentUnitID));
         RemoteOrderDisplayInterface.autoToneDuration(i);
         logSet("AutoToneDuration");
     }
@@ -207,7 +111,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     public void setAutoToneFrequency(int i) throws JposException {
         logPreSet("AutoToneFrequency");
         checkOnline(Data.CurrentUnitID);
-        check(i < 0, Data.CurrentUnitID, JposConst.JPOS_E_ILLEGAL, 0, "AutoToneFrequency " + i + " invalid for unit " + Data.unitsToFirstIndex(Data.CurrentUnitID));
+        check(i < 0, Data.CurrentUnitID, JPOS_E_ILLEGAL, 0, "AutoToneFrequency " + i + " invalid for unit " + Data.unitsToFirstIndex(Data.CurrentUnitID));
         RemoteOrderDisplayInterface.autoToneFrequency(i);
         logSet("AutoToneFrequency");
     }
@@ -279,7 +183,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     public void setCurrentUnitID(int i) throws JposException {
         logPreSet("CurrentUnitID");
         checkEnabled();
-        check(!Device.member(i, validUnitIDs), 0, JposConst.JPOS_E_ILLEGAL, 0, "" + i + " is not a valid unit ID");
+        check(!member(i, validUnitIDs), 0, JPOS_E_ILLEGAL, 0, i + " is not a valid unit ID");
         RemoteOrderDisplayInterface.currentUnitID(i);
         logSet("CurrentUnitID");
     }
@@ -323,7 +227,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     public void setEventType(int i) throws JposException {
         logPreSet("EventType");
         checkOpened();
-        check(!Device.member(i, validEventTypes), Data.CurrentUnitID, JposConst.JPOS_E_ILLEGAL, 0, "EventType " + i + " invalid");
+        check(!member(i, validEventTypes), Data.CurrentUnitID, JPOS_E_ILLEGAL, 0, "EventType " + i + " invalid");
         checkNoChangedOrClaimed(Data.EventType, i);
         RemoteOrderDisplayInterface.eventType(i);
         logSet("EventType");
@@ -354,7 +258,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     public void setMapCharacterSet(boolean b) throws JposException {
         logPreSet("MapCharacterSet");
         checkOpened();
-        check(b && !Data.CapMapCharacterSet, -1, JposConst.JPOS_E_ILLEGAL, 0, "MapCharacterSet " + b + " invalid");
+        check(b && !Data.CapMapCharacterSet, -1, JPOS_E_ILLEGAL, 0, "MapCharacterSet " + b + " invalid");
         RemoteOrderDisplayInterface.mapCharacterSet(b);
         logSet("MapCharacterSet");
     }
@@ -384,7 +288,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     public void setTimeout(int i) throws JposException {
         logPreSet("Timeout");
         checkOpened();
-        check(i < 0, -1, JposConst.JPOS_E_ILLEGAL, 0, "Timeout " + i + " invalid");
+        check(i < 0, -1, JPOS_E_ILLEGAL, 0, "Timeout " + i + " invalid");
         checkNoChangedOrClaimed(Data.Timeout, i);
         RemoteOrderDisplayInterface.timeout(i);
         logSet("Timeout");
@@ -401,7 +305,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     public int getVideoDataCount() throws JposException {
         checkOpened();
         int count = RemoteOrderDisplayInterface.unitDataCount();
-        Device.log(Level.DEBUG, Props.LogicalName + ": VideoDataCount: " + count);
+        Device.log(DEBUG, Props.LogicalName + ": VideoDataCount: " + count);
         return count;
     }
 
@@ -421,7 +325,7 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
         for (int j = 0; j < modi.length; j++) {
             validModes[j] = Long.parseLong(modi[j].split(":")[0]);
         }
-        check(Device.member(i , validModes), Data.CurrentUnitID, JposConst.JPOS_E_ILLEGAL, 0, "VideoMode " + i + " invalid for unit " + Data.unitsToFirstIndex(Data.CurrentUnitID));
+        check(member(i , validModes), Data.CurrentUnitID, JPOS_E_ILLEGAL, 0, "VideoMode " + i + " invalid for unit " + Data.unitsToFirstIndex(Data.CurrentUnitID));
         RemoteOrderDisplayInterface.videoMode(i);
         logSet("VideoMode");
     }
@@ -455,20 +359,11 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
             TransactionCommand = null;
     }
 
-    private long[] validFunctions = new long[] {
-            RemoteOrderDisplayConst.ROD_CLK_PAUSE, RemoteOrderDisplayConst.ROD_CLK_START,
-            RemoteOrderDisplayConst.ROD_CLK_RESUME, RemoteOrderDisplayConst.ROD_CLK_STOP,
-            RemoteOrderDisplayConst.ROD_CLK_MOVE
-    };
+    private final long[] validFunctions = { ROD_CLK_PAUSE, ROD_CLK_START, ROD_CLK_RESUME, ROD_CLK_STOP, ROD_CLK_MOVE };
 
-    private long[] initFunktions = new long[] {
-            RemoteOrderDisplayConst.ROD_CLK_START, RemoteOrderDisplayConst.ROD_CLK_MOVE
-    };
+    private final long[] initFunktions = { ROD_CLK_START, ROD_CLK_MOVE };
 
-    private long[] validClockModes = new long[] {
-            RemoteOrderDisplayConst.ROD_CLK_SHORT, RemoteOrderDisplayConst.ROD_CLK_NORMAL,
-            RemoteOrderDisplayConst.ROD_CLK_12_LONG, RemoteOrderDisplayConst.ROD_CLK_24_LONG
-    };
+    private final long[] validClockModes = { ROD_CLK_SHORT, ROD_CLK_NORMAL, ROD_CLK_12_LONG, ROD_CLK_24_LONG };
 
     /**
      * Checks whether the given coordinates are valid for the specified units.
@@ -532,42 +427,39 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     }
 
     @Override
-    public void controlClock(int i, int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8, int i9) throws JposException {
-        logPreCall("ControlClock", "" + i + ", " + i1 + ", " + i2 + ", " + i3 + ", " + i4 + ", " + i5 + ", " + i6 + ", " + i7 + ", " + i8 + ", " + i9);
-        checkOnline(i);
-        checkDeviceIdle(i);
+    public void controlClock(int Units, int function, int clockid, int hour, int minute, int second, int row, int column, int attribute, int mode) throws JposException {
+        logPreCall("ControlClock", removeOuterArraySpecifier(new Object[]{Units, function, clockid, hour, minute, second, row, column, attribute, mode}, Device.MaxArrayStringElements));
+        checkOnline(Units);
+        checkDeviceIdle(Units);
         try {
             int errbits;
-            check(!Device.member(i1, validFunctions), i, JposConst.JPOS_E_ILLEGAL, 0, "Invalid function: " + i1);
-            errbits = validateClockID(i, i2);
-            check(errbits != 0, errbits, JposConst.JPOS_E_ILLEGAL, 0, "Invalid clock id: " + i2);
-            check(i1 == RemoteOrderDisplayConst.ROD_CLK_START && (i3 < 0 || i3 > 23), i, JposConst.JPOS_E_ILLEGAL, 0, "Hour out of range: " + i3);
-            check(i1 == RemoteOrderDisplayConst.ROD_CLK_START && (i4 < 0 || i4 > 59), i, JposConst.JPOS_E_ILLEGAL, 0, "Minute out of range: " + i4);
-            check(i1 == RemoteOrderDisplayConst.ROD_CLK_START && (i5 < 0 || i5 > 59), i, JposConst.JPOS_E_ILLEGAL, 0, "Second out of range: " + i5);
-            check(i1 == RemoteOrderDisplayConst.ROD_CLK_START && (i8 < 0 || i8 > 255), i, JposConst.JPOS_E_ILLEGAL, 0, "Attribute out of range: " + i8);
-            errbits = validateCoordinates(i, i6, i7);
-            check(Device.member(i1, initFunktions) && errbits != 0, errbits, JposConst.JPOS_E_ILLEGAL, 0, "Row and / or column too big for units: " + errbits);
-            check(i1 == RemoteOrderDisplayConst.ROD_CLK_START && !Device.member(i9, validClockModes), i, JposConst.JPOS_E_ILLEGAL, 0, "Invalid clock mode: " + i9);
-            RemoteOrderDisplayInterface.controlClock(i, i1, i2, i3, i4, i5, i6, i7, i8, i9);
+            check(!member(function, validFunctions), Units, JPOS_E_ILLEGAL, 0, "Invalid function: " + function);
+            errbits = validateClockID(Units, clockid);
+            check(errbits != 0, errbits, JPOS_E_ILLEGAL, 0, "Invalid clock id: " + clockid);
+            check(function == ROD_CLK_START && (hour < 0 || hour > 23), Units, JPOS_E_ILLEGAL, 0, "Hour out of range: " + hour);
+            check(function == ROD_CLK_START && (minute < 0 || minute > 59), Units, JPOS_E_ILLEGAL, 0, "Minute out of range: " + minute);
+            check(function == ROD_CLK_START && (second < 0 || second > 59), Units, JPOS_E_ILLEGAL, 0, "Second out of range: " + second);
+            check(function == ROD_CLK_START && (attribute < 0 || attribute > 255), Units, JPOS_E_ILLEGAL, 0, "Attribute out of range: " + attribute);
+            errbits = validateCoordinates(Units, row, column);
+            check(member(function, initFunktions) && errbits != 0, errbits, JPOS_E_ILLEGAL, 0, "Row and / or column too big for units: " + errbits);
+            check(function == ROD_CLK_START && !member(mode, validClockModes), Units, JPOS_E_ILLEGAL, 0, "Invalid clock mode: " + mode);
+            RemoteOrderDisplayInterface.controlClock(Units, function, clockid, hour, minute, second, row, column, attribute, mode);
         } finally {
             setDeviceIdle();
         }
         logCall("ControlClock");
     }
 
-    private static final long[] validCursorFunctions = new long[]{
-            RemoteOrderDisplayConst.ROD_CRS_LINE, RemoteOrderDisplayConst.ROD_CRS_LINE_BLINK, RemoteOrderDisplayConst.ROD_CRS_BLOCK,
-            RemoteOrderDisplayConst.ROD_CRS_BLOCK_BLINK, RemoteOrderDisplayConst.ROD_CRS_OFF
-    };
+    private static final long[] validCursorFunctions = { ROD_CRS_LINE, ROD_CRS_LINE_BLINK, ROD_CRS_BLOCK, ROD_CRS_BLOCK_BLINK, ROD_CRS_OFF };
 
     @Override
-    public void controlCursor(int i, int i1) throws JposException {
-        logPreCall("ControlCursor", "" + i + ", " + i1);
-        checkOnline(i);
-        checkDeviceIdle(i);
+    public void controlCursor(int units, int function) throws JposException {
+        logPreCall("ControlCursor", removeOuterArraySpecifier(new Object[]{units, function}, Device.MaxArrayStringElements));
+        checkOnline(units);
+        checkDeviceIdle(units);
         try {
-            check(!Device.member(i1, validCursorFunctions), i, JposConst.JPOS_E_ILLEGAL, 0, "Invalid function: " + i1);
-            RemoteOrderDisplayInterface.controlCursor(i, i1);
+            check(!member(function, validCursorFunctions), units, JPOS_E_ILLEGAL, 0, "Invalid function: " + function);
+            RemoteOrderDisplayInterface.controlCursor(units, function);
         } finally {
             setDeviceIdle();
         }
@@ -592,22 +484,22 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     }
 
     @Override
-    public void freeVideoRegion(int i, int i1) throws JposException {
-        logPreCall("FreeVideoRegion", "" + i + ", " + i1);
-        checkOnline(i);
-        int errunits = validateBufferID(i, i1);
-        check(errunits != 0, errunits, JposConst.JPOS_E_ILLEGAL, 0, "BufferID " + i1 + " invalid for units " + i);
-        RemoteOrderDisplayInterface.freeVideoRegion(i, i1);
+    public void freeVideoRegion(int units, int bufferId) throws JposException {
+        logPreCall("FreeVideoRegion", removeOuterArraySpecifier(new Object[]{units, bufferId}, Device.MaxArrayStringElements));
+        checkOnline(units);
+        int errunits = validateBufferID(units, bufferId);
+        check(errunits != 0, errunits, JPOS_E_ILLEGAL, 0, "BufferID " + bufferId + " invalid for units " + units);
+        RemoteOrderDisplayInterface.freeVideoRegion(units, bufferId);
         logCall("FreeVideoRegion");
     }
 
     @Override
-    public void resetVideo(int i) throws JposException {
-        logPreCall("ResetVideo", "" + i);
-        checkOnline(i);
-        checkDeviceIdle(i);
+    public void resetVideo(int units) throws JposException {
+        logPreCall("ResetVideo", removeOuterArraySpecifier(new Object[]{units}, Device.MaxArrayStringElements));
+        checkOnline(units);
+        checkDeviceIdle(units);
         try {
-            RemoteOrderDisplayInterface.resetVideo(i);
+            RemoteOrderDisplayInterface.resetVideo(units);
         } finally {
             setDeviceIdle();
         }
@@ -619,21 +511,21 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
         while (units != 0) {
             int index = Data.unitsToFirstIndex(units);
             units &= ~(1 << index);
-            if ((!Data.Unit[index].CapSelectCharacterSet && Data.Unit[index].CharacterSet != cs) || !Device.member(cs, Device.stringArrayToLongArray(Data.Unit[index].CharacterSetList.split(","))))
+            if ((!Data.Unit[index].CapSelectCharacterSet && Data.Unit[index].CharacterSet != cs) || !member(cs, stringArrayToLongArray(Data.Unit[index].CharacterSetList.split(","))))
                 result |= 1 << index;
         }
         return result;
     }
 
     @Override
-    public void selectChararacterSet(int i, int i1) throws JposException {
-        logPreCall("SelectChararacterSet", "" + i + ", " + i1);
-        checkOnline(i);
-        checkDeviceIdle(i);
+    public void selectChararacterSet(int units, int characterSet) throws JposException {
+        logPreCall("SelectChararacterSet", removeOuterArraySpecifier(new Object[]{units, characterSet}, Device.MaxArrayStringElements));
+        checkOnline(units);
+        checkDeviceIdle(units);
         try {
-            int errunits = validateCharacterSet(i, i1);
-            check(errunits != 0, errunits, JposConst.JPOS_E_ILLEGAL, 0, "Cannot select character set " + i1 + " for units " + i);
-            RemoteOrderDisplayInterface.selectChararacterSet(i, i1);
+            int errunits = validateCharacterSet(units, characterSet);
+            check(errunits != 0, errunits, JPOS_E_ILLEGAL, 0, "Cannot select character set " + characterSet + " for units " + units);
+            RemoteOrderDisplayInterface.selectChararacterSet(units, characterSet);
         } finally {
             setDeviceIdle();
         }
@@ -641,14 +533,14 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     }
 
     @Override
-    public void setCursor(int i, int i1, int i2) throws JposException {
-        logPreCall("SetCursor", "" + i + ", " + i1 + ", " + i2);
-        checkOnline(i);
-        checkDeviceIdle(i);
+    public void setCursor(int units, int row, int column) throws JposException {
+        logPreCall("SetCursor", removeOuterArraySpecifier(new Object[]{units, row, column}, Device.MaxArrayStringElements));
+        checkOnline(units);
+        checkDeviceIdle(units);
         try {
-            int errunits = validateCoordinates(i, i1, i2);
-            check(errunits != 0, errunits, JposConst.JPOS_E_ILLEGAL, 0, "Row and / or column too big for units: " + errunits);
-            RemoteOrderDisplayInterface.setCursor(i, i1, i2);
+            int errunits = validateCoordinates(units, row, column);
+            check(errunits != 0, errunits, JPOS_E_ILLEGAL, 0, "Row and / or column too big for units: " + errunits);
+            RemoteOrderDisplayInterface.setCursor(units, row, column);
         } finally {
             setDeviceIdle();
         }
@@ -666,129 +558,125 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     }
 
     @Override
-    public void clearVideo(int i, int i1) throws JposException {
-        logPreCall("ClearVideo", "" + i + ", " + i1);
-        checkSyncOnline(i);
-        check(i1 < 0 || i1 > 0xff, i, JposConst.JPOS_E_ILLEGAL, 0, "Illegal attribute value: " + i1);
-        doItTrans(RemoteOrderDisplayInterface.clearVideo(i, i1), "ClearVideo");
+    public void clearVideo(int units, int attribute) throws JposException {
+        logPreCall("ClearVideo", removeOuterArraySpecifier(new Object[]{units, attribute}, Device.MaxArrayStringElements));
+        checkSyncOnline(units);
+        check(attribute < 0 || attribute > 0xff, units, JPOS_E_ILLEGAL, 0, "Illegal attribute value: " + attribute);
+        doItTrans(RemoteOrderDisplayInterface.clearVideo(units, attribute), "ClearVideo");
     }
 
     @Override
-    public void clearVideoRegion(int i, int i1, int i2, int i3, int i4, int i5) throws JposException {
-        logPreCall("ClearVideoRegion", "" + i + ", " + i1 + ", " + i2 + ", " + i3 + ", " + i4 + ", " + i5);
-        checkSyncOnline(i);
-        check(i1 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Row of region invalid: " + i1);
-        check(i2 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Column of region invalid: " + i2);
-        check(i3 < 1, i, JposConst.JPOS_E_ILLEGAL, 0, "Height of region invalid: " + i3);
-        check(i4 < 1, i, JposConst.JPOS_E_ILLEGAL, 0, "Width of region invalid: " + i4);
-        int errorunits = validateCoordinates(i, i1, i2);                            // upper left corner invalid
-        errorunits |= validateCoordinates(i, i1 + i3 - 1, i2 + i4 - 1); // lower right corner invalid
-        checkSync(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
-        check(i5 < 0 || i5 > 0xff, i, JposConst.JPOS_E_ILLEGAL, 0, "Illegal attribute value: " + i5);
-        doItTrans(RemoteOrderDisplayInterface.clearVideoRegion(i, i1, i2, i3, i4, i5), "ClearVideoRegion");
+    public void clearVideoRegion(int units, int row, int column, int height, int width, int attribute) throws JposException {
+        logPreCall("ClearVideoRegion", removeOuterArraySpecifier(new Object[]{units, row, column, height, width, attribute}, Device.MaxArrayStringElements));
+        checkSyncOnline(units);
+        check(row < 0, units, JPOS_E_ILLEGAL, 0, "Row of region invalid: " + row);
+        check(column < 0, units, JPOS_E_ILLEGAL, 0, "Column of region invalid: " + column);
+        check(height < 1, units, JPOS_E_ILLEGAL, 0, "Height of region invalid: " + height);
+        check(width < 1, units, JPOS_E_ILLEGAL, 0, "Width of region invalid: " + width);
+        int errorunits = validateCoordinates(units, row, column);                            // upper left corner invalid
+        errorunits |= validateCoordinates(units, row + height - 1, column + width - 1); // lower right corner invalid
+        checkSync(errorunits != 0, errorunits, JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
+        check(attribute < 0 || attribute > 0xff, units, JPOS_E_ILLEGAL, 0, "Illegal attribute value: " + attribute);
+        doItTrans(RemoteOrderDisplayInterface.clearVideoRegion(units, row, column, height, width, attribute), "ClearVideoRegion");
     }
 
     @Override
-    public void copyVideoRegion(int i, int i1, int i2, int i3, int i4, int i5, int i6) throws JposException {
-        logPreCall("CopyVideoRegion", "" + i + ", " + i1 + ", " + i2 + ", " + i3 + ", " + i4 + ", " + i5 + ", " + i6);
-        checkSyncOnline(i);
-        check(i1 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Row of region invalid: " + i1);
-        check(i2 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Column of region invalid: " + i2);
-        check(i3 < 1, i, JposConst.JPOS_E_ILLEGAL, 0, "Height of region invalid: " + i3);
-        check(i4 < 1, i, JposConst.JPOS_E_ILLEGAL, 0, "Width of region invalid: " + i4);
-        check(i5 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "TargetRow of region invalid: " + i5);
-        check(i6 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "TargetColumn of region invalid: " + i6);
-        int errorunits = validateCoordinates(i, i1, i2);                            // upper left source corner invalid
-        errorunits |= validateCoordinates(i, i1 + i3 - 1, i2 + i4 - 1); // lower right source corner invalid
-        errorunits |= validateCoordinates(i, i5 + i3 - 1, i6 + i4 - 1); // lower right target corner invalid
-        checkSync(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
-        doItTrans(RemoteOrderDisplayInterface.copyVideoRegion(i, i1, i2, i3, i4, i5, i6), "CopyVideoRegion");
+    public void copyVideoRegion(int units, int row, int column, int height, int width, int targetRow, int targetColumn) throws JposException {
+        logPreCall("CopyVideoRegion", removeOuterArraySpecifier(new Object[]{units, row, column, height, width, targetRow, targetColumn}, Device.MaxArrayStringElements));
+        checkSyncOnline(units);
+        check(row < 0, units, JPOS_E_ILLEGAL, 0, "Row of region invalid: " + row);
+        check(column < 0, units, JPOS_E_ILLEGAL, 0, "Column of region invalid: " + column);
+        check(height < 1, units, JPOS_E_ILLEGAL, 0, "Height of region invalid: " + height);
+        check(width < 1, units, JPOS_E_ILLEGAL, 0, "Width of region invalid: " + width);
+        check(targetRow < 0, units, JPOS_E_ILLEGAL, 0, "TargetRow of region invalid: " + targetRow);
+        check(targetColumn < 0, units, JPOS_E_ILLEGAL, 0, "TargetColumn of region invalid: " + targetColumn);
+        int errorunits = validateCoordinates(units, row, column);                            // upper left source corner invalid
+        errorunits |= validateCoordinates(units, row + height - 1, column + width - 1); // lower right source corner invalid
+        errorunits |= validateCoordinates(units, targetRow + height - 1, targetColumn + width - 1); // lower right target corner invalid
+        checkSync(errorunits != 0, errorunits, JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
+        doItTrans(RemoteOrderDisplayInterface.copyVideoRegion(units, row, column, height, width, targetRow, targetColumn), "CopyVideoRegion");
     }
 
     @Override
-    public void displayData(int i, int i1, int i2, int i3, String s) throws JposException {
-        logPreCall("DisplayData", "" + i + ", " + i1 + ", " + i2 + ", " + i3 + ", \"" + s + "\"");
-        checkSyncOnline(i);
-        check(i1 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Row of region invalid: " + i1);
-        check(i2 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Column of region invalid: " + i2);
-        int errorunits = validateCoordinates(i, i1, i2);                            // upper left source corner invalid
-        checkSync(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
-        check(i3 < 0 || i3 > 0xff, i, JposConst.JPOS_E_ILLEGAL, 0, "Illegal attribute value: " + i3);
-        doItTrans(RemoteOrderDisplayInterface.displayData(i, i1, i2, i3, s), "DisplayData");
+    public void displayData(int units, int row, int column, int attribute, String data) throws JposException {
+        logPreCall("DisplayData", removeOuterArraySpecifier(new Object[]{units, row, column, attribute, data}, Device.MaxArrayStringElements));
+        checkSyncOnline(units);
+        check(row < 0, units, JPOS_E_ILLEGAL, 0, "Row of region invalid: " + row);
+        check(column < 0, units, JPOS_E_ILLEGAL, 0, "Column of region invalid: " + column);
+        int errorunits = validateCoordinates(units, row, column);                            // upper left source corner invalid
+        checkSync(errorunits != 0, errorunits, JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
+        check(attribute < 0 || attribute > 0xff, units, JPOS_E_ILLEGAL, 0, "Illegal attribute value: " + attribute);
+        doItTrans(RemoteOrderDisplayInterface.displayData(units, row, column, attribute, data), "DisplayData");
     }
 
-    private long[] validBorderType = new long[]{
-            RemoteOrderDisplayConst.ROD_BDR_SINGLE, RemoteOrderDisplayConst.ROD_BDR_DOUBLE, RemoteOrderDisplayConst.ROD_BDR_SOLID
-    };
+    private final long[] validBorderType = { ROD_BDR_SINGLE, ROD_BDR_DOUBLE, ROD_BDR_SOLID };
 
     @Override
-    public void drawBox(int i, int i1, int i2, int i3, int i4, int i5, int i6) throws JposException {
-        logPreCall("DrawBox", "" + i + ", " + i1 + ", " + i2 + ", " + i3 + ", " + i4 + ", " + i5 + ", " + i6);
-        checkSyncOnline(i);
-        check(i1 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Row of region invalid: " + i1);
-        check(i2 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Column of region invalid: " + i2);
-        check(i3 < 1, i, JposConst.JPOS_E_ILLEGAL, 0, "Height of region invalid: " + i3);
-        check(i4 < 1, i, JposConst.JPOS_E_ILLEGAL, 0, "Width of region invalid: " + i4);
-        int errorunits = validateCoordinates(i, i1, i2);                            // upper left corner invalid
-        errorunits |= validateCoordinates(i, i1 + i3 - 1, i2 + i4 - 1); // lower right corner invalid
-        checkSync(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
-        check(i5 < 0 || i5 > 0xff, i, JposConst.JPOS_E_ILLEGAL, 0, "Illegal attribute value: " + i5);
-        check(!Device.member(i6, validBorderType), i, JposConst.JPOS_E_ILLEGAL, 0, "Illegal border type: " + i6);
-        doItTrans(RemoteOrderDisplayInterface.drawBox(i, i1, i2, i3, i4, i5, i6), "DrawBox");
-    }
-
-    @Override
-    public void restoreVideoRegion(int i, int i1, int i2, int i3) throws JposException {
-        logPreCall("RestoreVideoRegion", "" + i + ", " + i1 + ", " + i2 + ", " + i3);
-        checkSyncOnline(i);
-        check(i1 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Row of region invalid: " + i1);
-        check(i2 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Column of region invalid: " + i2);
-        int errorunits = validateCoordinates(i, i1, i2);                            // upper left source corner invalid
-        checkSync(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
-        check(i3 < 1, i, JposConst.JPOS_E_ILLEGAL, 0, "Illegal buffer ID: " + i3);
-        errorunits = validateBufferID(i, i3);
-        checkSync(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + i3 + " for units specified by " + errorunits);
-        doItTrans(RemoteOrderDisplayInterface.restoreVideoRegion(i, i1, i2, i3), "RestoreVideoRegion");
+    public void drawBox(int units, int row, int column, int height, int width, int attribute, int borderType) throws JposException {
+        logPreCall("DrawBox", removeOuterArraySpecifier(new Object[]{units, row, column, height, width, attribute, borderType}, Device.MaxArrayStringElements));
+        checkSyncOnline(units);
+        check(row < 0, units, JPOS_E_ILLEGAL, 0, "Row of region invalid: " + row);
+        check(column < 0, units, JPOS_E_ILLEGAL, 0, "Column of region invalid: " + column);
+        check(height < 1, units, JPOS_E_ILLEGAL, 0, "Height of region invalid: " + height);
+        check(width < 1, units, JPOS_E_ILLEGAL, 0, "Width of region invalid: " + width);
+        int errorunits = validateCoordinates(units, row, column);                            // upper left corner invalid
+        errorunits |= validateCoordinates(units, row + height - 1, column + width - 1); // lower right corner invalid
+        checkSync(errorunits != 0, errorunits, JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
+        check(attribute < 0 || attribute > 0xff, units, JPOS_E_ILLEGAL, 0, "Illegal attribute value: " + attribute);
+        check(!member(borderType, validBorderType), units, JPOS_E_ILLEGAL, 0, "Illegal border type: " + borderType);
+        doItTrans(RemoteOrderDisplayInterface.drawBox(units, row, column, height, width, attribute, borderType), "DrawBox");
     }
 
     @Override
-    public void saveVideoRegion(int i, int i1, int i2, int i3, int i4, int i5) throws JposException {
-        logPreCall("SaveVideoRegion", "" + i + ", " + i1 + ", " + i2 + ", " + i3 + ", " + i4 + ", " + i5);
-        checkSyncOnline(i);
-        check(i1 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Row of region invalid: " + i1);
-        check(i2 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Column of region invalid: " + i2);
-        check(i3 < 1, i, JposConst.JPOS_E_ILLEGAL, 0, "Height of region invalid: " + i3);
-        check(i4 < 1, i, JposConst.JPOS_E_ILLEGAL, 0, "Width of region invalid: " + i4);
-        int errorunits = validateCoordinates(i, i1, i2);                            // upper left corner invalid
-        errorunits |= validateCoordinates(i, i1 + i3 - 1, i2 + i4 - 1); // lower right corner invalid
-        checkSync(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
-        check(i5 < 1, i, JposConst.JPOS_E_ILLEGAL, 0, "Illegal buffer ID: " + i5);
-        errorunits = validateBufferID(i, i5);
-        checkSync(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + i5 + " for units specified by " + errorunits);
-        doItTrans(RemoteOrderDisplayInterface.saveVideoRegion(i, i1, i2, i3, i4, i5), "SaveVideoRegion");
+    public void restoreVideoRegion(int units, int targetRow, int targetColumn, int bufferId) throws JposException {
+        logPreCall("RestoreVideoRegion", removeOuterArraySpecifier(new Object[]{units, targetRow, targetColumn, bufferId}, Device.MaxArrayStringElements));
+        checkSyncOnline(units);
+        check(targetRow < 0, units, JPOS_E_ILLEGAL, 0, "Row of region invalid: " + targetRow);
+        check(targetColumn < 0, units, JPOS_E_ILLEGAL, 0, "Column of region invalid: " + targetColumn);
+        int errorunits = validateCoordinates(units, targetRow, targetColumn);                            // upper left source corner invalid
+        checkSync(errorunits != 0, errorunits, JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
+        check(bufferId < 1, units, JPOS_E_ILLEGAL, 0, "Illegal buffer ID: " + bufferId);
+        errorunits = validateBufferID(units, bufferId);
+        checkSync(errorunits != 0, errorunits, JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + bufferId + " for units specified by " + errorunits);
+        doItTrans(RemoteOrderDisplayInterface.restoreVideoRegion(units, targetRow, targetColumn, bufferId), "RestoreVideoRegion");
     }
 
-    private static final long[] validTransactionType = new long[] {
-            RemoteOrderDisplayConst.ROD_TD_TRANSACTION, RemoteOrderDisplayConst.ROD_TD_NORMAL
-    };
+    @Override
+    public void saveVideoRegion(int units, int row, int column, int height, int width, int bufferId) throws JposException {
+        logPreCall("SaveVideoRegion", removeOuterArraySpecifier(new Object[]{units, row, column, height, width, bufferId}, Device.MaxArrayStringElements));
+        checkSyncOnline(units);
+        check(row < 0, units, JPOS_E_ILLEGAL, 0, "Row of region invalid: " + row);
+        check(column < 0, units, JPOS_E_ILLEGAL, 0, "Column of region invalid: " + column);
+        check(height < 1, units, JPOS_E_ILLEGAL, 0, "Height of region invalid: " + height);
+        check(width < 1, units, JPOS_E_ILLEGAL, 0, "Width of region invalid: " + width);
+        int errorunits = validateCoordinates(units, row, column);                            // upper left corner invalid
+        errorunits |= validateCoordinates(units, row + height - 1, column + width - 1); // lower right corner invalid
+        checkSync(errorunits != 0, errorunits, JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
+        check(bufferId < 1, units, JPOS_E_ILLEGAL, 0, "Illegal buffer ID: " + bufferId);
+        errorunits = validateBufferID(units, bufferId);
+        checkSync(errorunits != 0, errorunits, JPOS_E_ILLEGAL, 0, "Illegal buffer ID " + bufferId + " for units specified by " + errorunits);
+        doItTrans(RemoteOrderDisplayInterface.saveVideoRegion(units, row, column, height, width, bufferId), "SaveVideoRegion");
+    }
+
+    private static final long[] validTransactionType = { ROD_TD_TRANSACTION, ROD_TD_NORMAL };
 
     @Override
-    public void transactionDisplay(int i, int i1) throws JposException {
-        logPreCall("TransactionDisplay", "" + i + ", " + i1);
+    public void transactionDisplay(int units, int function) throws JposException {
+        logPreCall("TransactionDisplay", removeOuterArraySpecifier(new Object[]{units, function}, Device.MaxArrayStringElements));
         TransactionDisplay request;
         checkEnabled();
-        check(!Device.member(i1, validTransactionType), i, JposConst.JPOS_E_ILLEGAL, 0, "Illegal transaction type: " + i1);
-        if (i1 == RemoteOrderDisplayConst.ROD_TD_TRANSACTION) {
-            check(TransactionCommand != null, i, JposConst.JPOS_E_ILLEGAL, 0, "Transaction in progress");
-            TransactionCommand = request = RemoteOrderDisplayInterface.transactionDisplay(i, i1);
+        check(!member(function, validTransactionType), units, JPOS_E_ILLEGAL, 0, "Illegal transaction type: " + function);
+        if (function == ROD_TD_TRANSACTION) {
+            check(TransactionCommand != null, units, JPOS_E_ILLEGAL, 0, "Transaction in progress");
+            TransactionCommand = request = RemoteOrderDisplayInterface.transactionDisplay(units, function);
         }
         else {
-            check(TransactionCommand == null, i, JposConst.JPOS_E_ILLEGAL, 0, "Transaction not in progress");
-            request = RemoteOrderDisplayInterface.transactionDisplay(i, i1);
+            check(TransactionCommand == null, units, JPOS_E_ILLEGAL, 0, "Transaction not in progress");
+            request = RemoteOrderDisplayInterface.transactionDisplay(units, function);
             TransactionCommand.addMethod(request);
             request = TransactionCommand;
             TransactionCommand = null;
-            checkSyncOnline(i);
+            checkSyncOnline(units);
             if (!callNowOrLater(request)) {
                 logCall("TransactionDisplay");
                 return;
@@ -797,27 +685,25 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
         logAsyncCall("TransactionDisplay");
     }
 
-    private static final long[] validAttributeFunction = new long[]{
-            RemoteOrderDisplayConst.ROD_UA_SET, RemoteOrderDisplayConst.ROD_UA_INTENSITY_ON,
-            RemoteOrderDisplayConst.ROD_UA_INTENSITY_OFF, RemoteOrderDisplayConst.ROD_UA_REVERSE_ON,
-            RemoteOrderDisplayConst.ROD_UA_REVERSE_OFF, RemoteOrderDisplayConst.ROD_UA_BLINK_ON,
-            RemoteOrderDisplayConst.ROD_UA_BLINK_OFF
+    private static final long[] validAttributeFunction = {
+            ROD_UA_SET, ROD_UA_INTENSITY_ON, ROD_UA_INTENSITY_OFF, ROD_UA_REVERSE_ON, ROD_UA_REVERSE_OFF,
+            ROD_UA_BLINK_ON, ROD_UA_BLINK_OFF
     };
 
     @Override
-    public void updateVideoRegionAttribute(int i, int i1, int i2, int i3, int i4, int i5, int i6) throws JposException {
-        logPreCall("UpdateVideoRegionAttribute", "" + i + ", " + i1 + ", " + i2 + ", " + i3 + ", " + i4 + ", " + i5 + ", " + i6);
-        checkSyncOnline(i);
-        check(!Device.member(i1, validAttributeFunction), i, JposConst.JPOS_E_ILLEGAL, 0, "Invalid attribute command: " + i1);
-        check(i2 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Row of region invalid: " + i2);
-        check(i3 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Column of region invalid: " + i3);
-        check(i4 < 1, i, JposConst.JPOS_E_ILLEGAL, 0, "Height of region invalid: " + i4);
-        check(i5 < 1, i, JposConst.JPOS_E_ILLEGAL, 0, "Width of region invalid: " + i5);
-        int errorunits = validateCoordinates(i, i2, i3);                            // upper left corner invalid
-        errorunits |= validateCoordinates(i, i2 + i4 - 1, i3 + i5 - 1); // lower right corner invalid
-        checkSync(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
-        check(i1 == RemoteOrderDisplayConst.ROD_UA_SET && (i6 < 0 || i6 > 0xff), i, JposConst.JPOS_E_ILLEGAL, 0, "Illegal attribute value: " + i6);
-        doItTrans(RemoteOrderDisplayInterface.updateVideoRegionAttribute(i, i1, i2, i3, i4, i5, i6), "UpdateVideoRegionAttribute");
+    public void updateVideoRegionAttribute(int units, int function, int row, int column, int height, int width, int attribute) throws JposException {
+        logPreCall("UpdateVideoRegionAttribute", removeOuterArraySpecifier(new Object[]{units, function, row, column, height, width, attribute}, Device.MaxArrayStringElements));
+        checkSyncOnline(units);
+        check(!member(function, validAttributeFunction), units, JPOS_E_ILLEGAL, 0, "Invalid attribute command: " + function);
+        check(row < 0, units, JPOS_E_ILLEGAL, 0, "Row of region invalid: " + row);
+        check(column < 0, units, JPOS_E_ILLEGAL, 0, "Column of region invalid: " + column);
+        check(height < 1, units, JPOS_E_ILLEGAL, 0, "Height of region invalid: " + height);
+        check(width < 1, units, JPOS_E_ILLEGAL, 0, "Width of region invalid: " + width);
+        int errorunits = validateCoordinates(units, row, column);                            // upper left corner invalid
+        errorunits |= validateCoordinates(units, row + height - 1, column + width - 1); // lower right corner invalid
+        checkSync(errorunits != 0, errorunits, JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits);
+        check(function == ROD_UA_SET && (attribute < 0 || attribute > 0xff), units, JPOS_E_ILLEGAL, 0, "Illegal attribute value: " + attribute);
+        doItTrans(RemoteOrderDisplayInterface.updateVideoRegionAttribute(units, function, row, column, height, width, attribute), "UpdateVideoRegionAttribute");
     }
 
     /**
@@ -837,60 +723,60 @@ public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDi
     }
 
     @Override
-    public void videoSound(int i, int i1, int i2, int i3, int i4) throws JposException {
-        logPreCall("VideoSound", "" + i + ", " + i1 + ", " + i2 + ", " + i3 + ", " + i4);
-        checkSyncOnline(i);
-        check(i1 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Frequency invalid: " + i1);
-        check(i2 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Duration invalid: " + i2);
-        check(i3 != JposConst.JPOS_FOREVER && i3 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Invalid cycle count: " + i3);
-        check(i4 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "InterSoundWait invalid: " + i4);
-        check(i2 + i4 < 0, i, JposConst.JPOS_E_ILLEGAL, 0, "Sound cylcle time invalid: " + (i2 + i4));
-        int errunits = validateTone(i);
-        checkSync(errunits != 0, errunits, JposConst.JPOS_E_FAILURE, 0, "Selected units do not support video sound: " + errunits);
-        doItTrans(RemoteOrderDisplayInterface.videoSound(i, i1, i2, i3, i4), "VideoSound");
+    public void videoSound(int units, int frequency, int duration, int NumberOfCycles, int interSountWait) throws JposException {
+        logPreCall("VideoSound", removeOuterArraySpecifier(new Object[]{units, frequency, duration, NumberOfCycles, interSountWait}, Device.MaxArrayStringElements));
+        checkSyncOnline(units);
+        check(frequency < 0, units, JPOS_E_ILLEGAL, 0, "Frequency invalid: " + frequency);
+        check(duration < 0, units, JPOS_E_ILLEGAL, 0, "Duration invalid: " + duration);
+        check(NumberOfCycles != JPOS_FOREVER && NumberOfCycles < 0, units, JPOS_E_ILLEGAL, 0, "Invalid cycle count: " + NumberOfCycles);
+        check(interSountWait < 0, units, JPOS_E_ILLEGAL, 0, "InterSoundWait invalid: " + interSountWait);
+        check(duration + interSountWait < 0, units, JPOS_E_ILLEGAL, 0, "Sound cylcle time invalid: " + (duration + interSountWait));
+        int errunits = validateTone(units);
+        checkSync(errunits != 0, errunits, JPOS_E_FAILURE, 0, "Selected units do not support video sound: " + errunits);
+        doItTrans(RemoteOrderDisplayInterface.videoSound(units, frequency, duration, NumberOfCycles, interSountWait), "VideoSound");
     }
 
     @Override
     public void checkFirstEnabled() throws JposException {
         checkOpened();
-        check(!Props.FirstEnableHappened, 0, JposConst.JPOS_E_ILLEGAL, 0, "Device never enabled");
+        check(!Props.FirstEnableHappened, 0, JPOS_E_ILLEGAL, 0, "Device never enabled");
     }
 
     @Override
     public void checkOpened() throws JposException {
-        check(Props.State == JposConst.JPOS_S_CLOSED, 0, JposConst.JPOS_E_CLOSED, 0, "Device not opened");
+        check(Props.State == JPOS_S_CLOSED, 0, JPOS_E_CLOSED, 0, "Device not opened");
     }
 
     @Override
     public void checkEnabled() throws JposException {
         checkOpened();
         JposCommonProperties claimer = Props.getClaimingInstance();
-        check(!Props.Claimed, 0,  claimer == null ? JposConst.JPOS_E_NOTCLAIMED : JposConst.JPOS_E_CLAIMED, 0, "Device not claimed");
-        check(!Props.DeviceEnabled, 0, JposConst.JPOS_E_DISABLED, 0, "Device not enabled");
+        check(!Props.Claimed, 0,  claimer == null ? JPOS_E_NOTCLAIMED : JPOS_E_CLAIMED, 0, "Device not claimed");
+        check(!Props.DeviceEnabled, 0, JPOS_E_DISABLED, 0, "Device not enabled");
     }
 
     private void checkOnline(int units) throws JposException {
         checkEnabled();
-        check((units & ~Data.UnitsOnline) != 0, units & ~Data.UnitsOnline, JposConst.JPOS_E_OFFLINE, 0, "Display units specified by " + (units & ~Data.UnitsOnline) + " Offline");
+        check((units & ~Data.UnitsOnline) != 0, units & ~Data.UnitsOnline, JPOS_E_OFFLINE, 0, "Display units specified by " + (units & ~Data.UnitsOnline) + " Offline");
     }
 
     private void checkSyncOnline(int units) throws JposException {
         checkEnabled();
         if (!Data.AsyncMode && TransactionCommand == null)
-            check((~Data.UnitsOnline & units) != 0, ~Data.UnitsOnline & units, JposConst.JPOS_E_OFFLINE, 0, "Display units specified by " + (units & ~Data.UnitsOnline) + " offline");
+            check((~Data.UnitsOnline & units) != 0, ~Data.UnitsOnline & units, JPOS_E_OFFLINE, 0, "Display units specified by " + (units & ~Data.UnitsOnline) + " offline");
     }
 
     private void checkDeviceIdle(int units) throws JposException {
         synchronized (Device.AsyncProcessorRunning) {
-            check(Data.State != JposConst.JPOS_S_IDLE, units, JposConst.JPOS_E_BUSY, 0, "Device is not idle: " + Data.State);
-            Data.State = JposConst.JPOS_S_BUSY;
+            check(Data.State != JPOS_S_IDLE, units, JPOS_E_BUSY, 0, "Device is not idle: " + Data.State);
+            Data.State = JPOS_S_BUSY;
             logSet("State");
         }
     }
 
     private void setDeviceIdle() {
         synchronized (Device.AsyncProcessorRunning) {
-            Data.State = JposConst.JPOS_S_IDLE;
+            Data.State = JPOS_S_IDLE;
             logSet("State");
         }
     }

@@ -17,7 +17,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.JposConst;
+
+import static jpos.JposConst.*;
 
 /**
  * FiscalPrinter error events, holds additional parameters.
@@ -30,7 +31,7 @@ public class FiscalPrinterErrorEvent extends JposErrorEvent {
     public int getLevel() {
         return Level;
     }
-    private int Level;
+    private final int Level;
 
     /**
      * Getter for error output ID.
@@ -39,7 +40,7 @@ public class FiscalPrinterErrorEvent extends JposErrorEvent {
     public int getOutputID() {
         return OutputID;
     }
-    private int OutputID;
+    private final int OutputID;
 
     /**
      * Getter for error state.
@@ -48,7 +49,7 @@ public class FiscalPrinterErrorEvent extends JposErrorEvent {
     public int getState() {
         return State;
     }
-    private int State;
+    private final int State;
 
     /**
      * Getter for error station.
@@ -57,7 +58,7 @@ public class FiscalPrinterErrorEvent extends JposErrorEvent {
     public int getStation() {
         return Station;
     }
-    private int Station;
+    private final int Station;
 
     /**
      * Getter for error message.
@@ -66,7 +67,7 @@ public class FiscalPrinterErrorEvent extends JposErrorEvent {
     public String getMessage() {
         return Message;
     }
-    private String Message;
+    private final String Message;
 
     /**
      * Constructor. Parameters are:
@@ -81,7 +82,7 @@ public class FiscalPrinterErrorEvent extends JposErrorEvent {
      * @param message   Error message. To be stored in property ErrorString.
      */
     public FiscalPrinterErrorEvent(JposBase source, int errorcode, int extended, int level, int outputID, int state, int station, String message) {
-        super(source, errorcode, extended, JposConst.JPOS_EL_OUTPUT);
+        super(source, errorcode, extended, JPOS_EL_OUTPUT);
         Level = level;
         OutputID = outputID;
         State = state;

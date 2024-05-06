@@ -19,11 +19,11 @@ package SampleCAT;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.cat.*;
-import jpos.JposConst;
 import jpos.JposException;
 import jpos.config.JposEntry;
 import jpos.loader.JposServiceInstance;
 import jpos.loader.JposServiceInstanceFactory;
+import static jpos.JposConst.*;
 
 /**
  * Factory class for CAT sample service implementation
@@ -43,23 +43,23 @@ public class CATFactory extends Factory implements JposServiceInstanceFactory {
                     if (!created) {
                         dev = new Device(port, jposEntry.getPropertyValue("DisplayName"), jposEntry.getPropertyValue("JournalPath"));
                     } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
+                        throw new JposException(JPOS_E_NOSERVICE, "Port " + port + " used by " + any.getClass().getName());
                     else {
                         dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry);
-                    JposServiceInstance srv = addDevice(0, dev);
+                    JposServiceInstance srv = addDevice(0, dev, jposEntry);
                     if (!created)
                         putDevice(port, dev);
                     return srv;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

@@ -27,7 +27,7 @@ public class AuthorizeCompletion extends CashDeposit {
      * @return Tax and other amounts for approval.
      */
     public long getTaxOthers() { return TaxOthers; }
-    private long TaxOthers;
+    private final long TaxOthers;
 
     /**
      * Constructor. Stores given parameters for later use.

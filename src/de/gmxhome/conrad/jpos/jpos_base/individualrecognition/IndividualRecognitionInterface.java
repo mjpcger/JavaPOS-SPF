@@ -18,6 +18,7 @@
 package de.gmxhome.conrad.jpos.jpos_base.individualrecognition;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposBaseInterface;
+import jpos.JposException;
 
 /**
  * Interface for methods that implement property setter and method calls for the IndividualRecognition device category.
@@ -25,4 +26,16 @@ import de.gmxhome.conrad.jpos.jpos_base.JposBaseInterface;
  * Further details about error handling can be found in introduction - Device Behavior Models - Errors.
  */
 public interface IndividualRecognitionInterface extends JposBaseInterface {
+    /**
+     * Final part of setting IndividualRecognitionFilter. Can be overwritten within derived classes, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is open,/li>
+     *     <li>individualRecognitionFilter is neither null nor an empty string.</li>
+     * </ul>
+     *
+     * @param individualRecognitionFilter New value for IndividualRecognitionFilter property.
+     * @throws JposException If an error occurs.
+     */
+    void individualRecognitionFilter(String individualRecognitionFilter) throws JposException;
 }

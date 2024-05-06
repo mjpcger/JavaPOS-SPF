@@ -22,15 +22,13 @@ import de.gmxhome.conrad.jpos.jpos_base.checkscanner.*;
 import de.gmxhome.conrad.jpos.jpos_base.imagescanner.*;
 import jpos.*;
 import jpos.config.*;
+import java.util.*;
 
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static javax.swing.JOptionPane.*;
+import static jpos.CheckScannerConst.*;
+import static jpos.ImageScannerConst.*;
+import static jpos.JposConst.*;
 
 /**
  * JposDevice based dummy implementation, currently for JavaPOS CheckScanner and ImageScanner device service implementation.
@@ -67,7 +65,7 @@ import java.util.Map;
  * frame data structure is not as it should be based on the ImageType property.
  */
 public class Device extends JposDevice {
-    private JposCommonProperties[] ClaimedDevices;
+    private final JposCommonProperties[] ClaimedDevices;
     /**
      * The device implementation. See parent for further details.
      * @param id  Device ID, not used by implementation.
@@ -82,13 +80,13 @@ public class Device extends JposDevice {
         };
         PhysicalDeviceDescription = "Dummy device simulator";
         PhysicalDeviceName = "Dummy Device Simulator";
-        CapPowerReporting = JposConst.JPOS_PR_NONE;
+        CapPowerReporting = JPOS_PR_NONE;
     }
 
     private void checkClaimedByAnyInstance() throws JposException {
         synchronized (ClaimedDevices) {
             for (JposCommonProperties claimed : ClaimedDevices) {
-                JposDevice.check(claimed != null, JposConst.JPOS_E_CLAIMED, "Other simulator instance is just claimed");
+                check(claimed != null, JPOS_E_CLAIMED, "Other simulator instance is just claimed");
             }
         }
     }
@@ -100,19 +98,18 @@ public class Device extends JposDevice {
             checkCheckScannerProperties(entry);
             checkImageScannerProperties(entry);
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property", e);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property", e);
         }
     }
 
-    private static interface ConfirmWaiterFinalizer {
+    private interface ConfirmWaiterFinalizer {
         void finish(String what, int result);
     }
 
     private class ConfirmationWaiter extends Thread {
-        private SyncObject Sync;
-        private String OperationName;
-        private Map<String, Integer> Defaults = new HashMap<String, Integer>();
-        private ConfirmWaiterFinalizer Finalizer;
+        private final String OperationName;
+        private final Map<String, Integer> Defaults = new HashMap<>();
+        private final ConfirmWaiterFinalizer Finalizer;
         /**
          * Confirmation result. Is null while confirmation dialog has not been finished. If not null, it holds
          * the index of the selected option, starting at zero. In case of timeout or no selection, it holds the number of
@@ -124,34 +121,30 @@ public class Device extends JposDevice {
          * Constructor for threads that allow waiting for
          * @param name  Thread name
          * @param operation Identifier for operation, one of "DoCheckScan" or "DoImageScan".
-         * @param sync  SyncObject, to be signalled whenever the thread has been finished.
          * @param finalizer Finalizer, its finish method will be called after confirmation.
          */
-        private ConfirmationWaiter(String name, String operation, SyncObject sync, ConfirmWaiterFinalizer finalizer) {
+        private ConfirmationWaiter(String name, String operation, ConfirmWaiterFinalizer finalizer) {
             setName(name);
             OperationName = operation;
-            Sync = sync;
             Finalizer = finalizer;
         }
 
-        private SynchronizedMessageBox Box = new SynchronizedMessageBox();
+        private final SynchronizedMessageBox Box = new SynchronizedMessageBox();
 
         @Override
         public void run() {
             if (OperationName.equals("DoCheckScan")) {
                 Integer index = Defaults.get(OperationName);
                 String defOption = index == null || index < 0 || index >= CheckScannerOptions.length ? null : CheckScannerOptions[index];
-                Box.synchronizedConfirmationBox("Scan Simulation Successful?", "Check Scanner", CheckScannerOptions, defOption, JOptionPane.QUESTION_MESSAGE, JposConst.JPOS_FOREVER);
-                if (Defaults.containsKey(OperationName))
-                    Defaults.remove(OperationName);
+                Box.synchronizedConfirmationBox("Scan Simulation Successful?", "Check Scanner", CheckScannerOptions, defOption, QUESTION_MESSAGE, JPOS_FOREVER);
+                Defaults.remove(OperationName);
                 if (Result >= 0 && Result < CheckScannerOptions.length)
                     Defaults.put(OperationName, Result);
             } else if (OperationName.equals("DoImageScan")) {
                 Integer index = Defaults.get(OperationName);
                 String defOption = index == null || index < 0 || index >= ImageScannerOptions.length ? null : ImageScannerOptions[index];
-                Box.synchronizedConfirmationBox("Scan Simulation Successful?", "Image Scanner", ImageScannerOptions, defOption, JOptionPane.QUESTION_MESSAGE, SessionTimeoutImage);
-                if (Defaults.containsKey(OperationName))
-                    Defaults.remove(OperationName);
+                Box.synchronizedConfirmationBox("Scan Simulation Successful?", "Image Scanner", ImageScannerOptions, defOption, QUESTION_MESSAGE, SessionTimeoutImage);
+                Defaults.remove(OperationName);
                 if (Result >= 0 && Result < ImageScannerOptions.length)
                     Defaults.put(OperationName, Result);
             }
@@ -160,9 +153,8 @@ public class Device extends JposDevice {
     }
 
     private ConfirmationWaiter startAsyncOperation(String name, String operation, SyncObject sync, ConfirmWaiterFinalizer finalizer) throws JposException {
-        while (sync.suspend(0))
-            ;
-        ConfirmationWaiter ret = new ConfirmationWaiter(name, operation, sync, finalizer);
+        sync.reset();
+        ConfirmationWaiter ret = new ConfirmationWaiter(name, operation, finalizer);
         ret.start();
         return ret;
     }
@@ -180,7 +172,6 @@ public class Device extends JposDevice {
 
     static private final String[] CheckScannerOptions = {"Yes", "No"};
     static private final int CheckScannerYes = 0;
-    static private final int CheckScannerNo = 1;
 
     private void checkCheckScannerProperties(JposEntry entry) {
         Object o;
@@ -202,8 +193,8 @@ public class Device extends JposDevice {
         props.DeviceServiceDescription = "Check scanner service for sample dummy device";
         props.DocumentHeightDef = MaxHeightCheck;
         props.DocumentWidthDef = MaxWidthCheck;
-        props.CapColor = CheckScannerConst.CHK_CCL_MONO;
-        props.CapImageFormat = CheckScannerConst.CHK_CIF_NATIVE;
+        props.CapColor = CHK_CCL_MONO;
+        props.CapImageFormat = CHK_CIF_NATIVE;
         props.CapDefineCropArea = true;
         props.ContrastDef = ContrastCheck;    // UPOS specification: Shall be user configurable.
         props.MaxCropAreas = MaxCropAreasCheck;
@@ -220,13 +211,13 @@ public class Device extends JposDevice {
         protected SampleCheckScannerProperties() {
             super(0);
             try {
-                defineCropArea(CheckScannerConst.CHK_CROP_AREA_RESET_ALL, 0, 0, 0, 0);
-            } catch (JposException e) {}
+                defineCropArea(CHK_CROP_AREA_RESET_ALL, 0, 0, 0, 0);
+            } catch (JposException ignored) {}
         }
 
         private ConfirmationWaiter TheWaiter = null;
-        private SyncObject SyncObj = new SyncObject();
-        Map<Integer, int[]> CropAreas = new HashMap();
+        private final SyncObject SyncObj = new SyncObject();
+        Map<Integer, int[]> CropAreas = new HashMap<>();
         int ScanQuality = 0;
 
         @Override
@@ -257,18 +248,18 @@ public class Device extends JposDevice {
         @Override
         public void beginInsertion(int timeout) throws JposException {
             if (Inserted != null)
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, Inserted ? "Check scanned" : "Removal not finished");
+                throw new JposException(JPOS_E_ILLEGAL, Inserted ? "Check scanned" : "Removal not finished");
             synchronized (SyncObj) {
                 if (TheWaiter == null) {
                     TheWaiter = startAsyncOperation(ID + ":CheckScanConfirmWaiter", "DoCheckScan", SyncObj, this);
                 }
                 ScanQuality = Quality;
             }
-            if (!SyncObj.suspend(timeout == JposConst.JPOS_FOREVER ? SyncObject.INFINITE : timeout)) {
+            if (!SyncObj.suspend(timeout == JPOS_FOREVER ? INFINITE : timeout)) {
                 InsertionMode = true;
-                throw new JposException(JposConst.JPOS_E_TIMEOUT, "Timeout BeginInsertion");
+                throw new JposException(JPOS_E_TIMEOUT, "Timeout BeginInsertion");
             }
-            check(TheWaiter.Result != CheckScannerYes, JposConst.JPOS_E_FAILURE, "Check Insertion Failed");
+            check(TheWaiter.Result != CheckScannerYes, JPOS_E_FAILURE, "Check Insertion Failed");
         }
 
         Boolean Inserted = null;
@@ -280,13 +271,13 @@ public class Device extends JposDevice {
                 result = TheWaiter.Result;
             }
             if (result == null) {
-                SyncObj.suspend(SyncObject.INFINITE);
+                SyncObj.suspend(INFINITE);
             }
             if (TheWaiter.Result != CheckScannerYes) {
                 resetWaiter();
-                throw new JposException(CheckScannerConst.JPOS_ECHK_NOCHECK, "No check available");
+                throw new JposException(JPOS_ECHK_NOCHECK, "No check available");
             }
-            handleEvent(new CheckScannerStatusUpdateEvent(EventSource, CheckScannerConst.CHK_SUE_SCANCOMPLETE));
+            handleEvent(new CheckScannerStatusUpdateEvent(EventSource, CHK_SUE_SCANCOMPLETE));
             Inserted = true;
         }
 
@@ -307,24 +298,24 @@ public class Device extends JposDevice {
 
         @Override
         public void beginRemoval(int timeout) throws JposException {
-            checkext(Inserted == null, CheckScannerConst.JPOS_ECHK_NOCHECK, "No check available");
+            checkext(Inserted == null, JPOS_ECHK_NOCHECK, "No check available");
             Inserted = false;
             resetWaiter();
         }
 
         @Override
         public void endRemoval() throws JposException {
-            checkext(Inserted == null, CheckScannerConst.JPOS_ECHK_NOCHECK, "No check available");
-            checkext(Inserted, CheckScannerConst.JPOS_ECHK_CHECK, "Check still available");
+            checkext(Inserted == null, JPOS_ECHK_NOCHECK, "No check available");
+            checkext(Inserted, JPOS_ECHK_CHECK, "Check still available");
             Inserted = null;
         }
 
         @Override
         public void retrieveImage(int cropAreaID) throws JposException {
             int[] area = CropAreas.get(cropAreaID);
-            check(area == null, JposConst.JPOS_E_ILLEGAL, "Invalid cropAreaID: " + cropAreaID);
-            checkext(TheWaiter == null || TheWaiter.Result == null || TheWaiter.Result != CheckScannerYes, CheckScannerConst.JPOS_ECHK_NOCHECK, "No check available");
-            int factor = getMM_Factor(CheckScannerConst.CHK_MM_ENGLISH);
+            check(area == null, JPOS_E_ILLEGAL, "Invalid cropAreaID: " + cropAreaID);
+            checkext(TheWaiter == null || TheWaiter.Result == null || TheWaiter.Result != CheckScannerYes, JPOS_ECHK_NOCHECK, "No check available");
+            int factor = getMM_Factor(CHK_MM_ENGLISH);
             // Only cx and cy are relevant for image size
             int scanheight = ((area[3] * ScanQuality + (factor >> 2)) / factor + Byte.SIZE - 1) / Byte.SIZE;
             int scanwidth = (area[2] * ScanQuality + (factor >> 2)) / factor;
@@ -336,18 +327,17 @@ public class Device extends JposDevice {
         @Override
         public void defineCropArea(int cropAreaID, int x, int y, int cx, int cy) throws JposException {
             // Store area coordinates in MM_ENGLISH
-            if (cropAreaID == CheckScannerConst.CHK_CROP_AREA_RESET_ALL) {
+            if (cropAreaID == CHK_CROP_AREA_RESET_ALL) {
                 CropAreas.clear();
                 if (CropAreaCount > 0) {
                     CropAreaCount = 0;
                     EventSource.logSet("CropAreaCount");
                 }
-                CropAreas.put(CheckScannerConst.CHK_CROP_AREA_ENTIRE_IMAGE, new int[]{0, 0, MaxWidthCheck - 1, MaxHeightCheck - 1});
-            } else  if (cropAreaID != CheckScannerConst.CHK_CROP_AREA_ENTIRE_IMAGE) {
-                check(CropAreaCount == MaxCropAreas, JposConst.JPOS_E_ILLEGAL, "Maximum number of crop areas reached");
-                if (CropAreas.containsKey(cropAreaID))
-                    CropAreas.remove(cropAreaID);
-                int[] factors = new int[]{ getMM_Factor(MapMode), getMM_Factor(CheckScannerConst.CHK_MM_ENGLISH) };
+                CropAreas.put(CHK_CROP_AREA_ENTIRE_IMAGE, new int[]{0, 0, MaxWidthCheck - 1, MaxHeightCheck - 1});
+            } else  if (cropAreaID != CHK_CROP_AREA_ENTIRE_IMAGE) {
+                check(CropAreaCount == MaxCropAreas, JPOS_E_ILLEGAL, "Maximum number of crop areas reached");
+                CropAreas.remove(cropAreaID);
+                int[] factors = { getMM_Factor(MapMode), getMM_Factor(CHK_MM_ENGLISH) };
                 CropAreas.put(cropAreaID, new int[]{
                         (x * factors[1] + (factors[0] >> 1)) / factors[0],
                         (y * factors[1] + (factors[0] >> 1)) / factors[0],
@@ -378,14 +368,15 @@ public class Device extends JposDevice {
     private int BitsPerPixelImage = 8;
     private boolean IlluminateModeImage = true;
     private boolean AimModeImage = true;
-    private int SessionTimeoutImage = JposConst.JPOS_FOREVER;
-    private int TypeImage = ImageScannerConst.IMG_TYP_JPEG;
+    private int SessionTimeoutImage = JPOS_FOREVER;
+    private int TypeImage = IMG_TYP_JPEG;
     static private final String[] ImageScannerOptions = {"Yes", "No"};
     static private final int ImageScannerYes = 0;
     static private final int ImageScannerNo = 1;
     static private final int ImageScannerTimeout = 2;
     static private final int ImageScannerAbort = -1;
 
+    @SuppressWarnings("boxing")
     private void checkImageScannerProperties(JposEntry entry) {
         Object o;
         int val;
@@ -395,26 +386,27 @@ public class Device extends JposDevice {
             WidthImage = val;
         if ((o = entry.getPropertyValue("BitsPerPixelImage")) != null && (val = Integer.parseInt(o.toString())) > 0)
             BitsPerPixelImage = val;
-        if ((o = entry.getPropertyValue("SessionTimeoutImage")) != null && ((val = Integer.parseInt(o.toString())) >= 0 || val == JposConst.JPOS_FOREVER))
+        if ((o = entry.getPropertyValue("SessionTimeoutImage")) != null && ((val = Integer.parseInt(o.toString())) >= 0 || val == JPOS_FOREVER))
             SessionTimeoutImage = val;
-        if ((o = entry.getPropertyValue("IlluminateModeImage")) != null && (val = Boolean.parseBoolean(o.toString()) ? 1 : -1) != 0)
-            IlluminateModeImage = val > 0;
-        if ((o = entry.getPropertyValue("AimModeImage")) != null && (val = Boolean.parseBoolean(o.toString()) ? 1 : -1) != 0)
-            AimModeImage = val > 0;
+        if ((o = entry.getPropertyValue("IlluminateModeImage")) != null)
+            IlluminateModeImage = Boolean.parseBoolean(o.toString());
+        if ((o = entry.getPropertyValue("AimModeImage")) != null)
+            AimModeImage = Boolean.parseBoolean(o.toString());
         if ((o = entry.getPropertyValue("ImageType")) != null) {
             Object[][] validpairs = {
-                    {"BMP", ImageScannerConst.IMG_TYP_BMP},
-                    {"JPEG", ImageScannerConst.IMG_TYP_JPEG},
-                    {"GIF", ImageScannerConst.IMG_TYP_GIF},
-                    {"PNG", ImageScannerConst.IMG_TYP_PNG},
-                    {"TIFF", ImageScannerConst.IMG_TYP_TIFF}
+                    {"BMP", IMG_TYP_BMP},
+                    {"JPEG", IMG_TYP_JPEG},
+                    {"GIF", IMG_TYP_GIF},
+                    {"PNG", IMG_TYP_PNG},
+                    {"TIFF", IMG_TYP_TIFF}
             };
-            Object value = null;
             for (Object[] pair : validpairs) {
-                if (pair[0].equals(o.toString().toUpperCase()))
-                    value = pair[1];
+                if (pair[0].equals(o.toString().toUpperCase())) {
+                    TypeImage = (int) pair[1];
+                    return;
+                }
             }
-            TypeImage = (Integer)value;
+            throw new NullPointerException("Bad ImageType: " + o);
         }
     }
 
@@ -439,7 +431,7 @@ public class Device extends JposDevice {
     private class SampleImageScannerProperties extends ImageScannerProperties implements ConfirmWaiterFinalizer {
         private boolean InSession = false;
         private ConfirmationWaiter TheWaiter = null;
-        private SyncObject SyncObj = new SyncObject();
+        private final SyncObject SyncObj = new SyncObject();
 
         protected SampleImageScannerProperties() {
             super(0);
@@ -509,7 +501,7 @@ public class Device extends JposDevice {
 
         @Override
         public void finish(String what, int result) {
-            if (ImageMode == ImageScannerConst.IMG_STILL_ONLY) {
+            if (ImageMode == IMG_STILL_ONLY) {
                 try {
                     synchronized (SyncObj) {
                         InSession = false;
@@ -519,17 +511,17 @@ public class Device extends JposDevice {
                         case ImageScannerYes:
                             byte[] framedata = new byte[HeightImage * WidthImage * ((BitsPerPixelImage + Byte.SIZE - 1) / Byte.SIZE) * ImageQuality / 3];
                             handleEvent(new ImageScannerDataEvent(EventSource, 0, framedata, BitsPerPixelImage,
-                                    ImageScannerConst.IMG_FRAME_STILL, HeightImage, WidthImage, framedata.length, TypeImage));
+                                    IMG_FRAME_STILL, HeightImage, WidthImage, framedata.length, TypeImage));
                             break;
                         case ImageScannerNo:
-                            handleEvent(new JposErrorEvent(EventSource, JposConst.JPOS_E_FAILURE, 0, JposConst.JPOS_EL_INPUT, "Simulated image Scan failed"));
+                            handleEvent(new JposErrorEvent(EventSource, JPOS_E_FAILURE, 0, JPOS_EL_INPUT, "Simulated image Scan failed"));
                             break;
                         case ImageScannerTimeout:
-                            handleEvent(new JposErrorEvent(EventSource, JposConst.JPOS_E_TIMEOUT, 0, JposConst.JPOS_EL_INPUT, "Session timed out"));
+                            handleEvent(new JposErrorEvent(EventSource, JPOS_E_TIMEOUT, 0, JPOS_EL_INPUT, "Session timed out"));
                         case ImageScannerAbort:
                             break;
                         default:
-                            handleEvent(new JposErrorEvent(EventSource, JposConst.JPOS_E_ILLEGAL, 0, JposConst.JPOS_EL_INPUT, "Unexpected session end"));
+                            handleEvent(new JposErrorEvent(EventSource, JPOS_E_ILLEGAL, 0, JPOS_EL_INPUT, "Unexpected session end"));
                     }
                 } catch (JposException e) {
                     e.printStackTrace();

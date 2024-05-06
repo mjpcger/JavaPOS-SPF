@@ -20,7 +20,7 @@ package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
  * Output request base for FiscalPrinter methods that use amount arguments.
  */
 class SimpleAmountOutputRequest extends PrePostOutputRequest {
-    private long Amount;
+    private final long Amount;
 
     /**
      * FiscalPrinter method parameter amount, see specific method.

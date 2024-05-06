@@ -23,6 +23,8 @@ import jpos.*;
 import jpos.config.*;
 import jpos.loader.*;
 
+import static jpos.JposConst.*;
+
 /**
  * Factory class for sample RFIDScanner device implementation
  */
@@ -41,22 +43,22 @@ public class RFIDScannerFactory extends Factory implements JposServiceInstanceFa
                     if (create) {
                         dev = new RFIDDevice(file);
                     } else if (!(any instanceof RFIDDevice))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + file);
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: " + file);
                     else {
                         dev = (RFIDDevice) any;
                     }
                     dev.checkProperties(jposEntry);
-                    RFIDScannerService srv = addDevice(0, dev);
+                    RFIDScannerService srv = addDevice(0, dev, jposEntry);
                     if (create)
                         putDevice(file, dev);
                     return srv;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

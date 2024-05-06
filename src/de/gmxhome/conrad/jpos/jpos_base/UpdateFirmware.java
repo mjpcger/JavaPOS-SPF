@@ -17,8 +17,10 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
-import jpos.JposConst;
 import jpos.JposException;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposBaseDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * Output request executor for common method UpdateFirmware.
@@ -31,15 +33,15 @@ public class UpdateFirmware extends JposOutputRequest {
     public String getFirmwareFileName() {
         return FirmwareFileName;
     }
-    private String FirmwareFileName;
+    private final String FirmwareFileName;
 
-    private long[] AllowedResult = new long[]{
-            JposConst.JPOS_SUE_UF_COMPLETE,
-            JposConst.JPOS_SUE_UF_COMPLETE_DEV_NOT_RESTORED,
-            JposConst.JPOS_SUE_UF_FAILED_DEV_OK,
-            JposConst.JPOS_SUE_UF_FAILED_DEV_UNRECOVERABLE,
-            JposConst.JPOS_SUE_UF_FAILED_DEV_NEEDS_FIRMWARE,
-            JposConst.JPOS_SUE_UF_FAILED_DEV_UNKNOWN
+    private final long[] AllowedResult = {
+            JPOS_SUE_UF_COMPLETE,
+            JPOS_SUE_UF_COMPLETE_DEV_NOT_RESTORED,
+            JPOS_SUE_UF_FAILED_DEV_OK,
+            JPOS_SUE_UF_FAILED_DEV_UNRECOVERABLE,
+            JPOS_SUE_UF_FAILED_DEV_NEEDS_FIRMWARE,
+            JPOS_SUE_UF_FAILED_DEV_UNKNOWN
     };
     /**
      * Sets result of firmware update for the case that updateFirmware throws a JposException. Must be one of
@@ -52,7 +54,7 @@ public class UpdateFirmware extends JposOutputRequest {
      * @throws JposException if result is invalid.
      */
     public void setResult(int result) throws JposException {
-        Props.Device.checkMember(result, AllowedResult, JposConst.JPOS_E_ILLEGAL, "Invalid UpdateFirmware result: " + result);
+        checkMember(result, AllowedResult, JPOS_E_ILLEGAL, "Invalid UpdateFirmware result: " + result);
         Result = result;
     }
     private int Result;
@@ -76,11 +78,11 @@ public class UpdateFirmware extends JposOutputRequest {
     @Override
     public void invoke() throws JposException {
         try {
-            Result = JposConst.JPOS_SUE_UF_FAILED_DEV_UNKNOWN;
+            Result = JPOS_SUE_UF_FAILED_DEV_UNKNOWN;
             Props.EventSource.DeviceInterface.updateFirmware(this);
-            Result = JposConst.JPOS_SUE_UF_COMPLETE;
+            Result = JPOS_SUE_UF_COMPLETE;
         } catch (JposException e) {
-            if (Props.Device.member(e.getErrorCodeExtended(), AllowedResult)) {
+            if (member(e.getErrorCodeExtended(), AllowedResult)) {
                 Result = e.getErrorCodeExtended();
             }
         }

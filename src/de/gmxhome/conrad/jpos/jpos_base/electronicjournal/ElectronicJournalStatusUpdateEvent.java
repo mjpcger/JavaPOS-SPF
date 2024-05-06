@@ -17,7 +17,9 @@
 package de.gmxhome.conrad.jpos.jpos_base.electronicjournal;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.*;
+
+import static jpos.ElectronicJournalConst.*;
+import static jpos.JposConst.*;
 
 /**
  * Status update event implementation for ElectronicJournal devices.
@@ -39,82 +41,49 @@ public class ElectronicJournalStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         ElectronicJournalProperties props = (ElectronicJournalProperties)getPropertySet();
         switch (getStatus()) {
-            case ElectronicJournalConst.EJ_SUE_IDLE:
-                props.State = JposConst.JPOS_S_IDLE;
-                props.signalWaiter();
-                return true;
-            case ElectronicJournalConst.EJ_SUE_SUSPENDED:
-                props.Suspended = true;
-                props.signalWaiter();
-                return true;
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_FULL:
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_NEAR_FULL:
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_INSERTED:
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_REMOVED:
-                props.signalWaiter();
-                return true;
+            case EJ_SUE_IDLE -> props.State = JPOS_S_IDLE;
+            case EJ_SUE_SUSPENDED -> props.Suspended = true;
+            case EJ_SUE_MEDIUM_FULL, EJ_SUE_MEDIUM_NEAR_FULL, EJ_SUE_MEDIUM_INSERTED, EJ_SUE_MEDIUM_REMOVED -> {
+            }
+            default -> {
+                return false;
+            }
         }
-        return false;
+        props.signalWaiter();
+        return true;
     }
 
     @Override
     public boolean checkStatusCorresponds() {
-        if (super.checkStatusCorresponds())
-            return true;
-        ElectronicJournalProperties props = (ElectronicJournalProperties)getPropertySet();
-        switch (getStatus()) {
-            case ElectronicJournalConst.EJ_SUE_SUSPENDED:
-                return props.Suspended == true;
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_FULL:
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_NEAR_FULL:
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_INSERTED:
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_REMOVED:
-            case ElectronicJournalConst.EJ_SUE_IDLE:
-                return true;
-        }
-        return false;
+        ElectronicJournalProperties props = (ElectronicJournalProperties) getPropertySet();
+        return super.checkStatusCorresponds() ||switch (getStatus()) {
+            case EJ_SUE_SUSPENDED -> props.Suspended;
+            case EJ_SUE_MEDIUM_FULL, EJ_SUE_MEDIUM_NEAR_FULL, EJ_SUE_MEDIUM_INSERTED, EJ_SUE_MEDIUM_REMOVED, EJ_SUE_IDLE -> true;
+            default -> false;
+        };
     }
 
     @Override
     public boolean setAndCheckStatusProperties() {
-        String[] propnames = {
-                "State",
-                "Suspended"
-        };
+        String[] propnames = { "State", "Suspended" };
         Object[] oldvals = getPropertyValues(propnames);
-        if (super.setAndCheckStatusProperties())
-            return true;
-        if (propertiesHaveBeenChanged(propnames, oldvals))
-            return true;
-        switch (getStatus()) {
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_FULL:
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_NEAR_FULL:
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_INSERTED:
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_REMOVED:
-                return true;
-        }
-        return false;
+        return super.setAndCheckStatusProperties() || propertiesHaveBeenChanged(propnames, oldvals) || switch (getStatus()) {
+            case EJ_SUE_MEDIUM_FULL, EJ_SUE_MEDIUM_NEAR_FULL, EJ_SUE_MEDIUM_INSERTED, EJ_SUE_MEDIUM_REMOVED -> true;
+            default -> false;
+        };
     }
 
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        if (ret.length() > 0)
-            return ret;
-        switch (getStatus()) {
-            case ElectronicJournalConst.EJ_SUE_IDLE:
-                return "ElectronicJournal Idle";
-            case ElectronicJournalConst.EJ_SUE_SUSPENDED:
-                return "ElectronicJournal suspended";
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_FULL:
-                return "ElectronicJournal medium full";
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_NEAR_FULL:
-                return "ElectronicJournal medium nearly full";
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_INSERTED:
-                return "ElectronicJournal medium inserted";
-            case ElectronicJournalConst.EJ_SUE_MEDIUM_REMOVED:
-                return "ElectronicJournal medium removed";
-        }
-        return "Unknown Status Change: " + getStatus();
+        return ret.length() > 0 ? ret : switch (getStatus()) {
+            case EJ_SUE_IDLE -> "ElectronicJournal Idle";
+            case EJ_SUE_SUSPENDED -> "ElectronicJournal suspended";
+            case EJ_SUE_MEDIUM_FULL -> "ElectronicJournal medium full";
+            case EJ_SUE_MEDIUM_NEAR_FULL -> "ElectronicJournal medium nearly full";
+            case EJ_SUE_MEDIUM_INSERTED -> "ElectronicJournal medium inserted";
+            case EJ_SUE_MEDIUM_REMOVED -> "ElectronicJournal medium removed";
+            default -> "Unknown Status Change: " + getStatus();
+        };
     }
 }

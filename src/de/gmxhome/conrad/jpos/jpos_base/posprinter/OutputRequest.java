@@ -34,8 +34,7 @@ public class OutputRequest extends JposOutputRequest {
 
     @Override
     public JposErrorEvent createErrorEvent(JposException ex) {
-        if (ex instanceof POSPrinterException) {
-            POSPrinterException e = (POSPrinterException) ex;
+        if (ex instanceof POSPrinterException e) {
             return new POSPrinterErrorEvent(Device.CurrentCommand.Props.EventSource, e.getErrorCode(), e.getErrorCodeExtended(), e.Station, e.Level, e.getMessage());
         }
         return super.createErrorEvent(ex);

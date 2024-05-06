@@ -18,7 +18,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.videocapture;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.*;
+
+import static jpos.VideoCaptureConst.*;
 
 /**
  * Status update event implementation for VideoCapture devices.
@@ -39,16 +40,12 @@ public class VideoCaptureStatusUpdateEvent extends JposStatusUpdateEvent {
         String ret = super.toLogString();
         if (ret.length() > 0)
             return ret;
-        switch (getStatus()) {
-            case VideoCaptureConst.VCAP_SUE_START_PHOTO:
-                return "VideoCapture Start Taking Photo";
-            case VideoCaptureConst.VCAP_SUE_END_PHOTO:
-                return "VideoCapture End Taking Photo";
-            case VideoCaptureConst.VCAP_SUE_START_VIDEO:
-                return "VideoCapture Start Vidoe Recording";
-            case VideoCaptureConst.VCAP_SUE_STOP_VIDEO:
-                return "VideoCapture Stop Video Recording";
-        }
-        return "Unknown VideoCapture Status Change: " + getStatus();
+        return switch (getStatus()) {
+            case VCAP_SUE_START_PHOTO -> "VideoCapture Start Taking Photo";
+            case VCAP_SUE_END_PHOTO -> "VideoCapture End Taking Photo";
+            case VCAP_SUE_START_VIDEO -> "VideoCapture Start Vidoe Recording";
+            case VCAP_SUE_STOP_VIDEO -> "VideoCapture Stop Video Recording";
+            default -> "Unknown VideoCapture Status Change: " + getStatus();
+        };
     }
 }

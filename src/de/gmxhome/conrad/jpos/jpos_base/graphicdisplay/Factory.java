@@ -21,6 +21,9 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.config.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * General part of GraphicDisplay factory for JPOS devices using this framework.
  */
@@ -30,16 +33,14 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults.
      * @param index GraphicDisplay  property set index.
      * @param dev GraphicDisplay implementation instance derived from JposDevice to be used by the service.
-     * @param entry Property list from jpos configuration.
+     * @param entries Property list from jpos configuration.
      * @return GraphicDisplayService object.
      * @throws JposException If property set could not be retrieved.
      */
-    public GraphicDisplayService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
+    public GraphicDisplayService addDevice(int index, JposDevice dev, JposEntry entries) throws JposException {
         GraphicDisplayProperties props = dev.getGraphicDisplayProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getGraphicDisplayProperties()");
+        validateJposConfiguration(props, dev, dev.ClaimedGraphicDisplay, entries);
         GraphicDisplayService service = (GraphicDisplayService) (props.EventSource = new GraphicDisplayService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedGraphicDisplay;
         dev.changeDefaults(props);
         props.addProperties(dev.GraphicDisplays);
         service.DeviceInterface = service.GraphicDisplay = props;

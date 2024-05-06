@@ -20,18 +20,21 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * CoinDispenser service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class CoinDispenserService extends JposBase implements CoinDispenserService115 {
+public class CoinDispenserService extends JposBase implements CoinDispenserService116 {
     /**
      * Instance of a class implementing the CoinDispenserInterface for coin dispenser specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public CoinDispenserInterface CoinDispenserInterface;
 
-    private CoinDispenserProperties Data;
+    private final CoinDispenserProperties Data;
 
     /**
      * Constructor. Stores given property set and device implementation object.
@@ -74,64 +77,40 @@ public class CoinDispenserService extends JposBase implements CoinDispenserServi
 
     @Override
     public void adjustCashCounts(String cashCounts) throws JposException {
-        logPreCall("AdjustCashCounts", cashCounts == null ? "null" : "" + cashCounts);
+        logPreCall("AdjustCashCounts", removeOuterArraySpecifier(new Object[]{cashCounts}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(cashCounts == null, JposConst.JPOS_E_ILLEGAL, "Cash counts null");
-        String cashCount[] = cashCounts.split(",");
-        Device.check(cashCount.length == 0, JposConst.JPOS_E_ILLEGAL, "No cash counts");
+        check(cashCounts == null, JPOS_E_ILLEGAL, "Cash counts null");
+        String[] cashCount = cashCounts.split(",");
+        check(cashCount.length == 0, JPOS_E_ILLEGAL, "No cash counts");
         for (String entry : cashCount) {
-            String values[] = entry.split(":");
-            Device.check(values.length != 2, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
+            String[] values = entry.split(":");
+            check(values.length != 2, JPOS_E_ILLEGAL, "Bad format of cash count");
             try {
-                Device.check(Integer.parseInt(values[0]) <= 0 || Integer.parseInt(values[1]) < 0, JposConst.JPOS_E_ILLEGAL, "Bad format of cash count");
+                check(Integer.parseInt(values[0]) <= 0 || Integer.parseInt(values[1]) < 0, JPOS_E_ILLEGAL, "Bad format of cash count");
             }
             catch (NumberFormatException e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Non-integer cash count component", e);
+                throw new JposException(JPOS_E_ILLEGAL, "Non-integer cash count component", e);
             }
         }
         CoinDispenserInterface.adjustCashCounts(cashCounts);
         logCall("AdjustCashCounts");
     }
 
-    private String generateArgString(String[] cashCounts, boolean[] discrepancy) {
-        String res = "";
-        if (cashCounts == null)
-            res = "null, ";
-        else {
-            String prefix = "";
-            res = "{ ";
-            for (String arg : cashCounts) {
-                res += prefix + (arg == null ? "null" : arg);
-                prefix = ", ";
-            }
-            res += " }, ";
-        }
-        if (discrepancy == null)
-            return res + "null";
-        String prefix = "";
-        res = "{ ";
-        for (boolean arg : discrepancy) {
-            res += prefix + arg;
-            prefix = ", ";
-        }
-        return res + " }";
-    }
-
     @Override
     public void readCashCounts(String[] cashCounts, boolean[] discrepancy) throws JposException {
-        logPreCall("ReadCashCounts", generateArgString(cashCounts, discrepancy));
+        logPreCall("ReadCashCounts", removeOuterArraySpecifier(new Object[]{cashCounts, discrepancy}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(cashCounts == null || cashCounts.length != 1, JposConst.JPOS_E_ILLEGAL, "Bad dimension of cashCounts");
-        Device.check(discrepancy == null || discrepancy.length != 1, JposConst.JPOS_E_ILLEGAL, "Bad dimension of discrepancy");
+        check(cashCounts == null || cashCounts.length != 1, JPOS_E_ILLEGAL, "Bad dimension of cashCounts");
+        check(discrepancy == null || discrepancy.length != 1, JPOS_E_ILLEGAL, "Bad dimension of discrepancy");
         CoinDispenserInterface.readCashCounts(cashCounts, discrepancy);
-        logCall("ReadCashCounts", generateArgString(cashCounts, discrepancy));
+        logCall("ReadCashCounts", removeOuterArraySpecifier(new Object[]{cashCounts[0], discrepancy[0]}, Device.MaxArrayStringElements));
     }
 
     @Override
     public void dispenseChange(int amount) throws JposException {
-        logPreCall("DispenseChange", "" + amount);
+        logPreCall("DispenseChange", removeOuterArraySpecifier(new Object[]{amount}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(amount <= 0 , JposConst.JPOS_E_ILLEGAL, "Amount negative or zero");
+        check(amount <= 0 , JPOS_E_ILLEGAL, "Amount negative or zero");
         CoinDispenserInterface.dispenseChange(amount);
         logCall("DispenseChange");
     }

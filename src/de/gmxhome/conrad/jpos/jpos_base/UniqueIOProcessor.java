@@ -16,11 +16,12 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
-import jpos.JposConst;
 import jpos.JposException;
-import net.bplaced.conrad.log4jpos.Level;
 
 import java.util.Arrays;
+
+import static jpos.JposConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * Unique implementation for IO processing. Derived classes should add
@@ -137,12 +138,12 @@ public class UniqueIOProcessor implements AutoCloseable {
     /**
      * Synchronization object for write operations.
      */
-    byte[] WriteSynchronizer = new byte[]{'W'};
+    final byte[] WriteSynchronizer = {'W'};
 
     /**
      * Synchronization object for read operations.
      */
-    byte[] ReadSynchronizer = new byte[]{'R'};
+    final byte[] ReadSynchronizer = {'R'};
 
     /**
      * Generate log string from byte buffer
@@ -150,25 +151,24 @@ public class UniqueIOProcessor implements AutoCloseable {
      * @return String corresponding to previously specified logging type
      */
     public String toLogString(byte[] buffer) {
-        String res = "";
+        StringBuilder res = new StringBuilder();
         for (byte c : buffer) {
             switch (LoggingType) {
-                case LoggingTypeHexString:
-                    res += String.format(" %02X", c & 0xff);
-                    break;
-                case LoggingTypeEscapeString:
+                case LoggingTypeHexString -> res.append(String.format(" %02X", c & 0xff));
+                case LoggingTypeEscapeString -> {
                     if (c < 0x20)
-                        res += String.format("\\%03o", (int)c & 0xff);
+                        res.append(String.format("\\%03o", (int) c & 0xff));
                     else if (c == '\\')
-                        res += "\\";
+                        res.append("\\");
                     else
-                        res += new String(new byte[]{c});
-                    break;
-                case LoggingTypeNoLogging:
+                        res.append(new String(new byte[]{c}));
+                }
+                case LoggingTypeNoLogging -> {
                     return "...";
+                }
             }
         }
-        return res;
+        return res.toString();
     }
 
     /**
@@ -195,7 +195,7 @@ public class UniqueIOProcessor implements AutoCloseable {
      * @throws  JposException if something goes wrong
      */
     public int write(byte[] buffer) throws JposException {
-        Dev.log(Level.TRACE, LoggingPrefix + "Write " + buffer.length + " byte" + location(false) +": " + toLogString(buffer));
+        Dev.log(TRACE, LoggingPrefix + "Write " + buffer.length + " byte" + location(false) +": " + toLogString(buffer));
         return buffer.length;
     }
 
@@ -208,10 +208,10 @@ public class UniqueIOProcessor implements AutoCloseable {
     public int available() throws JposException {
         try {
             int count = Integer.parseInt(new String(LoggingData));
-            Dev.log(Level.ALL, LoggingPrefix + "Available bytes: " + count);
+            Dev.log(ALL, LoggingPrefix + "Available bytes: " + count);
             return count;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, "Available implementation error, no LoggingData available.");
+            throw new JposException(JPOS_E_ILLEGAL, IOProcessorError, "Available implementation error, no LoggingData available.");
         }
     }
 
@@ -226,15 +226,15 @@ public class UniqueIOProcessor implements AutoCloseable {
      */
     public byte[] read(int count) throws JposException {
         if (LoggingData == null)
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, IOProcessorError, "Read implementation error, no LoggingData available.");
+            throw new JposException(JPOS_E_ILLEGAL, IOProcessorError, "Read implementation error, no LoggingData available.");
         if (LoggingData.length > count) {
             byte[] data = Arrays.copyOf(LoggingData, count);
             byte[] remainder = Arrays.copyOfRange(LoggingData, count, LoggingData.length);
-            Dev.log(Level.TRACE, LoggingPrefix + "Read " + data.length + " bytes" + location(true) + ": " + toLogString(data));
-            Dev.log(Level.TRACE, LoggingPrefix + "Discard " + remainder.length + " bytes" + location(true) + ": " + toLogString(remainder));
+            Dev.log(TRACE, LoggingPrefix + "Read " + data.length + " bytes" + location(true) + ": " + toLogString(data));
+            Dev.log(TRACE, LoggingPrefix + "Discard " + remainder.length + " bytes" + location(true) + ": " + toLogString(remainder));
             return data;
         } else {
-            Dev.log(Level.TRACE, LoggingPrefix + "Read " + LoggingData.length + " bytes" + location(true) + ": " + toLogString(LoggingData));
+            Dev.log(TRACE, LoggingPrefix + "Read " + LoggingData.length + " bytes" + location(true) + ": " + toLogString(LoggingData));
             return LoggingData;
         }
     }
@@ -256,7 +256,7 @@ public class UniqueIOProcessor implements AutoCloseable {
      * @throws JposException Iif something goes wrong
      */
     public void flush() throws JposException {
-        Dev.log(Level.TRACE, LoggingPrefix + "Flushed IO buffers.");
+        Dev.log(TRACE, LoggingPrefix + "Flushed IO buffers.");
     }
 
     /**
@@ -267,7 +267,7 @@ public class UniqueIOProcessor implements AutoCloseable {
      * @throws JposException if an IO error occurs
      */
     public void open(boolean noErrorLog) throws JposException {
-        Dev.log(Level.DEBUG, LoggingPrefix + "Opened successfully.");
+        Dev.log(DEBUG, LoggingPrefix + "Opened successfully.");
     }
 
     /**
@@ -275,7 +275,7 @@ public class UniqueIOProcessor implements AutoCloseable {
      * @throws JposException If an IO error occurs
      */
     public void close() throws JposException {
-        Dev.log(Level.DEBUG, LoggingPrefix + "Closed successfully.");
+        Dev.log(DEBUG, LoggingPrefix + "Closed successfully.");
     }
 
     /**
@@ -287,7 +287,7 @@ public class UniqueIOProcessor implements AutoCloseable {
      * @throws JposException  The exception. Its message will be set to why.
      */
     public int logerror(String what, int error, String why) throws JposException {
-        Dev.log(Level.ERROR, LoggingPrefix + what + " error: " + why);
+        Dev.log(ERROR, LoggingPrefix + what + " error: " + why);
         throw new JposException(error, IOProcessorError, why);
     }
 
@@ -300,7 +300,7 @@ public class UniqueIOProcessor implements AutoCloseable {
      * @throws JposException  The exception. Its message will be set to ex.getMessage().
      */
     public int logerror(String what, int error, Exception ex) throws JposException {
-        Dev.log(Level.ERROR, LoggingPrefix + what + " error: " + ex.getMessage());
+        Dev.log(ERROR, LoggingPrefix + what + " error: " + ex.getMessage());
         if (ex instanceof JposException)
             throw (JposException) ex;
         else
@@ -315,7 +315,7 @@ public class UniqueIOProcessor implements AutoCloseable {
      * @throws JposException  The exception. Its message will be set to ex.getMessage().
      */
     public int logerror(String what, JposException ex) throws JposException {
-        Dev.log(Level.ERROR, LoggingPrefix + what + " error: " + ex.getMessage());
-        throw (JposException) ex;
+        Dev.log(ERROR, LoggingPrefix + what + " error: " + ex.getMessage());
+        throw ex;
     }
 }

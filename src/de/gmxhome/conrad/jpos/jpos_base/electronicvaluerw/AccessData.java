@@ -24,6 +24,15 @@ import jpos.JposException;
  */
 public class AccessData extends DataObjRequest {
     /**
+     * Returns contents of dataType parameter
+     * @return Contents of DataType.
+     */
+    public int getDataType() {
+        return DataType;
+    }
+    private final int DataType;
+
+    /**
      * Constructor. Stores given parameters for later use.
      * @param props       Property set of device service.
      * @param dataType    Data type.
@@ -32,6 +41,7 @@ public class AccessData extends DataObjRequest {
      */
     public AccessData(ElectronicValueRWProperties props, int dataType, int[] data, Object[] obj) {
         super(props, data, obj);
+        DataType = dataType;
     }
 
     @Override

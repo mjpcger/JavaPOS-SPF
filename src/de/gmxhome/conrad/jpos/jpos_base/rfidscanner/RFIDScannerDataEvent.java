@@ -17,19 +17,16 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.rfidscanner;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposBase;
-import de.gmxhome.conrad.jpos.jpos_base.JposDataEvent;
-import jpos.JposException;
-import jpos.RFIDScanner;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Data event implementation for RFIDScanner devices.
  */
 public class RFIDScannerDataEvent extends JposDataEvent {
-    List<RFIDScannerTagData> ScannedTags;
+    final List<RFIDScannerTagData> ScannedTags;
 
     /**
      * Constructor. Parameters passed to base class unchanged.
@@ -41,8 +38,7 @@ public class RFIDScannerDataEvent extends JposDataEvent {
     public RFIDScannerDataEvent(JposBase source, int state, List<RFIDScannerTagData> tags) {
         super(source, state);
         ScannedTags = new ArrayList<>();
-        for (RFIDScannerTagData tag : tags)
-            ScannedTags.add(tag);
+        ScannedTags.addAll(tags);
     }
 
     @Override
@@ -51,9 +47,7 @@ public class RFIDScannerDataEvent extends JposDataEvent {
         RFIDScannerProperties data = (RFIDScannerProperties)service.Props;
         synchronized (service.CurrentLabelData) {
             service.CurrentLabelData.clear();
-            for (RFIDScannerTagData tagData : ScannedTags) {
-                service.CurrentLabelData.add(tagData);
-            }
+            service.CurrentLabelData.addAll(ScannedTags);
             if (data.TagCount != ScannedTags.size()) {
                 data.TagCount = service.CurrentLabelData.size();
                 data.EventSource.logSet("TagCount");
@@ -61,7 +55,7 @@ public class RFIDScannerDataEvent extends JposDataEvent {
             if (data.TagCount > 0) {
                 try {
                     service.setCurrentTagData(0);
-                } catch (JposException e) {}    // Never occurs because TagCount > 0 and
+                } catch (JposException ignored) {}    // Never occurs because TagCount > 0 and
             }
         }
     }

@@ -18,6 +18,10 @@ package de.gmxhome.conrad.jpos.jpos_base.keylock;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of Keylock factory for JPOS devices using this framework.
@@ -28,19 +32,30 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults.
      * @param index Keylock property set index.
      * @param dev   Keylock implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return KeylockService object.
      * @throws JposException If property set could not be retrieved.
      */
-    public KeylockService addDevice(int index, JposDevice dev) throws JposException {
+    public KeylockService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         KeylockProperties props = dev.getKeylockProperties(index);
-        KeylockService service;
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getKeylockProperties()");
-        service = (KeylockService) (props.EventSource = new KeylockService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedKeylock;
+        validateJposConfiguration(props, dev, dev.ClaimedKeylock, entry);
+        KeylockService service = (KeylockService) (props.EventSource = new KeylockService(props, dev));
         dev.changeDefaults(props);
         props.addProperties(dev.Keylocks);
         service.DeviceInterface = service.KeylockInterface = props;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index Keylock property set index.
+     * @param dev   Keylock implementation instance derived from JposDevice to be used by the service.
+     * @return KeylockService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public KeylockService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

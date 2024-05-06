@@ -20,18 +20,23 @@ package SamplePOSPrinter;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.posprinter.*;
 import jpos.*;
-import net.bplaced.conrad.log4jpos.Level;
 
 import java.nio.*;
 import java.nio.charset.*;
 import java.util.*;
 
+import static SamplePOSPrinter.Device.*;
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static jpos.JposConst.*;
+import static jpos.POSPrinterConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
+
 /**
  * Class implementing the POSPrinterInterface for the sample pos printer.
  */
 public class POSPrinter extends POSPrinterProperties {
-    private SamplePOSPrinter.Device Dev;
-    private static final int LineCharsListVals[] = {42, 56};
+    private final SamplePOSPrinter.Device Dev;
+    private static final int[] LineCharsListVals = {42, 56};
     private static final byte[] CodePages = { '6', '0', '6', '0', '1', '2', '3', '4', '5', '6' };    // Default encoding of Java is UFT-8
     private static final byte[] Fonts = { 'A', 'B' };
     private int CurrentCodePageIndex = 0;
@@ -40,12 +45,12 @@ public class POSPrinter extends POSPrinterProperties {
 
     // Byte arrays for printer commands.
     private final static byte[] CmdCut = {'\14'};
-    private byte[] CmdBold = {'\33', 'b'};
-    private byte[] CmdColor = {'\33', 'c'};
-    private byte[] CmdFont = {'\33', 'f'};
-    private byte[] CmdOrientation = {'\33', 'o'};
-    private byte[] CmdCodepage = {'\33', 'p'};
-    private byte[] CmdUnderline = {'\33', 'u'};
+    private final byte[] CmdBold = {'\33', 'b'};
+    private final byte[] CmdColor = {'\33', 'c'};
+    private final byte[] CmdFont = {'\33', 'f'};
+    private final byte[] CmdOrientation = {'\33', 'o'};
+    private final byte[] CmdCodepage = {'\33', 'p'};
+    private final byte[] CmdUnderline = {'\33', 'u'};
 
     // Matrix for unit computation
     private final int[][] FactorMatrix;
@@ -59,10 +64,10 @@ public class POSPrinter extends POSPrinterProperties {
         super(0);
         Dev = dev;
         FactorMatrix = new int[][]{
-                new int[]{POSPrinterConst.PTR_MM_DOTS, dev.LineWidth},  // LineWidth dots per line
-                new int[]{POSPrinterConst.PTR_MM_METRIC, 8000},     // 8000/100 mm per line
-                new int[]{POSPrinterConst.PTR_MM_ENGLISH, 3150},    // 3150/1000 inch per line
-                new int[]{POSPrinterConst.PTR_MM_TWIPS, 4535},      // 4535/1440 inch per line
+                {PTR_MM_DOTS, LineWidth},  // LineWidth dots per line
+                {PTR_MM_METRIC, 8000},     // 8000/100 mm per line
+                {PTR_MM_ENGLISH, 3150},    // 3150/1000 inch per line
+                {PTR_MM_TWIPS, 4535},      // 4535/1440 inch per line
         };
     }
 
@@ -75,8 +80,8 @@ public class POSPrinter extends POSPrinterProperties {
 
     private void setCurrentValues() {
         int index;
-        for (index = 0; index < Dev.CharSetListVals.length; index++) {
-            if (CharacterSet == Dev.CharSetListVals[index]) {
+        for (index = 0; index < CharSetListVals.length; index++) {
+            if (CharacterSet == CharSetListVals[index]) {
                 CurrentCodePageIndex = index;
                 break;
             }
@@ -100,7 +105,7 @@ public class POSPrinter extends POSPrinterProperties {
     public void deviceEnabled(boolean enable) throws JposException {
         SyncObject obj = Dev.StartWaiter;
         if (obj != null)
-            obj.suspend(SyncObject.INFINITE);
+            obj.suspend(INFINITE);
         super.deviceEnabled(enable);
         updateStates(enable);
     }
@@ -108,9 +113,8 @@ public class POSPrinter extends POSPrinterProperties {
     private void updateStates(boolean enable) {
         Dev.updateCommonStates(this, enable);
         if (enable) {
-            CoverOpen = CoverOpen;
-            RecEmpty = Dev.PaperState == Dev.PaperEnd;
-            RecNearEnd = Dev.PaperState > Dev.PaperOk;
+            RecEmpty = Dev.PaperState == PaperEnd;
+            RecNearEnd = Dev.PaperState > PaperOk;
         }
     }
 
@@ -124,20 +128,20 @@ public class POSPrinter extends POSPrinterProperties {
     public void checkHealth(int level) throws JposException {
         CheckHealthText = "Interactive CheckHealth: ";
         switch (level) {
-            case JposConst.JPOS_CH_INTERNAL:
+            case JPOS_CH_INTERNAL:
                 CheckHealthText = "Internal CheckHealth: OK.";
                 break;
-            case JposConst.JPOS_CH_EXTERNAL:
+            case JPOS_CH_EXTERNAL:
                 CheckHealthText = "External CheckHealth: ";
-            case JposConst.JPOS_CH_INTERACTIVE:
+            case JPOS_CH_INTERACTIVE:
                 try {
-                    ((POSPrinterService) EventSource).printImmediate(POSPrinterConst.PTR_S_RECEIPT, "\12\33|cA" + CheckHealthText + "OK.\12\33|fP");
+                    ((POSPrinterService) EventSource).printImmediate(PTR_S_RECEIPT, "\12\33|cA" + CheckHealthText + "OK.\12\33|fP");
                     CheckHealthText += "OK.";
                 } catch (JposException e) {
                     CheckHealthText += "Error: " + e.getMessage() + ".";
                 }
         }
-        Dev.log(Level.DEBUG, LogicalName + ": CheckHealthText <- " + CheckHealthText);
+        Dev.log(DEBUG, LogicalName + ": CheckHealthText <- " + CheckHealthText);
         super.checkHealth(level);
     }
 
@@ -145,19 +149,19 @@ public class POSPrinter extends POSPrinterProperties {
     public void mapMode(int i) throws JposException {
         if (i != MapMode) {
             super.mapMode(i);
-            RecLineSpacing = fromDotScale(Dev.LineSpacings[Dev.CurrentFontIndex]);
-            RecLineWidth = fromDotScale((Dev.LineWidth / Dev.CharWidths[Dev.CurrentFontIndex]) * RecLineChars);
-            RecLineHeight = fromDotScale(Dev.LineHeights[Dev.CurrentFontIndex]);
-            Dev.log(Level.DEBUG, LogicalName + ": RecLineSpacing <- " + RecLineSpacing);
-            Dev.log(Level.DEBUG, LogicalName + ": RecLineWidth <- " + RecLineWidth);
-            Dev.log(Level.DEBUG, LogicalName + ": RecLineHeight <- " + RecLineHeight);
+            RecLineSpacing = fromDotScale(LineSpacings[Dev.CurrentFontIndex]);
+            RecLineWidth = fromDotScale((LineWidth / CharWidths[Dev.CurrentFontIndex]) * RecLineChars);
+            RecLineHeight = fromDotScale(LineHeights[Dev.CurrentFontIndex]);
+            Dev.log(DEBUG, LogicalName + ": RecLineSpacing <- " + RecLineSpacing);
+            Dev.log(DEBUG, LogicalName + ": RecLineWidth <- " + RecLineWidth);
+            Dev.log(DEBUG, LogicalName + ": RecLineHeight <- " + RecLineHeight);
         }
     }
 
     private int fromDotScale(int dotval, int mapmode) {
         for (int[] vector : FactorMatrix) {
             if (vector[0] == mapmode) {
-                return dotval * vector[1] / Dev.LineWidth;
+                return dotval * vector[1] / LineWidth;
             }
         }
         return dotval;
@@ -170,7 +174,7 @@ public class POSPrinter extends POSPrinterProperties {
     private int toDotScale(int mapval, int mapmode) {
         for (int[] vector : FactorMatrix) {
             if (vector[0] == mapmode) {
-                return mapval * Dev.LineWidth / vector[1];
+                return mapval * LineWidth / vector[1];
             }
         }
         return mapval;
@@ -179,8 +183,8 @@ public class POSPrinter extends POSPrinterProperties {
     @Override
     public void characterSet(int value) throws JposException {
         int newindex;
-        for (newindex = 0; newindex < Dev.CharSetListVals.length; newindex++) {
-            if (value == Dev.CharSetListVals[newindex]) {
+        for (newindex = 0; newindex < CharSetListVals.length; newindex++) {
+            if (value == CharSetListVals[newindex]) {
                 CurrentCodePageIndex = newindex;
                 break;
             }
@@ -196,28 +200,28 @@ public class POSPrinter extends POSPrinterProperties {
                 break;
         }
         if (newindex == LineCharsListVals.length)
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "RecLineChars too high: " + value + ", maximum: " + LineCharsListVals[newindex - 1]);
+            throw new JposException(JPOS_E_ILLEGAL, "RecLineChars too high: " + value + ", maximum: " + LineCharsListVals[newindex - 1]);
         if (newindex != Dev.CurrentFontIndex) {
-            RecLineSpacing = fromDotScale(Dev.LineSpacings[Dev.CurrentFontIndex = newindex]);
-            RecLineWidth = fromDotScale((Dev.LineWidth / Dev.CharWidths[Dev.CurrentFontIndex]) * RecLineChars);
-            RecLineHeight = fromDotScale(Dev.LineHeights[Dev.CurrentFontIndex]);
-            RecLinesToPaperCut = (Dev.KnifeOffset + Dev.LineSpacings[Dev.CurrentFontIndex] - 1) / Dev.LineSpacings[Dev.CurrentFontIndex];
-            Dev.log(Level.DEBUG, LogicalName + ": RecLineSpacing <- " + RecLineSpacing);
-            Dev.log(Level.DEBUG, LogicalName + ": RecLineWidth <- " + RecLineWidth);
-            Dev.log(Level.DEBUG, LogicalName + ": RecLineHeight <- " + RecLineHeight);
-            Dev.log(Level.DEBUG, LogicalName + ": RecLinesToPaperCut <- " + RecLinesToPaperCut);
+            RecLineSpacing = fromDotScale(LineSpacings[Dev.CurrentFontIndex = newindex]);
+            RecLineWidth = fromDotScale((LineWidth / CharWidths[Dev.CurrentFontIndex]) * RecLineChars);
+            RecLineHeight = fromDotScale(LineHeights[Dev.CurrentFontIndex]);
+            RecLinesToPaperCut = (KnifeOffset + LineSpacings[Dev.CurrentFontIndex] - 1) / LineSpacings[Dev.CurrentFontIndex];
+            Dev.log(DEBUG, LogicalName + ": RecLineSpacing <- " + RecLineSpacing);
+            Dev.log(DEBUG, LogicalName + ": RecLineWidth <- " + RecLineWidth);
+            Dev.log(DEBUG, LogicalName + ": RecLineHeight <- " + RecLineHeight);
+            Dev.log(DEBUG, LogicalName + ": RecLinesToPaperCut <- " + RecLinesToPaperCut);
         }
         super.recLineChars(Dev.AdjustLineChars ? LineCharsListVals[Dev.CurrentFontIndex] : value);
     }
 
     @Override
     public void recLineHeight(int i) throws JposException {
-        super.recLineHeight(fromDotScale(Dev.LineHeights[Dev.CurrentFontIndex]));
+        super.recLineHeight(fromDotScale(LineHeights[Dev.CurrentFontIndex]));
     }
 
     @Override
     public void recLineSpacing(int i) throws JposException {
-        super.recLineSpacing(fromDotScale(Dev.LineSpacings[Dev.CurrentFontIndex]));
+        super.recLineSpacing(fromDotScale(LineSpacings[Dev.CurrentFontIndex]));
     }
 
     private POSPrinterService.PrintDataPart[] TopLogoData;
@@ -231,19 +235,19 @@ public class POSPrinter extends POSPrinterProperties {
     @Override
     public void setLogo(int location, String data) throws JposException {
         try {
-            ((POSPrinterService)EventSource).validateData(POSPrinterConst.PTR_S_RECEIPT, data);
+            ((POSPrinterService)EventSource).validateData(PTR_S_RECEIPT, data);
         } catch (JposException e) {
-            if (e.getErrorCode() == JposConst.JPOS_E_FAILURE)
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, e.getMessage(), e);
+            if (e.getErrorCode() == JPOS_E_FAILURE)
+                throw new JposException(JPOS_E_ILLEGAL, e.getMessage(), e);
         }
         List<POSPrinterService.PrintDataPart> dataparts = ((POSPrinterService)EventSource).outputDataParts(data);
         Object o = null;
-        for (int i = 0; i < dataparts.size(); i++) {
-            o = dataparts.get(i);
+        for (POSPrinterService.PrintDataPart datapart : dataparts) {
+            o = datapart;
             if (o instanceof POSPrinterService.EscLogo)
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Data contains logo escape sequence");
+                throw new JposException(JPOS_E_ILLEGAL, "Data contains logo escape sequence");
         }
-        if (location == POSPrinterConst.PTR_L_TOP) {
+        if (location == PTR_L_TOP) {
             TopLogoData = dataparts.toArray(new POSPrinterService.PrintDataPart[0]);
         }
         else {
@@ -255,17 +259,17 @@ public class POSPrinter extends POSPrinterProperties {
     public void validateData(int station, POSPrinterService.PrintData data) throws JposException {
         checkNextMustFeed();
         super.validateData(station, data);
-        if (data.getServiceIsMapping() && data.getCharacterSet() != POSPrinterConst.PTR_CS_UNICODE) {
-            Charset charset = data.getCharacterSet() == POSPrinterConst.PTR_CS_ANSI ? Charset.defaultCharset() : Charset.forName(getCharsetString(data));
+        if (data.getServiceIsMapping() && data.getCharacterSet() != PTR_CS_UNICODE) {
+            Charset charset = data.getCharacterSet() == PTR_CS_ANSI ? Charset.defaultCharset() : Charset.forName(getCharsetString(data));
             CharsetEncoder encoder = charset.newEncoder();
             encoder.onMalformedInput(CodingErrorAction.REPORT);
             encoder.onUnmappableCharacter(CodingErrorAction.REPORT);
             try {
                 encoder.encode(CharBuffer.wrap(data.getPrintData()));
             } catch (UnmappableCharacterException e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Unmappable character", e);
+                throw new JposException(JPOS_E_ILLEGAL, "Unmappable character", e);
             } catch (CharacterCodingException e) {
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Malformed input", e);
+                throw new JposException(JPOS_E_FAILURE, "Malformed input", e);
             }
         }
     }
@@ -273,13 +277,13 @@ public class POSPrinter extends POSPrinterProperties {
     private void checkNextMustFeed() throws JposException {
         if (NextMustFeed) {
             NextMustFeed = false;
-            throw new JposException(JposConst.JPOS_E_FAILURE, "Carriage return without line feed not supported");
+            throw new JposException(JPOS_E_FAILURE, "Carriage return without line feed not supported");
         }
         LastHasFed = false;
     }
 
     private String getCharsetString(POSPrinterService.PrintData data) {
-        return data.getCharacterSet() == POSPrinterConst.PTR_CS_ASCII ? "ASCII" : (data.getCharacterSet() == POSPrinterConst.PTR_CS_UNICODE || data.getCharacterSet() == Dev.CS_UTF8 ? "UTF-8" : "cp" + data.getCharacterSet());
+        return data.getCharacterSet() == PTR_CS_ASCII ? "ASCII" : (data.getCharacterSet() == PTR_CS_UNICODE || data.getCharacterSet() == CS_UTF8 ? "UTF-8" : "cp" + data.getCharacterSet());
     }
 
     private boolean LastHasFed = false;
@@ -313,16 +317,16 @@ public class POSPrinter extends POSPrinterProperties {
         NextMustFeed = false;
         if (esc.getReverse()) {
             LastHasFed = false;
-            throw new JposException(JposConst.JPOS_E_FAILURE, "Reverse feeding not supported");
+            throw new JposException(JPOS_E_FAILURE, "Reverse feeding not supported");
         }
         int count = esc.getCount();
         if (esc.getUnits()) {
             count = toDotScale(esc.getCount(), esc.getMapMode());
-            if (++count % Dev.LineSpacings[Dev.CurrentFontIndex] > 2) {
+            if (++count % LineSpacings[Dev.CurrentFontIndex] > 2) {
                 LastHasFed = false;
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Unit feed not supported, feed to nearest line");
+                throw new JposException(JPOS_E_ILLEGAL, "Unit feed not supported, feed to nearest line");
             }
-            count /= Dev.LineSpacings[Dev.CurrentFontIndex];
+            count /= LineSpacings[Dev.CurrentFontIndex];
         }
         if (count > 0)
             LastHasFed = true;
@@ -341,10 +345,10 @@ public class POSPrinter extends POSPrinterProperties {
     }
 
     private void checkInError() throws JposException {
-        Dev.check(Dev.InIOError, JposConst.JPOS_E_FAILURE, "No connection to device");
-        Dev.check(Dev.PrinterError, JposConst.JPOS_E_FAILURE, "POSPrinter not operational");
-        Dev.checkext(CoverOpen, POSPrinterConst.JPOS_EPTR_COVER_OPEN, "POSPrinter cover open");
-        Dev.checkext(Dev.PaperState == Dev.PaperEnd, POSPrinterConst.JPOS_EPTR_REC_EMPTY, "Paper end");
+        check(Dev.InIOError, JPOS_E_FAILURE, "No connection to device");
+        check(Dev.PrinterError, JPOS_E_FAILURE, "POSPrinter not operational");
+        checkext(CoverOpen, JPOS_EPTR_COVER_OPEN, "POSPrinter cover open");
+        checkext(Dev.PaperState == PaperEnd, JPOS_EPTR_REC_EMPTY, "Paper end");
     }
 
     @Override
@@ -373,10 +377,10 @@ public class POSPrinter extends POSPrinterProperties {
         new SyncObject().suspend(request.EndSync == null ? Dev.AsyncProcessingCommandDelay : 0);      // for testing
         checkInError();
         List<POSPrinterService.PrintDataPart> dataparts = request.getData();
-        boolean[] complete = new boolean[]{true};
+        boolean[] complete = {true};
         PrinterState printerstate = (PrinterState)request.AdditionalData;
         byte[] binarydata = getBytes(dataparts, printerstate, complete);
-        Dev.check(request.getSynchronousPrinting() && !complete[0], JposConst.JPOS_E_ILLEGAL, "Completing printer output impossible");
+        check(request.getSynchronousPrinting() && !complete[0], JPOS_E_ILLEGAL, "Completing printer output impossible");
         if (binarydata.length > 0) {
             byte[] cmdnormalize = Dev.getCmdNormalize(printerstate.Cartridge);
             if (Arrays.equals(cmdnormalize, Arrays.copyOf(binarydata, cmdnormalize.length)) || binarydata[0] == LineFeed) {
@@ -391,7 +395,7 @@ public class POSPrinter extends POSPrinterProperties {
                 // In synchronous print mode, we must throw an exception if printer is in error state afterwards.
                 SyncObject obj = Dev.StartWaiter = new SyncObject();
                 Dev.PollWaiter.signal();
-                obj.suspend(SyncObject.INFINITE);
+                obj.suspend(INFINITE);
                 checkInError();
             }
         }
@@ -421,13 +425,15 @@ public class POSPrinter extends POSPrinterProperties {
                 }
             }
             else if (data instanceof POSPrinterService.EscNormalize) {
-                if ((parts[i] = getNormalize(statusData)) != null && parts[i].limit() > 0) {
+                parts[i] = getNormalize(statusData);
+                if (parts[i] != null && parts[i].limit() > 0) {
                     totalsize += parts[i].limit();
                     complete[0] = false;
                 }
             }
             else if (data instanceof POSPrinterService.EscLogo) {
-                if ((parts[i] = getLogo((POSPrinterService.EscLogo) data, statusData, complete)) != null && parts[i].limit() > 0)
+                parts[i] = getLogo((POSPrinterService.EscLogo) data, statusData, complete);
+                if (parts[i] != null && parts[i].limit() > 0)
                     totalsize += parts[i].limit();
             }
             else if (data instanceof POSPrinterService.EscFeed) {
@@ -437,7 +443,8 @@ public class POSPrinter extends POSPrinterProperties {
                 }
             }
             else if (data instanceof POSPrinterService.EscEmbedded) {
-                if ((parts[i] = getEmbeddedBytes((POSPrinterService.EscEmbedded) data, complete)) != null && parts[i].limit() > 0)
+                parts[i] = getEmbeddedBytes((POSPrinterService.EscEmbedded) data, complete);
+                if (parts[i] != null && parts[i].limit() > 0)
                     totalsize += parts[i].limit();
             }
             else if (data instanceof POSPrinterService.EscAlignment) {
@@ -478,8 +485,8 @@ public class POSPrinter extends POSPrinterProperties {
 
     private ByteBuffer getPrintData(POSPrinterService.PrintData data, PrinterState statusData) {
         ByteBuffer databuffer;
-        if (data.getServiceIsMapping() || data.getCharacterSet() == POSPrinterConst.PTR_CS_UNICODE) {
-            Charset charset = data.getCharacterSet() == POSPrinterConst.PTR_CS_ANSI ? Charset.defaultCharset() : Charset.forName(getCharsetString(data));
+        if (data.getServiceIsMapping() || data.getCharacterSet() == PTR_CS_UNICODE) {
+            Charset charset = data.getCharacterSet() == PTR_CS_ANSI ? Charset.defaultCharset() : Charset.forName(getCharsetString(data));
             CharsetEncoder encoder = charset.newEncoder();
             encoder.onMalformedInput(CodingErrorAction.IGNORE);
             encoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
@@ -515,9 +522,8 @@ public class POSPrinter extends POSPrinterProperties {
     }
 
     private ByteBuffer getCut(POSPrinterService.EscCut data, PrinterState state) {
-        POSPrinterService.EscCut cut = data;
         byte[] cmdnormalize = Dev.getCmdNormalize(state.Cartridge);
-        if (cut.getFeed() || cut.getStamp()) {
+        if (data.getFeed() || data.getStamp()) {
             ByteBuffer retbuffer = ByteBuffer.allocate(RecLinesToPaperCut + 1 + cmdnormalize.length);
             Arrays.fill(retbuffer.array(), 0, RecLinesToPaperCut, LineFeed);
             retbuffer.position(RecLinesToPaperCut);
@@ -531,10 +537,9 @@ public class POSPrinter extends POSPrinterProperties {
     }
 
     private ByteBuffer getLogo(POSPrinterService.EscLogo data, PrinterState status, boolean[] complete) throws JposException {
-        List<POSPrinterService.PrintDataPart> logodata = new ArrayList<POSPrinterService.PrintDataPart>();
+        List<POSPrinterService.PrintDataPart> logodata = new ArrayList<>();
         POSPrinterService.PrintDataPart[] source = data.getLogoData();
-        for (POSPrinterService.PrintDataPart part : source)
-            logodata.add(part);
+        Collections.addAll(logodata, source);
         return ByteBuffer.wrap(getBytes(logodata, status, complete));
     }
 
@@ -542,7 +547,7 @@ public class POSPrinter extends POSPrinterProperties {
         if (!data.getReverse()) {
             int count = data.getCount();
             if (data.getUnits()) {
-                count = (toDotScale(count, data.getMapMode()) + Dev.LineSpacings[Dev.CurrentFontIndex] / 2) / Dev.LineSpacings[Dev.CurrentFontIndex];
+                count = (toDotScale(count, data.getMapMode()) + LineSpacings[Dev.CurrentFontIndex] / 2) / LineSpacings[Dev.CurrentFontIndex];
             }
             if (count == 0)
                 count++;
@@ -566,7 +571,7 @@ public class POSPrinter extends POSPrinterProperties {
     }
 
     private ByteBuffer getAlignment(POSPrinterService.EscAlignment data) {
-        return ByteBuffer.allocate(CmdOrientation.length + 1).put(CmdOrientation).put((byte)(data.getAlignment() == POSPrinterConst.PTR_BC_LEFT ? 'l' : (data.getAlignment() == POSPrinterConst.PTR_BC_CENTER ? 'c' : 'r')));
+        return ByteBuffer.allocate(CmdOrientation.length + 1).put(CmdOrientation).put((byte)(data.getAlignment() == PTR_BC_LEFT ? 'l' : (data.getAlignment() == PTR_BC_CENTER ? 'c' : 'r')));
     }
 
     private ByteBuffer getSimpleAttribute(POSPrinterService.EscSimple data) {
@@ -585,21 +590,21 @@ public class POSPrinter extends POSPrinterProperties {
 
     private ByteBuffer getColor(POSPrinterService.EscColor data) {
         if (!data.getRgb()) {
-            return ByteBuffer.allocate(CmdColor.length + 1).put(CmdColor).put((byte)(data.getColor() != POSPrinterConst.PTR_COLOR_PRIMARY ? '1' : '0'));
+            return ByteBuffer.allocate(CmdColor.length + 1).put(CmdColor).put((byte)(data.getColor() != PTR_COLOR_PRIMARY ? '1' : '0'));
         }
         return null;
     }
 
     @Override
     public void transactionPrint(TransactionPrint request) throws JposException {
-        if (request.getControl() == POSPrinterConst.PTR_TP_NORMAL) {
+        if (request.getControl() == PTR_TP_NORMAL) {
             SyncObject obj = Dev.StartWaiter = new SyncObject();
             Dev.PollWaiter.signal();
-            obj.suspend(SyncObject.INFINITE);
-            Dev.check(!Dev.Online, JposConst.JPOS_E_FAILURE, "Device off");
-            Dev.check(Dev.PrinterError, JposConst.JPOS_E_FAILURE, "Device offline");
-            Dev.checkext(CoverOpen, POSPrinterConst.JPOS_EPTR_COVER_OPEN, "Cover open");
-            Dev.checkext(Dev.PaperState == Dev.PaperEnd, POSPrinterConst.JPOS_EPTR_REC_EMPTY, "Cover open");
+            obj.suspend(INFINITE);
+            check(!Dev.Online, JPOS_E_FAILURE, "Device off");
+            check(Dev.PrinterError, JPOS_E_FAILURE, "Device offline");
+            checkext(CoverOpen, JPOS_EPTR_COVER_OPEN, "Cover open");
+            checkext(Dev.PaperState == PaperEnd, JPOS_EPTR_REC_EMPTY, "Cover open");
         }
     }
 }

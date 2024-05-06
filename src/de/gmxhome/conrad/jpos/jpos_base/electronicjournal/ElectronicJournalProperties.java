@@ -18,7 +18,10 @@ package de.gmxhome.conrad.jpos.jpos_base.electronicjournal;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import net.bplaced.conrad.log4jpos.*;
+
+import static jpos.ElectronicJournalConst.*;
+import static jpos.JposConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * Class containing the electronic journal specific properties, their default values and default implementations of
@@ -90,7 +93,7 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
      * UPOS property CapStation. Default: S_RECEIPT. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapStation = ElectronicJournalConst.EJ_S_RECEIPT;
+    public int CapStation = EJ_S_RECEIPT;
 
     /**
      * UPOS property CapStorageEnabled. Default: false. Can be overwritten
@@ -164,7 +167,7 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
      * UPOS property Station. Default: S_RECEIPT. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int Station = ElectronicJournalConst.EJ_S_RECEIPT;
+    public int Station = EJ_S_RECEIPT;
 
     /**
      * UPOS property StorageEnabled.
@@ -189,7 +192,7 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
      */
     public ElectronicJournalProperties(int dev) {
         super(dev);
-        FlagWhenIdleStatusValue = ElectronicJournalConst.EJ_SUE_IDLE;
+        FlagWhenIdleStatusValue = EJ_SUE_IDLE;
     }
 
     @Override
@@ -230,7 +233,7 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
             DataCount = 0;
         }
         newJposOutputRequest().clearInput();
-        State = JposConst.JPOS_S_IDLE;
+        State = JPOS_S_IDLE;
         clearErrorProperties();
         newJposOutputRequest().reactivate(false);
         if (Device.CurrentCommand == null && Device.PendingCommands.size() == 0 && FlagWhenIdle) {
@@ -246,8 +249,8 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
             EventList.clear();
         }
         newJposOutputRequest().clearOutput();
-        if (State != JposConst.JPOS_S_IDLE) {
-            State = JposConst.JPOS_S_IDLE;
+        if (State != JPOS_S_IDLE) {
+            State = JPOS_S_IDLE;
             EventSource.logSet("State");
         }
         clearOutputErrorProperties();
@@ -263,14 +266,14 @@ public class ElectronicJournalProperties extends JposCommonProperties implements
     public void retryOutput() {
         clearErrorProperties();
         newJposOutputRequest().reactivate(false);
-        Device.log(Level.DEBUG, LogicalName + ": Enter Retry output...");
+        Device.log(DEBUG, LogicalName + ": Enter Retry output...");
     }
 
     @Override
     public void retryInput() {
         clearErrorProperties();
         newJposOutputRequest().reactivate(true);
-        Device.log(Level.DEBUG, LogicalName + ": Enter Retry input...");
+        Device.log(DEBUG, LogicalName + ": Enter Retry input...");
     }
 
     @Override

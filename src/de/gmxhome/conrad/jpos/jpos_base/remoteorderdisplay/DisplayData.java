@@ -29,7 +29,7 @@ public class DisplayData extends PositionBase {
     public int getAttributes() {
         return Attributes;
     }
-    private int Attributes;
+    private final int Attributes;
 
     /**
      * Retrieves parameter data of method DisplayData. See UPOS specification for further information.
@@ -38,7 +38,7 @@ public class DisplayData extends PositionBase {
     public String getData() {
         return Data;
     }
-    private String Data;
+    private final String Data;
 
     /**
      * Constructor. Stores given parameters for later use.

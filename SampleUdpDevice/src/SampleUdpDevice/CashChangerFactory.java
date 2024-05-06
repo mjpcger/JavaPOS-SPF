@@ -17,13 +17,13 @@
 
 package SampleUdpDevice;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.cashchanger.Factory;
-import jpos.JposConst;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import de.gmxhome.conrad.jpos.jpos_base.cashchanger.*;
+import jpos.*;
 import jpos.config.JposEntry;
-import jpos.loader.JposServiceInstance;
-import jpos.loader.JposServiceInstanceFactory;
+import jpos.loader.*;
+
+import static jpos.JposConst.*;
 
 /**
  * Factory class for CashChanger device class of sample UDP service implementation.
@@ -43,22 +43,22 @@ public class CashChangerFactory extends Factory implements JposServiceInstanceFa
                     if (!created) {
                         dev = new BeltCashboxDrawer(port);
                     } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Port " + port + " used by " + any.getClass().getName());
+                        throw new JposException(JPOS_E_NOSERVICE, "Port " + port + " used by " + any.getClass().getName());
                     else {
                         dev = (BeltCashboxDrawer) any;
                     }
                     dev.checkProperties(jposEntry);
-                    JposServiceInstance service = addDevice(0, dev);
+                    JposServiceInstance service = addDevice(0, dev, jposEntry);
                     if (!created)
                         putDevice(port, dev);
                     return service;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

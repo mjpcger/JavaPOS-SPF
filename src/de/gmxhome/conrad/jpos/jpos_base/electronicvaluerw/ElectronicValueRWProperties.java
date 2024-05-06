@@ -17,16 +17,16 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import jpos.ElectronicValueRWConst;
-import jpos.JposConst;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
+import jpos.config.JposEntry;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
+import java.text.*;
+import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.ElectronicValueRWConst.*;
+import static jpos.JposConst.*;
 
 /**
  * Class containing the electronic value reader / writer specific properties, their default values and default implementations of
@@ -457,14 +457,36 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
     public TypeSafeStringMap TypedResults;
 
     /**
+     * Specifies whether enumerated values will be passed by value (true) or by name (false). Default is true.
+     */
+    public boolean UseEnumeratedValues = true;
+
+    /**
+     * Specifies whether enumeration values will be checked against the list of enumerations specified in the corresponding
+     * UPOS specification (true) or not (false). In the latter case, any value can be passes for an enumeration value
+     * and the specific service implementation must decide whether the given value shall be supported. Default is true.
+     */
+    public boolean StrongEnumerationCheck = true;
+
+    /**
      * Constructor.
      *
      * @param dev Device index
      */
     protected ElectronicValueRWProperties(int dev) {
         super(dev);
-        DeviceServiceVersion = 1015000;
         ExclusiveUse = ExclusiveYes;
+    }
+
+    @Override
+    public void checkProperties(JposEntry entry) throws JposException {
+        super.checkProperties(entry);
+        Object o = entry.getPropertyValue("UseEnumeratedValues");
+        if (o != null)
+            UseEnumeratedValues = Boolean.parseBoolean(o.toString());
+        o = entry.getPropertyValue("StrongEnumerationCheck");
+        if (o != null)
+            StrongEnumerationCheck = Boolean.parseBoolean(o.toString());
     }
 
     @Override
@@ -482,20 +504,20 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
         CurrentService = "";
         DailyLog = "";
         DetectionControl = false;
-        DetectionStatus = ElectronicValueRWConst.EVRW_DS_NOCARD;
+        DetectionStatus = EVRW_DS_NOCARD;
         ExpirationDate = "";
         LastUsedDate = "";
         MediumID = "";
         PaymentDetail = "";
-        PaymentMedia = ElectronicValueRWConst.EVRW_MEDIA_UNSPECIFIED;
-        PINEntry = ElectronicValueRWConst.EVRW_PIN_ENTRY_UNKNOWN;
+        PaymentMedia = EVRW_MEDIA_UNSPECIFIED;
+        PINEntry = EVRW_PIN_ENTRY_UNKNOWN;
         Point = 0;
         SequenceNumber = 0;
-        ServiceType = ElectronicValueRWConst.EVRW_ST_UNSPECIFIED;
+        ServiceType = EVRW_ST_UNSPECIFIED;
         SettledAmount = 0;
         SettledPoint = 0;
         SlipNumber = "";
-        TrainingModeState = ElectronicValueRWConst.EVRW_TM_UNKNOWN;
+        TrainingModeState = EVRW_TM_UNKNOWN;
         TransactionLog = "";
         TransactionNumber = "";
         TransactionType = 0;
@@ -504,6 +526,7 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
     }
 
     @Override
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     public void initOnClaim() {
         super.initOnClaim();
         synchronized (TypedParameters) {
@@ -523,8 +546,10 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
      */
     public JposException checkTagValueFormat(String tag, String value) {
         try {
-            boolean b = (checkCurrencyTag(tag, value) || checkBoolenTag(tag, value) || checkNumberTag(tag, value) ||
-                    checkDateTimeTag(tag, value) || checkEnumTag(tag, value) || checkStringTag(tag, value));
+            if (!checkCurrencyTag(tag, value) && !checkBoolenTag(tag, value) && !checkNumberTag(tag, value)
+                    && !checkDateTimeTag(tag, value) && !checkEnumTag(tag, value)) {
+                checkStringTag(tag, value);
+            }
             return null;
         } catch (JposException e) {
             return e;
@@ -540,10 +565,10 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
         for(String name : currencies) {
             if (name.equals(tag)) {
                 try {
-                    long i = Long.valueOf(value);
+                    Long.parseLong(value);
                     return true;
                 } catch (NumberFormatException e) {
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value, e);
+                    throw new JposException(JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value, e);
                 }
             }
         }
@@ -575,7 +600,7 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
                     if (tagvals[i].equals(value))
                         return true;
                 }
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value);
+                throw new JposException(JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value);
             }
         }
         return tag.equals("VOIDorRETURN") || tag.equals("VoidTransactionType");
@@ -589,7 +614,7 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
                 if (value.equals("True") || value.equals("False")) {
                     return true;
                 } else {
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value);
+                    throw new JposException(JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value);
                 }
             }
         }
@@ -608,10 +633,10 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
         for(String name : numbers) {
             if (name.equals(tag)) {
                 try {
-                    int i = Integer.valueOf(value);
+                    Integer.parseInt(value);
                     return true;
                 } catch (NumberFormatException e) {
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value, e);
+                    throw new JposException(JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value, e);
                 }
             }
         }
@@ -625,27 +650,28 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
         for(String name : datetimes) {
             if (name.equals(tag)) {
                 try {
-                    Date d = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").parse(value);
+                    new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").parse(value);
                     return true;
                 } catch (ParseException e) {
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value, e);
+                    throw new JposException(JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value, e);
                 }
             }
         }
         return false;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private boolean checkStringTag(String tag, String value) throws JposException {
         if (tag.equals("SetttledVoucherID") || tag.equals("SettledVoucherID") || tag.equals("VoucherID")) {
             if (value.length() > 0) {
                 String[] parts = value.split(":");
                 int i;
                 try {
-                    i = Integer.valueOf(parts[1]);
-                    JposDevice.check(i <= 0 || parts.length != 2, JposConst.JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value);
+                    i = Integer.parseInt(parts[1]);
+                    check(i <= 0 || parts.length != 2, JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value);
                     return true;
                 } catch (Exception e) {
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value, e);
+                    throw new JposException(JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value, e);
                 }
             }
         } else if (tag.equals("VoucherIDList")) {
@@ -655,15 +681,14 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
                     String[] parts = id.split(":");
                     int i;
                     try {
-                        i = Integer.valueOf(parts[1]);
-                        JposDevice.check(i <= 0 || parts.length != 2, JposConst.JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value);
+                        i = Integer.parseInt(parts[1]);
+                        check(i <= 0 || parts.length != 2, JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value);
                         return true;
                     } catch (Exception e) {
-                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value, e);
+                        throw new JposException(JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value, e);
                     }
                 }
             }
-
         }
         return false;
     }
@@ -743,6 +768,7 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
 
     }
 
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     @Override
     public void clearParameterInformation() throws JposException {
         synchronized (TypedParameters) {
@@ -765,6 +791,7 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
 
     }
 
+    @SuppressWarnings({"SynchronizeOnNonFinalField", "deprecation"})
     @Override
     public void retrieveResultInformation(String name, String[] value) throws JposException {
         synchronized (TypedResults) {
@@ -774,63 +801,38 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
     }
 
     @Override
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     public void setParameterInformation(String name, String value) throws JposException {
         synchronized (TypedResults) {
             try {
                 TypedResults.put(name, value);
             } catch (Exception e) {
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Parameter error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+                throw new JposException(JPOS_E_ILLEGAL, "Parameter error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
             }
         }
     }
 
-    private Object[][] TagValueList = {
+    private final Object[][] TagValueList = {
             {"PaymentCondition"},
             {
-                    ElectronicValueRWConst.EVRW_TAG_PC_INSTALLMENT_1,
-                    ElectronicValueRWConst.EVRW_TAG_PC_INSTALLMENT_2,
-                    ElectronicValueRWConst.EVRW_TAG_PC_INSTALLMENT_3,
-                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_1,
-                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_2,
-                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_3,
-                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_4,
-                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_5,
-                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_1,
-                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_2,
-                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_3,
-                    ElectronicValueRWConst.EVRW_TAG_PC_BONUS_COMBINATION_4,
-                    ElectronicValueRWConst.EVRW_TAG_PC_LUMP,
-                    ElectronicValueRWConst.EVRW_TAG_PC_REVOLVING
+                    EVRW_TAG_PC_INSTALLMENT_1, EVRW_TAG_PC_INSTALLMENT_2, EVRW_TAG_PC_INSTALLMENT_3,
+                    EVRW_TAG_PC_BONUS_1, EVRW_TAG_PC_BONUS_2, EVRW_TAG_PC_BONUS_3, EVRW_TAG_PC_BONUS_4, EVRW_TAG_PC_BONUS_5,
+                    EVRW_TAG_PC_BONUS_COMBINATION_1, EVRW_TAG_PC_BONUS_COMBINATION_2,
+                    EVRW_TAG_PC_BONUS_COMBINATION_3, EVRW_TAG_PC_BONUS_COMBINATION_4,
+                    EVRW_TAG_PC_LUMP, EVRW_TAG_PC_REVOLVING
             }, {
-                    ElectronicValueRWConst.EVRW_PAYMENT_INSTALLMENT_1,
-                    ElectronicValueRWConst.EVRW_PAYMENT_INSTALLMENT_2,
-                    ElectronicValueRWConst.EVRW_PAYMENT_INSTALLMENT_3,
-                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_1,
-                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_2,
-                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_3,
-                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_4,
-                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_5,
-                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_1,
-                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_2,
-                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_3,
-                    ElectronicValueRWConst.EVRW_PAYMENT_BONUS_COMBINATION_4,
-                    ElectronicValueRWConst.EVRW_PAYMENT_LUMP,
-                    ElectronicValueRWConst.EVRW_PAYMENT_REVOLVING
+                    EVRW_PAYMENT_INSTALLMENT_1, EVRW_PAYMENT_INSTALLMENT_2, EVRW_PAYMENT_INSTALLMENT_3,
+                    EVRW_PAYMENT_BONUS_1, EVRW_PAYMENT_BONUS_2, EVRW_PAYMENT_BONUS_3, EVRW_PAYMENT_BONUS_4, EVRW_PAYMENT_BONUS_5,
+                    EVRW_PAYMENT_BONUS_COMBINATION_1, EVRW_PAYMENT_BONUS_COMBINATION_2,
+                    EVRW_PAYMENT_BONUS_COMBINATION_3, EVRW_PAYMENT_BONUS_COMBINATION_4,
+                    EVRW_PAYMENT_LUMP, EVRW_PAYMENT_REVOLVING
             }, {"TransactionType"},
             {
-                    ElectronicValueRWConst.EVRW_TAG_TT_RETURN,
-                    ElectronicValueRWConst.EVRW_TAG_TT_SUBTRACT,
-                    ElectronicValueRWConst.EVRW_TAG_TT_CANCEL_SALES,
-                    ElectronicValueRWConst.EVRW_TAG_TT_ADD,
-                    ElectronicValueRWConst.EVRW_TAG_TT_COMPLETION,
-                    ElectronicValueRWConst.EVRW_TAG_TT_PRE_SALES
-          }, {
-                    ElectronicValueRWConst.EVRW_TRANSACTION_REFUND,
-                    ElectronicValueRWConst.EVRW_TRANSACTION_SALES,
-                    ElectronicValueRWConst.EVRW_TRANSACTION_VOID,
-                    ElectronicValueRWConst.EVRW_TRANSACTION_CASHDEPOSIT,
-                    ElectronicValueRWConst.EVRW_TRANSACTION_COMPLETION,
-                    ElectronicValueRWConst.EVRW_TRANSACTION_PRESALES
+                    EVRW_TAG_TT_RETURN, EVRW_TAG_TT_SUBTRACT, EVRW_TAG_TT_CANCEL_SALES,
+                    EVRW_TAG_TT_ADD, EVRW_TAG_TT_COMPLETION, EVRW_TAG_TT_PRE_SALES
+            }, {
+                    EVRW_TRANSACTION_REFUND, EVRW_TRANSACTION_SALES, EVRW_TRANSACTION_VOID,
+                    EVRW_TRANSACTION_CASHDEPOSIT, EVRW_TRANSACTION_COMPLETION, EVRW_TRANSACTION_PRESALES
             }
     };
 

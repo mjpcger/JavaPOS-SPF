@@ -23,7 +23,7 @@ public class UnitOutputCompleteEvent extends JposOutputCompleteEvent {
     /**
      * Target units of the corresponding output request.
      */
-    public int Units;
+    public final int Units;
 
     /**
      * Constructor. Parameters passed to base class unchanged.

@@ -19,7 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.smartcardrw;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
 import jpos.JposException;
-import jpos.SmartCardRWConst;
+
+import static jpos.SmartCardRWConst.*;
 
 /**
  * Class containing the smart card reader / writer specific properties, their default values and default implementations of
@@ -42,7 +43,7 @@ public class SmartCardRWProperties extends JposCommonProperties implements Smart
      * UPOS property CapInterfaceMode. Default: CMODE_TRANS. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int CapInterfaceMode = SmartCardRWConst.SC_CMODE_TRANS;
+    public int CapInterfaceMode = SC_CMODE_TRANS;
 
     /**
      * UPOS property CapIsoEmvMode. Default: 0. Can be overwritten by objects derived from JposDevice within the
@@ -71,7 +72,7 @@ public class SmartCardRWProperties extends JposCommonProperties implements Smart
      * UPOS property InterfaceMode. Default: MODE_TRANS. Must be overwritten until first enabled if CapInterfaceMode
      * does not contain CMODE_TRANS.
      */
-    public int InterfaceMode = SmartCardRWConst.SC_MODE_TRANS;
+    public int InterfaceMode = SC_MODE_TRANS;
 
     /**
      * UPOS property IsoEmvMode. Default: 0.

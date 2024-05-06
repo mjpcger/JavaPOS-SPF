@@ -19,8 +19,10 @@ package de.gmxhome.conrad.jpos.jpos_base.posprinter;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * Output request executor for POSPrinter method RotatePrint.
@@ -34,7 +36,7 @@ public class RotatePrint extends OutputRequest {
         return Station;
     }
 
-    private int Station;
+    private final int Station;
 
     /**
      * POSPrinter method RotatePrint parameter rotation, see UPOS specification.
@@ -44,12 +46,12 @@ public class RotatePrint extends OutputRequest {
         return Rotation;
     }
 
-    private int Rotation;
+    private final int Rotation;
 
     /**
      * List holds all outstanding output requests.
      */
-    public List<OutputRequest> SidewaysCommands = new ArrayList<OutputRequest>();
+    public final List<OutputRequest> SidewaysCommands = new ArrayList<>();
 
     /**
      * Adds an output request to the request queue.
@@ -57,7 +59,7 @@ public class RotatePrint extends OutputRequest {
      * @throws JposException if request is null (specifying synchronous method implementation).
      */
     public synchronized void addMethod(OutputRequest request) throws JposException {
-        Props.Device.check(request == null, JposConst.JPOS_E_FAILURE, "Rotate print mode not supported for synchronous implementation");
+        check(request == null, JPOS_E_FAILURE, "Rotate print mode not supported for synchronous implementation");
         SidewaysCommands.add(request);
     }
 
@@ -83,7 +85,7 @@ public class RotatePrint extends OutputRequest {
         }
         svc.POSPrinterInterface.rotatePrint(this);
         for (OutputRequest request : SidewaysCommands) {
-            Device.check (Abort != null, JposConst.JPOS_E_FAILURE, "Rotate print interrupted");
+            check (Abort != null, JPOS_E_FAILURE, "Rotate print interrupted");
             request.invoke();
         }
     }

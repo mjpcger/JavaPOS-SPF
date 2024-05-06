@@ -72,7 +72,7 @@ public interface ElectronicValueRWInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is open,</li>
-     *     <li>service is one of the sevices specified in property ReaderWriterServiceList or an
+     *     <li>service is one of the services specified in property ReaderWriterServiceList or an
      *     empty string,</li>
      *     <li>internal property AllowAlwaysSetProperties is true or service equals the previous value of CurrentService.</li>
      * </ul>

@@ -17,13 +17,12 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.rfidscanner;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import de.gmxhome.conrad.jpos.jpos_base.JposErrorEvent;
-import de.gmxhome.conrad.jpos.jpos_base.JposInputRequest;
-import jpos.JposConst;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
 
-import java.util.Arrays;
+import java.util.*;
+
+import static jpos.JposConst.*;
 
 /**
  * Input request executor for RFIDScanner method ReadTags and StartReadTags.
@@ -85,8 +84,8 @@ public class ReadTags extends JposInputRequest {
         return Arrays.copyOf(Password, Password.length);
     }
 
-    private byte[] Password, FilterID, Filtermask;
-    private int Timeout, Cmd, Start, Length;
+    private final byte[] Password, FilterID, Filtermask;
+    private final int Timeout, Cmd, Start, Length;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -115,7 +114,7 @@ public class ReadTags extends JposInputRequest {
 
     @Override
     public JposErrorEvent createErrorEvent(JposException ex) {
-        return new RFIDScannerErrorEvent(Props.EventSource, ex.getErrorCode(), ex.getErrorCodeExtended(), JposConst.JPOS_EL_INPUT, ex.getMessage());
+        return new RFIDScannerErrorEvent(Props.EventSource, ex.getErrorCode(), ex.getErrorCodeExtended(), JPOS_EL_INPUT, ex.getMessage());
     }
 
     @Override

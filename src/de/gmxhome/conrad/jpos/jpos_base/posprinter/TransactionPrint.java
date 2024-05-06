@@ -19,8 +19,10 @@ package de.gmxhome.conrad.jpos.jpos_base.posprinter;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * Output request executor for POSPrinter method TransactionPrint.
@@ -34,7 +36,7 @@ public class TransactionPrint extends OutputRequest {
         return Station;
     }
 
-    private int Station;
+    private final int Station;
 
     /**
      * POSPrinter method TransactionPrint parameter control, see UPOS specification.
@@ -44,12 +46,12 @@ public class TransactionPrint extends OutputRequest {
         return Control;
     }
 
-    private int Control;
+    private final int Control;
 
     /**
      * List holds all outstanding output requests.
      */
-    List<OutputRequest> TransactionCommands = new ArrayList<OutputRequest>();
+    final List<OutputRequest> TransactionCommands = new ArrayList<>();
 
     /**
      * Adds an output request to the request queue.
@@ -57,7 +59,7 @@ public class TransactionPrint extends OutputRequest {
      * @throws JposException if request is null (specifying synchronous method implementation).
      */
     synchronized void addMethod(OutputRequest request) throws JposException {
-        Props.Device.check(request == null, JposConst.JPOS_E_FAILURE, "Transaction mode not supported for synchronous implementation");
+        check(request == null, JPOS_E_FAILURE, "Transaction mode not supported for synchronous implementation");
         TransactionCommands.add(request);
     }
 
@@ -82,7 +84,7 @@ public class TransactionPrint extends OutputRequest {
         }
         svc.POSPrinterInterface.transactionPrint(this);
         for (OutputRequest request : TransactionCommands) {
-            Device.check (Abort != null, JposConst.JPOS_E_FAILURE, "Transaction interrupted");
+            check (Abort != null, JPOS_E_FAILURE, "Transaction interrupted");
             request.invoke();
         }
     }

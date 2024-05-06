@@ -19,8 +19,11 @@ package de.gmxhome.conrad.jpos.jpos_base.itemdispenser;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
 import de.gmxhome.conrad.jpos.jpos_base.JposDeviceFactory;
-import jpos.JposConst;
 import jpos.JposException;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of ItemDispenser factory for JPOS devices using this framework.
@@ -31,19 +34,30 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults. Returns ItemDispenserService object.
      * @param index ItemDispenser property set index.
      * @param dev   ItemDispenser implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return ItemDispenserService object.
      * @throws jpos.JposException If property set could not be retrieved.
      */
-    public ItemDispenserService addDevice(int index, JposDevice dev) throws JposException {
-        ItemDispenserProperties drw = dev.getItemDispenserProperties(index);
-        ItemDispenserService service;
-        JposDevice.check(drw == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getItemDispenserProperties()");
-        service = (ItemDispenserService) (drw.EventSource = new ItemDispenserService(drw, dev));
-        drw.Device = dev;
-        drw.Claiming = dev.ClaimedItemDispenser;
-        dev.changeDefaults(drw);
-        drw.addProperties(dev.ItemDispensers);
-        service.DeviceInterface = service.ItemDispenserInterface = drw;
+    public ItemDispenserService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
+        ItemDispenserProperties props = dev.getItemDispenserProperties(index);
+        validateJposConfiguration(props, dev, dev.ClaimedItemDispenser, entry);
+        ItemDispenserService service = (ItemDispenserService) (props.EventSource = new ItemDispenserService(props, dev));
+        dev.changeDefaults(props);
+        props.addProperties(dev.ItemDispensers);
+        service.DeviceInterface = service.ItemDispenserInterface = props;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults. Returns ItemDispenserService object.
+     * @param index ItemDispenser property set index.
+     * @param dev   ItemDispenser implementation instance derived from JposDevice to be used by the service.
+     * @return ItemDispenserService object.
+     * @throws jpos.JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public ItemDispenserService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

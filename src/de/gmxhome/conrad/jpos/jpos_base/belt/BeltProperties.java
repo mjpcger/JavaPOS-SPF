@@ -18,8 +18,9 @@
 package de.gmxhome.conrad.jpos.jpos_base.belt;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import jpos.BeltConst;
 import jpos.JposException;
+
+import static jpos.BeltConst.*;
 
 /**
  * Class containing the belt specific properties, their default values and default implementations of
@@ -139,7 +140,7 @@ public class BeltProperties extends JposCommonProperties implements BeltInterfac
      * UPOS property MotionStatus. Default: MT_STOPPED.  Must be
      * initialized and kept current while device is enabled.
      */
-    public int MotionStatus = BeltConst.BELT_MT_STOPPED;
+    public int MotionStatus = BELT_MT_STOPPED;
 
     /**
      * UPOS property SecurityFlapBackwardOpened. Default: false.  Must be
@@ -192,7 +193,7 @@ public class BeltProperties extends JposCommonProperties implements BeltInterfac
      */
     @Override
     public void adjustItemCount(int direction, int count) throws JposException {
-        if (direction == BeltConst.BELT_AIC_BACKWARD)
+        if (direction == BELT_AIC_BACKWARD)
             AutoStopBackwardItemCount += count;
         else
             AutoStopForwardItemCount += count;
@@ -218,7 +219,7 @@ public class BeltProperties extends JposCommonProperties implements BeltInterfac
      */
     @Override
     public void resetItemCount(int direction) throws JposException {
-        if (direction == BeltConst.BELT_AIC_BACKWARD)
+        if (direction == BELT_AIC_BACKWARD)
             AutoStopBackwardItemCount = 0;
         else
             AutoStopForwardItemCount = 0;

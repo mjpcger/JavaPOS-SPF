@@ -17,9 +17,7 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.checkscanner;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposBase;
-import de.gmxhome.conrad.jpos.jpos_base.JposDataEvent;
-import jpos.CheckScannerConst;
+import de.gmxhome.conrad.jpos.jpos_base.*;
 
 import java.util.Arrays;
 
@@ -30,38 +28,38 @@ public class CheckScannerDataEvent extends JposDataEvent {
     /**
      * New contents of FileID property. Must be set if CapAutoGenerateFileID is true. For details, see UPOS specification.
      */
-    public String FileID;
+    public final String FileID;
 
     /**
      * New contents of FileIndex property. For details, see UPOS specification.
      */
-    public int FileIndex;
+    public final int FileIndex;
 
     /**
      * New contents of ImageData property. For details, see UPOS specification.
      */
-    public byte[] ImageData;
+    public final byte[] ImageData;
 
     /**
      * New contents of ImageTagData property. Must be set if CapAutoGenerateImageTagData is true. For details, see UPOS specification.
      */
-    public String ImageTagData;
+    public final String ImageTagData;
 
     /**
      * New document height in dot units. See Quality for details.
      */
-    public Integer DocumentHeight;
+    public final Integer DocumentHeight;
 
     /**
      * New document width in dot units. See Quality for details.
      */
-    public Integer DocumentWidth;
+    public final Integer DocumentWidth;
 
     /**
      * Resolution of the scan image in DPI. For example, if Quality equals 320 and the scan image is 3 x 6 inch,
      * DocumentHeight must be equal to 960 and DocumentWidth equal to 1920.
      */
-    public Integer Quality;
+    public final Integer Quality;
 
     /**
      * Constructor. Parameters passed to base class unchanged.

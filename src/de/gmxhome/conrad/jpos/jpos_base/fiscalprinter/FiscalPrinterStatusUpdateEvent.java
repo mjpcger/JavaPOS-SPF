@@ -17,7 +17,9 @@
 package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.*;
+
+import static jpos.FiscalPrinterConst.*;
+import static jpos.JposConst.*;
 
 /**
  * Status update event implementation for FiscalPrinter devices.
@@ -39,52 +41,25 @@ public class FiscalPrinterStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         FiscalPrinterProperties props = (FiscalPrinterProperties)getPropertySet();
         switch (getStatus()) {
-            case FiscalPrinterConst.FPTR_SUE_COVER_OK:
-                props.CoverOpen = false;
-                break;
-            case FiscalPrinterConst.FPTR_SUE_COVER_OPEN:
-                props.CoverOpen = true;
-            case FiscalPrinterConst.FPTR_SUE_JRN_COVER_OK:
-            case FiscalPrinterConst.FPTR_SUE_JRN_COVER_OPEN:
-            case FiscalPrinterConst.FPTR_SUE_REC_COVER_OK:
-            case FiscalPrinterConst.FPTR_SUE_REC_COVER_OPEN:
-            case FiscalPrinterConst.FPTR_SUE_SLP_COVER_OK:
-            case FiscalPrinterConst.FPTR_SUE_SLP_COVER_OPEN:
-                break;
-            case FiscalPrinterConst.FPTR_SUE_IDLE:
-                props.State = JposConst.JPOS_S_IDLE;
-                break;
-            case FiscalPrinterConst.FPTR_SUE_JRN_EMPTY:
-                props.JrnEmpty = true;
-                break;
-            case FiscalPrinterConst.FPTR_SUE_JRN_NEAREMPTY:
+            case FPTR_SUE_COVER_OK -> props.CoverOpen = false;
+            case FPTR_SUE_COVER_OPEN -> props.CoverOpen = true;
+            case FPTR_SUE_JRN_COVER_OK, FPTR_SUE_JRN_COVER_OPEN, FPTR_SUE_REC_COVER_OK, FPTR_SUE_REC_COVER_OPEN, FPTR_SUE_SLP_COVER_OK, FPTR_SUE_SLP_COVER_OPEN -> {
+            }
+            case FPTR_SUE_IDLE -> props.State = JPOS_S_IDLE;
+            case FPTR_SUE_JRN_EMPTY, FPTR_SUE_SLP_EMPTY -> props.JrnEmpty = true;
+            case FPTR_SUE_JRN_NEAREMPTY -> {
                 props.JrnNearEnd = true;
                 props.JrnEmpty = false;
-                break;
-            case FiscalPrinterConst.FPTR_SUE_JRN_PAPEROK:
-                props.JrnEmpty = props.JrnNearEnd = false;
-                break;
-            case FiscalPrinterConst.FPTR_SUE_REC_EMPTY:
-                props.RecEmpty = true;
-                break;
-            case FiscalPrinterConst.FPTR_SUE_REC_NEAREMPTY:
+            }
+            case FPTR_SUE_JRN_PAPEROK, FPTR_SUE_SLP_PAPEROK -> props.JrnEmpty = props.JrnNearEnd = false;
+            case FPTR_SUE_REC_EMPTY -> props.RecEmpty = true;
+            case FPTR_SUE_REC_NEAREMPTY -> {
                 props.RecNearEnd = true;
                 props.RecEmpty = false;
-                break;
-            case FiscalPrinterConst.FPTR_SUE_REC_PAPEROK:
-                props.RecEmpty = props.RecNearEnd = false;
-                break;
-            case FiscalPrinterConst.FPTR_SUE_SLP_EMPTY:
-                props.JrnEmpty = true;
-                break;
-            case FiscalPrinterConst.FPTR_SUE_SLP_NEAREMPTY:
-                props.JrnNearEnd = true;
-                break;
-            case FiscalPrinterConst.FPTR_SUE_SLP_PAPEROK:
-                props.JrnEmpty = props.JrnNearEnd = false;
-                break;
-            default:
-                return false;
+            }
+            case FPTR_SUE_REC_PAPEROK -> props.RecEmpty = props.RecNearEnd = false;
+            case FPTR_SUE_SLP_NEAREMPTY -> props.JrnNearEnd = true;
+            default -> { return false; }
         }
         props.signalWaiter();
         return true;
@@ -92,42 +67,26 @@ public class FiscalPrinterStatusUpdateEvent extends JposStatusUpdateEvent {
 
     @Override
     public boolean checkStatusCorresponds() {
-        if (super.checkStatusCorresponds())
-            return true;
         FiscalPrinterProperties props = (FiscalPrinterProperties)getPropertySet();
-        switch (getStatus()) {
-            case FiscalPrinterConst.FPTR_SUE_JRN_COVER_OK:
-            case FiscalPrinterConst.FPTR_SUE_REC_COVER_OK:
-            case FiscalPrinterConst.FPTR_SUE_SLP_COVER_OK:
-            case FiscalPrinterConst.FPTR_SUE_COVER_OK:
-                return props.CoverOpen == false;
-            case FiscalPrinterConst.FPTR_SUE_JRN_COVER_OPEN:
-            case FiscalPrinterConst.FPTR_SUE_REC_COVER_OPEN:
-            case FiscalPrinterConst.FPTR_SUE_SLP_COVER_OPEN:
-            case FiscalPrinterConst.FPTR_SUE_COVER_OPEN:
-                return props.CoverOpen == true;
-            case FiscalPrinterConst.FPTR_SUE_IDLE:
-                return true;
-            case FiscalPrinterConst.FPTR_SUE_JRN_EMPTY:
-                return props.JrnEmpty == true;
-            case FiscalPrinterConst.FPTR_SUE_JRN_NEAREMPTY:
-                return props.JrnNearEnd == true && props.JrnEmpty == false;
-            case FiscalPrinterConst.FPTR_SUE_JRN_PAPEROK:
-                return props.JrnEmpty == false && props.JrnNearEnd == false;
-            case FiscalPrinterConst.FPTR_SUE_REC_EMPTY:
-                return props.RecEmpty == true;
-            case FiscalPrinterConst.FPTR_SUE_REC_NEAREMPTY:
-                return props.RecNearEnd == true && props.RecEmpty == false;
-            case FiscalPrinterConst.FPTR_SUE_REC_PAPEROK:
-                return props.RecEmpty == false && props.RecNearEnd == false;
-            case FiscalPrinterConst.FPTR_SUE_SLP_EMPTY:
-                return props.JrnEmpty == true;
-            case FiscalPrinterConst.FPTR_SUE_SLP_NEAREMPTY:
-                return props.JrnNearEnd == true;
-            case FiscalPrinterConst.FPTR_SUE_SLP_PAPEROK:
-                return props.JrnEmpty == false && props.JrnNearEnd == false;
-        }
-        return false;
+        return super.checkStatusCorresponds() || switch (getStatus()) {
+            case FPTR_SUE_JRN_COVER_OK, FPTR_SUE_REC_COVER_OK,
+                    FPTR_SUE_SLP_COVER_OK, FPTR_SUE_COVER_OK ->
+                    !props.CoverOpen;
+            case FPTR_SUE_JRN_COVER_OPEN, FPTR_SUE_REC_COVER_OPEN,
+                    FPTR_SUE_SLP_COVER_OPEN, FPTR_SUE_COVER_OPEN ->
+                    props.CoverOpen;
+            case FPTR_SUE_IDLE -> true;
+            case FPTR_SUE_JRN_EMPTY, FPTR_SUE_SLP_EMPTY ->
+                    props.JrnEmpty;
+            case FPTR_SUE_JRN_NEAREMPTY -> props.JrnNearEnd && !props.JrnEmpty;
+            case FPTR_SUE_JRN_PAPEROK, FPTR_SUE_SLP_PAPEROK ->
+                    !props.JrnEmpty && !props.JrnNearEnd;
+            case FPTR_SUE_REC_EMPTY -> props.RecEmpty;
+            case FPTR_SUE_REC_NEAREMPTY -> props.RecNearEnd && !props.RecEmpty;
+            case FPTR_SUE_REC_PAPEROK -> !props.RecEmpty && !props.RecNearEnd;
+            case FPTR_SUE_SLP_NEAREMPTY -> props.JrnNearEnd;
+            default -> false;
+        };
     }
 
     @Override
@@ -148,63 +107,38 @@ public class FiscalPrinterStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         if (state != props.State)
             props.EventSource.logSet("State");
-        if (propertiesHaveBeenChanged(propnames, oldvals))
-            return true;
-        switch (getStatus()) {
-            case FiscalPrinterConst.FPTR_SUE_JRN_COVER_OK:
-            case FiscalPrinterConst.FPTR_SUE_JRN_COVER_OPEN:
-            case FiscalPrinterConst.FPTR_SUE_REC_COVER_OK:
-            case FiscalPrinterConst.FPTR_SUE_REC_COVER_OPEN:
-            case FiscalPrinterConst.FPTR_SUE_SLP_COVER_OK:
-            case FiscalPrinterConst.FPTR_SUE_SLP_COVER_OPEN:
-                return true;
-        }
-        return false;
+        return propertiesHaveBeenChanged(propnames, oldvals) || switch (getStatus()) {
+            case FPTR_SUE_JRN_COVER_OK, FPTR_SUE_JRN_COVER_OPEN,
+                    FPTR_SUE_REC_COVER_OK, FPTR_SUE_REC_COVER_OPEN,
+                    FPTR_SUE_SLP_COVER_OK, FPTR_SUE_SLP_COVER_OPEN ->
+                    true;
+            default -> false;
+        };
     }
 
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        if (ret.length() > 0)
-            return ret;
-        switch (getStatus()) {
-            case FiscalPrinterConst.FPTR_SUE_COVER_OK:
-                return "Cover OK";
-            case FiscalPrinterConst.FPTR_SUE_COVER_OPEN:
-                return "Cover open";
-            case FiscalPrinterConst.FPTR_SUE_IDLE:
-                return "Fiscal printer idle";
-            case FiscalPrinterConst.FPTR_SUE_JRN_COVER_OK:
-                return "Journal cover OK";
-            case FiscalPrinterConst.FPTR_SUE_JRN_COVER_OPEN:
-                return "Journal cover open";
-            case FiscalPrinterConst.FPTR_SUE_JRN_EMPTY:
-                return "Journal paper empty";
-            case FiscalPrinterConst.FPTR_SUE_JRN_NEAREMPTY:
-                return "Journal paper near end";
-            case FiscalPrinterConst.FPTR_SUE_JRN_PAPEROK:
-                return "Journal paper OK";
-            case FiscalPrinterConst.FPTR_SUE_REC_COVER_OK:
-                return "Receipt cover OK";
-            case FiscalPrinterConst.FPTR_SUE_REC_COVER_OPEN:
-                return "Receipt cover open";
-            case FiscalPrinterConst.FPTR_SUE_REC_EMPTY:
-                return "Receipt paper empty";
-            case FiscalPrinterConst.FPTR_SUE_REC_NEAREMPTY:
-                return "Receipt paper near end";
-            case FiscalPrinterConst.FPTR_SUE_REC_PAPEROK:
-                return "Receipt paper OK";
-            case FiscalPrinterConst.FPTR_SUE_SLP_COVER_OK:
-                return "Slip cover OK";
-            case FiscalPrinterConst.FPTR_SUE_SLP_COVER_OPEN:
-                return "Slip cover open";
-            case FiscalPrinterConst.FPTR_SUE_SLP_EMPTY:
-                return "Slip paper empty";
-            case FiscalPrinterConst.FPTR_SUE_SLP_NEAREMPTY:
-                return "Slip paper near end";
-            case FiscalPrinterConst.FPTR_SUE_SLP_PAPEROK:
-                return "Slip paper OK";
-        }
-        return "Unknown Status Change: " + getStatus();
+        return ret.length() > 0 ? ret : switch (getStatus()) {
+            case FPTR_SUE_COVER_OK -> "Cover OK";
+            case FPTR_SUE_COVER_OPEN -> "Cover open";
+            case FPTR_SUE_IDLE -> "Fiscal printer idle";
+            case FPTR_SUE_JRN_COVER_OK -> "Journal cover OK";
+            case FPTR_SUE_JRN_COVER_OPEN -> "Journal cover open";
+            case FPTR_SUE_JRN_EMPTY -> "Journal paper empty";
+            case FPTR_SUE_JRN_NEAREMPTY -> "Journal paper near end";
+            case FPTR_SUE_JRN_PAPEROK -> "Journal paper OK";
+            case FPTR_SUE_REC_COVER_OK -> "Receipt cover OK";
+            case FPTR_SUE_REC_COVER_OPEN -> "Receipt cover open";
+            case FPTR_SUE_REC_EMPTY -> "Receipt paper empty";
+            case FPTR_SUE_REC_NEAREMPTY -> "Receipt paper near end";
+            case FPTR_SUE_REC_PAPEROK -> "Receipt paper OK";
+            case FPTR_SUE_SLP_COVER_OK -> "Slip cover OK";
+            case FPTR_SUE_SLP_COVER_OPEN -> "Slip cover open";
+            case FPTR_SUE_SLP_EMPTY -> "Slip paper empty";
+            case FPTR_SUE_SLP_NEAREMPTY -> "Slip paper near end";
+            case FPTR_SUE_SLP_PAPEROK -> "Slip paper OK";
+            default -> "Unknown Status Change: " + getStatus();
+        };
     }
 }

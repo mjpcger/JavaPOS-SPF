@@ -20,30 +20,26 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.CATConst.*;
+import static jpos.JposConst.*;
+
 /**
  * CAT service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class CATService extends JposBase implements CATService115 {
+public class CATService extends JposBase implements CATService116 {
     /**
      * Instance of a class implementing the CATInterface for credit authorization terminal specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public CATInterface CatInterface;
 
-    private CATProperties Data;
+    private final CATProperties Data;
 
-    static private final long[] PaymentMedia = new long[]{
-            CATConst.CAT_MEDIA_UNSPECIFIED,
-            CATConst.CAT_MEDIA_CREDIT,
-            CATConst.CAT_MEDIA_DEBIT,
-            CATConst.CAT_MEDIA_ELECTRONIC_MONEY
-    };
+    static private final long[] PaymentMedia = { CAT_MEDIA_UNSPECIFIED, CAT_MEDIA_CREDIT, CAT_MEDIA_DEBIT, CAT_MEDIA_ELECTRONIC_MONEY };
 
-    static private final long[] DailyLogType = new long[]{
-            CATConst.CAT_DL_REPORTING,
-            CATConst.CAT_DL_SETTLEMENT
-    };
+    static private final long[] DailyLogType = { CAT_DL_REPORTING, CAT_DL_SETTLEMENT };
 
     /**
      * Constructor. Stores given property set and device implementation object.
@@ -76,7 +72,7 @@ public class CATService extends JposBase implements CATService115 {
         if (addInfo == null)
             addInfo = "";
         checkOpened();
-        Device.check(!Data.CapAdditionalSecurityInformation, JposConst.JPOS_E_ILLEGAL, "Device does not support AdditionalSecurityInformation");
+        check(!Data.CapAdditionalSecurityInformation, JPOS_E_ILLEGAL, "Device does not support AdditionalSecurityInformation");
         checkNoChangedOrClaimed(Data.AdditionalSecurityInformation, addInfo);
         CatInterface.additionalSecurityInformation(addInfo);
         logSet("AdditionalSecurityInformation");
@@ -275,7 +271,7 @@ public class CATService extends JposBase implements CATService115 {
     public void setPaymentMedia(int media) throws JposException {
         logPreSet("PaymentMedia");
         checkOpened();
-        Device.checkMember(media, PaymentMedia, JposConst.JPOS_E_ILLEGAL, "Invalid medium: " + media);
+        checkMember(media, PaymentMedia, JPOS_E_ILLEGAL, "Invalid medium: " + media);
         checkNoChangedOrClaimed(Data.PaymentMedia, media);
         CatInterface.paymentMedia(media);
         logSet("PaymentMedia");
@@ -313,7 +309,7 @@ public class CATService extends JposBase implements CATService115 {
     public void setTrainingMode(boolean flag) throws JposException {
         logPreSet("TrainingMode");
         checkOpened();
-        Device.check(!Data.CapTrainingMode && flag, JposConst.JPOS_E_ILLEGAL, "Device does not support TrainingMode");
+        check(!Data.CapTrainingMode && flag, JPOS_E_ILLEGAL, "Device does not support TrainingMode");
         checkNoChangedOrClaimed(Data.TrainingMode, flag);
         CatInterface.trainingMode(flag);
         logSet("TrainingMode");
@@ -335,95 +331,102 @@ public class CATService extends JposBase implements CATService115 {
 
     @Override
     public void accessDailyLog(int sequenceNumber, int type, int timeout) throws JposException {
-        logPreCall("AccessDailyLog", "" + sequenceNumber + ", " + type + ", " + timeout);
+        logPreCall("AccessDailyLog", removeOuterArraySpecifier(new Object[]{sequenceNumber, type, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.checkMember(type, DailyLogType, JposConst.JPOS_E_ILLEGAL, "Invalid log type: " + type);
-        Device.check((type & ~Data.CapDailyLog) != 0, JposConst.JPOS_E_ILLEGAL, "Invalid log type: " + type);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        checkMember(type, DailyLogType, JPOS_E_ILLEGAL, "Invalid log type: " + type);
+        check((type & ~Data.CapDailyLog) != 0, JPOS_E_ILLEGAL, "Invalid log type: " + type);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(CatInterface.accessDailyLog(sequenceNumber, type, timeout), "AccessDailyLog");
     }
 
     @Override
     public void authorizeCompletion(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
-        logPreCall("AuthorizeCompletion", "" + sequenceNumber + ", " + amount + ", " + taxOthers + ", " + timeout);
+        logPreCall("AuthorizeCompletion", removeOuterArraySpecifier(new Object[]{
+                sequenceNumber, amount, taxOthers, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(!Data.CapAuthorizeCompletion, JposConst.JPOS_E_ILLEGAL, "AuthorizeCompletion not supported");
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount: " + amount);
-        Device.check(taxOthers < 0, JposConst.JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapAuthorizeCompletion, JPOS_E_ILLEGAL, "AuthorizeCompletion not supported");
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount: " + amount);
+        check(taxOthers < 0, JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(CatInterface.authorizeCompletion(sequenceNumber, amount, taxOthers, timeout), "AuthorizeCompletion");
     }
 
     @Override
     public void authorizePreSales(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
-        logPreCall("AuthorizePreSales", "" + sequenceNumber + ", " + amount + ", " + taxOthers + ", " + timeout);
+        logPreCall("AuthorizePreSales", removeOuterArraySpecifier(new Object[]{
+                sequenceNumber, amount, taxOthers, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(!Data.CapAuthorizePreSales, JposConst.JPOS_E_ILLEGAL, "AuthorizePreSales not supported");
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount: " + amount);
-        Device.check(taxOthers < 0, JposConst.JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapAuthorizePreSales, JPOS_E_ILLEGAL, "AuthorizePreSales not supported");
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount: " + amount);
+        check(taxOthers < 0, JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(CatInterface.authorizePreSales(sequenceNumber, amount, taxOthers, timeout), "AuthorizePreSales");
     }
 
     @Override
     public void authorizeRefund(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
-        logPreCall("AuthorizeRefund", "" + sequenceNumber + ", " + amount + ", " + taxOthers + ", " + timeout);
+        logPreCall("AuthorizeRefund", removeOuterArraySpecifier(new Object[]{
+                sequenceNumber, amount, taxOthers, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(!Data.CapAuthorizeRefund, JposConst.JPOS_E_ILLEGAL, "AuthorizeRefund not supported");
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount: " + amount);
-        Device.check(taxOthers < 0, JposConst.JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapAuthorizeRefund, JPOS_E_ILLEGAL, "AuthorizeRefund not supported");
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount: " + amount);
+        check(taxOthers < 0, JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(CatInterface.authorizeRefund(sequenceNumber, amount, taxOthers, timeout), "AuthorizeRefund");
     }
 
     @Override
     public void authorizeSales(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
-        logPreCall("AuthorizeSales", "" + sequenceNumber + ", " + amount + ", " + taxOthers + ", " + timeout);
+        logPreCall("AuthorizeSales", removeOuterArraySpecifier(new Object[]{
+                sequenceNumber, amount, taxOthers, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount: " + amount);
-        Device.check(taxOthers < 0, JposConst.JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount: " + amount);
+        check(taxOthers < 0, JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(CatInterface.authorizeSales(sequenceNumber, amount, taxOthers, timeout), "AuthorizeSales");
     }
 
     @Override
     public void authorizeVoid(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
-        logPreCall("AuthorizeVoid", "" + sequenceNumber + ", " + amount + ", " + taxOthers + ", " + timeout);
+        logPreCall("AuthorizeVoid", removeOuterArraySpecifier(new Object[]{
+                sequenceNumber, amount, taxOthers, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(!Data.CapAuthorizeVoid, JposConst.JPOS_E_ILLEGAL, "AuthorizeVoid not supported");
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount: " + amount);
-        Device.check(taxOthers < 0, JposConst.JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapAuthorizeVoid, JPOS_E_ILLEGAL, "AuthorizeVoid not supported");
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount: " + amount);
+        check(taxOthers < 0, JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(CatInterface.authorizeVoid(sequenceNumber, amount, taxOthers, timeout), "AuthorizeVoid");
     }
 
     @Override
     public void authorizeVoidPreSales(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
-        logPreCall("AuthorizeVoidPreSales", "" + sequenceNumber + ", " + amount + ", " + taxOthers + ", " + timeout);
+        logPreCall("AuthorizeVoidPreSales", removeOuterArraySpecifier(new Object[]{
+                sequenceNumber, amount, taxOthers, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(!Data.CapAuthorizeVoidPreSales, JposConst.JPOS_E_ILLEGAL, "AuthorizeVoidPreSales not supported");
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount: " + amount);
-        Device.check(taxOthers < 0, JposConst.JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapAuthorizeVoidPreSales, JPOS_E_ILLEGAL, "AuthorizeVoidPreSales not supported");
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount: " + amount);
+        check(taxOthers < 0, JPOS_E_ILLEGAL, "Invalid taxOthers: " + taxOthers);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(CatInterface.authorizeVoidPreSales(sequenceNumber, amount, taxOthers, timeout), "AuthorizeVoidPreSales");
     }
 
     @Override
     public void cashDeposit(int sequenceNumber, long amount, int timeout) throws JposException {
-        logPreCall("CashDeposit", "" + sequenceNumber + ", " + amount + ", " + timeout);
+        logPreCall("CashDeposit", removeOuterArraySpecifier(new Object[]{
+                sequenceNumber, amount, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(!Data.CapCashDeposit, JposConst.JPOS_E_ILLEGAL, "CashDeposit not supported");
-        Device.check(amount <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid amount: " + amount);
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapCashDeposit, JPOS_E_ILLEGAL, "CashDeposit not supported");
+        check(amount <= 0, JPOS_E_ILLEGAL, "Invalid amount: " + amount);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(CatInterface.cashDeposit(sequenceNumber, amount, timeout), "CashDeposit");
     }
 
     @Override
     public void checkCard(int sequenceNumber, int timeout) throws JposException {
-        logPreCall("CheckCard", "" + sequenceNumber + ", " + timeout);
+        logPreCall("CheckCard", removeOuterArraySpecifier(new Object[]{sequenceNumber, timeout}, Device.MaxArrayStringElements));
         checkBusy();
-        Device.check(!Data.CapCheckCard, JposConst.JPOS_E_ILLEGAL, "CheckCard not supported");
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
+        check(!Data.CapCheckCard, JPOS_E_ILLEGAL, "CheckCard not supported");
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + timeout);
         callIt(CatInterface.checkCard(sequenceNumber, timeout), "CheckCard");
     }
 
@@ -431,7 +434,7 @@ public class CATService extends JposBase implements CATService115 {
     public void lockTerminal() throws JposException {
         logPreCall("LockTerminal");
         checkBusy();
-        Device.check(!Data.CapLockTerminal, JposConst.JPOS_E_ILLEGAL, "LockTerminal not supported");
+        check(!Data.CapLockTerminal, JPOS_E_ILLEGAL, "LockTerminal not supported");
         callIt(CatInterface.lockTerminal(), "LockTerminal");
     }
 
@@ -439,7 +442,7 @@ public class CATService extends JposBase implements CATService115 {
     public void unlockTerminal() throws JposException {
         logPreCall("UnlockTerminal");
         checkBusy();
-        Device.check(!Data.CapUnlockTerminal, JposConst.JPOS_E_ILLEGAL, "UnlockTerminal not supported");
+        check(!Data.CapUnlockTerminal, JPOS_E_ILLEGAL, "UnlockTerminal not supported");
         callIt(CatInterface.unlockTerminal(), "UnlockTerminal");
     }
 

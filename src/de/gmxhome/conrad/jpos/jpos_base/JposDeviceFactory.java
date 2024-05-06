@@ -16,10 +16,12 @@
 
 package de.gmxhome.conrad.jpos.jpos_base;
 
-import jpos.JposConst;
 import jpos.JposException;
+import jpos.config.JposEntry;
 
 import java.util.*;
+
+import static jpos.JposConst.*;
 
 /**
  * General part of JposDevice factory for every JPOS device using this framework. Every
@@ -34,7 +36,31 @@ public class JposDeviceFactory {
      * Holds all JposDevice objects currentls created. The ID specified within the
      * constructor of a JposDevice will be used as index into this map.
      */
-    static public Map<String,JposDevice> Devices = new HashMap<String,JposDevice>();
+    static final public Map<String,JposDevice> Devices = new HashMap<>();
+
+    /**
+     * Temporary storage for jpos entries passed to createInstance. Will be
+     * filled in checkProperties method of JposBaseDevice for later use in deprecated addDevice methods (those methods
+     * that have no JposEntry parameter).
+     */
+    @Deprecated
+    static public JposEntry CurrentEntry;
+
+    /**
+     * Initializes property set properties Device and Claiming and calls checkProperties method of the property set to
+     * verify correctness of jpos configuration and to initialize some corresponding values.
+     * @param props    Property set to be validated.
+     * @param dev      Device to be used by property set.
+     * @param claiming Array containing the currently claimed device, if any.
+     * @param entry    Name / Value pairs containing configuration values of the jpos.xml configuration file
+     * @throws JposException    if a value specified in entry is invalid
+     */
+    protected void validateJposConfiguration(JposCommonProperties props, JposDevice dev, JposCommonProperties[] claiming,
+                                             JposEntry entry) throws JposException {
+        props.Device = dev;
+        props.Claiming = claiming;
+        props.checkProperties(entry);
+    }
 
     /**
      * Retrieves driver implementation derived from JposDevice.
@@ -43,7 +69,7 @@ public class JposDeviceFactory {
      */
     public static JposDevice getDevice(String key) {
         synchronized(Devices) {
-            return Devices.containsKey(key) ? Devices.get(key) : null;
+            return Devices.getOrDefault(key, null);
         }
     }
 
@@ -56,7 +82,7 @@ public class JposDeviceFactory {
     public static void putDevice(String key, JposDevice dev) throws JposException {
         synchronized(Devices) {
             if (Devices.containsKey(key))
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, "Duplicate device");
+                throw new JposException(JPOS_E_ILLEGAL, "Duplicate device");
             Devices.put(key, dev);
         }
     }
@@ -71,7 +97,7 @@ public class JposDeviceFactory {
     public static void deleteDevice (String key) throws JposException {
         synchronized(Devices) {
             if (!Devices.containsKey(key))
-                throw new JposException(JposConst.JPOS_E_NOEXIST, "Device not present");
+                throw new JposException(JPOS_E_NOEXIST, "Device not present");
             Devices.remove(key);
         }
     }

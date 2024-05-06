@@ -21,6 +21,9 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.config.JposEntry;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * General part of SpeechSynthesis factory for JPOS devices using this framework.
  */
@@ -36,10 +39,8 @@ public class Factory extends JposDeviceFactory {
      */
     public SpeechSynthesisService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         SpeechSynthesisProperties props = dev.getSpeechSynthesisProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getSpeechSynthesisProperties()");
+        validateJposConfiguration(props, dev, dev.ClaimedSpeechSynthesis, entry);
         SpeechSynthesisService service = (SpeechSynthesisService) (props.EventSource = new SpeechSynthesisService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedSpeechSynthesis;
         dev.changeDefaults(props);
         props.addProperties(dev.SpeechSynthesiss);
         service.DeviceInterface = service.SpeechSynthesis = props;

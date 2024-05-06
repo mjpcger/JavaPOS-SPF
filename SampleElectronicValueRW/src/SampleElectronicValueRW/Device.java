@@ -21,11 +21,16 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw.*;
 import jpos.*;
 import jpos.config.*;
-import net.bplaced.conrad.log4jpos.*;
 
 import java.math.*;
+import java.nio.charset.StandardCharsets;
 import java.text.*;
 import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.UniqueIOProcessor.IOProcessorError;
+import static jpos.ElectronicValueRWConst.*;
+import static jpos.JposConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * Base of a JposDevice based implementation of JavaPOS ElectronicValueRW device service implementations for the
@@ -76,72 +81,69 @@ import java.util.*;
  *     specified timeout is less than or equal to MinClaimTimeout. Default: 100.</li>
  *     <li>PollDelay: The interval for printer status polling if response is "1" (currently not available), default: 200.</li>
  *     <li>Port: The IPv4 address of the device. Must always be specified and not empty. Notation: address:port, where
- *     address is a IPv4 address and port the TCP port of the device.</li>
+ *     add     * Sample device specific class. The device uses the following commands:
+ *      * <ul>
+ *      *     <li>p%d\3			Set print line width. Parameters: Line width (must be &ge; 28).</li>
+ *      *     <li>l%d\3			Lock or unlock terminal. Parameters: 0: unlock, 1: lock</li>
+ *      *     <li>b\3				Begin transaction. s, v or r must follow.</li>
+ *      *     <li>s%f\3			Set sale amount. Parameters: Amount.</li>
+ *      *     <li>c%d\2%d\3		Commit operation. Parameters: No. of transaction to be committed, result (0: Verification
+ *      *                          error, 1: Signature verified). Mandatory after sign-based sale operations.</li>
+ *      *     <li>r%f\3			Set return amount. Parameters: Amount.</li>
+ *      *     <li>v%d\3			Void transaction. Parameters: No. of transaction to be voided.</li>
+ *      *     <li>a\3				Abort operation.</li>
+ *      * </ul>
+ *      * In addition, the device sends the following responses:
+ *      * <ul>
+ *      *     <li>L%d\3										Lock terminal. Parameters: Result code (0: OK, 4: just locked).</li>
+ *      *     <li>U%d\3										Unlock terminal. Parameters: Result code (0: OK, 4: just unlocked).</li>
+ *      *     <li>B%d\3										Begin transaction. Parameters: Result code (0: OK, 4: just locked,
+ *      *                                                      6: waiting for commit, 7: authorization active).</li>
+ *      *     <li>E%d\3										End. Parameters: Result code (0: OK, 3: Abort, 4: locked, 5: no
+ *      *                                                      transaction, 6: wait for commit, 7: other operation active,
+ *      *                                                      8: invalid transaction).</li>
+ *      *     <li>E%d\2%s\2%s\2%s\2%s\2%s\2%s\2%s\2%s\2%s\3 	End processing. Parameters: Result code (0: OK, 1: wait for commit,
+ *      *                                                      2: Error), Result code (0: no error), approval result (0: OK,
+ *      *                                                      1111: check, else error), balance, tip (included in balance),
+ *      *                                                      card issuer (abbreviation, see IssuerList), card no (last 4 digits),
+ *      *                                                      expiration date, transaction number, transaction time (format
+ *      *                                                      YYYYmmddTHHMMSS).</li>
+ *      * </ul>
+ *      * The device sends the following status messages:
+ *      * <ul>
+ *      *     <li>D%d\2%s\3					Display line. Parameters: line no (0-3), contents (UTF-8).</li>
+ *      *     <li>P%d\2%s\3					Print ticket. Parameters: count (1-2), ticket data (UTF-8), may contain line feeds.</li>
+ *      * </ul>
+ *      * The contents of all display lines sent from the simulator will be passed via property pString of TransitionEvent
+ *      * events with EventNumber = TE_NOTIFY_BUSY, the line number (1 - 4) will be passed in pData.
+ *      * <br>In addition, the contents of line 2 will be analysed to detect the following transitions:
+ *      * <ul>
+ *      *     <li>Line 2, Swipe Card: Triggers transition event with EventNumber TE_NOTIFY_TOUCH. Next change of line 2
+ *      *     triggers transition event with EventNumber TE_NOTIFY_CAPTURE_CARD</li>
+ *      *     <li>Line 2, Enter PIN: Triggers transition event with EventNumber TE_NOTIFY_PIN.</li>
+ *      *     <li>Line 2, Waiting...: Triggers transition event with EventNumber TE_NOTIFY_CENTER_CHECK. Next change of
+ *      *     line 2 triggers transition event with EventNumber TE_NOTIFY_CENTER_CHECK_COMPLETE</li>
+ *      * </ul>
+ *      * The contents of the following display lines will be passed via property pString of TransitionEvent events with
+ *      * EventNumber TE_NOTIFY_INVALID_OPERATION or TE_NOTIFY_COMPLETE:
+ *      *     <li>Line 3, *** ABORTED ***</li>
+ *      *     <li>Line 3, *** SUCCESS ***</li>
+ *      *     <li>Line 3, *** READY ***</li>
+ *      *     <li>Line 3, *** LOCKED ***</li>
+ *      * </ul>
+ *      * Ticket data will be passed via transition event with EventNumber = TE_CONFIRM_DEVICE_DATA via property pString,
+ *      * the ticket count (1 or 2) via pData. To confirm error free processing of ticket data, the application sets
+ *      * AdditionalSecurityInformation to "0", in case of an error to "1". Currently, this feedback will not be checked.
+ *      * <br>If AsyncMode is false, TransitionEvent events will not be used. In this case, ticket data
+ *      * <br>The device will be connected via TCP.ress is a IPv4 address and port the TCP port of the device.</li>
  *     <li>RequestTimeout: Maximum time the service object waits for the reception of a response frame after sending a
  *     request to the target, in milliseconds. Default: 1000.</li>
  *     <li>TicketWidth: Length of one ticket line passed vie TransitionEvent. Must be a value between 28 and 99
  *     (inclusive). Default: 32.</li>
  * </ul>
  */
+@SuppressWarnings("unused")
 public class Device extends JposDevice implements Runnable {
-    /**
-     * Sample device specific class. The device uses the following commands:
-     * <ul>
-     *     <li>p%d\3			Set print line width. Parameters: Line width (must be &ge; 28).</li>
-     *     <li>l%d\3			Lock or unlock terminal. Parameters: 0: unlock, 1: lock</li>
-     *     <li>b\3				Begin transaction. s, v or r must follow.</li>
-     *     <li>s%f\3			Set sale amount. Parameters: Amount.</li>
-     *     <li>c%d\2%d\3		Commit operation. Parameters: No. of transaction to be committed, result (0: Verification
-     *                          error, 1: Signature verified). Mandatory after sign-based sale operations.</li>
-     *     <li>r%f\3			Set return amount. Parameters: Amount.</li>
-     *     <li>v%d\3			Void transaction. Parameters: No. of transaction to be voided.</li>
-     *     <li>a\3				Abort operation.</li>
-     * </ul>
-     * In addition, the device sends the following responses:
-     * <ul>
-     *     <li>L%d\3										Lock terminal. Parameters: Result code (0: OK, 4: just locked).</li>
-     *     <li>U%d\3										Unlock terminal. Parameters: Result code (0: OK, 4: just unlocked).</li>
-     *     <li>B%d\3										Begin transaction. Parameters: Result code (0: OK, 4: just locked,
-     *                                                      6: waiting for commit, 7: authorization active).</li>
-     *     <li>E%d\3										End. Parameters: Result code (0: OK, 3: Abort, 4: locked, 5: no
-     *                                                      transaction, 6: wait for commit, 7: other operation active,
-     *                                                      8: invalid transaction).</li>
-     *     <li>E%d\2%s\2%s\2%s\2%s\2%s\2%s\2%s\2%s\2%s\3 	End processing. Parameters: Result code (0: OK, 1: wait for commit,
-     *                                                      2: Error), Result code (0: no error), approval result (0: OK,
-     *                                                      1111: check, else error), balance, tip (included in balance),
-     *                                                      card issuer (abbreviation, see IssuerList), card no (last 4 digits),
-     *                                                      expiration date, transaction number, transaction time (format
-     *                                                      YYYYmmddTHHMMSS).</li>
-     * </ul>
-     * The device sends the following status messages:
-     * <ul>
-     *     <li>D%d\2%s\3					Display line. Parameters: line no (0-3), contents (UTF-8).</li>
-     *     <li>P%d\2%s\3					Print ticket. Parameters: count (1-2), ticket data (UTF-8), may contain line feeds.</li>
-     * </ul>
-     * The contents of all display lines sent from the simulator will be passed via property pString of TransitionEvent
-     * events with EventNumber = TE_NOTIFY_BUSY, the line number (1 - 4) will be passed in pData.
-     * <br>In addition, the contents of line 2 will be analysed to detect the following transitions:
-     * <ul>
-     *     <li>Line 2, Swipe Card: Triggers transition event with EventNumber TE_NOTIFY_TOUCH. Next change of line 2
-     *     triggers transition event with EventNumber TE_NOTIFY_CAPTURE_CARD</li>
-     *     <li>Line 2, Enter PIN: Triggers transition event with EventNumber TE_NOTIFY_PIN.</li>
-     *     <li>Line 2, Waiting...: Triggers transition event with EventNumber TE_NOTIFY_CENTER_CHECK. Next change of
-     *     line 2 triggers transition event with EventNumber TE_NOTIFY_CENTER_CHECK_COMPLETE</li>
-     * </ul>
-     * The contents of the following display lines will be passed via property pString of TransitionEvent events with
-     * EventNumber TE_NOTIFY_INVALID_OPERATION or TE_NOTIFY_COMPLETE:
-     *     <li>Line 3, *** ABORTED ***</li>
-     *     <li>Line 3, *** SUCCESS ***</li>
-     *     <li>Line 3, *** READY ***</li>
-     *     <li>Line 3, *** LOCKED ***</li>
-     * </ul>
-     * Ticket data will be passed via transition event with EventNumber = TE_CONFIRM_DEVICE_DATA via property pString,
-     * the ticket count (1 or 2) via pData. To confirm error free processing of ticket data, the application sets
-     * AdditionalSecurityInformation to "0", in case of an error to "1". Currently, this feedback will not be checked.
-     * <br>If AsyncMode is false, TransitionEvent events will not be used. In this case, ticket data
-     * <br>The device will be connected via TCP.
-     */
-
     /**
      * Maximum time between request and response.
      */
@@ -161,23 +163,12 @@ public class Device extends JposDevice implements Runnable {
     /**
      * Status watcher instance.
      */
-    Thread StateWatcher = null;
-
-    /**
-     * Flag showing that status watcher shall be stopped.
-     */
-    boolean ToBeFinished;
+    ThreadHandler StateWatcher = null;
 
     /**
      * Flag showing the current communication state.
      */
     boolean InIOError = false;
-
-    /**
-     * Long representation of a CURRENCY value of 1. Since a CURRENCY is specified as a long with implicit 4 decimals,
-     * this value is always 10000.
-     */
-    static final long CURRENCYFACTOR = 10000;
 
     static private final int MinTicketWidth = 28;      // Minimum print line length.
     static private final int MaxTicketWidth = 99;      // Maximum print line length.
@@ -201,25 +192,23 @@ public class Device extends JposDevice implements Runnable {
 
     static private final byte SOH = 1;                  // Start of header, used in transaction log file.
 
-    static private final String UTF8 = "UTF-8";         // Used for string conversion
-
     /**
      * Transitions detected by analysis of line 3
      */
-    static private Object[][] Line3Params = {
-            {ElectronicValueRWConst.EVRW_TE_NOTIFY_INVALID_OPERATION, "\\** ABORTED \\**"},
-            {ElectronicValueRWConst.EVRW_TE_NOTIFY_COMPLETE, "\\** SUCCESS \\**"},
-            {ElectronicValueRWConst.EVRW_TE_NOTIFY_COMPLETE, "\\** READY \\**"},
-            {ElectronicValueRWConst.EVRW_TE_NOTIFY_COMPLETE, "\\** LOCKED \\**"}
+    static private final Object[][] Line3Params = {
+            {EVRW_TE_NOTIFY_INVALID_OPERATION, "\\** ABORTED \\**"},
+            {EVRW_TE_NOTIFY_COMPLETE, "\\** SUCCESS \\**"},
+            {EVRW_TE_NOTIFY_COMPLETE, "\\** READY \\**"},
+            {EVRW_TE_NOTIFY_COMPLETE, "\\** LOCKED \\**"}
     };
 
     /**
      * Transitions detected by analysis of line 2
      */
-    static private Object[][] Line2Params = {
-            {ElectronicValueRWConst.EVRW_TE_NOTIFY_TOUCH, "Swipe Card", ElectronicValueRWConst.EVRW_TE_NOTIFY_CAPTURE_CARD},
-            {ElectronicValueRWConst.EVRW_TE_NOTIFY_CENTER_CHECK, "Waiting...", ElectronicValueRWConst.EVRW_TE_NOTIFY_CENTER_CHECK_COMPLETE},
-            {ElectronicValueRWConst.EVRW_TE_NOTIFY_PIN, "Enter PIN", null}
+    static private final Object[][] Line2Params = {
+            {EVRW_TE_NOTIFY_TOUCH, "Swipe Card", EVRW_TE_NOTIFY_CAPTURE_CARD},
+            {EVRW_TE_NOTIFY_CENTER_CHECK, "Waiting...", EVRW_TE_NOTIFY_CENTER_CHECK_COMPLETE},
+            {EVRW_TE_NOTIFY_PIN, "Enter PIN", null}
     };
 
     /**
@@ -238,7 +227,7 @@ public class Device extends JposDevice implements Runnable {
         electronicValueRWInit(1);
         PhysicalDeviceDescription = "ElectronicValueRW simulator for TCP";
         PhysicalDeviceName = "ElectronicValueRW Simulator";
-        CapPowerReporting = JposConst.JPOS_PR_STANDARD;
+        CapPowerReporting = JPOS_PR_STANDARD;
     }
 
     @Override
@@ -260,7 +249,7 @@ public class Device extends JposDevice implements Runnable {
             if ((o = entry.getPropertyValue("TicketWidth")) != null && (value = Integer.parseInt(o.toString())) >= 0 && MinTicketWidth <= value && value <= MaxTicketWidth)
                 TicketWidth = value;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property", e);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property", e);
         }
     }
 
@@ -283,9 +272,8 @@ public class Device extends JposDevice implements Runnable {
          */
         char ResultHead = 0;
 
-        private SyncObject FrameReader = new SyncObject();
+        private final SyncObject FrameReader = new SyncObject();
         private String TheFrame = null;
-        final private int BIGTIMEOUT = 1000000000;  // One billion milliseconds
 
         StreamReader(String name) {
             super(name);
@@ -293,12 +281,13 @@ public class Device extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings({"LoopConditionNotUpdatedInsideLoop", "ThrowableInstanceNeverThrown"})
         public void run() {
             TcpClientIOProcessor stream = OutStream;
-            byte[] frame = new byte[0];
+            byte[] frame = {};
             while (stream != null) {
                 try {
-                    stream.setTimeout(frame.length == 0 ? BIGTIMEOUT : CharacterTimeout);
+                    stream.setTimeout(frame.length == 0 ? Integer.MAX_VALUE : CharacterTimeout);
                     byte[] part1 = stream.read(1);
                     if (part1.length > 0) {
                         int count = stream.available();
@@ -308,7 +297,7 @@ public class Device extends JposDevice implements Runnable {
                         System.arraycopy(part2, 0, data, frame.length + part1.length, part2.length);
                         for (int i = frame.length; i < data.length; i++) {
                             if (data[i] == ETX) {
-                                processFrame(new String(Arrays.copyOf(data, i), UTF8));
+                                processFrame(new String(Arrays.copyOf(data, i), StandardCharsets.UTF_8));
                                 data = Arrays.copyOfRange(data, i + 1, data.length);
                                 i = -1;
                             }
@@ -316,7 +305,7 @@ public class Device extends JposDevice implements Runnable {
                         frame = data;
                     }
                     else if (frame.length > 0) {
-                        log(Level.DEBUG, ID + ": Incomplete frame discarded.");
+                        log(DEBUG, ID + ": Incomplete frame discarded.");
                         frame = new byte[0];
                     }
                 } catch (JposException e) {
@@ -347,10 +336,10 @@ public class Device extends JposDevice implements Runnable {
                     String data = parts.length >= 2 ? parts[1] : "";
                     int line = Integer.parseInt(parts[0].substring(1));
                     System.out.println("Display line " + line + ": " + data);
-                    if (props != null && props.State == JposConst.JPOS_S_BUSY) {
+                    if (props != null && props.State == JPOS_S_BUSY) {
                         if (!Synchronous) {
                             try {
-                                handleEvent(new JposTransitionEvent(props.EventSource, ElectronicValueRWConst.EVRW_TE_NOTIFY_BUSY, line + 1, data));
+                                handleEvent(new JposTransitionEvent(props.EventSource, EVRW_TE_NOTIFY_BUSY, line + 1, data));
                             } catch (JposException e) {
                                 e.printStackTrace();
                             }
@@ -395,15 +384,15 @@ public class Device extends JposDevice implements Runnable {
                 case 'P':   // Ticket data
                 {
                     ElectronicValueRW props = (ElectronicValueRW) getClaimingInstance(ClaimedElectronicValueRW, 0);
-                    if(props != null && props.State == JposConst.JPOS_S_BUSY) {
+                    if(props != null && props.State == JPOS_S_BUSY) {
                         String[] parts = frame.split("\2");
                         String ticket = parts.length >= 2 ? parts[1] : "";
                         int count = Integer.parseInt(parts[0].substring(1));
-                        TicketData = "" + SequenceNumber + "\2" + count + "\2" + ticket;
+                        TicketData = SequenceNumber + "\2" + count + "\2" + ticket;
                         if (!Synchronous) {
                             try {
                                 props.PrintDataEvent = new JposTransitionWaitingEvent(props.EventSource,
-                                        ElectronicValueRWConst.EVRW_TE_CONFIRM_DEVICE_DATA, 0, TicketData);
+                                        EVRW_TE_CONFIRM_DEVICE_DATA, 0, TicketData);
                                 handleEvent(props.PrintDataEvent);
                             } catch (JposException e) {
                                 e.printStackTrace();
@@ -447,7 +436,7 @@ public class Device extends JposDevice implements Runnable {
             if (!FrameReader.suspend(timeout) && (stream = OutStream) != null) {
                 try {
                     stream.write(new byte[]{'a', ETX});
-                } catch (JposException e) {}
+                } catch (JposException ignored) {}
             }
             synchronized(this) {
                 String response = TheFrame;
@@ -468,7 +457,7 @@ public class Device extends JposDevice implements Runnable {
         char[] data = s.toCharArray();
         for (int i = data.length - 1; i >= 0; --i)
             data[i] += keyValue;
-        return data.toString();
+        return new String(data);
     }
 
     private StreamReader ReadThread;
@@ -487,6 +476,7 @@ public class Device extends JposDevice implements Runnable {
         return null;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private JposException closePort() {
         JposException e = null;
         if (OutStream != null) {
@@ -500,6 +490,7 @@ public class Device extends JposDevice implements Runnable {
         return e;
     }
 
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     private Object sendRecv(String command, char resptype, int timeout) {   // Method to perform any command, Keep in mind that commands normally generate no response.
         TcpClientIOProcessor stream;
         StreamReader reader;
@@ -514,18 +505,19 @@ public class Device extends JposDevice implements Runnable {
             reader = ReadThread;
         }
         try {
-            byte[] request = (command + "\3").getBytes(UTF8);
+            byte[] request = (command + "\3").getBytes(StandardCharsets.UTF_8);
             reader.prepareReadResponse(resptype);
             stream.write(request);
             return resptype == 0 ? "" : reader.readFrame(timeout);
         } catch (Exception e) {
-            log(Level.TRACE, ID + ": IO error: " + e.getMessage());
+            log(TRACE, ID + ": IO error: " + e.getMessage());
             closePort();
             InIOError = true;
-            return e instanceof JposException ? (JposException)e : new JposException(JposConst.JPOS_E_ILLEGAL, UniqueIOProcessor.IOProcessorError, e.getMessage());
+            return e instanceof JposException ? (JposException)e : new JposException(JPOS_E_ILLEGAL, IOProcessorError, e.getMessage());
         }
     }
 
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     private Object sendAbort() {     // Method to send an abort command without waiting for the response.
         TcpClientIOProcessor stream;
         synchronized(this) {
@@ -538,19 +530,19 @@ public class Device extends JposDevice implements Runnable {
             stream = OutStream;
         }
         try {
-            byte[] request = ("a\3").getBytes(UTF8);
+            byte[] request = ("a\3").getBytes(StandardCharsets.UTF_8);
             stream.write(request);
             return "";
         } catch (Exception e) {
-            log(Level.TRACE, ID + ": IO error: " + e.getMessage());
+            log(TRACE, ID + ": IO error: " + e.getMessage());
             closePort();
             InIOError = true;
-            return e instanceof JposException ? (JposException)e : new JposException(JposConst.JPOS_E_ILLEGAL, UniqueIOProcessor.IOProcessorError, e.getMessage());
+            return e instanceof JposException ? (JposException)e : new JposException(JPOS_E_ILLEGAL, IOProcessorError, e.getMessage());
         }
     }
 
     private void setPrintWidth(int width){      // Internal command to set ticket line width.
-        Object o = sendRecv(String.format("p%d", width), '\0', 0);
+        sendRecv(String.format("p%d", width), '\0', 0);
     }
 
     private void lock(boolean lock, int timeout) throws JposException {     // Internal command to lock or unlock the terminal.
@@ -559,7 +551,7 @@ public class Device extends JposDevice implements Runnable {
             throw (JposException) o;
         String resp = (String) o;
         if (resp.length() == 0)
-            throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
+            throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
         // This function fails only if the terminal is just in the requested state. Therefore, errors will be ignored.
     }
 
@@ -578,14 +570,14 @@ public class Device extends JposDevice implements Runnable {
             throw (JposException) o;
         String resp = (String) o;
         if (resp.length() == 0)
-            throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "No valid response within " + request.getTimeout() + " milliseconds");
+            throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + request.getTimeout() + " milliseconds");
         switch (Result = Integer.parseInt(resp.substring(1))) {
-            case 4:
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_RESET, "Terminal locked");
-            case 6:
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_COMMANDERROR, "Confirmation requested");
-            case 7:
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_COMMANDERROR, "Authorization just activated");
+            case 4 ->
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Terminal locked");
+            case 6 ->
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Confirmation requested");
+            case 7 ->
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Authorization just activated");
         }
         SequenceNumber = request.getSequenceNumber();
     }
@@ -604,14 +596,14 @@ public class Device extends JposDevice implements Runnable {
         long time = System.currentTimeMillis();
         SyncObject poll = new SyncObject();
         while (time - props.MethodStartTime < props.MethodTimeout) {
-            JposTransitionWaitingEvent ev = new JposTransitionWaitingEvent(props.EventSource, ElectronicValueRWConst.EVRW_TE_CONFIRM_DEVICE_DATA, 0, "");
+            JposTransitionWaitingEvent ev = new JposTransitionWaitingEvent(props.EventSource, EVRW_TE_CONFIRM_DEVICE_DATA, 0, "");
             handleEvent(ev);
             long starttime = time;
             if (!(ev.getWaiter().suspend(props.MethodTimeout - (time - props.MethodStartTime)))
                     || (time = System.currentTimeMillis()) - props.MethodStartTime >= props.MethodTimeout)
-                throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "Timeout printer state request");
+                throw new JposException(JPOS_E_TIMEOUT, 0, "Timeout printer state request");
             if ("2".equals(((ElectronicValueRWProperties) request.Props).AdditionalSecurityInformation))
-                throw new JposException(JposConst.JPOS_E_FAILURE, "Ticket printing not supported");
+                throw new JposException(JPOS_E_FAILURE, "Ticket printing not supported");
             if ("0".equals(((ElectronicValueRWProperties)request.Props).AdditionalSecurityInformation))
                 break;
             if (time - starttime < PollDelay)
@@ -634,9 +626,9 @@ public class Device extends JposDevice implements Runnable {
      */
     private void confirm(int transno, Boolean commit) throws JposException {
         ElectronicValueRW props = (ElectronicValueRW) getClaimingInstance(ClaimedElectronicValueRW, 0);
-        check(props == null, JposConst.JPOS_E_NOTCLAIMED, "Terminal not caimed");
+        check(props == null, JPOS_E_NOTCLAIMED, "Terminal not caimed");
         if (commit == null) {
-            JposTransitionWaitingEvent ev = new JposTransitionWaitingEvent(props.EventSource, ElectronicValueRWConst.EVRW_TE_CONFIRM_CANCEL, 0, "Verify Signature");
+            JposTransitionWaitingEvent ev = new JposTransitionWaitingEvent(props.EventSource, EVRW_TE_CONFIRM_CANCEL, 0, "Verify Signature");
             handleEvent(ev);
             long timeout = props.MethodTimeout - (System.currentTimeMillis() - props.MethodStartTime);
             commit = ev.getWaiter().suspend(timeout > 0 ? timeout : 0) || ev.getData() == 0;
@@ -648,16 +640,16 @@ public class Device extends JposDevice implements Runnable {
             throw (JposException) o;
         String resp = (String) o;
         if (resp.length() == 0)
-            throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
+            throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
         switch (Result = Integer.parseInt(resp.substring(1))) {
-            case 4: // Device locked:
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_RESET, "Terminal locked");
-            case 5: // Not in transaction: Ignore.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_COMMANDERROR, "Not in transaction");
-            case 7: // No confirmation requested.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_COMMANDERROR, "No confirmation requested");
-            case 8: // Invalid transaction number:
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, Result, "Invalid transaction number: " + transno);
+            case 4 -> // Device locked:
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Terminal locked");
+            case 5 -> // Not in transaction: Ignore.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Not in transaction");
+            case 7 -> // No confirmation requested.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "No confirmation requested");
+            case 8 -> // Invalid transaction number:
+                    throw new JposException(JPOS_E_ILLEGAL, Result, "Invalid transaction number: " + transno);
         }
     }
 
@@ -673,23 +665,21 @@ public class Device extends JposDevice implements Runnable {
             throw (JposException) o;
         String resp = (String) o;
         if (resp.length() == 0)
-            throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "No valid response within " + request.getTimeout() + " milliseconds");
+            throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + request.getTimeout() + " milliseconds");
         int codeEndIndex = resp.indexOf(STX);
         switch (Result = Integer.parseInt(resp.substring(1, codeEndIndex > 0 ? codeEndIndex : resp.length()))) {
-            case 4: // Device locked:
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_RESET, "Terminal locked");
-            case 5: // Not in transaction: Ignore.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_COMMANDERROR, "Not in transaction");
-            case 6: // Waiting for commit.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_COMMANDERROR, "Waiting for commit");
-            case 7: // No confirmation requested.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_COMMANDERROR, "Authorization active");
-            case 3: // Operation abort confirmed
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_COMMANDERROR, "Authorization aborted");
-            case 0: // Transaction OK
-            case 1: // Wait for commit
-            case 2: // Authorization failure
-                setTransactionProperties(request, resp);
+            case 4 -> // Device locked:
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Terminal locked");
+            case 5 -> // Not in transaction: Ignore.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Not in transaction");
+            case 6 -> // Waiting for commit.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Waiting for commit");
+            case 7 -> // No confirmation requested.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Authorization active");
+            case 3 -> // Operation abort confirmed
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Authorization aborted");
+            case 0, 1, 2 -> // Transaction OK, Wait for commit, Authorization failure
+                    setTransactionProperties(request, resp);
         }
     }
 
@@ -700,34 +690,32 @@ public class Device extends JposDevice implements Runnable {
      */
     private void rollback(AuthorizeVoid request) throws JposException {
         ElectronicValueRWProperties props = (ElectronicValueRWProperties) getClaimingInstance(ClaimedElectronicValueRW, 0);
-        check(props == null, JposConst.JPOS_E_NOTCLAIMED, "Terminal not caimed");
+        check(props == null, JPOS_E_NOTCLAIMED, "Terminal not caimed");
         try {
             Integer.parseInt(props.ApprovalCode);
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid ApprovalCode: " + props.ApprovalCode);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid ApprovalCode: " + props.ApprovalCode);
         }
         Object o = sendRecv("v" + props.ApprovalCode, 'E', request.getTimeout());
         if (o instanceof JposException)
             throw (JposException) o;
         String resp = (String) o;
         if (resp.length() == 0)
-            throw new JposException(JposConst.JPOS_E_TIMEOUT, 0, "No valid response within " + request.getTimeout() + " milliseconds");
+            throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + request.getTimeout() + " milliseconds");
         int codeEndIndex = resp.indexOf(STX);
         switch (Result = Integer.parseInt(resp.substring(1, codeEndIndex > 0 ? codeEndIndex : resp.length()))) {
-            case 4: // Device locked:
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_RESET, "Terminal locked");
-            case 5: // Not in transaction: Ignore.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_COMMANDERROR, "Not in transaction");
-            case 6: // Waiting for commit.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_COMMANDERROR, "Waiting for commit");
-            case 7: // No confirmation requested.
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_COMMANDERROR, "Authorization active");
-            case 8: // No confirmation requested.
-                throw new JposException(JposConst.JPOS_E_ILLEGAL, Result, "Invalid approval code: " + props.ApprovalCode);
-            case 0: // Transaction OK
-            case 1: // Wait for commit
-            case 2: // Authorization failure
-                setTransactionProperties(request, resp);
+            case 4 -> // Device locked:
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Terminal locked");
+            case 5 -> // Not in transaction: Ignore.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Not in transaction");
+            case 6 -> // Waiting for commit.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Waiting for commit");
+            case 7 -> // No confirmation requested.
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Authorization active");
+            case 8 -> // No confirmation requested.
+                    throw new JposException(JPOS_E_ILLEGAL, Result, "Invalid approval code: " + props.ApprovalCode);
+            case 0, 1, 2 -> // Transaction OK, Wait for commit, Authorization failure
+                    setTransactionProperties(request, resp);
         }
     }
 
@@ -745,6 +733,7 @@ public class Device extends JposDevice implements Runnable {
      * @param resp  Response string as received by sendRecv().
      * @throws JposException If response doesnot contain the expected fields or non-numeric amount.
      */
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     private void setTransactionProperties(AuthorizeCompletion request, String resp) throws JposException {
         String[] params = resp.substring(resp.indexOf('\2') + 1).split("\2");
         if (params.length >= 9) {
@@ -756,79 +745,80 @@ public class Device extends JposDevice implements Runnable {
                     props.TypedResults.putCurrency(name = "TaxOthers", new BigDecimal(value = params[3]).scaleByPowerOfTen(4).longValueExact());
                     props.TypedResults.putCurrency(name = "Balance", new BigDecimal(value = params[2]).scaleByPowerOfTen(4).longValueExact());
                 } catch (Exception e) {
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, JposConst.JPOS_E_ILLEGAL, "Illegal " + name + ": " + value);
+                    throw new JposException(JPOS_E_ILLEGAL, JPOS_E_ILLEGAL, "Illegal " + name + ": " + value);
                 }
                 props.CardCompanyID = params[4];
                 props.ApprovalCode = params[7];
                 handleTransactionDateTimeExpDateCardNo(params, props);
-                props.PaymentMedia = ElectronicValueRWConst.EVRW_MEDIA_CREDIT;
-                Integer tag = props.getEnumTagFromPropertyValue("PaymentCondition", props.PaymentCondition = ElectronicValueRWConst.EVRW_PAYMENT_DEBIT);
+                props.PaymentMedia = EVRW_MEDIA_CREDIT;
+                Integer tag = props.getEnumTagFromPropertyValue("PaymentCondition", props.PaymentCondition = EVRW_PAYMENT_DEBIT);
                 if (tag != null)
                     props.TypedResults.putEnumerated("PaymentCondition", tag);
                 if (request instanceof AuthorizeSales)
-                    props.TransactionType = ElectronicValueRWConst.EVRW_TRANSACTION_SALES;
+                    props.TransactionType = EVRW_TRANSACTION_SALES;
                 else if (request instanceof AuthorizeRefund)
-                    props.TransactionType = ElectronicValueRWConst.EVRW_TRANSACTION_REFUND;
+                    props.TransactionType = EVRW_TRANSACTION_REFUND;
                 else if (request instanceof AuthorizeVoid)
-                    props.TransactionType = ElectronicValueRWConst.EVRW_TRANSACTION_VOID;
+                    props.TransactionType = EVRW_TRANSACTION_VOID;
                 tag = props.getEnumTagFromPropertyValue("TransactionType", props.TransactionType);
-                props.TypedResults.putEnumerated("TransactionType", tag != null ? tag : ElectronicValueRWConst.EVRW_TAG_TT_CANCEL_SALES);
+                props.TypedResults.putEnumerated("TransactionType", tag != null ? tag : EVRW_TAG_TT_CANCEL_SALES);
             }
             checkErrorCondition(params);
         }
         else
-            throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_COMMANDERROR, "Invalid response: " + resp);
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Invalid response: " + resp);
     }
 
     private void handleTransactionDateTimeExpDateCardNo(String[] params, ElectronicValueRWProperties props) {
         String[] LastDayOfMonth = {"31", "", "31", "30", "31", "30", "31", "31", "30", "31", "30", "31"};
         try {
-            int expmonth = Integer.valueOf(params[6].substring(0, 2));
+            int expmonth = Integer.parseInt(params[6].substring(0, 2));
             Date temp;
             if (expmonth > 0 && expmonth <= 12) {
-                props.Results.put("AccountNumber", props.AccountNumber = "XXXXXXXXXXXX" + params[5]);
+                props.TypedResults.put("AccountNumber", props.AccountNumber = "XXXXXXXXXXXX" + params[5]);
                 String LastDay = LastDayOfMonth[expmonth - 1];
                 // This routine works only until year 2099 (Only optimists believe UPOS 1.15 survives until 2099)
                 if (LastDay.length() == 0)
-                    LastDay = Integer.valueOf(params[6].substring(2, 4)) % 4 == 0 ? "29" : "28";
+                    LastDay = Integer.parseInt(params[6].substring(2, 4)) % 4 == 0 ? "29" : "28";
 
                 temp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").parse("20" + params[6].substring(2, 4)
                         + "-" + params[6].substring(0, 2) + "-" + LastDay + "T23:59:59.999");
-                props.Results.put("ExpirationDate", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").format(temp));
+                props.TypedResults.put("ExpirationDate", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").format(temp));
                 props.ExpirationDate = "20" + params[6].substring(2, 4) + params[6].substring(0, 2) + LastDay;
             }
             temp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").parse(params[8].substring(0, 4) + "-"
                     + params[8].substring(4, 6) + "-" + params[8].substring(6, 11) + ":" + params[8].substring(11, 13)
                     + ":" + params[8].substring(13) + ".000");
-            props.Results.put("EVRWDateTime", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").format(temp));
+            props.TypedResults.put("EVRWDateTime", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").format(temp));
         } catch (ParseException e) { /* Should not happen */}
         props.SlipNumber = params[8].substring(0, 8) + params[8].substring(9);
     }
 
     private void checkErrorCondition(String[] params) throws JposException {
         switch (Integer.parseInt(params[0])) {
-            case 100:   // Abort by user
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_RESET, "Aborted by customer");
-            case 101:   // Card locked
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_CENTERERROR, "Card locked");
-            case 102:   // Retain card
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_CENTERERROR, "Retain card");
-            case 103:   // Card error
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_CENTERERROR, "Card error");
-            case 104:   // Approval error
-                throw new JposException(JposConst.JPOS_E_EXTENDED, ElectronicValueRWConst.JPOS_EEVRW_CENTERERROR, "Approval error");
+            case 100 ->   // Abort by user
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Aborted by customer");
+            case 101 ->   // Card locked
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_CENTERERROR, "Card locked");
+            case 102 ->   // Retain card
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_CENTERERROR, "Retain card");
+            case 103 ->   // Card error
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_CENTERERROR, "Card error");
+            case 104 ->   // Approval error
+                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_CENTERERROR, "Approval error");
         }
     }
 
     @Override
+    @SuppressWarnings({"resource", "ThrowableInstanceNeverThrown"})
     public void run() {
         UniqueIOProcessor oldstream = null;
         UniqueIOProcessor currentStream = null;
         try {
             oldstream = new UniqueIOProcessor(this, "");
-        } catch (JposException e) {}
+        } catch (JposException ignored) {}
         JposCommonProperties props;
-        while (!ToBeFinished) {
+        while (!StateWatcher.ToBeFinished) {
             StreamReader reader;
             synchronized (this) {
                 if (OutStream == null)
@@ -840,7 +830,7 @@ public class Device extends JposDevice implements Runnable {
                 oldstream = currentStream;
                 if ((props = getClaimingInstance(ClaimedElectronicValueRW, 0)) != null) {
                     try {
-                        handleEvent(new JposStatusUpdateEvent(props.EventSource, oldstream == null ? JposConst.JPOS_SUE_POWER_OFF_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE));
+                        handleEvent(new JposStatusUpdateEvent(props.EventSource, oldstream == null ? JPOS_SUE_POWER_OFF_OFFLINE : JPOS_SUE_POWER_ONLINE));
                     } catch (JposException e) {
                         e.printStackTrace();
                     }
@@ -878,31 +868,26 @@ public class Device extends JposDevice implements Runnable {
         public void claim(int timeout) throws JposException {
             super.claim(timeout);
             if (StateWatcher == null) {
-                StateWatcher = new Thread(Device.this, "StateWatcher");
+                StateWatcher = new ThreadHandler("ElectronicValueRWStateWatcher", Device.this);
                 StateWatcher.start();
             }
             setPrintWidth(TicketWidth);
             if (InIOError) {
                 release();
-                throw new JposException(JposConst.JPOS_E_NOHARDWARE, "EVRW not detected");
+                throw new JposException(JPOS_E_NOHARDWARE, "EVRW not detected");
             }
         }
 
         @Override
+        @SuppressWarnings("ThrowableInstanceNeverThrown")
         public void release() throws JposException {
-            ToBeFinished = true;
+            StateWatcher.ToBeFinished = true;
             synchronized (Device.this) {
                 closePort();
             }
-            while (ToBeFinished) {
-                try {
-                    StateWatcher.join();
-                } catch (Exception e) {
-                }
-                break;
-            }
+            StateWatcher.waitFinished();
             StateWatcher = null;
-            PowerState = JposConst.JPOS_PS_UNKNOWN;
+            PowerState = JPOS_PS_UNKNOWN;
             EventSource.logSet("PowerState");
             InIOError = false;
             super.release();
@@ -924,7 +909,7 @@ public class Device extends JposDevice implements Runnable {
         public void handlePowerStateOnEnable() throws JposException {
             synchronized (Device.this) {
                 int old = PowerState;
-                if (old != (PowerState = OutStream == null ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE))
+                if (old != (PowerState = OutStream == null ? JPOS_PS_OFF_OFFLINE : JPOS_PS_ONLINE))
                     EventSource.logSet("PowerState");
             }
             super.handlePowerStateOnEnable();
@@ -938,13 +923,13 @@ public class Device extends JposDevice implements Runnable {
         public AuthorizeSales authorizeSales(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
             // AdditionalSecurityInformation must be an integer value, containing the transaction number generated by
             // the device.
-            check(ServiceType != ElectronicValueRWConst.EVRW_ST_CAT, JposConst.JPOS_E_ILLEGAL, "No Service selected");
+            check(ServiceType != EVRW_ST_CAT, JPOS_E_ILLEGAL, "No Service selected");
             return super.authorizeSales(sequenceNumber, amount, taxOthers, timeout);
         }
 
         @Override
         public void authorizeSales(AuthorizeSales request) throws JposException {
-            MethodTimeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
+            MethodTimeout = request.getTimeout() == JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
             MethodStartTime = System.currentTimeMillis();
             PrintDataEvent = null;
             beginAuthorization(request);
@@ -964,7 +949,7 @@ public class Device extends JposDevice implements Runnable {
                         else
                             confirm(transno, true);
                     } catch (NumberFormatException e) {
-                        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid ApprovalCode: " + ApprovalCode, e);
+                        throw new JposException(JPOS_E_ILLEGAL, "Invalid ApprovalCode: " + ApprovalCode, e);
                     }
                 }
             }
@@ -973,14 +958,14 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public AuthorizeVoid authorizeVoid(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
             // ApprovalCode must match the approval code returned by original operation.
-            check(ServiceType != ElectronicValueRWConst.EVRW_ST_CAT, JposConst.JPOS_E_ILLEGAL, "No Service selected");
-            check("".equals(ApprovalCode), JposConst.JPOS_E_ILLEGAL, "ApprovalCode missing");
+            check(ServiceType != EVRW_ST_CAT, JPOS_E_ILLEGAL, "No Service selected");
+            check("".equals(ApprovalCode), JPOS_E_ILLEGAL, "ApprovalCode missing");
             return super.authorizeVoid(sequenceNumber, amount, taxOthers, timeout);
         }
 
         @Override
         public void authorizeVoid(AuthorizeVoid request) throws JposException {
-            MethodTimeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
+            MethodTimeout = request.getTimeout() == JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
             MethodStartTime = System.currentTimeMillis();
             beginAuthorization(request);
             long deltatime = System.currentTimeMillis() - MethodStartTime;
@@ -993,13 +978,13 @@ public class Device extends JposDevice implements Runnable {
         public AuthorizeRefund authorizeRefund(int sequenceNumber, long amount, long taxOthers, int timeout) throws JposException {
             // AdditionalSecurityInformation must be an integer value, containing the transaction number generated by
             // the device.
-            check(ServiceType != ElectronicValueRWConst.EVRW_ST_CAT, JposConst.JPOS_E_ILLEGAL, "No Service selected");
+            check(ServiceType != EVRW_ST_CAT, JPOS_E_ILLEGAL, "No Service selected");
             return super.authorizeRefund(sequenceNumber, amount, taxOthers, timeout);
         }
 
         @Override
         public void authorizeRefund(AuthorizeRefund request) throws JposException {
-            MethodTimeout = request.getTimeout() == JposConst.JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
+            MethodTimeout = request.getTimeout() == JPOS_FOREVER ? Integer.MAX_VALUE : request.getTimeout();
             MethodStartTime = System.currentTimeMillis();
             beginAuthorization(request);
             long deltatime = System.currentTimeMillis() - MethodStartTime;
@@ -1016,16 +1001,16 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void currentService(String service) throws JposException {
-            if (!service.equals(ServiceType)) {
-                if (ReaderWriterServiceList.equals(service)) {  // So easy only if ReaderWriterServiceList has only one element
+            if ((ServiceType == EVRW_ST_UNSPECIFIED) != (service.length() == 0)) {
+                if (service.length() > 0) {     // It must be EFT
                     super.currentService(service);
-                    ServiceType = ElectronicValueRWConst.EVRW_ST_CAT;
-                    TrainingModeState = ElectronicValueRWConst.EVRW_TM_FALSE;
-                    PINEntry = ElectronicValueRWConst.EVRW_PIN_ENTRY_INTERNAL;
-                } else {
-                    ServiceType = ElectronicValueRWConst.EVRW_ST_UNSPECIFIED;
-                    TrainingModeState = ElectronicValueRWConst.EVRW_TM_UNKNOWN;
-                    PINEntry = ElectronicValueRWConst.EVRW_PIN_ENTRY_UNKNOWN;
+                    ServiceType = EVRW_ST_CAT;
+                    TrainingModeState = EVRW_TM_FALSE;
+                    PINEntry = EVRW_PIN_ENTRY_INTERNAL;
+                } else {                        // It is an empty string
+                    ServiceType = EVRW_ST_UNSPECIFIED;
+                    TrainingModeState = EVRW_TM_UNKNOWN;
+                    PINEntry = EVRW_PIN_ENTRY_UNKNOWN;
                 }
                 EventSource.logSet("ServiceType");
                 EventSource.logSet("TrainingModeState");
@@ -1036,8 +1021,8 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public void PINEntry(int value) throws JposException {
             // If service = EFT, only internal PINEntry supported. If service not set, PINEntry is unknown.
-            check(CurrentService.length() == 0 && value != ElectronicValueRWConst.EVRW_PIN_ENTRY_UNKNOWN, JposConst.JPOS_E_ILLEGAL, "No service, PINEntry value illegal: " + value);
-            check(CurrentService.equals(ReaderWriterServiceList) && value != ElectronicValueRWConst.EVRW_PIN_ENTRY_INTERNAL, JposConst.JPOS_E_ILLEGAL, "PINEntry value " + value + " not supported for service " + ReaderWriterServiceList);
+            check(CurrentService.length() == 0 && value != EVRW_PIN_ENTRY_UNKNOWN, JPOS_E_ILLEGAL, "No service, PINEntry value illegal: " + value);
+            check(CurrentService.equals(ReaderWriterServiceList) && value != EVRW_PIN_ENTRY_INTERNAL, JPOS_E_ILLEGAL, "PINEntry value " + value + " not supported for service " + ReaderWriterServiceList);
             super.PINEntry(value);
         }
     }

@@ -31,7 +31,7 @@ public class PrintBarCode extends OutputRequest {
         return Station;
     }
 
-    private int Station;
+    private final int Station;
 
     /**
      * POSPrinter method PrintBarCode parameter data, see UPOS specification.
@@ -41,7 +41,7 @@ public class PrintBarCode extends OutputRequest {
         return Data;
     }
 
-    private String Data;
+    private final String Data;
 
     /**
      * POSPrinter method PrintBarCode parameter symbology, see UPOS specification.
@@ -51,7 +51,7 @@ public class PrintBarCode extends OutputRequest {
         return Symbology;
     }
 
-    private int Symbology;
+    private final int Symbology;
 
     /**
      * POSPrinter method PrintBarCode parameter height, see UPOS specification.
@@ -61,7 +61,7 @@ public class PrintBarCode extends OutputRequest {
         return Height;
     }
 
-    private int Height;
+    private final int Height;
 
     /**
      * POSPrinter method PrintBarCode parameter width, see UPOS specification.
@@ -71,7 +71,7 @@ public class PrintBarCode extends OutputRequest {
         return Width;
     }
 
-    private int Width;
+    private final int Width;
 
     /**
      * POSPrinter method PrintBarCode parameter alignment, see UPOS specification.
@@ -81,7 +81,7 @@ public class PrintBarCode extends OutputRequest {
         return Alignment;
     }
 
-    private int Alignment;
+    private final int Alignment;
 
     /**
      * POSPrinter method PrintBarCode parameter textPosition, see UPOS specification.
@@ -91,7 +91,7 @@ public class PrintBarCode extends OutputRequest {
         return TextPosition;
     }
 
-    private int TextPosition;
+    private final int TextPosition;
 
     /**
      * Constructor. Stores given parameters for later use.

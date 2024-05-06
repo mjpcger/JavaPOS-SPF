@@ -16,33 +16,31 @@
 
 package de.gmxhome.conrad.jSSC;
 
-import de.gmxhome.conrad.jpos.jpos_base.SerialIOAdapter;
-import jssc.SerialPort;
-import jssc.SerialPortException;
-import jssc.SerialPortTimeoutException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jssc.*;
 
-import java.io.IOException;
-import java.util.Arrays;
+import java.io.*;
+import java.util.*;
+
+import static jssc.SerialPort.*;
 
 /**
  * Implementation of SerialIOAdapter using jSSC framework.
  */
 public class JSSCSerial implements SerialIOAdapter {
     private SerialPort SerialIOExecutor;
-    private String Port;
-    private Integer Baudrate, Databits, Stopbits, Parity;
-    private final static int PurgeMode = SerialPort.PURGE_RXABORT|SerialPort.PURGE_TXABORT;
+    private final String Port;
+    private final static int PurgeMode = PURGE_RXABORT|PURGE_TXABORT;
 
     /**
      * Constructor. Creates communication adapter.
      * @throws IOException If the operating system is not supported by JnaSerial.
      */
     public JSSCSerial() throws IOException {
-        Baudrate = Databits = Stopbits = Parity = null;
         Port = null;
         SerialIOExecutor = null;
         try {
-            Class theclass = Class.forName("jssc.SerialPort");
+            Class.forName("jssc.SerialPort");
         } catch (Exception e) {
             throw new IOException("Framework jSSC not available", e);
         }
@@ -51,7 +49,7 @@ public class JSSCSerial implements SerialIOAdapter {
     @Override
     public void open(String port) throws IOException {
         checkOpened(false);
-        SerialPort portObj = null;
+        SerialPort portObj;
         try {
             portObj = new SerialPort(Port);
             portObj.openPort();
@@ -107,7 +105,7 @@ public class JSSCSerial implements SerialIOAdapter {
         try {
             len = SerialIOExecutor.getInputBufferBytesCount();
             if (len > 0)
-                result = SerialIOExecutor.readBytes(len <= count ? len : count);
+                result = SerialIOExecutor.readBytes(Math.min(len, count));
             else {
                 result = SerialIOExecutor.readBytes(1, timeout);
                 if (result.length == 1 && count > 1 && (len = SerialIOExecutor.getInputBufferBytesCount()) > 0) {
@@ -169,30 +167,30 @@ public class JSSCSerial implements SerialIOAdapter {
     public int[][] getCommunicationConstants(int constantType) {
         int[][][] validvalues = {
                 {   // T_BAUD
-                        {B_1200, SerialPort.BAUDRATE_1200},
-                        {B_4800, SerialPort.BAUDRATE_4800},
-                        {B_9600, SerialPort.BAUDRATE_9600},
-                        {B_19200, SerialPort.BAUDRATE_19200},
-                        {B_38400, SerialPort.BAUDRATE_38400},
-                        {B_57600, SerialPort.BAUDRATE_57600},
-                        {B_115200, SerialPort.BAUDRATE_115200},
-                        {B_128000, SerialPort.BAUDRATE_128000},
-                        {B_256000, SerialPort.BAUDRATE_256000}
+                        {B_1200, BAUDRATE_1200},
+                        {B_4800, BAUDRATE_4800},
+                        {B_9600, BAUDRATE_9600},
+                        {B_19200, BAUDRATE_19200},
+                        {B_38400, BAUDRATE_38400},
+                        {B_57600, BAUDRATE_57600},
+                        {B_115200, BAUDRATE_115200},
+                        {B_128000, BAUDRATE_128000},
+                        {B_256000, BAUDRATE_256000}
                 },
                 {   // T_DATA
-                        {D_7, SerialPort.DATABITS_7},
-                        {D_8, SerialPort.DATABITS_8}
+                        {D_7, DATABITS_7},
+                        {D_8, DATABITS_8}
                 },
                 {   // T_STOP
-                        {S_1, SerialPort.STOPBITS_1},
-                        {S_2, SerialPort.STOPBITS_2}
+                        {S_1, STOPBITS_1},
+                        {S_2, STOPBITS_2}
                 },
                 {   // T_PARITY
-                        {P_NO, SerialPort.PARITY_NONE},
-                        {P_ODD, SerialPort.PARITY_ODD},
-                        {P_EVEN, SerialPort.PARITY_EVEN},
-                        {P_MARK, SerialPort.PARITY_MARK},
-                        {P_SPACE, SerialPort.PARITY_SPACE}
+                        {P_NO, PARITY_NONE},
+                        {P_ODD, PARITY_ODD},
+                        {P_EVEN, PARITY_EVEN},
+                        {P_MARK, PARITY_MARK},
+                        {P_SPACE, PARITY_SPACE}
                 }
         };
         if (constantType >= 0 && constantType < validvalues.length)

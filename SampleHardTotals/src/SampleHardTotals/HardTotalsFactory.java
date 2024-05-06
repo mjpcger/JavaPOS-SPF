@@ -17,13 +17,13 @@
 
 package SampleHardTotals;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.hardtotals.Factory;
-import jpos.JposConst;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import de.gmxhome.conrad.jpos.jpos_base.hardtotals.*;
+import jpos.*;
 import jpos.config.JposEntry;
-import jpos.loader.JposServiceInstance;
-import jpos.loader.JposServiceInstanceFactory;
+import jpos.loader.*;
+
+import static jpos.JposConst.*;
 
 /**
  * Factory class for sample HardTotals device implementation
@@ -45,23 +45,23 @@ public class HardTotalsFactory extends Factory implements JposServiceInstanceFac
                     if (create) {
                         dev = new Device(file);
                     } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same file: " + file);
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same file: " + file);
                     else {
                         dev = (Device) any;
                     }
                     dev.checkProperties(jposEntry, index);
-                    JposServiceInstance srv = addDevice(index, dev);
+                    JposServiceInstance srv = addDevice(index, dev, jposEntry);
                     if (create) {
                         putDevice(file, dev);
                     }
                     return srv;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

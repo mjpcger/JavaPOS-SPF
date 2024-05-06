@@ -18,6 +18,10 @@ package de.gmxhome.conrad.jpos.jpos_base.posprinter;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of POSPrinter factory for JPOS devices using this framework.
@@ -28,19 +32,30 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults.
      * @param index POSPrinter property set index.
      * @param dev POSPrinter implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return POSPrinterService object.
      * @throws JposException If property set could not be retrieved.
      */
-    public POSPrinterService addDevice(int index, JposDevice dev) throws JposException {
-        POSPrinterService service;
+    public POSPrinterService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         POSPrinterProperties props = dev.getPOSPrinterProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getPOSPrinterProperties()");
-        service = (POSPrinterService) (props.EventSource = new POSPrinterService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedPOSPrinter;
+        validateJposConfiguration(props, dev, dev.ClaimedPOSPrinter, entry);
+        POSPrinterService service = (POSPrinterService) (props.EventSource = new POSPrinterService(props, dev));
         dev.changeDefaults(props);
         props.addProperties(dev.POSPrinters);
         service.DeviceInterface = service.POSPrinterInterface = props;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index POSPrinter property set index.
+     * @param dev POSPrinter implementation instance derived from JposDevice to be used by the service.
+     * @return POSPrinterService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public POSPrinterService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

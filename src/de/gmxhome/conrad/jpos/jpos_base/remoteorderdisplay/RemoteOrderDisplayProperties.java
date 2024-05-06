@@ -18,8 +18,10 @@ package de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
-import jpos.events.JposEvent;
-import net.bplaced.conrad.log4jpos.Level;
+
+import java.util.Objects;
+
+import static jpos.RemoteOrderDisplayConst.*;
 
 /**
  * Class containing the remote order display specific properties, their default values and default implementations of
@@ -149,7 +151,7 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
     /**
      * Unit specific properties, one per possible unit.
      */
-    public UnitProperties[] Unit = new UnitProperties[32];
+    public final UnitProperties[] Unit = new UnitProperties[Integer.SIZE];
 
     /**
      * Copies all properties to the property set belonging to this object.
@@ -202,7 +204,7 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
                 CharacterSet = Unit[index].CharacterSet;
                 EventSource.logSet("CharacterSet");
             }
-            if (CharacterSetList != Unit[index].CharacterSetList) {
+            if (!Objects.equals(CharacterSetList, Unit[index].CharacterSetList)) {
                 CharacterSetList = Unit[index].CharacterSetList;
                 EventSource.logSet("CharacterSetList");
             }
@@ -214,7 +216,7 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
                 VideoMode = Unit[index].VideoMode;
                 EventSource.logSet("VideoMode");
             }
-            if (VideoModesList != Unit[index].VideoModesList) {
+            if (!Objects.equals(VideoModesList, Unit[index].VideoModesList)) {
                 VideoModesList = Unit[index].VideoModesList;
                 EventSource.logSet("VideoModesList");
             }
@@ -226,10 +228,10 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
     }
 
     /**
-     * Default value of CharacterSet property for offline units. Default: RemoteOrderDisplayConst.ROD_CS_ASCII. Can be
+     * Default value of CharacterSet property for offline units. Default: ROD_CS_ASCII. Can be
      * overwritten by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CharacterSetDef = RemoteOrderDisplayConst.ROD_CS_ASCII;
+    public int CharacterSetDef = ROD_CS_ASCII;
 
     /**
      * Default value of VideoMode property for offline units. Default: 0. Can be
@@ -300,6 +302,7 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
      * @param units A bitmask specifying one or more display units.
      * @return The lowest index where (units &amp; (1 &lt;&lt; index)) != 0.
      */
+    @SuppressWarnings("LoopConditionNotUpdatedInsideLoop")
     public int unitsToFirstIndex(int units) {
         int i = -1;
         while (units != 0) {
@@ -346,7 +349,6 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
      */
     public RemoteOrderDisplayProperties(int dev) {
         super(dev);
-        FlagWhenIdleStatusValue = RemoteOrderDisplayService.ROD_SUE_IDLE;
     }
 
     @Override
@@ -364,7 +366,7 @@ public class RemoteOrderDisplayProperties extends JposCommonProperties implement
     @Override
     public boolean initOnFirstEnable() {
         if (!super.initOnFirstEnable()) {
-            CurrentUnitID = RemoteOrderDisplayConst.ROD_UID_1;
+            CurrentUnitID = ROD_UID_1;
             copyIn();
             SystemClocks = SystemClocksDef;
             SystemVideoSaveBuffers = SystemVideoSaveBuffersDef;

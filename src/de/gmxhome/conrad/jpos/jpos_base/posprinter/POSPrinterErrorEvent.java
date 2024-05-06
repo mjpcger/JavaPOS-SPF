@@ -17,7 +17,9 @@
 package de.gmxhome.conrad.jpos.jpos_base.posprinter;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.*;
+
+import static jpos.JposConst.*;
+import static jpos.POSPrinterConst.*;
 
 /**
  * POSPrinter error event class. Holds print station,error level and error message.
@@ -26,17 +28,17 @@ public class POSPrinterErrorEvent extends JposErrorEvent {
     /**
      * Printer station. In case of asynchronous processing, this value will be passed to the ErrorStation property.
      */
-    public int Station;
+    public final int Station;
 
     /**
      * Error level. In case of asynchronous processing, this value will be passed to the ErrorLevel property.
      */
-    public int Level;
+    public final int Level;
 
     /**
      * Error message. In case of asynchronous processing, this value will be passed to ErrorString property.
      */
-    public String Text;
+    public final String Text;
 
     /**
      * Constructor. Parameters passed to base class unchanged.
@@ -49,7 +51,7 @@ public class POSPrinterErrorEvent extends JposErrorEvent {
      * @param text      Error description. Value to be stored in property ErrorString.
      */
     public POSPrinterErrorEvent(JposBase source, int errorcode, int extended, int station, int level, String text) {
-        super(source, errorcode, extended, JposConst.JPOS_EL_OUTPUT, text);
+        super(source, errorcode, extended, JPOS_EL_OUTPUT, text);
         Station = station;
         Level = level;
         Text = text;
@@ -59,7 +61,7 @@ public class POSPrinterErrorEvent extends JposErrorEvent {
     public void setErrorProperties() {
         POSPrinterProperties data = (POSPrinterProperties) getPropertySet();
 
-        if ((data.ErrorLevel = Level) != POSPrinterConst.PTR_EL_NONE) {
+        if ((data.ErrorLevel = Level) != PTR_EL_NONE) {
             data.ErrorStation = Station;
             data.EventSource.logSet("ErrorStation");
             data.ErrorString = Text;

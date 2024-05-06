@@ -24,8 +24,8 @@ import jpos.JposException;
  * Output request executor for SmartCardRW method WriteData.
  */
 public class WriteData extends JposOutputRequest {
-    private int Count, Action;
-    private String Data;
+    private final int Count, Action;
+    private final String Data;
 
     /**
      * SmartCardRW method WriteData parameter action, see UPOS specification.

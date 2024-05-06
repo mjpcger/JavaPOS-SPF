@@ -17,8 +17,7 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.cashchanger;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposBaseInterface;
-import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
+import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.JposException;
 
 /**

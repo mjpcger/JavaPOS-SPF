@@ -20,20 +20,23 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
-import java.util.Arrays;
+import java.util.*;
+
+import static jpos.JposConst.*;
+import static jpos.KeylockConst.*;
 
 /**
  * Keylock service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class KeylockService extends JposBase implements KeylockService115 {
+public class KeylockService extends JposBase implements KeylockService116 {
     /**
      * Instance of a class implementing the KeylockInterface for keylock specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public KeylockInterface KeylockInterface;
 
-    private KeylockProperties Data;
+    private final KeylockProperties Data;
 
     /**
      * Constructor. Stores property set and device driver implementation
@@ -76,10 +79,10 @@ public class KeylockService extends JposBase implements KeylockService115 {
 
     @Override
     public void waitForKeylockChange(int i, int i1) throws JposException {
-        logPreCall("WaitForKeylockChange", "" + i + ", " + i1);
+        logPreCall("WaitForKeylockChange", removeOuterArraySpecifier(new Object[]{i, i1}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(i < KeylockConst.LOCK_KP_ANY || i > Data.PositionCount, JposConst.JPOS_E_ILLEGAL, "Key position out of range: "+ i);
-        Device.check(i1 < 0 && i1 != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout: " + i1);
+        check(i < LOCK_KP_ANY || i > Data.PositionCount, JPOS_E_ILLEGAL, "Key position out of range: "+ i);
+        check(i1 < 0 && i1 != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout: " + i1);
         KeylockInterface.waitForKeylockChange(i, i1);
         logCall("WaitForKeylockChange");
     }

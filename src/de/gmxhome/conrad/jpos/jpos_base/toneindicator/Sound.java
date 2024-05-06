@@ -24,14 +24,15 @@ import jpos.*;
  */
 public class Sound extends JposOutputRequest {
     /**
-     * ToneIndicator method sound parameter numberOfCycles, see UPOS specification.
+     * ToneIndicator method sound parameter numberOfCycles, see UPOS specification. Should be decremented after each
+     * sound played.
      */
     public int Count;
 
     /**
      * ToneIndicator method sound parameter interSoundWait, see UPOS specification.
      */
-    public int Delay;
+    public final int Delay;
 
     /**
      * Constructor. Stores given parameters for later use. In addition to the base class, the UPOS parameters of

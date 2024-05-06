@@ -17,9 +17,12 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.smartcardrw;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.JposDeviceFactory;
+import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
 
 /**
  * General part of SmartCardRW factory for JPOS devices using this framework.
@@ -30,19 +33,30 @@ public class Factory extends JposDeviceFactory {
      * set and driver to each other and sets driver specific property defaults.
      * @param index SmartCardRW  property set index.
      * @param dev SmartCardRW implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
      * @return SmartCardRWService object.
      * @throws JposException If property set could not be retrieved.
      */
-    public SmartCardRWService addDevice(int index, JposDevice dev) throws JposException {
-        SmartCardRWService service;
+    public SmartCardRWService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         SmartCardRWProperties props = dev.getSmartCardRWProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getSmartCardRWProperties()");
-        service = (SmartCardRWService) (props.EventSource = new SmartCardRWService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedSmartCardRW;
+        validateJposConfiguration(props, dev, dev.ClaimedSmartCardRW, entry);
+        SmartCardRWService service = (SmartCardRWService) (props.EventSource = new SmartCardRWService(props, dev));
         dev.changeDefaults(props);
         props.addProperties(dev.SmartCardRWs);
         service.DeviceInterface = service.SmartCardRW = props;
         return service;
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index SmartCardRW  property set index.
+     * @param dev SmartCardRW implementation instance derived from JposDevice to be used by the service.
+     * @return SmartCardRWService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    @Deprecated
+    public SmartCardRWService addDevice(int index, JposDevice dev) throws JposException {
+        return addDevice(index, dev, CurrentEntry);
     }
 }

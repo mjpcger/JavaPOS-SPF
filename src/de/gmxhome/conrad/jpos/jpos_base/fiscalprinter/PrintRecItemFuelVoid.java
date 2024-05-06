@@ -22,7 +22,7 @@ import jpos.*;
  * Output request executor for FiscalPrinter method PrintRecItemFuelVoid.
  */
 public class PrintRecItemFuelVoid extends SimpleItemOutputRequest {
-    private long SpecialTax;
+    private final long SpecialTax;
 
     /**
      * FiscalPrinter method parameter specialTax, see method PrintRecItemFuelVoid.

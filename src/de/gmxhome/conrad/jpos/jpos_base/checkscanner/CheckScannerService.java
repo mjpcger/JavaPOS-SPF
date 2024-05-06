@@ -23,18 +23,22 @@ import jpos.services.*;
 
 import java.util.Arrays;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.CheckScannerConst.*;
+import static jpos.JposConst.*;
+
 /**
  * CheckScanner service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class CheckScannerService extends JposBase implements CheckScannerService115 {
+public class CheckScannerService extends JposBase implements CheckScannerService116 {
     /**
      * Instance of a class implementing the CheckScannerInterface for check scanner specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public CheckScannerInterface CheckScanner;
 
-    private CheckScannerProperties Data;
+    private final CheckScannerProperties Data;
     /**
      * Constructor. Stores given property set and device implementation object.
      *
@@ -154,7 +158,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
     @Override
     public int getContrast() throws JposException {
         checkEnabled();
-        Device.check(Data.Contrast == null, JposConst.JPOS_E_ILLEGAL, "Property Contrast invalid");
+        check(Data.Contrast == null, JPOS_E_ILLEGAL, "Property Contrast invalid");
         logGet("Contrast");
         return Data.Contrast;
     }
@@ -260,30 +264,27 @@ public class CheckScannerService extends JposBase implements CheckScannerService
     @Override
     public void setColor(int color) throws JposException {
         int[][] colors = {
-                {CheckScannerConst.CHK_CL_MONO, CheckScannerConst.CHK_CCL_MONO},
-                {CheckScannerConst.CHK_CL_GRAYSCALE, CheckScannerConst.CHK_CCL_GRAYSCALE},
-                {CheckScannerConst.CHK_CL_16, CheckScannerConst.CHK_CCL_16},
-                {CheckScannerConst.CHK_CL_256, CheckScannerConst.CHK_CCL_256},
-                {CheckScannerConst.CHK_CL_FULL, CheckScannerConst.CHK_CCL_FULL}
+                {CHK_CL_MONO, CHK_CCL_MONO}, {CHK_CL_GRAYSCALE, CHK_CCL_GRAYSCALE},
+                {CHK_CL_16, CHK_CCL_16}, {CHK_CL_256, CHK_CCL_256}, {CHK_CL_FULL, CHK_CCL_FULL}
         };
         logPreSet("Color");
         checkOpened();
         for (int[] colorrow : colors) {
             if (colorrow[0] == color) {
-                Device.check((Data.CapColor & colorrow[1]) == 0, JposConst.JPOS_E_ILLEGAL, "Unsupported color value: " + color);
+                check((Data.CapColor & colorrow[1]) == 0, JPOS_E_ILLEGAL, "Unsupported color value: " + color);
                 CheckScanner.color(color);
                 logSet("Color");
                 return;
             }
         }
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid color value: " + color);
+        throw new JposException(JPOS_E_ILLEGAL, "Invalid color value: " + color);
     }
 
     @Override
     public void setConcurrentMICR(boolean concurrentMICR) throws JposException {
         logPreSet("ConcurrentMICR");
         checkOpened();
-        Device.check(Data.CapMICRDevice && !Data.CapConcurrentMICR && concurrentMICR, JposConst.JPOS_E_ILLEGAL, "Setting ConcurrentMICR invalid");
+        check(Data.CapMICRDevice && !Data.CapConcurrentMICR && concurrentMICR, JPOS_E_ILLEGAL, "Setting ConcurrentMICR invalid");
         checkNoChangedOrClaimed(Data.ConcurrentMICR, concurrentMICR);
         CheckScanner.concurrentMICR(concurrentMICR);
         logSet("ConcurrentMICR");
@@ -293,11 +294,11 @@ public class CheckScannerService extends JposBase implements CheckScannerService
     public void setContrast(int contrast) throws JposException {
         logPreSet("Contrast");
         checkEnabled();
-        if (contrast == CheckScannerConst.CHK_AUTOMATIC_CONTRAST) {
-            Device.check(!Data.CapAutoContrast, JposConst.JPOS_E_ILLEGAL, "Invalid Contrast value: " + contrast);
+        if (contrast == CHK_AUTOMATIC_CONTRAST) {
+            check(!Data.CapAutoContrast, JPOS_E_ILLEGAL, "Invalid Contrast value: " + contrast);
         }
         else {
-            Device.check(100 < contrast || contrast < 0, JposConst.JPOS_E_ILLEGAL, "Contrast out of range: " + contrast);
+            check(100 < contrast || contrast < 0, JPOS_E_ILLEGAL, "Contrast out of range: " + contrast);
         }
         CheckScanner.contrast(contrast);
         logSet("Contrast");
@@ -307,10 +308,10 @@ public class CheckScannerService extends JposBase implements CheckScannerService
     public void setDocumentHeight(int documentHeight) throws JposException {
         logPreSet("DocumentHeight");
         checkOpened();
-        Device.check(documentHeight < 0, JposConst.JPOS_E_ILLEGAL, "DocumentHeight must be a positive value");
+        check(documentHeight < 0, JPOS_E_ILLEGAL, "DocumentHeight must be a positive value");
         for (int[] pair : Data.getMM_Factors()) {
             if (Data.MapMode == pair[0]) {
-                JposDevice.check((documentHeight * 1000 + (pair[1] >> 1)) / pair[1] > Data.DocumentHeightDef, JposConst.JPOS_E_ILLEGAL, "Invalid height: " + documentHeight);
+                check((documentHeight * 1000 + (pair[1] >> 1)) / pair[1] > Data.DocumentHeightDef, JPOS_E_ILLEGAL, "Invalid height: " + documentHeight);
                 break;
             }
         }
@@ -323,10 +324,10 @@ public class CheckScannerService extends JposBase implements CheckScannerService
     public void setDocumentWidth(int documentWidth) throws JposException {
         logPreSet("DocumentWidth");
         checkOpened();
-        Device.check(documentWidth < 0, JposConst.JPOS_E_ILLEGAL, "DocumentWidth must be a positive value");
+        check(documentWidth < 0, JPOS_E_ILLEGAL, "DocumentWidth must be a positive value");
         for (int[] pair : Data.getMM_Factors()) {
             if (Data.MapMode == pair[0]) {
-                JposDevice.check((documentWidth * 1000 + (pair[1] >> 1)) / pair[1] > Data.DocumentWidthDef, JposConst.JPOS_E_ILLEGAL, "Invalid width: " + documentWidth);
+                check((documentWidth * 1000 + (pair[1] >> 1)) / pair[1] > Data.DocumentWidthDef, JPOS_E_ILLEGAL, "Invalid width: " + documentWidth);
                 break;
             }
         }
@@ -358,24 +359,21 @@ public class CheckScannerService extends JposBase implements CheckScannerService
     @Override
     public void setImageFormat(int imageFormat) throws JposException {
         int[][] formats = {
-                {CheckScannerConst.CHK_IF_NATIVE, CheckScannerConst.CHK_CIF_NATIVE},
-                {CheckScannerConst.CHK_IF_TIFF, CheckScannerConst.CHK_CIF_TIFF},
-                {CheckScannerConst.CHK_IF_BMP, CheckScannerConst.CHK_CIF_BMP},
-                {CheckScannerConst.CHK_IF_JPEG, CheckScannerConst.CHK_CIF_JPEG},
-                {CheckScannerConst.CHK_IF_GIF, CheckScannerConst.CHK_CIF_GIF}
+                {CHK_IF_NATIVE, CHK_CIF_NATIVE}, {CHK_IF_TIFF, CHK_CIF_TIFF}, {CHK_IF_BMP, CHK_CIF_BMP},
+                {CHK_IF_JPEG, CHK_CIF_JPEG}, {CHK_IF_GIF, CHK_CIF_GIF}
         };
         logPreSet("ImageFormat");
         checkOpened();
         for (int[] format : formats) {
             if (imageFormat == format[0]) {
-                Device.check((Data.CapImageFormat & format[1]) == 0, JposConst.JPOS_E_ILLEGAL, "Unsupported ImageFormat value: " + imageFormat);
+                check((Data.CapImageFormat & format[1]) == 0, JPOS_E_ILLEGAL, "Unsupported ImageFormat value: " + imageFormat);
                 checkNoChangedOrClaimed(Data.ImageFormat, imageFormat);
                 CheckScanner.imageFormat(imageFormat);
                 logSet("ImageFormat");
                 return;
             }
         }
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid ImageFormat property value: " + imageFormat);
+        throw new JposException(JPOS_E_ILLEGAL, "Invalid ImageFormat property value: " + imageFormat);
     }
 
     @Override
@@ -391,15 +389,10 @@ public class CheckScannerService extends JposBase implements CheckScannerService
 
     @Override
     public void setMapMode(int mapMode) throws JposException {
-        long[] modes = {
-                CheckScannerConst.CHK_MM_DOTS,
-                CheckScannerConst.CHK_MM_TWIPS,
-                CheckScannerConst.CHK_MM_ENGLISH,
-                CheckScannerConst.CHK_MM_METRIC
-        };
+        long[] modes = { CHK_MM_DOTS, CHK_MM_TWIPS, CHK_MM_ENGLISH, CHK_MM_METRIC };
         logPreSet("MapMode");
         checkOpened();
-        Device.checkMember(mapMode, modes, JposConst.JPOS_E_ILLEGAL, "Illegal MapMode value: " + mapMode);
+        checkMember(mapMode, modes, JPOS_E_ILLEGAL, "Illegal MapMode value: " + mapMode);
         checkNoChangedOrClaimed(Data.MapMode, mapMode);
         CheckScanner.mapMode(mapMode);
         logSet("MapMode");
@@ -409,7 +402,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
     public void setQuality(int quality) throws JposException {
         logPreSet("Quality");
         checkOpened();
-        Device.checkMember(quality, Device.stringArrayToLongArray(Data.QualityList.split(",")), JposConst.JPOS_E_ILLEGAL, "Invalid Quality value: " + quality);
+        checkMember(quality, stringArrayToLongArray(Data.QualityList.split(",")), JPOS_E_ILLEGAL, "Invalid Quality value: " + quality);
         checkNoChangedOrClaimed(Data.Quality, quality);
         CheckScanner.quality(quality);
         logSet("Quality");
@@ -417,9 +410,9 @@ public class CheckScannerService extends JposBase implements CheckScannerService
 
     @Override
     public void beginInsertion(int timeout) throws JposException {
-        logPreCall("BeginInsertion", "" + timeout);
+        logPreCall("BeginInsertion", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
         CheckScanner.beginInsertion(timeout);
         Data.InsertionMode = true;
         logCall("BeginInsertion");
@@ -427,9 +420,9 @@ public class CheckScannerService extends JposBase implements CheckScannerService
 
     @Override
     public void beginRemoval(int timeout) throws JposException {
-        logPreCall("BeginRemoval", "" + timeout);
+        logPreCall("BeginRemoval", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(timeout < 0 && timeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
+        check(timeout < 0 && timeout != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid timeout value: " + timeout);
         CheckScanner.beginRemoval(timeout);
         Data.RemovalMode = true;
         logCall("BeginRemoval");
@@ -437,32 +430,27 @@ public class CheckScannerService extends JposBase implements CheckScannerService
 
     @Override
     public void clearImage(int by) throws JposException {
-        long[] validby = {
-                CheckScannerConst.CHK_CLR_ALL,
-                CheckScannerConst.CHK_CLR_BY_FILEID,
-                CheckScannerConst.CHK_CLR_BY_FILEINDEX,
-                CheckScannerConst.CHK_CLR_BY_IMAGETAGDATA
-        };
-        logPreCall("ClearImage", "" + by);
+        long[] validby = { CHK_CLR_ALL, CHK_CLR_BY_FILEID, CHK_CLR_BY_FILEINDEX, CHK_CLR_BY_IMAGETAGDATA };
+        logPreCall("ClearImage", removeOuterArraySpecifier(new Object[]{by}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.checkMember(by, validby, JposConst.JPOS_E_ILLEGAL, "Invalid by value: " + by);
+        checkMember(by, validby, JPOS_E_ILLEGAL, "Invalid by value: " + by);
         CheckScanner.clearImage(by);
         logCall("ClearImage");
     }
 
     @Override
     public void defineCropArea(int cropAreaID, int x, int y, int cx, int cy) throws JposException {
-        logPreCall("DefineCropArea", "" + x + ", " + y + ", " + cx + ", " + cy);
+        logPreCall("DefineCropArea", removeOuterArraySpecifier(new Object[]{cropAreaID, x, y, cx, cy}, Device.MaxArrayStringElements));
         checkEnabled();
-        if (cropAreaID != CheckScannerConst.CHK_CROP_AREA_RESET_ALL) {
-            JposDevice.check(!Data.CapDefineCropArea, JposConst.JPOS_E_ILLEGAL, "Crop areas not supported");
-            JposDevice.check(x < 0 || x >= Data.DocumentWidth, JposConst.JPOS_E_ILLEGAL, "X coordinate invalid: " + x);
-            JposDevice.check(y < 0 || y >= Data.DocumentHeight, JposConst.JPOS_E_ILLEGAL, "Y coordinate invalid: " + y);
-            JposDevice.check(cx < 0 && cx != CheckScannerConst.CHK_CROP_AREA_RIGHT, JposConst.JPOS_E_ILLEGAL, "CX negative");
-            JposDevice.check(cy < 0 && cy != CheckScannerConst.CHK_CROP_AREA_BOTTOM, JposConst.JPOS_E_ILLEGAL, "CY negative");
-            if (x + cx > Data.DocumentWidth || cx == CheckScannerConst.CHK_CROP_AREA_RIGHT)
+        if (cropAreaID != CHK_CROP_AREA_RESET_ALL) {
+            check(!Data.CapDefineCropArea, JPOS_E_ILLEGAL, "Crop areas not supported");
+            check(x < 0 || x >= Data.DocumentWidth, JPOS_E_ILLEGAL, "X coordinate invalid: " + x);
+            check(y < 0 || y >= Data.DocumentHeight, JPOS_E_ILLEGAL, "Y coordinate invalid: " + y);
+            check(cx < 0 && cx != CHK_CROP_AREA_RIGHT, JPOS_E_ILLEGAL, "CX negative");
+            check(cy < 0 && cy != CHK_CROP_AREA_BOTTOM, JPOS_E_ILLEGAL, "CY negative");
+            if (x + cx > Data.DocumentWidth || cx == CHK_CROP_AREA_RIGHT)
                 cx = Data.DocumentWidth - x;
-            if (y + cy > Data.DocumentHeight || cy == CheckScannerConst.CHK_CROP_AREA_BOTTOM)
+            if (y + cy > Data.DocumentHeight || cy == CHK_CROP_AREA_BOTTOM)
                 cy = Data.DocumentHeight - y;
         }
         CheckScanner.defineCropArea(cropAreaID, x, y, cx, cy);
@@ -473,7 +461,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
     public void endInsertion() throws JposException {
         logPreCall("EndInsertion");
         checkEnabled();
-        Device.check(!Data.InsertionMode, JposConst.JPOS_E_ILLEGAL, "Not in insertion mode");
+        check(!Data.InsertionMode, JPOS_E_ILLEGAL, "Not in insertion mode");
         Data.InsertionMode = false;
         CheckScanner.endInsertion();
         logCall("EndInsertion");
@@ -483,7 +471,7 @@ public class CheckScannerService extends JposBase implements CheckScannerService
     public void endRemoval() throws JposException {
         logPreCall("EndRemoval");
         checkEnabled();
-        Device.check(!Data.RemovalMode, JposConst.JPOS_E_ILLEGAL, "Not in removal mode");
+        check(!Data.RemovalMode, JPOS_E_ILLEGAL, "Not in removal mode");
         Data.RemovalMode = false;
         CheckScanner.endRemoval();
         logCall("EndRemoval");
@@ -491,51 +479,46 @@ public class CheckScannerService extends JposBase implements CheckScannerService
 
     @Override
     public void retrieveImage(int cropAreaID) throws JposException {
-        logPreCall("RetrieveImage", "" + cropAreaID);
+        logPreCall("RetrieveImage", removeOuterArraySpecifier(new Object[]{cropAreaID}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(Data.InsertionMode || Data.RemovalMode, JposConst.JPOS_E_FAILURE, "Bad device state (" + (Data.InsertionMode ? "insertion" : "removal") + " mode)");
-        JposDevice.check(!Data.CapDefineCropArea && cropAreaID != CheckScannerConst.CHK_CROP_AREA_ENTIRE_IMAGE, JposConst.JPOS_E_ILLEGAL, "Invalid Crop area: " + cropAreaID);
+        check(Data.InsertionMode || Data.RemovalMode, JPOS_E_FAILURE, "Bad device state (" + (Data.InsertionMode ? "insertion" : "removal") + " mode)");
+        check(!Data.CapDefineCropArea && cropAreaID != CHK_CROP_AREA_ENTIRE_IMAGE, JPOS_E_ILLEGAL, "Invalid Crop area: " + cropAreaID);
         CheckScanner.retrieveImage(cropAreaID);
         logCall("RetrieveImage");
     }
 
     @Override
     public void retrieveMemory(int by) throws JposException {
-        logPreCall("RetrieveMemory", "" + by);
+        logPreCall("RetrieveMemory", removeOuterArraySpecifier(new Object[]{by}, Device.MaxArrayStringElements));
         Object[][] allowedValue = {
+                { CHK_LOCATE_BY_FILEID, Data.FileID != null && !Data.FileID.equals(""), "Missing FileID" },
+                { CHK_LOCATE_BY_FILEINDEX, true },
                 {
-                        CheckScannerConst.CHK_LOCATE_BY_FILEID,
-                        Data.FileID != null && !Data.FileID.equals(""),
-                        "Missing FileID"
-                },
-                {
-                        CheckScannerConst.CHK_LOCATE_BY_FILEINDEX,
-                        true},
-                {
-                        CheckScannerConst.CHK_LOCATE_BY_IMAGETAGDATA,
+                        CHK_LOCATE_BY_IMAGETAGDATA,
                         Data.CapImageTagData && Data.ImageTagData != null && !Data.ImageTagData.equals(""),
-                        (Data.CapImageTagData ? "No ImageTagData support" : "Missing ImageTagData")}
+                        (Data.CapImageTagData ? "No ImageTagData support" : "Missing ImageTagData")
+                }
         };
         checkEnabled();
-        JposDevice.check(!Data.CapStoreImageFiles, JposConst.JPOS_E_ILLEGAL, "No image file available");
+        check(!Data.CapStoreImageFiles, JPOS_E_ILLEGAL, "No image file available");
         for (Object[] pair : allowedValue) {
             if (by == (Integer) pair[0]) {
                 if(!(Boolean)pair[1])
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, pair[2].toString());
+                    throw new JposException(JPOS_E_ILLEGAL, pair[2].toString());
                 CheckScanner.retrieveMemory(by);
                 logCall("RetrieveMemory");
                 return;
             }
         }
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid by: " + by);
+        throw new JposException(JPOS_E_ILLEGAL, "Invalid by: " + by);
     }
 
     @Override
     public void storeImage(int cropAreaID) throws JposException {
-        logPreCall("StoreImage", "" + cropAreaID);
+        logPreCall("StoreImage", removeOuterArraySpecifier(new Object[]{cropAreaID}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(!Data.CapStoreImageFiles, JposConst.JPOS_E_ILLEGAL, "StoreImage not supported");
-        JposDevice.check(!Data.CapDefineCropArea && cropAreaID != CheckScannerConst.CHK_CROP_AREA_ENTIRE_IMAGE, JposConst.JPOS_E_ILLEGAL, "Invalid Crop area: " + cropAreaID);
+        check(!Data.CapStoreImageFiles, JPOS_E_ILLEGAL, "StoreImage not supported");
+        check(!Data.CapDefineCropArea && cropAreaID != CHK_CROP_AREA_ENTIRE_IMAGE, JPOS_E_ILLEGAL, "Invalid Crop area: " + cropAreaID);
         CheckScanner.storeImage(cropAreaID);
         logCall("StoreImage");
     }

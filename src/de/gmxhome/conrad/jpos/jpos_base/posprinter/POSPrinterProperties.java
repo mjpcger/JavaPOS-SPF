@@ -19,6 +19,10 @@ package de.gmxhome.conrad.jpos.jpos_base.posprinter;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.POSPrinterConst.*;
+
 /**
  * Class containing the POSPrinter specific properties, their default values and default implementations of
  * POSPrinterInterface.
@@ -41,7 +45,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
      * UPOS property CapCharacterSet. Default: PTR_CCS_ASCII. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapCharacterSet = POSPrinterConst.PTR_CCS_ASCII;
+    public int CapCharacterSet = PTR_CCS_ASCII;
 
     /**
      * UPOS property CapConcurrentJrnRec. Default: false. Can be overwritten
@@ -185,7 +189,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
      * UPOS property CapRecColor. Default: COLOR_PRIMARY. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CapRecColor = POSPrinterConst.PTR_COLOR_PRIMARY;
+    public int CapRecColor = PTR_COLOR_PRIMARY;
 
     /**
      * UPOS property CapRecDhigh. Default: false. Can be overwritten
@@ -424,7 +428,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
      * Default value of CharacterSet property. Default: PTR_CS_ASCII. Should be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int CharacterSetDef = POSPrinterConst.PTR_CS_ASCII;
+    public int CharacterSetDef = PTR_CS_ASCII;
 
     /**
      * UPOS property CharacterSet.
@@ -435,7 +439,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
      * UPOS property CharacterSetList. Default: "998" (PTR_CS_ASCII). Should be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public String CharacterSetList = Integer.toString(POSPrinterConst.PTR_CS_ASCII);
+    public String CharacterSetList = Integer.toString(PTR_CS_ASCII);
 
     /**
      * UPOS property CoverOpen.
@@ -607,7 +611,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
      * Default value of RecCurrentCartridge property. Default: PTR_COLOR_PRIMARY. Should be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int RecCurrentCartridgeDef = POSPrinterConst.PTR_COLOR_PRIMARY;
+    public int RecCurrentCartridgeDef = PTR_COLOR_PRIMARY;
 
     /**
      * UPOS property RecCurrentCartridge.
@@ -827,7 +831,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
      * Default value of SlpPrintSide property. Default: PTR_PS_UNKNOWN. Should be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int SlpPrintSideDef = POSPrinterConst.PTR_PS_UNKNOWN;
+    public int SlpPrintSideDef = PTR_PS_UNKNOWN;
 
     /**
      * UPOS property SlpPrintSide.
@@ -863,19 +867,19 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
      */
     public POSPrinterProperties(int dev) {
         super(dev);
-        FlagWhenIdleStatusValue = POSPrinterConst.PTR_SUE_IDLE;
+        FlagWhenIdleStatusValue = PTR_SUE_IDLE;
     }
 
     @Override
     public void initOnOpen() {
         super.initOnOpen();
-        CartridgeNotify = POSPrinterConst.PTR_CN_DISABLED;
-        ErrorLevel = POSPrinterConst.PTR_EL_NONE;
-        JrnCartridgeState = POSPrinterConst.PTR_CART_UNKNOWN;
+        CartridgeNotify = PTR_CN_DISABLED;
+        ErrorLevel = PTR_EL_NONE;
+        JrnCartridgeState = PTR_CART_UNKNOWN;
         PageModeStation = 0;
-        RecCartridgeState = POSPrinterConst.PTR_CART_UNKNOWN;
-        RotateSpecial = POSPrinterConst.PTR_RP_NORMAL;
-        SlpCartridgeState = POSPrinterConst.PTR_CART_UNKNOWN;
+        RecCartridgeState = PTR_CART_UNKNOWN;
+        RotateSpecial = PTR_RP_NORMAL;
+        SlpCartridgeState = PTR_CART_UNKNOWN;
         if (DeviceServiceVersion < 1007000)
             MapCharacterSet = false;
         else if (MapCharacterSet == null)
@@ -888,15 +892,15 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
             CharacterSet = CharacterSetDef;
             JrnCurrentCartridge = JrnCurrentCartridgeDef;
             JrnLetterQuality = false;
-            JrnLineChars = JrnLineCharsList.length() > 0 ? (int)Device.stringArrayToLongArray(JrnLineCharsList.split(","))[0] : 0;
+            JrnLineChars = JrnLineCharsList.length() > 0 ? (int)stringArrayToLongArray(JrnLineCharsList.split(","))[0] : 0;
             JrnLineHeight = JrnLineHeightDef;
             JrnLineSpacing = JrnLineSpacingDef;
             JrnLineWidth = JrnLineWidthDef;
-            MapMode = POSPrinterConst.PTR_MM_DOTS;
-            PageModePrintDirection = POSPrinterConst.PTR_PD_LEFT_TO_RIGHT;
+            MapMode = PTR_MM_DOTS;
+            PageModePrintDirection = PTR_PD_LEFT_TO_RIGHT;
             RecCurrentCartridge = RecCurrentCartridgeDef;
             RecLetterQuality = false;
-            RecLineChars = RecLineCharsList.length() > 0 ? (int)Device.stringArrayToLongArray(RecLineCharsList.split(","))[0] : 0;
+            RecLineChars = RecLineCharsList.length() > 0 ? (int)stringArrayToLongArray(RecLineCharsList.split(","))[0] : 0;
             RecLineHeight = RecLineHeightDef;
             RecLineSpacing = RecLineSpacingDef;
             RecLinesToPaperCut = RecLinesToPaperCutDef;
@@ -905,7 +909,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
             RecSidewaysMaxLines = RecSidewaysMaxLinesDef;
             SlpCurrentCartridge = SlpCurrentCartridgeDef;
             SlpLetterQuality = false;
-            SlpLineChars = SlpLineCharsList.length() > 0 ? (int)Device.stringArrayToLongArray(SlpLineCharsList.split(","))[0] : 0;
+            SlpLineChars = SlpLineCharsList.length() > 0 ? (int)stringArrayToLongArray(SlpLineCharsList.split(","))[0] : 0;
             SlpLineHeight = SlpLineHeightDef;
             SlpLinesNearEndToEnd = SlpLinesNearEndToEndDef;
             SlpLineSpacing = SlpLineSpacingDef;
@@ -938,7 +942,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     @Override
     public void clearErrorProperties() {
         super.clearErrorProperties();
-        ErrorLevel = POSPrinterConst.PTR_EL_NONE;
+        ErrorLevel = PTR_EL_NONE;
         ErrorStation = 0;
         ErrorString = "";
     }
@@ -1124,7 +1128,7 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
     public void validateData(int station, POSPrinterService.PrintData data) throws JposException {
         for (int i = 0; i < data.getPrintData().length(); i++) {
             int actchar = data.getPrintData().charAt(i);
-            Device.check(actchar < ' ', JposConst.JPOS_E_FAILURE, "Invalid character: " + actchar);
+            check(actchar < ' ', JPOS_E_FAILURE, "Invalid character: " + actchar);
         }
     }
 
@@ -1134,12 +1138,12 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
 
     @Override
     public void validateData(int station, POSPrinterService.EscCut esc) throws JposException {
-        Device.check(esc.getPercent() != 0 && esc.getPercent() != 100, JposConst.JPOS_E_ILLEGAL, "Percentage not supported: " + esc.getPercent());
+        check(esc.getPercent() != 0 && esc.getPercent() != 100, JPOS_E_ILLEGAL, "Percentage not supported: " + esc.getPercent());
     }
 
     @Override
     public void validateData(int station, POSPrinterService.EscRuledLine esc) throws JposException {
-        Device.check(true, JposConst.JPOS_E_FAILURE, "Ruled line not supported");
+        throw new JposException(JPOS_E_FAILURE, "Ruled line not supported");
     }
 
     @Override
@@ -1189,16 +1193,16 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
 
     @Override
     public void validateData(int station, POSPrinterService.EscSimple esc) throws JposException {
-        JposDevice.check(!esc.getActivate(), JposConst.JPOS_E_ILLEGAL, "Resetting attribute not supported");
-        JposDevice.check(esc.getReverse(), JposConst.JPOS_E_ILLEGAL, "Reverse video printing not supported");
-        JposDevice.check(esc.getSubscript(), JposConst.JPOS_E_ILLEGAL, "Subscript printing not supported");
-        JposDevice.check(esc.getSuperscript(), JposConst.JPOS_E_ILLEGAL, "Superscript printing not supported");
+        check(!esc.getActivate(), JPOS_E_ILLEGAL, "Resetting attribute not supported");
+        check(esc.getReverse(), JPOS_E_ILLEGAL, "Reverse video printing not supported");
+        check(esc.getSubscript(), JPOS_E_ILLEGAL, "Subscript printing not supported");
+        check(esc.getSuperscript(), JPOS_E_ILLEGAL, "Superscript printing not supported");
     }
 
     @Override
     public void validateData(int station, POSPrinterService.EscLine esc) throws JposException {
-        Device.check(esc.getThickness() != 0 && !esc.getUnderline(), JposConst.JPOS_E_FAILURE, "Strike-through not supported");
-        Device.check(esc.getThickness() > 1, JposConst.JPOS_E_ILLEGAL, "Thickness not supported: " + esc.getThickness());
+        check(esc.getThickness() != 0 && !esc.getUnderline(), JPOS_E_FAILURE, "Strike-through not supported");
+        check(esc.getThickness() > 1, JPOS_E_ILLEGAL, "Thickness not supported: " + esc.getThickness());
     }
 
     @Override
@@ -1207,12 +1211,12 @@ public class POSPrinterProperties extends JposCommonProperties implements POSPri
 
     @Override
     public void validateData(int station, POSPrinterService.EscShade esc) throws JposException {
-        Device.check(esc.getPercentage() > 0, JposConst.JPOS_E_ILLEGAL, "Shading value not supported for: " + esc.getPercentage());
+        check(esc.getPercentage() > 0, JPOS_E_ILLEGAL, "Shading value not supported for: " + esc.getPercentage());
     }
 
     @Override
     public void validateData(int station, POSPrinterService.EscUnknown esc) throws JposException {
-        throw new JposException(JposConst.JPOS_E_FAILURE, "Unknown escape sequence not supported");
+        throw new JposException(JPOS_E_FAILURE, "Unknown escape sequence not supported");
     }
 
     @Override

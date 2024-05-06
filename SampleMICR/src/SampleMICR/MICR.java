@@ -21,6 +21,9 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.micr.*;
 import jpos.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposBaseDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * Class derived from MICRProperties that implements the MICRInterface for the sample magnetic ink character
  * recognition reader.
@@ -45,7 +48,7 @@ import jpos.*;
  * </ul>
  */
 public class MICR extends MICRProperties {
-    private SampleMICR.Device Dev;
+    private final SampleMICR.Device Dev;
 
     /**
      * The constructor. Gets the Device object that implements the device communication as parameter. The
@@ -59,45 +62,40 @@ public class MICR extends MICRProperties {
     @Override
     public void claim(int timeout) throws JposException {
         JposException e = Dev.initPort();
+        if (timeout < Dev.MinClaimTimeout)
+            timeout = Dev.MinClaimTimeout;
         if (e != null)
             throw e;
         super.claim(timeout);
-        Dev.ToBeFinished = false;
-        (Dev.CommandProcessor = new Thread(Dev)).start();
+        (Dev.CommandProcessor = new ThreadHandler("MICRCommandProcessor", Dev)).start();
     }
 
     @Override
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     public void release() throws JposException {
-        Dev.ToBeFinished = true;
-        synchronized (Dev) {
-            if (Dev.Target != null)
-                Dev.closePort();
-            else
-                Dev.PollWaiter.signal();
-        }
-        while (true) {
-            try {
-                Dev.CommandProcessor.join();
-                break;
-            } catch (Exception e) {}
-        }
+        Dev.CommandProcessor.ToBeFinished = true;
+        if (Dev.Target != null)
+            Dev.closePort();
+        else
+            Dev.PollWaiter.signal();
+        Dev.CommandProcessor.waitFinished();
         super.release();
     }
 
     @Override
     public void handlePowerStateOnEnable() throws JposException {
-        PowerState = Dev.Offline == JposConst.JPOS_SUE_POWER_OFF_OFFLINE ? JposConst.JPOS_PS_OFF_OFFLINE : JposConst.JPOS_PS_ONLINE;
+        PowerState = Dev.Offline == JPOS_SUE_POWER_OFF_OFFLINE ? JPOS_PS_OFF_OFFLINE : JPOS_PS_ONLINE;
         super.handlePowerStateOnEnable();
     }
 
     @Override
     public void checkHealth(int level) throws JposException {
-        if (level == JposConst.JPOS_CH_INTERNAL) {
+        if (level == JPOS_CH_INTERNAL) {
             CheckHealthText = "Internal CheckHealth: ";
-            CheckHealthText += Dev.Offline == JposConst.JPOS_SUE_POWER_OFF_OFFLINE ? "Failed" : "OK";
+            CheckHealthText += Dev.Offline == JPOS_SUE_POWER_OFF_OFFLINE ? "Failed" : "OK";
         }
         else {
-            CheckHealthText = level == JposConst.JPOS_CH_EXTERNAL ? "External" : "Interactive";
+            CheckHealthText = level == JPOS_CH_EXTERNAL ? "External" : "Interactive";
             CheckHealthText += " Checkhealth: Failed (Not supported)";
         }
         EventSource.logSet("CheckHealthText");
@@ -112,13 +110,13 @@ public class MICR extends MICRProperties {
                 return;
             }
             new SyncObject().suspend(Dev.PollDelay);
-        } while (timeout == JposConst.JPOS_FOREVER || System.currentTimeMillis() - starttime < timeout);
-        Dev.check(true, JposConst.JPOS_E_FAILURE, "No connection to MICR device");
+        } while (timeout == JPOS_FOREVER || System.currentTimeMillis() - starttime < timeout);
+        throw new JposException(JPOS_E_FAILURE, "No connection to MICR device");
     }
 
     @Override
     public void endInsertion() throws JposException {
-        Dev.check(!Dev.sendCommand("I"), JposConst.JPOS_E_FAILURE, "No connection to MICR device");
+        check(!Dev.sendCommand("I"), JPOS_E_FAILURE, "No connection to MICR device");
     }
 
     @Override
@@ -129,6 +127,6 @@ public class MICR extends MICRProperties {
                 return;
             new SyncObject().suspend(Dev.PollDelay);
         } while (System.currentTimeMillis() - starttime < timeout);
-        Dev.check(true, JposConst.JPOS_E_FAILURE, "No connection to MICR device");
+        throw new JposException(JPOS_E_FAILURE, "No connection to MICR device");
     }
 }

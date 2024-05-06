@@ -23,7 +23,7 @@ public class UnitDataEvent extends JposDataEvent {
     /**
      * Subsystem unit that forced the event.
      */
-    public int Unit;
+    public final int Unit;
 
     /**
      * Constructor. Parameters passed to base class unchanged.

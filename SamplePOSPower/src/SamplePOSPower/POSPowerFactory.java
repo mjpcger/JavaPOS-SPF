@@ -49,7 +49,7 @@ public class POSPowerFactory extends Factory implements JposServiceInstanceFacto
                     if (Device.Kernel32Lib == null)
                         throw new JposException(JposConst.JPOS_E_NOSERVICE, "JNA or Kernel32.dll not available");
                     dev.checkProperties(jposEntry);
-                    JposServiceInstance srv = addDevice(0, dev);
+                    JposServiceInstance srv = addDevice(0, dev, jposEntry);
                     if (create) {
                         putDevice("SamplePOSPower", dev);
                     }

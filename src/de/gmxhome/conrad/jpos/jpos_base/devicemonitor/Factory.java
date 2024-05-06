@@ -21,6 +21,9 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.config.JposEntry;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * General part of DeviceMonitor factory for JPOS devices using this framework.
  */
@@ -36,12 +39,10 @@ public class Factory extends JposDeviceFactory {
      */
     public DeviceMonitorService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         DeviceMonitorProperties props = dev.getDeviceMonitorProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getDeviceMonitorProperties()");
+        validateJposConfiguration(props, dev, dev.ClaimedDeviceMonitor, entry);
         DeviceMonitorService service = (DeviceMonitorService) (props.EventSource = new DeviceMonitorService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedDeviceMonitor;
         dev.changeDefaults(props);
-        JposDevice.check(props.DeviceList == null, JposConst.JPOS_E_NOSERVICE, "Bad Service: No DeviceList");
+        check(props.DeviceList == null, JPOS_E_NOSERVICE, "Bad Service: No DeviceList");
         props.addProperties(dev.DeviceMonitors);
         service.DeviceInterface = service.DeviceMonitor = props;
         return service;

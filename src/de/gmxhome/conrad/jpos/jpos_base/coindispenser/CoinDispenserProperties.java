@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.coindispenser;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.CoinDispenserConst.*;
+
 /**
  * Class containing the CoinDispenser specific properties, their default values and default implementations of
  * CoinDispenserInterface.
@@ -65,7 +67,7 @@ public class CoinDispenserProperties extends JposCommonProperties implements Coi
     @Override
     public void initOnEnable(boolean enable) {
         super.initOnEnable(enable);
-        DispenserStatus = CoinDispenserConst.COIN_STATUS_OK;
+        DispenserStatus = COIN_STATUS_OK;
     }
 
     @Override

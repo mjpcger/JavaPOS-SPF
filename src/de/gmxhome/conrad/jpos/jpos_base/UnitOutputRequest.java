@@ -20,6 +20,8 @@ import jpos.*;
 
 import java.util.*;
 
+import static jpos.JposConst.*;
+
 /**
  * Output request class for subsystem unit devices.
  */
@@ -33,7 +35,7 @@ public class UnitOutputRequest extends JposOutputRequest {
         return Units;
     };
 
-    private int Units;
+    private final int Units;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -106,7 +108,7 @@ public class UnitOutputRequest extends JposOutputRequest {
      */
     protected void checkUnitsOnline() throws JposException {
         JposBase svc = (JposBase) Props.EventSource;
-        svc.check((~Props.UnitsOnline & getUnits()) != 0, ~Props.UnitsOnline & getUnits(), JposConst.JPOS_E_OFFLINE, 0, "Display units specified by " + (getUnits() & ~Props.UnitsOnline) + " offline", EndSync != null);
+        svc.check((~Props.UnitsOnline & getUnits()) != 0, ~Props.UnitsOnline & getUnits(), JPOS_E_OFFLINE, 0, "Display units specified by " + (getUnits() & ~Props.UnitsOnline) + " offline", EndSync != null);
     }
 
 }

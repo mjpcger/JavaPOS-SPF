@@ -20,8 +20,10 @@ package de.gmxhome.conrad.jpos.jpos_base.pointcardrw;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+
+import static jpos.JposConst.*;
+import static jpos.PointCardRWConst.*;
 
 public class PrintWrite extends JposOutputRequest {
     /**
@@ -31,7 +33,7 @@ public class PrintWrite extends JposOutputRequest {
     public int getKind() {
         return Kind;
     }
-    private int Kind;
+    private final int Kind;
 
     /**
      * PointCardRW method PrintWrite parameter hposition, see UPOS specification.
@@ -40,7 +42,7 @@ public class PrintWrite extends JposOutputRequest {
     public int getHPosition() {
         return HPosition;
     }
-    private int HPosition;
+    private final int HPosition;
 
     /**
      * PointCardRW method PrintWrite parameter vposition, see UPOS specification.
@@ -49,7 +51,7 @@ public class PrintWrite extends JposOutputRequest {
     public int getVPosition() {
         return VPosition;
     }
-    private int VPosition;
+    private final int VPosition;
 
     /**
      * Get PointCardRW property Write<i>trackno</i>Data (1 &le; trackno &le; 6) contents when the method
@@ -62,7 +64,7 @@ public class PrintWrite extends JposOutputRequest {
             return null;
         return WriteTrackData[trackno];
     }
-    private String[] WriteTrackData;
+    private final String[] WriteTrackData;
 
     /**
      * Get PointCardRW property TracksToWrite contents when method PrintWrite has been invoked.
@@ -71,7 +73,7 @@ public class PrintWrite extends JposOutputRequest {
     public  int getTracksToWrite() {
         return TracksToWrite;
     }
-    private int TracksToWrite;
+    private final int TracksToWrite;
 
     /**
      * PointCardRW method PrintWrite parameter data, converted to a List&lt;Object&gt; with PointCardRWService method outputDataParts.
@@ -80,7 +82,7 @@ public class PrintWrite extends JposOutputRequest {
     public List<PointCardRWService.PrintDataPart> getData() {
         return Data;
     }
-    private List<PointCardRWService.PrintDataPart> Data;
+    private final List<PointCardRWService.PrintDataPart> Data;
 
     /**
      * Sets WriteStates, one value per track, must be set during write track operations. Will be used to set WriteState
@@ -91,7 +93,7 @@ public class PrintWrite extends JposOutputRequest {
     public void setWriteState(int track, int value) {
         WriteStates[track - 1] = value;
     }
-    private Integer[] WriteStates;
+    private final Integer[] WriteStates;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -110,7 +112,7 @@ public class PrintWrite extends JposOutputRequest {
         Data = ((PointCardRWService)props.EventSource).outputDataParts(data);
         TracksToWrite = props.TracksToWrite;
         WriteTrackData = Arrays.copyOf(props.WriteData, props.WriteData.length);
-        WriteStates = initWriteStates(props);
+        WriteStates = initWriteStates();
     }
 
     /**
@@ -130,7 +132,7 @@ public class PrintWrite extends JposOutputRequest {
         Data = data;
         TracksToWrite = props.TracksToWrite;
         WriteTrackData = Arrays.copyOf(props.WriteData, props.WriteData.length);
-        WriteStates = initWriteStates(props);
+        WriteStates = initWriteStates();
     }
 
     @Override
@@ -146,25 +148,24 @@ public class PrintWrite extends JposOutputRequest {
 
     @Override
     public JposOutputCompleteEvent createOutputEvent() {
-        PointCardRWProperties props = (PointCardRWProperties) Props;
         if (WriteStates != null) {
             for (int i = 0; i < WriteStates.length; i++) {
                 if (WriteStates[i] != null)
-                    WriteStates[i] = JposConst.JPOS_SUCCESS;
+                    WriteStates[i] = JPOS_SUCCESS;
             }
         }
         return new PointCardRWOutputCompleteEvent(Props.EventSource, OutputID, WriteStates);
     }
 
-    private Integer[] initWriteStates(PointCardRWProperties props) {
+    private Integer[] initWriteStates() {
         if ((Kind & 2) != 0) {
             return new Integer[] {
-                    (TracksToWrite & PointCardRWConst.PCRW_TRACK1) == 0 ? null : JposConst.JPOS_E_FAILURE,
-                    (TracksToWrite & PointCardRWConst.PCRW_TRACK2) == 0 ? null : JposConst.JPOS_E_FAILURE,
-                    (TracksToWrite & PointCardRWConst.PCRW_TRACK3) == 0 ? null : JposConst.JPOS_E_FAILURE,
-                    (TracksToWrite & PointCardRWConst.PCRW_TRACK4) == 0 ? null : JposConst.JPOS_E_FAILURE,
-                    (TracksToWrite & PointCardRWConst.PCRW_TRACK5) == 0 ? null : JposConst.JPOS_E_FAILURE,
-                    (TracksToWrite & PointCardRWConst.PCRW_TRACK6) == 0 ? null : JposConst.JPOS_E_FAILURE
+                    (TracksToWrite & PCRW_TRACK1) == 0 ? null : JPOS_E_FAILURE,
+                    (TracksToWrite & PCRW_TRACK2) == 0 ? null : JPOS_E_FAILURE,
+                    (TracksToWrite & PCRW_TRACK3) == 0 ? null : JPOS_E_FAILURE,
+                    (TracksToWrite & PCRW_TRACK4) == 0 ? null : JPOS_E_FAILURE,
+                    (TracksToWrite & PCRW_TRACK5) == 0 ? null : JPOS_E_FAILURE,
+                    (TracksToWrite & PCRW_TRACK6) == 0 ? null : JPOS_E_FAILURE
            };
         }
         return null;

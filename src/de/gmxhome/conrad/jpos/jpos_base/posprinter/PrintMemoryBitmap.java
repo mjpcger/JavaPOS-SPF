@@ -33,7 +33,7 @@ public class PrintMemoryBitmap extends OutputRequest {
         return Station;
     }
 
-    private int Station;
+    private final int Station;
 
     /**
      * POSPrinter method PrintMemoryBitmap parameter data, see UPOS specification.
@@ -43,7 +43,7 @@ public class PrintMemoryBitmap extends OutputRequest {
         return Arrays.copyOf(Data, Data.length);
     }
 
-    private byte[] Data;
+    private final byte[] Data;
 
     /**
      * POSPrinter method PrintMemoryBitmap parameter type, see UPOS specification.
@@ -53,7 +53,7 @@ public class PrintMemoryBitmap extends OutputRequest {
         return Type;
     }
 
-    private int Type;
+    private final int Type;
 
     /**
      * POSPrinter method PrintMemoryBitmap parameter width, see UPOS specification.
@@ -63,7 +63,7 @@ public class PrintMemoryBitmap extends OutputRequest {
         return Width;
     }
 
-    private int Width;
+    private final int Width;
 
     /**
      * POSPrinter method PrintMemoryBitmap parameter alignment, see UPOS specification.
@@ -73,7 +73,7 @@ public class PrintMemoryBitmap extends OutputRequest {
         return Alignment;
     }
 
-    private int Alignment;
+    private final int Alignment;
 
     /**
      * Constructor. Stores given parameters for later use.

@@ -22,7 +22,7 @@ import jpos.*;
  * Output request executor for FiscalPrinter methods PrintRecTotal.
  */
 public class PrintRecTotal extends SimpleAmountOutputRequest {
-    private long Payment;
+    private final long Payment;
 
     /**
      * FiscalPrinter method PrintRecTotal parameter payment, see UPOS specification.
@@ -32,7 +32,7 @@ public class PrintRecTotal extends SimpleAmountOutputRequest {
         return Payment;
     }
 
-    private String Description;
+    private final String Description;
 
     /**
      * FiscalPrinter method parameter description, see method PrintRecTotal.

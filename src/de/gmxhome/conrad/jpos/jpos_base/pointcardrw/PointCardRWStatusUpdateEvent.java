@@ -18,7 +18,8 @@
 package de.gmxhome.conrad.jpos.jpos_base.pointcardrw;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.*;
+
+import static jpos.PointCardRWConst.*;
 
 /**
  * Status update event implementation for PointCardRW devices.
@@ -36,19 +37,13 @@ public class PointCardRWStatusUpdateEvent extends JposStatusUpdateEvent {
 
     @Override
     public boolean setStatusProperties() {
-        if (super.setStatusProperties())
-            return true;
         PointCardRWProperties props = (PointCardRWProperties) getPropertySet();
-        int val = props.CardState;
-        switch (getStatus()) {
-            case PointCardRWConst.PCRW_SUE_NOCARD:
-                return extracted(props, PointCardRWConst.PCRW_STATE_NOCARD);
-            case PointCardRWConst.PCRW_SUE_REMAINING:
-                return extracted(props, PointCardRWConst.PCRW_STATE_REMAINING);
-            case PointCardRWConst.PCRW_SUE_INRW:
-                return extracted(props, PointCardRWConst.PCRW_STATE_INRW);
-        }
-        return false;
+        return super.setStatusProperties() || switch (getStatus()) {
+            case PCRW_SUE_NOCARD -> extracted(props, PCRW_STATE_NOCARD);
+            case PCRW_SUE_REMAINING -> extracted(props, PCRW_STATE_REMAINING);
+            case PCRW_SUE_INRW -> extracted(props, PCRW_STATE_INRW);
+            default -> false;
+        };
     }
 
     private static boolean extracted(PointCardRWProperties props, int value) {
@@ -60,33 +55,23 @@ public class PointCardRWStatusUpdateEvent extends JposStatusUpdateEvent {
 
     @Override
     public boolean checkStatusCorresponds() {
-        if (super.checkStatusCorresponds())
-            return true;
         PointCardRWProperties props = (PointCardRWProperties) getPropertySet();
-        switch (getStatus()) {
-            case PointCardRWConst.PCRW_SUE_NOCARD:
-                return (props.CardState == PointCardRWConst.PCRW_STATE_NOCARD);
-            case PointCardRWConst.PCRW_SUE_REMAINING:
-                return (props.CardState == PointCardRWConst.PCRW_STATE_REMAINING);
-            case PointCardRWConst.PCRW_SUE_INRW:
-                return (props.CardState == PointCardRWConst.PCRW_STATE_INRW);
-        }
-        return false;
+         return super.checkStatusCorresponds() || switch (getStatus()) {
+            case PCRW_SUE_NOCARD -> props.CardState == PCRW_STATE_NOCARD;
+            case PCRW_SUE_REMAINING -> props.CardState == PCRW_STATE_REMAINING;
+            case PCRW_SUE_INRW -> props.CardState == PCRW_STATE_INRW;
+            default -> false;
+        };
     }
 
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        if (ret.length() > 0)
-            return ret;
-        switch (getStatus()) {
-            case PointCardRWConst.PCRW_SUE_NOCARD:
-                return "No card present";
-            case PointCardRWConst.PCRW_SUE_REMAINING:
-                return "Card in entrance";
-            case PointCardRWConst.PCRW_SUE_INRW:
-                return "Card in device";
-        }
-        return "Unknown Status Change: "+ getStatus();
+        return ret.length() > 0 ? ret : switch (getStatus()) {
+            case PCRW_SUE_NOCARD -> "No card present";
+            case PCRW_SUE_REMAINING -> "Card in entrance";
+            case PCRW_SUE_INRW -> "Card in device";
+            default -> "Unknown Status Change: " + getStatus();
+        };
     }
 }

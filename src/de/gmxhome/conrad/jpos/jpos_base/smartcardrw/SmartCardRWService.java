@@ -21,18 +21,22 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.SmartCardRWConst.*;
+
 /**
  * SmartCardRW service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class SmartCardRWService extends JposBase implements SmartCardRWService115 {
+public class SmartCardRWService extends JposBase implements SmartCardRWService116 {
     /**
      * Instance of a class implementing the SmartCardRWInterface for smart card reader / writer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public SmartCardRWInterface SmartCardRW;
 
-    private SmartCardRWProperties Data;
+    private final SmartCardRWProperties Data;
     /**
      * Constructor. Stores given property set and device implementation object.
      *
@@ -131,41 +135,36 @@ public class SmartCardRWService extends JposBase implements SmartCardRWService11
     @Override
     public void setInterfaceMode(int mode) throws JposException {
         int[][] validCombinations = {
-                {SmartCardRWConst.SC_MODE_TRANS, SmartCardRWConst.SC_CMODE_TRANS},
-                {SmartCardRWConst.SC_MODE_BLOCK, SmartCardRWConst.SC_CMODE_BLOCK},
-                {SmartCardRWConst.SC_MODE_APDU, SmartCardRWConst.SC_CMODE_APDU},
-                {SmartCardRWConst.SC_MODE_XML, SmartCardRWConst.SC_CMODE_XML}
+                {SC_MODE_TRANS, SC_CMODE_TRANS}, {SC_MODE_BLOCK, SC_CMODE_BLOCK},
+                {SC_MODE_APDU, SC_CMODE_APDU}, {SC_MODE_XML, SC_CMODE_XML}
         };
         logPreSet("InterfaceMode");
         checkEnabled();
         for (int[] pair : validCombinations) {
             if (mode == pair[0]) {
-                JposDevice.check((Data.CapInterfaceMode & pair[1]) == 0, JposConst.JPOS_E_ILLEGAL, "Unsupported InterfaceMode: " + mode);
+                check((Data.CapInterfaceMode & pair[1]) == 0, JPOS_E_ILLEGAL, "Unsupported InterfaceMode: " + mode);
                 SmartCardRW.interfaceMode(mode);
                 logSet("InterfaceMode");
                 return;
             }
         }
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid InterfaceMode: " + mode);
+        throw new JposException(JPOS_E_ILLEGAL, "Invalid InterfaceMode: " + mode);
     }
 
     @Override
     public void setIsoEmvMode(int mode) throws JposException {
-        int[][] validCombinations = {
-                {SmartCardRWConst.SC_MODE_ISO, SmartCardRWConst.SC_CMODE_ISO},
-                {SmartCardRWConst.SC_MODE_EMV, SmartCardRWConst.SC_CMODE_EMV}
-        };
+        int[][] validCombinations = { {SC_MODE_ISO, SC_CMODE_ISO}, {SC_MODE_EMV, SC_CMODE_EMV} };
         logPreSet("IsoEmvMode");
         checkEnabled();
         for (int[] pair : validCombinations) {
             if (mode == pair[0]) {
-                JposDevice.check((Data.CapIsoEmvMode & pair[1]) == 0, JposConst.JPOS_E_ILLEGAL, "Unsupported IsoEmvMode: " + mode);
+                check((Data.CapIsoEmvMode & pair[1]) == 0, JPOS_E_ILLEGAL, "Unsupported IsoEmvMode: " + mode);
                 SmartCardRW.isoEmvMode(mode);
                 logSet("IsoEmvMode");
                 return;
             }
         }
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid IsoEmvMode: " + mode);
+        throw new JposException(JPOS_E_ILLEGAL, "Invalid IsoEmvMode: " + mode);
     }
 
     @Override
@@ -178,26 +177,26 @@ public class SmartCardRWService extends JposBase implements SmartCardRWService11
                 count++;
         }
         int badslots = ~Data.CapSCSlots & slots;
-        JposDevice.check(count != 1, JposConst.JPOS_E_ILLEGAL, "Invalid slot selected: " + Integer.toHexString(slots));
-        JposDevice.check(badslots != 0, JposConst.JPOS_E_ILLEGAL, "Unsupported slot selected: " + Integer.toHexString(badslots));
+        check(count != 1, JPOS_E_ILLEGAL, "Invalid slot selected: " + Integer.toHexString(slots));
+        check(badslots != 0, JPOS_E_ILLEGAL, "Unsupported slot selected: " + Integer.toHexString(badslots));
         SmartCardRW.sCSlot(slots);
         logSet("SCSlot");
     }
 
     @Override
     public void beginInsertion(int timeout) throws JposException {
-        logPreCall("BeginInsertion", "" + timeout);
+        logPreCall("BeginInsertion", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(timeout != JposConst.JPOS_FOREVER && timeout < 0, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value");
+        check(timeout != JPOS_FOREVER && timeout < 0, JPOS_E_ILLEGAL, "Invalid timeout value");
         SmartCardRW.beginInsertion(timeout);
         logCall("BeginInsertion");
     }
 
     @Override
     public void beginRemoval(int timeout) throws JposException {
-        logPreCall("BeginRemoval", "" + timeout);
+        logPreCall("BeginRemoval", removeOuterArraySpecifier(new Object[]{timeout}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposDevice.check(timeout != JposConst.JPOS_FOREVER && timeout < 0, JposConst.JPOS_E_ILLEGAL, "Invalid timeout value");
+        check(timeout != JPOS_FOREVER && timeout < 0, JPOS_E_ILLEGAL, "Invalid timeout value");
         SmartCardRW.beginRemoval(timeout);
         logCall("BeginRemoval");
     }
@@ -220,31 +219,25 @@ public class SmartCardRWService extends JposBase implements SmartCardRWService11
 
     @Override
     public void readData(int action, int[] count, String[] data) throws JposException {
-        long[] valid = {
-                SmartCardRWConst.SC_READ_DATA, SmartCardRWConst.SC_READ_PROGRAM,
-                SmartCardRWConst.SC_EXECUTE_AND_READ_DATA, SmartCardRWConst.SC_XML_READ_BLOCK_DATA
-        };
-        logPreCall("ReadData", "" + action);
-        JposDevice.check(count == null || count.length != 1, JposConst.JPOS_E_ILLEGAL, "Count is not array with length 1");
-        JposDevice.check(data == null || data.length != 1, JposConst.JPOS_E_ILLEGAL, "Data is not array with length 1");
+        logPreCall("ReadData", removeOuterArraySpecifier(new Object[]{action, "..."}, Device.MaxArrayStringElements));
+        long[] valid = { SC_READ_DATA, SC_READ_PROGRAM, SC_EXECUTE_AND_READ_DATA, SC_XML_READ_BLOCK_DATA };
+        check(count == null || count.length != 1, JPOS_E_ILLEGAL, "Count is not array with length 1");
+        check(data == null || data.length != 1, JPOS_E_ILLEGAL, "Data is not array with length 1");
         checkEnabled();
-        JposDevice.checkMember(action, valid, JposConst.JPOS_E_ILLEGAL, "Invalid read action: " + action);
+        checkMember(action, valid, JPOS_E_ILLEGAL, "Invalid read action: " + action);
         SmartCardRW.readData(action, count, data);
-        logCall("ReadData", "..., " + count[0] + ", " + data[0]);
+        logCall("ReadData", removeOuterArraySpecifier(new Object[]{"...", count[0], data[0]}, Device.MaxArrayStringElements));
     }
 
     @Override
     public void writeData(int action, int count, String data) throws JposException {
-        long[] valid = {
-                SmartCardRWConst.SC_STORE_DATA, SmartCardRWConst.SC_STORE_PROGRAM, SmartCardRWConst.SC_EXECUTE_DATA,
-                SmartCardRWConst.SC_XML_BLOCK_DATA, SmartCardRWConst.SC_SECURITY_FUSE, SmartCardRWConst.SC_RESET
-        };
+        logPreCall("WriteData", removeOuterArraySpecifier(new Object[]{action, count, data}, Device.MaxArrayStringElements));
+        long[] valid = { SC_STORE_DATA, SC_STORE_PROGRAM, SC_EXECUTE_DATA, SC_XML_BLOCK_DATA, SC_SECURITY_FUSE, SC_RESET };
         if (data == null)
             data = "";
-        logPreCall("WriteData", "" + action + ", " + count + ", " + data);
         checkEnabled();
-        JposDevice.checkMember(action, valid, JposConst.JPOS_E_ILLEGAL, "Invalid write action: " + action);
-        JposDevice.check(count <= 0, JposConst.JPOS_E_ILLEGAL, "Invalid byte count: " + count);
+        checkMember(action, valid, JPOS_E_ILLEGAL, "Invalid write action: " + action);
+        check(count <= 0, JPOS_E_ILLEGAL, "Invalid byte count: " + count);
         callNowOrLater(SmartCardRW.writeData(action, count, data));
         logAsyncCall("WriteData");
     }

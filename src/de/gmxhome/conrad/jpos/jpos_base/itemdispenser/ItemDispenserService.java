@@ -21,18 +21,20 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static jpos.JposConst.*;
+
 /**
  * ItemDispenser service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class ItemDispenserService extends JposBase implements ItemDispenserService115 {
+public class ItemDispenserService extends JposBase implements ItemDispenserService116 {
     /**
      * Instance of a class implementing the ItemDispenserInterface for item dispenser specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public ItemDispenserInterface ItemDispenserInterface;
 
-    private ItemDispenserProperties Data;
+    private final ItemDispenserProperties Data;
 
     /**
      * Constructor. Stores given property set and device implementation object.
@@ -89,40 +91,32 @@ public class ItemDispenserService extends JposBase implements ItemDispenserServi
 
     @Override
     public void adjustItemCount(int itemCount, int slotNumber) throws JposException {
-        logPreCall("AdjustItemCount", "" + itemCount + ", " + slotNumber);
+        logPreCall("AdjustItemCount", removeOuterArraySpecifier(new Object[]{itemCount, slotNumber}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(itemCount < 0, JposConst.JPOS_E_ILLEGAL, "Item count negative: " + itemCount);
-        Device.check(slotNumber < 1 || slotNumber > Data.MaxSlots, JposConst.JPOS_E_ILLEGAL, "slotNumber invalid: " + slotNumber);
+        check(itemCount < 0, JPOS_E_ILLEGAL, "Item count negative: " + itemCount);
+        check(slotNumber < 1 || slotNumber > Data.MaxSlots, JPOS_E_ILLEGAL, "slotNumber invalid: " + slotNumber);
         ItemDispenserInterface.adjustItemCount(itemCount, slotNumber);
         logCall("AdjustItemCount");
     }
 
     @Override
     public void dispenseItem(int[] numItem, int slotNumber) throws JposException {
-        try {
-            logPreCall("DispenseItem", "" + numItem[0] + ", " + slotNumber);
-        } catch (NullPointerException e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "numItem must not be null");
-        }
+        logPreCall("DispenseItem", removeOuterArraySpecifier(new Object[]{numItem, slotNumber}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(numItem.length != 1, JposConst.JPOS_E_ILLEGAL, "numItem Bad dimension: " + numItem.length);
-        Device.check(slotNumber < 1 || slotNumber > Data.MaxSlots, JposConst.JPOS_E_ILLEGAL, "slotNumber invalid: " + slotNumber);
+        check(numItem == null || numItem.length != 1, JPOS_E_ILLEGAL, "numItem invalid");
+        check(numItem[0] <= 0, JPOS_E_ILLEGAL, "numItem <= 0");
+        check(slotNumber < 1 || slotNumber > Data.MaxSlots, JPOS_E_ILLEGAL, "slotNumber invalid: " + slotNumber);
         ItemDispenserInterface.dispenseItem(numItem, slotNumber);
-        logCall("DispenseItem", "" + numItem[0]);
+        logCall("DispenseItem", removeOuterArraySpecifier(new Object[]{numItem[0], slotNumber}, Device.MaxArrayStringElements));
     }
 
     @Override
     public void readItemCount(int[] itemCount, int slotNumber) throws JposException {
-        try {
-            if (itemCount[0] > 0 || true)
-                logPreCall("ReadItemCount", "" + slotNumber);
-        } catch (NullPointerException e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "numItem must not be null");
-        }
+        logPreCall("ReadItemCount", removeOuterArraySpecifier(new Object[]{"...", slotNumber}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(itemCount.length != 1, JposConst.JPOS_E_ILLEGAL, "numItem Bad dimension: " + itemCount.length);
-        Device.check(slotNumber < 1 || slotNumber > Data.MaxSlots, JposConst.JPOS_E_ILLEGAL, "slotNumber invalid: " + slotNumber);
+        check(itemCount == null || itemCount.length != 1, JPOS_E_ILLEGAL, "itemCount invalid");
+        check(slotNumber < 1 || slotNumber > Data.MaxSlots, JPOS_E_ILLEGAL, "slotNumber invalid: " + slotNumber);
         ItemDispenserInterface.readItemCount(itemCount, slotNumber);
-        logCall("ReadItemCount", "" + itemCount[0]);
+        logCall("ReadItemCount", removeOuterArraySpecifier(new Object[]{itemCount[0], slotNumber}, Device.MaxArrayStringElements));
     }
 }

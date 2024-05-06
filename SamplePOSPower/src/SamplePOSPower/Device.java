@@ -27,10 +27,12 @@ import de.gmxhome.conrad.jpos.jpos_base.pospower.*;
 import jpos.*;
 import jpos.config.JposEntry;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.util.Arrays;
+
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static javax.swing.JOptionPane.*;
+import static jpos.POSPowerConst.*;
 
 /**
  * JposDevice based implementation of JavaPOS POSPower device service implementation for the battery power devices in
@@ -48,12 +50,13 @@ import java.util.Arrays;
  *     parameter "-t" of the shutdown command. Default: 1.</li>
  * </ul>
  */
+@SuppressWarnings("unused")
 public class Device extends JposDevice implements Runnable {
-    private static interface Kernel32Ext extends Kernel32 {
+    private interface Kernel32Ext extends Kernel32 {
         public boolean GetSystemPowerStatus(SYSTEM_POWER_STATUS lpSystemPowerStatus);
 
         @Structure.FieldOrder({"ACLineStatus", "BatteryFlag", "BatteryLifePercent", "SystemStatusFlag", "BatteryLifeTime", "BatteryFullLifeTime"})
-        public static class SYSTEM_POWER_STATUS extends Structure {
+        class SYSTEM_POWER_STATUS extends Structure {
             public byte ACLineStatus;
             public byte BatteryFlag;
             public byte BatteryLifePercent;
@@ -63,8 +66,9 @@ public class Device extends JposDevice implements Runnable {
         }
     }
 
-    private static interface PowrProf extends StdCallLibrary {
-        public boolean SetSuspendState(boolean hibernate, boolean force, boolean wakeupEventsDisabled);
+    private interface PowrProf extends StdCallLibrary {
+        @SuppressWarnings("UnusedReturnValue")
+        boolean SetSuspendState(boolean hibernate, boolean force, boolean wakeupEventsDisabled);
     }
 
     private static final byte ACLineStatusOffline = 0;
@@ -99,15 +103,14 @@ public class Device extends JposDevice implements Runnable {
             PowrProfLib = null;
             Kernel32Lib = null;
             if (System.getProperty("os.name").startsWith("Windows")) {
-                PowrProfLib = (PowrProf) Native.load("PowrProf", PowrProf.class, W32APIOptions.DEFAULT_OPTIONS);
-                Kernel32Lib = (Kernel32Ext) Native.load("kernel32", Kernel32Ext.class, W32APIOptions.DEFAULT_OPTIONS);
+                PowrProfLib = Native.load("PowrProf", PowrProf.class, W32APIOptions.DEFAULT_OPTIONS);
+                Kernel32Lib = Native.load("kernel32", Kernel32Ext.class, W32APIOptions.DEFAULT_OPTIONS);
             }
         } catch (Throwable e) {
             e.printStackTrace();
         }
     }
 
-    private static boolean ToBeFinished = false;
     private boolean Operational = true;
     private static Integer PollDelay = null;
 
@@ -121,21 +124,21 @@ public class Device extends JposDevice implements Runnable {
         return SecondsToFinish == null ? 1 : SecondsToFinish;
     }
 
-    private static SyncObject PollWaiter = new SyncObject();
+    private static final SyncObject PollWaiter = new SyncObject();
     private static SyncObject StartWaiter = null;
-    private Thread Poller = null;
+    private ThreadHandler Poller = null;
 
     private static int RemainingBatteryCapacity = BatteryLifePercentUnknown;
     private static int RemainingBatteryCapacityInSeconds = BatteryLifeSecondsUnknown;
-    private static int POSPowerSource = POSPowerConst.PWR_SOURCE_NA;
+    private static int POSPowerSource = PWR_SOURCE_NA;
     private static byte BatteryFlags = ~0;
     private static int ShutdownDelay;
     private static long NoACTick = 0;
 
     private static int OpenCount = 0;
 
-    private long[] AllowedLow = {0, 33};      // Low threshold 33%, see Win32 documentation.
-    private long[] AllowedCritical = {0, 5};  // Critical low threshold 5%, see Win32 documentation.
+    private final long[] AllowedLow = {0, 33};      // Low threshold 33%, see Win32 documentation.
+    private final long[] AllowedCritical = {0, 5};  // Critical low threshold 5%, see Win32 documentation.
 
     /**
      * The device implementation. See parent for further details.
@@ -154,7 +157,6 @@ public class Device extends JposDevice implements Runnable {
         super.checkProperties(entry);
         try {
             Object o;
-            int val;
             if ((o = entry.getPropertyValue("PollDelay")) != null && (PollDelay == null || Integer.parseInt(o.toString()) < PollDelay))
                 PollDelay = Integer.parseInt(o.toString());
             if ((o = entry.getPropertyValue("SecondsToFinish")) != null && (SecondsToFinish == null || Integer.parseInt(o.toString()) > SecondsToFinish))
@@ -166,7 +168,7 @@ public class Device extends JposDevice implements Runnable {
 
     @Override
     public void run() {
-        while (!ToBeFinished) {
+        while (!Poller.ToBeFinished) {
             try {
                 int oldcapacity = RemainingBatteryCapacity;
                 int oldseconds = RemainingBatteryCapacityInSeconds;
@@ -190,14 +192,15 @@ public class Device extends JposDevice implements Runnable {
         }
     }
 
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     private void checkShutDown() throws JposException {
         synchronized (Poller) {
             if (NoACTick != 0 && ShutdownDelay != 0 && System.currentTimeMillis() - NoACTick > ShutdownDelay) {
                 NoACTick = 0;
-                doShutdown("s");
+                doShutdown("-s");
                 JposCommonProperties props = getPropertySetInstance(POSPowers, 0, 0);
                 if (props != null)
-                    handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, POSPowerConst.PWR_SUE_SHUTDOWN));
+                    handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, PWR_SUE_SHUTDOWN));
             }
         }
     }
@@ -205,8 +208,8 @@ public class Device extends JposDevice implements Runnable {
     private void doShutdown(String s) {
         Process process;
         try {
-            if ("s".equals(s) || "r".equals(s))
-                process = Runtime.getRuntime().exec("shutdown.exe -" + s + " -t " + getSecondsToFinish());
+            if ("-s".equals(s) || "-r".equals(s))
+                process = Runtime.getRuntime().exec(new String[]{"shutdown.exe", s, "-t", String.valueOf(getSecondsToFinish())});
             else
                 return;
             process.waitFor();
@@ -215,30 +218,31 @@ public class Device extends JposDevice implements Runnable {
         }
     }
 
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     private void updateBatteryCapacityAndPowerSource(Kernel32Ext.SYSTEM_POWER_STATUS powerstate) throws IOException {
         if (!Kernel32Lib.GetSystemPowerStatus(powerstate))
             throw new IOException("GetSystemPowerStatus error " + Kernel32Lib.GetLastError());
         synchronized (Poller) {
             if (powerstate.BatteryFlag == BatteryFlagUnknownState || (powerstate.BatteryFlag & BatteryFlagNoBattery) != 0) {
                 RemainingBatteryCapacityInSeconds = RemainingBatteryCapacity = 0;
-                POSPowerSource = POSPowerConst.PWR_SOURCE_NA;
+                POSPowerSource = PWR_SOURCE_NA;
                 BatteryFlags = BatteryFlagCritical;
             } else {
                 RemainingBatteryCapacity = powerstate.BatteryLifePercent;
                 RemainingBatteryCapacityInSeconds = powerstate.BatteryLifeTime;
-                POSPowerSource = POSPowerConst.PWR_SOURCE_NA;
+                POSPowerSource = PWR_SOURCE_NA;
                 switch (powerstate.ACLineStatus) {
-                    case ACLineStatusOffline:
-                        POSPowerSource = POSPowerConst.PWR_SOURCE_BATTERY;
+                    case ACLineStatusOffline -> {
+                        POSPowerSource = PWR_SOURCE_BATTERY;
                         if (NoACTick == 0)
                             NoACTick = System.currentTimeMillis();
-                        break;
-                    case ACLineStatusOnline:
-                        POSPowerSource = POSPowerConst.PWR_SOURCE_AC;
+                    }
+                    case ACLineStatusOnline -> {
+                        POSPowerSource = PWR_SOURCE_AC;
                         NoACTick = 0;
-                        break;
+                    }
                 }
-                BatteryFlags = (byte) (powerstate.BatteryFlag & (BatteryFlagCritical & BatteryFlagLow));
+                BatteryFlags = (byte) (powerstate.BatteryFlag & (BatteryFlagCritical | BatteryFlagLow));
             }
         }
     }
@@ -247,16 +251,16 @@ public class Device extends JposDevice implements Runnable {
         JposCommonProperties props = getPropertySetInstance(POSPowers, 0, 0);
         if (props != null) {
             if (oldsource != POSPowerSource)
-                handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, POSPowerConst.PWR_SUE_PWR_SOURCE, POSPowerSource));
+                handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, PWR_SUE_PWR_SOURCE, POSPowerSource));
             if (oldcapacity != RemainingBatteryCapacity)
-                handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, POSPowerConst.PWR_SUE_BAT_CAPACITY_REMAINING, RemainingBatteryCapacity));
+                handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, PWR_SUE_BAT_CAPACITY_REMAINING, RemainingBatteryCapacity));
             if (oldseconds != RemainingBatteryCapacityInSeconds)
-                handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, POSPowerConst.PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS, RemainingBatteryCapacityInSeconds));
+                handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS, RemainingBatteryCapacityInSeconds));
             if (oldflags != BatteryFlags) {
                 if (((BatteryFlags & ~oldflags) & BatteryFlagCritical) != 0)
-                    handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, POSPowerConst.PWR_SUE_BAT_CRITICAL, 0));
+                    handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, PWR_SUE_BAT_CRITICAL, 0));
                 else if (((BatteryFlags & ~oldflags) & BatteryFlagLow) != 0)
-                    handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, POSPowerConst.PWR_SUE_BAT_LOW, 0));
+                    handleEvent(new POSPowerStatusUpdateEvent(props.EventSource, PWR_SUE_BAT_LOW, 0));
             }
         }
     }
@@ -289,6 +293,7 @@ public class Device extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings("SynchronizeOnNonFinalField")
         public void initOnOpen() {
             super.initOnOpen();
             synchronized (Poller) {
@@ -303,16 +308,15 @@ public class Device extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings("SynchronizeOnNonFinalField")
         public void open() throws JposException {
-            int count;
             synchronized (Device) {
-                if ((count = getModifiedOpenCount(true)) == 1) {
+                if (getModifiedOpenCount(true) == 1) {
                     SyncObject waiter = StartWaiter = new SyncObject();
-                    ToBeFinished = false;
-                    Poller = new Thread((Device) Device);
+                    Poller = new ThreadHandler("POSPowerPoller", Device.this);
                     Poller.setName("POSPower");
                     Poller.start();
-                    waiter.suspend(SyncObject.INFINITE);
+                    waiter.suspend(INFINITE);
                 }
             }
             check(!Operational, JposConst.JPOS_E_NOSERVICE, "Device not working");
@@ -320,17 +324,13 @@ public class Device extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings("SynchronizeOnNonFinalField")
         public void close() throws JposException {
-            int count;
             synchronized (Device) {
-                if ((count = getModifiedOpenCount(false)) == 0) {
-                    ToBeFinished = true;
+                if (getModifiedOpenCount(false) == 0) {
+                    Poller.ToBeFinished = true;
                     PollWaiter.signal();
-                    try {
-                        Poller.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    Poller.waitFinished();
                 }
             }
             super.close();
@@ -344,7 +344,7 @@ public class Device extends JposDevice implements Runnable {
                 typestr = "External";
             else if (level == JposConst.JPOS_CH_INTERACTIVE) {
                 typestr = "Interactive";
-                synchronizedMessageBox("CheckHealth result:\n" + typestr + result, "CheckHealth", JOptionPane.INFORMATION_MESSAGE);
+                synchronizedMessageBox("CheckHealth result:\n" + typestr + result, "CheckHealth", INFORMATION_MESSAGE);
             }
             CheckHealthText = typestr + result;
         }
@@ -372,6 +372,7 @@ public class Device extends JposDevice implements Runnable {
         }
 
         @Override
+        @SuppressWarnings("SynchronizeOnNonFinalField")
         public void enforcedShutdownDelayTime(int delay) throws JposException {
             synchronized (Device) {
                 super.enforcedShutdownDelayTime(delay);
@@ -391,17 +392,17 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void restartPOS() throws JposException {
-            doShutdown("r");
+            doShutdown("-r");
         }
 
         @Override
         public void shutdownPOS() throws JposException {
-            doShutdown("s");
+            doShutdown("-s");
         }
 
         @Override
         public void standbyPOS(int reason) throws JposException {
-            if (reason == POSPowerConst.PWR_REASON_REQUEST)
+            if (reason == PWR_REASON_REQUEST)
                 PowrProfLib.SetSuspendState(false, true, false);
             else
                 throw new JposException(JposConst.JPOS_E_ILLEGAL, "Not in current context (no suspend status update event)");
@@ -409,7 +410,7 @@ public class Device extends JposDevice implements Runnable {
 
         @Override
         public void suspendPOS(int reason) throws JposException {
-            if (reason == POSPowerConst.PWR_REASON_REQUEST)
+            if (reason == PWR_REASON_REQUEST)
                 PowrProfLib.SetSuspendState(true, true, true);
             else
                 throw new JposException(JposConst.JPOS_E_ILLEGAL, "Not in current context (no suspend status update event)");
@@ -418,12 +419,9 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public DirectIO directIO(int cmd, int[] data, Object obj) throws JposException {
             switch (cmd) {
-                case JOptionPane.ERROR_MESSAGE:
-                case JOptionPane.INFORMATION_MESSAGE:
-                case JOptionPane.WARNING_MESSAGE:
-                case JOptionPane.QUESTION_MESSAGE:
-                case JOptionPane.PLAIN_MESSAGE:
+                case ERROR_MESSAGE, INFORMATION_MESSAGE, WARNING_MESSAGE, QUESTION_MESSAGE, PLAIN_MESSAGE -> {
                     return super.directIO(cmd, data, obj);
+                }
             }
             throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid command: " + cmd);
         }

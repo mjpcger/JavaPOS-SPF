@@ -18,29 +18,23 @@
 package de.gmxhome.conrad.jpos.jpos_base.pinpad;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
-import jpos.*;
+import jpos.PINPadConst;
+
+import static jpos.PINPadConst.*;
 
 
 /**
  * Data event implementation for PINPad devices.
  */
 public class PINPadDataEvent extends JposDataEvent {
-    private String AdditionalSecurityInformation, EncryptedPIN;
+    private final String AdditionalSecurityInformation, EncryptedPIN;
 
     /**
-     * Since PINPadConst.PPAD_TIMEOUT is missing in current JavaPOS versions, this property can be used instead.
-     * <br>Until this bug will be fixed, PPAD_TIMEOUT will be set to 3. When the bug will be fixed, PPAD_TIMEOUT will have
-     * the value of PINPadConst.PPAD_TIMEOUT.
+     * Since PINPadConst.PPAD_TIMEOUT was missing in previous JavaPOS versions, this property could be used instead.
+     * Deprecated: Use PPAD_TIMEOUT from PINPadConst instead.
      */
-    static final public int PPAD_TIMEOUT = getPPAD_TIMEOUT();
-
-    private static int getPPAD_TIMEOUT() {
-        int ret = 3;
-        try {
-            ret = (int)(PINPadConst.class.getField("PPAD_TIMEOUT").get(null));
-        } catch (Exception e) {}
-        return ret;
-    }
+    @Deprecated
+    static final public int PPAD_TIMEOUT = PINPadConst.PPAD_TIMEOUT;
 
     /**
      * Constructor. Parameters passed to base class unchanged.
@@ -75,9 +69,9 @@ public class PINPadDataEvent extends JposDataEvent {
     public String toLogString() {
         int state = getStatus();
         String statestr;
-        if (state == PINPadConst.PPAD_SUCCESS)
+        if (state == PPAD_SUCCESS)
             statestr = "SUCCESS";
-        else if (state == PINPadConst.PPAD_CANCEL)
+        else if (state == PPAD_CANCEL)
             statestr = "CANCEL";
         else if (state == PPAD_TIMEOUT)
             statestr = "TIMEOUT";

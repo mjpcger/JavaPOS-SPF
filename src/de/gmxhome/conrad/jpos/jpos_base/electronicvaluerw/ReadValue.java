@@ -31,7 +31,7 @@ public class ReadValue extends JposInputRequest {
     public int getSequenceNumber() {
         return SequenceNumber;
     }
-    private int SequenceNumber;
+    private final int SequenceNumber;
 
     /**
      * Returns copy of maximum waiting time parameter (operation timeout).
@@ -40,7 +40,7 @@ public class ReadValue extends JposInputRequest {
     public int getTimeout() {
         return Timeout;
     }
-    private int Timeout;
+    private final int Timeout;
 
     /**
      * Constructor. Stores given parameters for later use.

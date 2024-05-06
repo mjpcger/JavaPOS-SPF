@@ -30,7 +30,7 @@ public class PrintContentFile extends JposOutputRequest {
     public String getFileName() {
         return FileName;
     }
-    private String FileName;
+    private final String FileName;
 
     /**
      * Constructor. Stores given parameters for later use.

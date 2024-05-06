@@ -22,7 +22,7 @@ import jpos.*;
  * Output request executor for FiscalPrinter method PrintRecVoid.
  */
 public class PrintRecVoid extends PrePostOutputRequest {
-    private String Description;
+    private final String Description;
 
     /**
      * FiscalPrinter method parameter description, see method PrintRecVoid.

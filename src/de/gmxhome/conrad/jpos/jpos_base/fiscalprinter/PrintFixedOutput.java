@@ -18,11 +18,13 @@ package de.gmxhome.conrad.jpos.jpos_base.fiscalprinter;
 
 import jpos.*;
 
+import static jpos.FiscalPrinterConst.*;
+
 /**
  * Output request executor for FiscalPrinter method PrintFiscalDocumentLine.
  */
 public class PrintFixedOutput extends OutputRequest {
-    private int Station = FiscalPrinterConst.FPTR_S_RECEIPT;
+    private int Station = FPTR_S_RECEIPT;
 
     /**
      * FiscalPrinter method BeginFixedOutput parameter station, see UPOS specification. Default:
@@ -40,10 +42,10 @@ public class PrintFixedOutput extends OutputRequest {
      * had been specified in the corresponding BeginFixedOutput method call.
      */
     public void changeToSlip() {
-        Station = FiscalPrinterConst.FPTR_S_SLIP;
+        Station = FPTR_S_SLIP;
     }
 
-    private int DocumentType;
+    private final int DocumentType;
 
     /**
      * FiscalPrinter method PrintFixedOutput parameter lineNumber, see UPOS specification.
@@ -53,7 +55,7 @@ public class PrintFixedOutput extends OutputRequest {
         return DocumentType;
     }
 
-    private int LineNumber;
+    private final int LineNumber;
 
     /**
      * FiscalPrinter method PrintFixedOutput parameter documentLine, see UPOS specification.
@@ -63,7 +65,7 @@ public class PrintFixedOutput extends OutputRequest {
         return LineNumber;
     }
 
-    private String Data;
+    private final String Data;
 
     /**
      * FiscalPrinter method PrintFixedOutput parameter data, see UPOS specification.

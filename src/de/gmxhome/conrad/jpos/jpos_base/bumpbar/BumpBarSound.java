@@ -2,8 +2,9 @@ package de.gmxhome.conrad.jpos.jpos_base.bumpbar;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
 import de.gmxhome.conrad.jpos.jpos_base.UnitOutputRequest;
-import jpos.JposConst;
 import jpos.JposException;
+
+import static jpos.JposConst.*;
 
 /**
  * Output request executor for BumpBar method BumpBarSound.
@@ -17,7 +18,7 @@ public class BumpBarSound extends UnitOutputRequest {
         return Frequency;
     }
 
-    private int Frequency;
+    private final int Frequency;
 
     /**
      * Retrieves parameter duration of method BumpBarSound. See UPOS specification for further information.
@@ -27,7 +28,7 @@ public class BumpBarSound extends UnitOutputRequest {
         return Duration;
     }
 
-    private int Duration;
+    private final int Duration;
 
     /**
      * Retrieves parameter numberOfCycles of method BumpBarSound. See UPOS specification for further information.
@@ -37,7 +38,7 @@ public class BumpBarSound extends UnitOutputRequest {
         return NumberOfCycles;
     }
 
-    private int NumberOfCycles;
+    private final int NumberOfCycles;
 
     /**
      * Retrieves parameter interSoundWait of method BumpBarSound. See UPOS specification for further information.
@@ -47,7 +48,7 @@ public class BumpBarSound extends UnitOutputRequest {
         return InterSoundWait;
     }
 
-    private int InterSoundWait;
+    private final int InterSoundWait;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -73,7 +74,7 @@ public class BumpBarSound extends UnitOutputRequest {
         if (EndSync == null) {
             checkUnitsOnline();
             int errunits = svc.validateTone(getUnits());
-            svc.check(errunits != 0, errunits, JposConst.JPOS_E_FAILURE, 0, "Selected units do not support bump bar sound: " + errunits, EndSync != null);
+            svc.check(errunits != 0, errunits, JPOS_E_FAILURE, 0, "Selected units do not support bump bar sound: " + errunits, EndSync != null);
         }
         svc.BumpBarInterface.bumpBarSound(this);
     }

@@ -20,6 +20,9 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * CashDrawer service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
@@ -28,16 +31,15 @@ import jpos.services.*;
  *     <li>DrawerBeepVolume: Volume of drawer beep. Valid values are from 0 to 127. Default: 100.</li>
  * </ul>
  */
-public class CashDrawerService extends JposBase implements CashDrawerService115, Runnable {
+public class CashDrawerService extends JposBase implements CashDrawerService116, Runnable {
     /**
      * Instance of a class implementing the CashDrawerInterface for cash drawer specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public CashDrawerInterface CashDrawerInterface;
 
-    private CashDrawerProperties Data;
+    private final CashDrawerProperties Data;
     private MySoundPlayer Sound;
-    private int DrawerBeepVolume;
 
     /**
      * Constructor. Stores property set and device implementation object.
@@ -45,9 +47,9 @@ public class CashDrawerService extends JposBase implements CashDrawerService115,
      * @param props  Device service property set
      * @param device Device implementation object
      */
+    @SuppressWarnings("deprecation")
     public CashDrawerService(CashDrawerProperties props, JposDevice device) {
         super(props, device);
-        DrawerBeepVolume = device.DrawerBeepVolume;
         device.DrawerBeepVolume = 100;
         Data = props;
     }
@@ -82,10 +84,10 @@ public class CashDrawerService extends JposBase implements CashDrawerService115,
     }
 
     private class MySoundPlayer extends SoundPlayer {
-        private int BeepTimeout;
-        private int BeepFrequency;
-        private int BeepDuration;
-        private int BeepDelay;
+        private final int BeepTimeout;
+        private final int BeepFrequency;
+        private final int BeepDuration;
+        private final int BeepDelay;
 
         MySoundPlayer(int beepTimeout, int beepFrequency, int beepDuration, int beepDelay) {
             super(Data.LogicalName);
@@ -98,14 +100,15 @@ public class CashDrawerService extends JposBase implements CashDrawerService115,
 
     @Override
     public void waitForDrawerClose(int beepTimeout, int beepFrequency, int beepDuration, int beepDelay) throws JposException {
-        logPreCall("WaitForDrawerClose", "" + beepTimeout + ", " + beepFrequency + ", " + beepDuration + ", " + beepDelay);
+        logPreCall("WaitForDrawerClose", removeOuterArraySpecifier(new Object[]{
+                beepTimeout, beepFrequency, beepDuration, beepDelay}, Device.MaxArrayStringElements));
         checkEnabledUnclaimed();
         if (!Data.CapStatus)
             return;
-        Device.check(beepTimeout < 0 && beepTimeout != JposConst.JPOS_FOREVER, JposConst.JPOS_E_CLOSED, "Negative beep timeout");
-        Device.checkRange(beepFrequency, 10, 24000 , JposConst.JPOS_E_CLOSED, "beep frequency out of range: " + beepFrequency);
-        Device.check(beepDuration < 0 && beepDuration != JposConst.JPOS_FOREVER, JposConst.JPOS_E_CLOSED, "Negative beep duration");
-        Device.check(beepDelay < 0 && beepDelay != JposConst.JPOS_FOREVER, JposConst.JPOS_E_CLOSED, "Negative beep delay");
+        check(beepTimeout < 0 && beepTimeout != JPOS_FOREVER, JPOS_E_CLOSED, "Negative beep timeout");
+        checkRange(beepFrequency, 10, 24000 , JPOS_E_CLOSED, "beep frequency out of range: " + beepFrequency);
+        check(beepDuration < 0 && beepDuration != JPOS_FOREVER, JPOS_E_CLOSED, "Negative beep duration");
+        check(beepDelay < 0 && beepDelay != JPOS_FOREVER, JPOS_E_CLOSED, "Negative beep delay");
         if (Data.DrawerOpened) {
             Sound = new MySoundPlayer(beepTimeout, beepFrequency, beepDuration, beepDelay);
             new Thread(this, Data.LogicalName + ".WaitForDrawerCloseHandler").start();
@@ -128,14 +131,17 @@ public class CashDrawerService extends JposBase implements CashDrawerService115,
      * thread, call Sound.clear() and set Sound = null.
      */
     @Override
+    @SuppressWarnings("BusyWait")
     public void run() {
         try {
-            if (Sound.BeepTimeout != JposConst.JPOS_FOREVER) {
-                Thread.sleep(Sound.BeepTimeout > 10 ? Sound.BeepTimeout : 10);
-                while (true) {
-                    Sound.startSound(Sound.BeepFrequency, Sound.BeepDuration, DrawerBeepVolume);
-                    Sound.waitFinished();
-                    Thread.sleep(Sound.BeepDelay);
+            if (Sound.BeepTimeout != JPOS_FOREVER) {
+                Thread.sleep(Math.max(Sound.BeepTimeout, 10));
+                while (Sound != null) {
+                    try {
+                        Sound.startSound(Sound.BeepFrequency, Sound.BeepDuration, Data.DrawerBeepVolume);
+                        Sound.waitFinished();
+                        Thread.sleep(Sound.BeepDelay);
+                    } catch (NullPointerException ignore) {}
                 }
             }
         }

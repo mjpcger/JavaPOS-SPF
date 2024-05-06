@@ -27,7 +27,7 @@ public class CashDeposit extends CheckCard {
      * @return Amount of money.
      */
     public long getAmount() { return Amount; }
-    private long Amount;
+    private final long Amount;
 
     /**
      * Constructor. Stores given parameters for later use.

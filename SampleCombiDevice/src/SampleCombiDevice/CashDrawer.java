@@ -20,14 +20,16 @@ package SampleCombiDevice;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.*;
 import jpos.*;
-import javax.swing.*;
 import static SampleCombiDevice.Device.*;
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static javax.swing.JOptionPane.*;
+import static jpos.JposConst.*;
 /**
  * Class implementing the CashDrawerInterface for the sample combi device.
  */
 public class CashDrawer extends CashDrawerProperties {
-    private Device Dev;
-    private static byte[] CmdDrawerOpen = {'D','O'};
+    private final Device Dev;
+    private static final byte[] CmdDrawerOpen = {'D','O'};
 
     /**
      * Constructor. Gets instance of Device to be used as communication object. Device index for
@@ -62,10 +64,10 @@ public class CashDrawer extends CashDrawerProperties {
 
     @Override
     public void checkHealth(int level) throws JposException {
-        if (!Dev.internalCheckHealth(this, level)) {
+        if (Dev.internalCheckHealth(this, level)) {
             try {
                 do {
-                    if (level == JposConst.JPOS_CH_EXTERNAL) {
+                    if (level == JPOS_CH_EXTERNAL) {
                         CheckHealthText = "External check: Error";
                         ((CashDrawerService) EventSource).openDrawer();
                         new SyncObject().suspend(200);
@@ -73,9 +75,7 @@ public class CashDrawer extends CashDrawerProperties {
                         CheckHealthText = "External check: OK";
                         break;
                     }
-                    if (drawerCheckHealthInteractive())
-                        break;
-                } while (false);
+                } while (drawerCheckHealthInteractive());
             } catch (JposException e) {
                 CheckHealthText += ", " + e.getMessage();
             }
@@ -86,30 +86,30 @@ public class CashDrawer extends CashDrawerProperties {
     private boolean drawerCheckHealthInteractive() throws JposException {
         SyncObject waiter = new SyncObject();
         CheckHealthText = "Interactive check: Error";
-        Dev.synchronizedMessageBox("Press OK to open the drawer", "CheckHealth Drawer", JOptionPane.INFORMATION_MESSAGE);
+        synchronizedMessageBox("Press OK to open the drawer", "CheckHealth Drawer", INFORMATION_MESSAGE);
         try {
             ((CashDrawerService) EventSource).openDrawer();
         } catch (JposException e) {
             CheckHealthText += ", " + e.getMessage();
-            Dev.synchronizedMessageBox("Drawer could not be opened:\n" + e.getMessage(), "CheckHealth Drawer", JOptionPane.ERROR_MESSAGE);
+            synchronizedMessageBox("Drawer could not be opened:\n" + e.getMessage(), "CheckHealth Drawer", ERROR_MESSAGE);
             return true;
         }
-        for (int i = 0; i > 10 && !DrawerOpened; i++) {
+        for (int i = 0; i < 10 && !DrawerOpened; i++) {
             waiter.suspend(200);
             if (Dev.DrawerIsOpen)
                 break;
         }
         if (!Dev.DrawerIsOpen) {
-            Dev.synchronizedMessageBox("Drawer could not be opened", "CheckHealth Drawer", JOptionPane.ERROR_MESSAGE);
+            synchronizedMessageBox("Drawer could not be opened", "CheckHealth Drawer", ERROR_MESSAGE);
             return true;
         }
-        Dev.synchronizedMessageBox("Close drawer to finish drawer check", "CheckHealth Drawer", JOptionPane.INFORMATION_MESSAGE);
+        synchronizedMessageBox("Close drawer to finish drawer check", "CheckHealth Drawer", INFORMATION_MESSAGE);
         waiter.suspend(200);
         if (Dev.DrawerIsOpen) {
-            Dev.synchronizedMessageBox("Drawer could not be closed", "CheckHealth Drawer", JOptionPane.ERROR_MESSAGE);
+            synchronizedMessageBox("Drawer could not be closed", "CheckHealth Drawer", ERROR_MESSAGE);
             return true;
         }
-        Dev.synchronizedMessageBox("Drawer check finished successfully", "CheckHealth Drawer", JOptionPane.INFORMATION_MESSAGE);
+        synchronizedMessageBox("Drawer check finished successfully", "CheckHealth Drawer", INFORMATION_MESSAGE);
         CheckHealthText = "Interactive check: OK";
         return false;
     }
@@ -118,24 +118,24 @@ public class CashDrawer extends CashDrawerProperties {
     public void openDrawer() throws JposException {
         int retry = 0;
         do {
-            Dev.sendCommand(CmdDrawerOpen, Dev.NoResponse);
-            if (Dev.sendCommand(Dev.CmdStatusRequest, Dev.RespFromStatus) == 0)
+            Dev.sendCommand(CmdDrawerOpen, NoResponse);
+            if (Dev.sendCommand(CmdStatusRequest, RespFromStatus) == 0)
                 continue;
             super.openDrawer();
             return;
         } while (++retry < Dev.MaxRetry);
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "No response on drawer open request");
+        throw new JposException(JPOS_E_ILLEGAL, "No response on drawer open request");
     }
 
     @Override
     public void waitForDrawerClose() throws JposException {
         attachWaiter();
         while (DrawerOpened && !Dev.DeviceIsOffline && DeviceEnabled) {
-            waitWaiter(SyncObject.INFINITE);
+            waitWaiter(INFINITE);
         }
         releaseWaiter();
-        check(Dev.DeviceIsOffline, JposConst.JPOS_E_OFFLINE, "Device offline");
-        check(!DeviceEnabled, JposConst.JPOS_E_ILLEGAL, "Device not enabled");
+        check(Dev.DeviceIsOffline, JPOS_E_OFFLINE, "Device offline");
+        check(!DeviceEnabled, JPOS_E_ILLEGAL, "Device not enabled");
         super.waitForDrawerClose();
     }
 }

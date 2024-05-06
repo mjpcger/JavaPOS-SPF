@@ -21,10 +21,16 @@ import jpos.config.*;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.*;
 import de.gmxhome.conrad.jpos.jpos_base.posprinter.*;
-import net.bplaced.conrad.log4jpos.Level;
 
 import java.io.*;
 import java.util.*;
+
+import static de.gmxhome.conrad.jpos.jpos_base.SerialIOProcessor.*;
+import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
+import static jpos.CashDrawerConst.*;
+import static jpos.JposConst.*;
+import static jpos.POSPrinterConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 
 /**
@@ -37,7 +43,7 @@ import java.util.*;
  *     <li>AdjustLineChars: Specifies whether setting RecLineChars sets RecLineChars to the given value (false) or to
  *     the maximum value allowed for the largest font that can print the specified number of characters per line.
  *     Default: true.</li>
- *     <li>AsyncProcessingCommandDelay: Delaybetween asynchronous commands in milliseconds . May be helpful for testing.
+ *     <li>AsyncProcessingCommandDelay: Delay between asynchronous commands in milliseconds . May be helpful for testing.
  *     Default: 0.</li>
  *     <li>Baudrate: Baud rate of the communication device. Must be one of the baud rate constants specified in the
  *     SerialIOProcessor class. Default: 9600 (SerialIOProcessor.BAUDRATE_9600).
@@ -71,9 +77,9 @@ import java.util.*;
  *     <br>This property may only be set if the communication with the device shall be made via serial port.</li>
  * </ul>
  */
+@SuppressWarnings("unused")
 public class Device extends JposDevice{
     private UniqueIOProcessor OutStream;
-    private boolean ToBeFinished;
     private static final String CharSetList = "997,998,999,1250,1251,1252,1253,1254,1257,65001";
     private static final String LineCharsList = "42,56";
     // Constants for status response byte. Naming: "Resp" + printer state word + drawer state word
@@ -84,19 +90,19 @@ public class Device extends JposDevice{
     private final static byte RespError = '8';
     private final static byte RespDrawerBit = 1;
     // Jpos.xml properties
-    private int Baudrate = SerialIOProcessor.BAUDRATE_9600;
-    private int Databits = SerialIOProcessor.DATABITS_8;
-    private int Stopbits = SerialIOProcessor.STOPBITS_2;
-    private int Parity = SerialIOProcessor.PARITY_NONE;
+    private int Baudrate = BAUDRATE_9600;
+    private int Databits = DATABITS_8;
+    private int Stopbits = STOPBITS_2;
+    private int Parity = PARITY_NONE;
     private Integer OwnPort = null;
-    private int LoggingType = UniqueIOProcessor.LoggingTypeEscapeString;
+    private int LoggingType = LoggingTypeEscapeString;
     private int PollDelay = 1000;
     private int MaxRetry = 2;
     private boolean UsbToSerial = false;
 
     private boolean MapCharacterSet = true;
     private boolean CoverOpen = false;
-    private final Integer[] OpenCount = new Integer[1];
+    private final Integer[] OpenCount = {null};
 
     /**
      * Get byte array for printer normalization command.
@@ -105,7 +111,7 @@ public class Device extends JposDevice{
      */
     byte[] getCmdNormalize(int cartridge) {
         byte[] retdata = Arrays.copyOf(CmdNormalize, CmdNormalize.length);
-        retdata[COLOR_INDEX] = (byte)(cartridge == POSPrinterConst.PTR_COLOR_PRIMARY ? '0' : '1');
+        retdata[COLOR_INDEX] = (byte)(cartridge == PTR_COLOR_PRIMARY ? '0' : '1');
         return retdata;
     }
     private final static byte[] CmdNormalize = {'\33', 'b', '0', '\33', 'c', '0', '\33', 'o', 'l', '\33', 'u', '0'};
@@ -134,7 +140,7 @@ public class Device extends JposDevice{
     /**
      * List of supported character sets.
      */
-    static final int CharSetListVals[] = {POSPrinterConst.PTR_CS_UNICODE,POSPrinterConst.PTR_CS_ASCII, POSPrinterConst.PTR_CS_ANSI,1250,1251,1252,1253,1254,1257,CS_UTF8};
+    static final int[] CharSetListVals = {PTR_CS_UNICODE,PTR_CS_ASCII, PTR_CS_ANSI,1250,1251,1252,1253,1254,1257,CS_UTF8};
 
     /**
      * Character width for font A and B in dots.
@@ -259,55 +265,53 @@ public class Device extends JposDevice{
         PhysicalDeviceDescription = "Sample printer simulator for virtual COM ports or TCP";
         PhysicalDeviceName = "Sample POSPrinter Simulator";
         OpenCount[0] = 0;
-        CapPowerReporting = JposConst.JPOS_PR_ADVANCED;
+        CapPowerReporting = JPOS_PR_ADVANCED;
     }
 
     @Override
+    @SuppressWarnings("resource")
     public void checkProperties(JposEntry entry) throws JposException {
         super.checkProperties(entry);
         try {
             new TcpClientIOProcessor(this, ID);
             OwnPort = 0;
-        } catch (JposException e) {}
+        } catch (JposException ignored) {}
         try {
             Object o;
             if ((o = entry.getPropertyValue("Baudrate")) != null) {
                 Baudrate = Integer.parseInt(o.toString());
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Baudrate");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Baudrate");
             }
             if ((o = entry.getPropertyValue("Databits")) != null) {
                 Databits = Integer.parseInt(o.toString());
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Databits");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Databits");
             }
             if ((o = entry.getPropertyValue("Stopbits")) != null) {
                 Stopbits = Integer.parseInt(o.toString());
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Stopbits");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Stopbits");
             }
             if ((o = entry.getPropertyValue("Parity")) != null) {
                 Parity = Integer.parseInt(o.toString());
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: Parity");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: Parity");
             }
             if ((o = entry.getPropertyValue("OwnPort")) != null) {
                 int port = Integer.parseInt(o.toString());
                 if (port < 0 || port > 0xffff)
                     throw new IOException("Invalid TCP port: " + o.toString());
                 if (OwnPort == null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: OwnPort");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: OwnPort");
                 OwnPort = port;
             }
             if ((o = entry.getPropertyValue("LoggingType")) != null) {
                 int type = Integer.parseInt(o.toString());
                 switch (type) {
-                    default:
-                        throw new IOException("Unsupported logging type: " + o.toString());
-                    case UniqueIOProcessor.LoggingTypeEscapeString:
-                    case UniqueIOProcessor.LoggingTypeHexString:
-                    case UniqueIOProcessor.LoggingTypeNoLogging:
-                        LoggingType = type;
+                    default -> throw new IOException("Unsupported logging type: " + o.toString());
+                    case LoggingTypeEscapeString, LoggingTypeHexString, LoggingTypeNoLogging ->
+                            LoggingType = type;
                 }
             }
             if ((o = entry.getPropertyValue("RequestTimeout")) != null)
@@ -319,7 +323,7 @@ public class Device extends JposDevice{
             if ((o = entry.getPropertyValue("UsbToSerial")) != null) {
                 UsbToSerial = Boolean.parseBoolean(o.toString());
                 if (OwnPort != null)
-                    throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property: UsbToSerial");
+                    throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property: UsbToSerial");
             }
             if ((o = entry.getPropertyValue("MapCharacterSet")) != null) {
                 MapCharacterSet = Boolean.parseBoolean(o.toString());
@@ -331,7 +335,7 @@ public class Device extends JposDevice{
                 AsyncProcessingCommandDelay = Integer.parseInt(o.toString());
             }
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid JPOS property", e);
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid JPOS property", e);
         }
     }
 
@@ -340,12 +344,12 @@ public class Device extends JposDevice{
         super.changeDefaults(props);
         props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "POSPrinter service for printer simulator";
-        props.CapCharacterSet = POSPrinterConst.PTR_CCS_UNICODE;
+        props.CapCharacterSet = PTR_CCS_UNICODE;
         props.CapCoverSensor = true;
         props.CapRec2Color = true;
         props.CapRecBarCode = false;
         props.CapRecBitmap = false;
-        props.CapRecColor = POSPrinterConst.PTR_COLOR_PRIMARY|POSPrinterConst.PTR_COLOR_CUSTOM1;
+        props.CapRecColor = PTR_COLOR_PRIMARY|PTR_COLOR_CUSTOM1;
         props.CapRecDwide = false;
         props.CapRecItalic = false;
         props.CapTransaction = true;
@@ -384,16 +388,17 @@ public class Device extends JposDevice{
             }
             try {
                 OutStream.write(request);
-            } catch (JposException e) {}
+            } catch (JposException ignored) {}
         }
     }
 
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     private void handleCommunicationError(String msg) {
         synchronized(this) {
-            closePort(false);
+            closePort();
             InIOError = true;
         }
-        log(Level.TRACE, ID + msg);
+        log(TRACE, ID + msg);
         LastUsedCodePageIndex = LastUsedFontIndex = -1;
         Online = false;
     }
@@ -413,164 +418,79 @@ public class Device extends JposDevice{
         }
     }
 
-    /**
-     * Status request thread. Tries to send a status request every PollDelay milliseconds. Starts StatusHandler thread
-     * after first request, even if successful. Stops StatusHandler before stopping itself.
-     */
-    class RequestSender extends Thread {
-        /**
-         * Flag to be set to force thread termination.
-         */
-        boolean ToBeFinished = false;
-        private StatusHandler Handler = null;
-
-        /**
-         * Constructor. Sets thread name.
-         */
-        RequestSender() {
-            super("RequestSender");
+    private void recvState(boolean firsttime) {
+        UniqueIOProcessor out;
+        synchronized (this) {
+            out = OutStream;
         }
-
-        @Override
-        public void run() {
-            while (!ToBeFinished) {
-                try {
-                    sendCommand(CmdStatusRequest);
-                } catch (JposException e) {}
-                if (Handler == null) {
-                    Handler = new StatusHandler();
-                    Handler.start();
-                }
-                PollWaiter.suspend(PollDelay);
-            }
-            Handler.ToBeFinished = true;
-            OfflineWaiter.signal();
-            closePort(false);
-            SendTask.ToBeFinished = true;
-            waitThreadFinished(Handler);
-        }
-    }
-
-    private void waitThreadFinished(Thread th) {
-        while (true) {
-            try {
-                th.join();
-                break;
-            } catch (InterruptedException e) {}
-        }
-    }
-
-    private RequestSender SendTask;
-    private SyncObject OfflineWaiter = new SyncObject();
-
-    /**
-     * Status handler thread, used for status check loop while device is opened.
-     */
-    class StatusHandler extends Thread {
-        /**
-         * Flag to be set to force thread termination.
-         */
-
-        boolean ToBeFinished = false;
-
-        /**
-         * Constructor. Sets thread name.
-         */
-        StatusHandler() {
-            super("StatusHandler");
-        }
-
-        @Override
-        public void run() {
-            boolean firsttime = true;
-            while (!ToBeFinished) {
-                boolean offline = Online;
-                boolean draweropen = DrawerOpen;
-                boolean coveropen = CoverOpen;
-                boolean inerror = PrinterError;
-                int paperstate = PaperState;
-                recvState(firsttime);
-                handleStatusChange(offline, inerror, draweropen, coveropen, paperstate);
-                if (StartWaiter != null) {
-                    SyncObject obj = StartWaiter;
-                    StartWaiter = null;
-                    obj.signal();
-                }
-                firsttime = false;
-            }
-            closePort(true);
-        }
-
-        private void recvState(boolean firsttime) {
-            UniqueIOProcessor out;
+        int timeout = PollDelay * MaxRetry + MaxRetry + RequestTimeout;
+        if (out == null) {
+            OfflineWaiter.suspend(firsttime ? timeout : INFINITE);
             synchronized (this) {
                 out = OutStream;
             }
-            int timeout = PollDelay * MaxRetry + MaxRetry + RequestTimeout;
-            if (out == null) {
-                OfflineWaiter.suspend(firsttime ? timeout : SyncObject.INFINITE);
-                synchronized (this) {
-                    out = OutStream;
-                }
-                if (out == null)
-                    return;
-            }
-            String msg;
-            try {
-                int count = out.available();
-                out.setTimeout(timeout);
-                byte[] data = count > 0 ? out.read(count) : out.read(1);
-                if (data != null && data.length > 0) {
-                    Online = true;
-                    setStatus(data[data.length - 1]);
-                    return;
-                }
-                msg = ": No response from sample printer";
-            } catch (JposException e) {
-                msg = ": IO error: " + e.getMessage();
-            }
-            handleCommunicationError(msg);
+            if (out == null)
+                return;
         }
+        String msg;
+        try {
+            int count = out.available();
+            out.setTimeout(timeout);
+            byte[] data = count > 0 ? out.read(count) : out.read(1);
+            if (data != null && data.length > 0) {
+                Online = true;
+                setStatus(data[data.length - 1]);
+                return;
+            }
+            msg = ": No response from sample printer";
+        } catch (JposException e) {
+            msg = ": IO error: " + e.getMessage();
+        }
+        handleCommunicationError(msg);
     }
+
+    private ThreadHandler SendTask;
+    private ThreadHandler StateTask;
+    private final SyncObject OfflineWaiter = new SyncObject();
 
     private void handleStatusChange(boolean offline, boolean inerror, boolean draweropen, boolean coveropen, int state) {
         JposCommonProperties props;
         if (offline != Online || inerror != PrinterError) {
             if ((props = getPropertySetInstance(CashDrawers, 0, 0)) != null) {
                 try {
-                    handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, !Online ? JposConst.JPOS_SUE_POWER_OFF : (PrinterError ? JposConst.JPOS_SUE_POWER_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE)));
-                } catch (JposException e) {}
+                    handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, !Online ? JPOS_SUE_POWER_OFF : (PrinterError ? JPOS_SUE_POWER_OFFLINE : JPOS_SUE_POWER_ONLINE)));
+                } catch (JposException ignored) {}
                 if (!Online) {
                     signalStatusWaits(CashDrawers[0]);
                 }
             }
             if ((props = getClaimingInstance(ClaimedPOSPrinter, 0)) != null) {
                 try {
-                    handleEvent(new POSPrinterStatusUpdateEvent(props.EventSource, !Online ? JposConst.JPOS_SUE_POWER_OFF : (PrinterError ? JposConst.JPOS_SUE_POWER_OFFLINE : JposConst.JPOS_SUE_POWER_ONLINE)));
-                } catch (JposException e) {}
+                    handleEvent(new POSPrinterStatusUpdateEvent(props.EventSource, !Online ? JPOS_SUE_POWER_OFF : (PrinterError ? JPOS_SUE_POWER_OFFLINE : JPOS_SUE_POWER_ONLINE)));
+                } catch (JposException ignored) {}
             }
         }
         if (Online && !PrinterError) {
             if (draweropen != DrawerOpen) {
                 if ((props = getPropertySetInstance(CashDrawers, 0, 0)) != null) {
                     try {
-                        handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, DrawerOpen ? CashDrawerConst.CASH_SUE_DRAWEROPEN : CashDrawerConst.CASH_SUE_DRAWERCLOSED));
-                    } catch (JposException e) {}
+                        handleEvent(new CashDrawerStatusUpdateEvent(props.EventSource, DrawerOpen ? CASH_SUE_DRAWEROPEN : CASH_SUE_DRAWERCLOSED));
+                    } catch (JposException ignored) {}
                 }
                 signalStatusWaits(CashDrawers[0]);
             }
             if (coveropen != CoverOpen) {
                 if ((props = getClaimingInstance(ClaimedPOSPrinter, 0)) != null) {
                     try {
-                        handleEvent(new POSPrinterStatusUpdateEvent(props.EventSource, CoverOpen ? POSPrinterConst.PTR_SUE_COVER_OPEN : POSPrinterConst.PTR_SUE_COVER_OK));
-                    } catch (JposException e) {}
+                        handleEvent(new POSPrinterStatusUpdateEvent(props.EventSource, CoverOpen ? PTR_SUE_COVER_OPEN : PTR_SUE_COVER_OK));
+                    } catch (JposException ignored) {}
                 }
             }
             if (state != PaperState) {
                 if ((props = getClaimingInstance(ClaimedPOSPrinter, 0)) != null) {
                     try {
-                        handleEvent(new POSPrinterStatusUpdateEvent(props.EventSource, PaperState == PaperOk ? POSPrinterConst.PTR_SUE_REC_PAPEROK : (PaperState == PaperEnd ? POSPrinterConst.PTR_SUE_REC_EMPTY : POSPrinterConst.PTR_SUE_REC_NEAREMPTY)));
-                    } catch (JposException e) {}
+                        handleEvent(new POSPrinterStatusUpdateEvent(props.EventSource, PaperState == PaperOk ? PTR_SUE_REC_PAPEROK : (PaperState == PaperEnd ? PTR_SUE_REC_EMPTY : PTR_SUE_REC_NEAREMPTY)));
+                    } catch (JposException ignored) {}
                 }
             }
         }
@@ -578,42 +498,29 @@ public class Device extends JposDevice{
 
     /**
      * Closes the port
-     * @param doFlush Specifies whether the output stream shall be flushed befor close.
-     * @return In case of an IO error, the corresponding exception. Otherwise null
+     *
      */
-    private JposException closePort(boolean doFlush) {
-        JposException e = null;
+    private synchronized void closePort() {
         if (OutStream != null) {
-            for (int i = 0; i < 2; i++) {
-                try {
-                    switch (i) {
-                        case 0:
-                            if (doFlush)
-                                OutStream.flush();
-                            i++;
-                        case 1:
-                            OutStream.close();
-                    }
-                } catch (JposException ee) {
-                    e = ee;
-                }
-            }
+            try {
+                OutStream.close();
+            } catch (JposException ignore) {}
             OutStream = null;
         }
-        return e;
     }
 
     private void stopSendTask() {
         SendTask.ToBeFinished = true;
         PollWaiter.signal();
-        waitThreadFinished(SendTask);
+        SendTask.waitFinished();
     }
 
     /**
      * Port initialization.
      * @return In case of initialization error, the exception. Otherwise null.
      */
-    private JposException initPort() {
+    @SuppressWarnings("resource")
+    private synchronized JposException initPort() {
         try {
             if (OwnPort == null) {
                 SerialIOProcessor ser;
@@ -643,10 +550,10 @@ public class Device extends JposDevice{
      */
     void updateCommonStates(JposCommonProperties dev, boolean enable) {
         if (enable) {
-            if (dev.PowerNotify == JposConst.JPOS_PN_ENABLED) {
-                dev.PowerState = !Online ? JposConst.JPOS_PS_OFF : (PrinterError ? JposConst.JPOS_PS_OFFLINE : JposConst.JPOS_PS_ONLINE);
+            if (dev.PowerNotify == JPOS_PN_ENABLED) {
+                dev.PowerState = !Online ? JPOS_PS_OFF : (PrinterError ? JPOS_PS_OFFLINE : JPOS_PS_ONLINE);
             } else
-                dev.PowerState = JposConst.JPOS_PS_UNKNOWN;
+                dev.PowerState = JPOS_PS_UNKNOWN;
         }
     }
 
@@ -655,12 +562,14 @@ public class Device extends JposDevice{
      * @param timeout Maximum time for communication startup
      * @return New value of OpenCount.
      */
+    @SuppressWarnings("UnusedReturnValue")
     int startCommunication(int timeout) {
         synchronized (OpenCount) {
             if (OpenCount[0] == 0) {
-                ToBeFinished = false;
                 SyncObject obj = StartWaiter = new SyncObject();
-                (SendTask = new RequestSender()).start();
+                (SendTask = new ThreadHandler("RequestSender", () -> {
+                    handleDeviceIO(obj);
+                })).start();
                 obj.suspend(timeout);
                 OpenCount[0] = 1;
             }
@@ -670,15 +579,54 @@ public class Device extends JposDevice{
         }
     }
 
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
+    private void handleDeviceIO(SyncObject obj) {
+        StateTask = null;
+        while (!SendTask.ToBeFinished) {
+            try {
+                sendCommand(CmdStatusRequest);
+            } catch (JposException ignored) {
+            }
+            if (StateTask == null)
+                (StateTask = new ThreadHandler("StatusHandler", () -> { handleStatusMessages(obj); })).start();
+            PollWaiter.suspend(PollDelay);
+        }
+        if (StateTask != null) {
+            StateTask.ToBeFinished = true;
+            OfflineWaiter.signal();
+            closePort();
+            StateTask.waitFinished();
+        }
+    }
+
+    private void handleStatusMessages(SyncObject obj) {
+        boolean firsttime = true;
+        while (!StateTask.ToBeFinished) {
+            boolean offline = Online;
+            boolean draweropen = DrawerOpen;
+            boolean coveropen = CoverOpen;
+            boolean inerror = PrinterError;
+            int paperstate = PaperState;
+            recvState(firsttime);
+            handleStatusChange(offline, inerror, draweropen, coveropen, paperstate);
+            if (StartWaiter != null) {
+                SyncObject waiter = StartWaiter;
+                StartWaiter = null;
+                waiter.signal();
+            }
+            firsttime = false;
+        }
+        obj.signal();
+    }
+
     /**
      * If OpenCount = 1, stops comminucation with sample printer. If OpenCount &gt; 0, decrements OpenCount.
      * @return New value of OpenCount.
      */
+    @SuppressWarnings("UnusedReturnValue")
     int stopCommunication() {
         synchronized(OpenCount) {
             if (OpenCount[0] == 1) {
-                SendTask.ToBeFinished = true;
-                PollWaiter.signal();
                 stopSendTask();
             }
             if (OpenCount[0] > 0)

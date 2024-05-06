@@ -21,6 +21,9 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.config.JposEntry;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+
 /**
  * General part of VideoCapture factory for JPOS devices using this framework.
  */
@@ -36,12 +39,10 @@ public class Factory extends JposDeviceFactory {
      */
     public VideoCaptureService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         VideoCaptureProperties props = dev.getVideoCaptureProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_NOSERVICE, "Missing implementation of getVideoCaptureProperties()");
+        validateJposConfiguration(props, dev, dev.ClaimedVideoCapture, entry);
         VideoCaptureService service = (VideoCaptureService) (props.EventSource = new VideoCaptureService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedVideoCapture;
         dev.changeDefaults(props);
-        JposDevice.check(!props.CapPhoto && !props.CapVideo, JposConst.JPOS_E_NOSERVICE, "Either video or photo support is mandatory for the device class");
+        check(!props.CapPhoto && !props.CapVideo, JPOS_E_NOSERVICE, "Either video or photo support is mandatory for the device class");
         props.addProperties(dev.VideoCaptures);
         service.DeviceInterface = service.VideoCapture = props;
         return service;

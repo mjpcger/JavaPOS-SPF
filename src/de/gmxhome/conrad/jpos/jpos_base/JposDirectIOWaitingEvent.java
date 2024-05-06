@@ -23,7 +23,7 @@ package de.gmxhome.conrad.jpos.jpos_base;
  * whenever the callback may change data or obj.
  */
 public class JposDirectIOWaitingEvent extends JposDirectIOEvent{
-    private SyncObject Waiter = new SyncObject();
+    private final SyncObject Waiter = new SyncObject();
 
     /**
      * Synchronization object, will be signalled after the event callback has been finished.

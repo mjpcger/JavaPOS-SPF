@@ -21,18 +21,22 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 import jpos.services.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.BeltConst.*;
+import static jpos.JposConst.*;
+
 /**
  * Belt service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
  */
-public class BeltService extends JposBase implements BeltService115 {
+public class BeltService extends JposBase implements BeltService116 {
     /**
      * Instance of a class implementing the BeltInterface for belt specific setter and method calls bound
      * to the property set. Almost always the same object as Data.
      */
     public BeltInterface BeltInterface;
 
-    private BeltProperties Data;
+    private final BeltProperties Data;
 
     /**
      * Constructor. Stores given property set and device implementation object.
@@ -208,7 +212,7 @@ public class BeltService extends JposBase implements BeltService115 {
     public void setAutoStopBackward(boolean b) throws JposException {
         logPreSet("AutoStopBackward");
         checkOpened();
-        Device.check(!Data.CapAutoStopBackward && b, JposConst.JPOS_E_ILLEGAL, "Device does not support AutoStopBackward");
+        check(!Data.CapAutoStopBackward && b, JPOS_E_ILLEGAL, "Device does not support AutoStopBackward");
         checkNoChangedOrClaimed(Data.AutoStopBackward, b);
         BeltInterface.autoStopBackward(b);
         logSet("AutoStopBackward");
@@ -220,7 +224,7 @@ public class BeltService extends JposBase implements BeltService115 {
         logPreSet("AutoStopBackwardDelayTime");
         checkOpened();
         if (Data.CapAutoStopBackward) {
-            Device.check(i < 0 && i != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Device does not support negative AutoStopBackwardDelayTime");
+            check(i < 0 && i != JPOS_FOREVER, JPOS_E_ILLEGAL, "Device does not support negative AutoStopBackwardDelayTime");
             checkNoChangedOrClaimed(Data.AutoStopBackwardDelayTime, i);
             BeltInterface.autoStopBackwardDelayTime(i);
         }
@@ -231,7 +235,7 @@ public class BeltService extends JposBase implements BeltService115 {
     public void setAutoStopForward(boolean b) throws JposException {
         logPreSet("AutoStopForward");
         checkOpened();
-        Device.check(!Data.CapAutoStopForward, JposConst.JPOS_E_ILLEGAL, "Device does not support AutoStopForward");
+        check(!Data.CapAutoStopForward, JPOS_E_ILLEGAL, "Device does not support AutoStopForward");
         checkNoChangedOrClaimed(Data.AutoStopForward, b);
         BeltInterface.autoStopForward(b);
         logSet("AutoStopForward");
@@ -242,7 +246,7 @@ public class BeltService extends JposBase implements BeltService115 {
         logPreSet("AutoStopForwardDelayTime");
         checkOpened();
         if (Data.CapAutoStopForward) {
-            Device.check(i < 0 && i != JposConst.JPOS_FOREVER, JposConst.JPOS_E_ILLEGAL, "Device does not support negative AutoStopForwardDelayTime");
+            check(i < 0 && i != JPOS_FOREVER, JPOS_E_ILLEGAL, "Device does not support negative AutoStopForwardDelayTime");
             checkNoChangedOrClaimed(Data.AutoStopForwardDelayTime, i);
             BeltInterface.autoStopForwardDelayTime(i);
         }
@@ -251,30 +255,30 @@ public class BeltService extends JposBase implements BeltService115 {
 
     @Override
     public void adjustItemCount(int i, int i1) throws JposException {
-        logPreCall("AdjustItemCount", "" + i + ", " + i1);
+        logPreCall("AdjustItemCount", removeOuterArraySpecifier(new Object[]{i, i1}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.checkMember(i, new long[]{BeltConst.BELT_AIC_BACKWARD, BeltConst.BELT_AIC_FORWARD}, JposConst.JPOS_E_ILLEGAL, "Invalid direction: " + i);
-        Device.check(!Data.CapAutoStopBackwardItemCount && i == BeltConst.BELT_AIC_BACKWARD, JposConst.JPOS_E_ILLEGAL, "Unsupported direction: " + i);
-        Device.check(!Data.CapAutoStopForwardItemCount && i == BeltConst.BELT_AIC_FORWARD, JposConst.JPOS_E_ILLEGAL, "Unsupported direction: " + i);
+        checkMember(i, new long[]{BELT_AIC_BACKWARD, BELT_AIC_FORWARD}, JPOS_E_ILLEGAL, "Invalid direction: " + i);
+        check(!Data.CapAutoStopBackwardItemCount && i == BELT_AIC_BACKWARD, JPOS_E_ILLEGAL, "Unsupported direction: " + i);
+        check(!Data.CapAutoStopForwardItemCount && i == BELT_AIC_FORWARD, JPOS_E_ILLEGAL, "Unsupported direction: " + i);
         BeltInterface.adjustItemCount(i, i1);
         logCall("adjustItemCount");
     }
 
     @Override
     public void moveBackward(int i) throws JposException {
-        logPreCall("MoveBackward", "" + i);
+        logPreCall("MoveBackward", removeOuterArraySpecifier(new Object[]{i}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(!Data.CapMoveBackward, JposConst.JPOS_E_ILLEGAL, "Not supported");
-        Device.check(i <= 0 || i > Data.CapSpeedStepsBackward, JposConst.JPOS_E_ILLEGAL, "Speed out of range: " + i);
+        check(!Data.CapMoveBackward, JPOS_E_ILLEGAL, "Not supported");
+        check(i <= 0 || i > Data.CapSpeedStepsBackward, JPOS_E_ILLEGAL, "Speed out of range: " + i);
         BeltInterface.moveBackward(i);
         logCall("MoveBackward");
     }
 
     @Override
     public void moveForward(int i) throws JposException {
-        logPreCall("MoveForward", "" + i);
+        logPreCall("MoveForward", removeOuterArraySpecifier(new Object[]{i}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.check(i <= 0 || i > Data.CapSpeedStepsForward, JposConst.JPOS_E_ILLEGAL, "Speed out of range: " + i);
+        check(i <= 0 || i > Data.CapSpeedStepsForward, JPOS_E_ILLEGAL, "Speed out of range: " + i);
         BeltInterface.moveForward(i);
         logCall("MoveForward");
     }
@@ -289,11 +293,11 @@ public class BeltService extends JposBase implements BeltService115 {
 
     @Override
     public void resetItemCount(int i) throws JposException {
-        logPreCall("ResetItemCount", "" + i);
+        logPreCall("ResetItemCount", removeOuterArraySpecifier(new Object[]{i}, Device.MaxArrayStringElements));
         checkEnabled();
-        Device.checkMember(i, new long[]{BeltConst.BELT_RIC_BACKWARD, BeltConst.BELT_RIC_FORWARD}, JposConst.JPOS_E_ILLEGAL, "Invalid direction: " + i);
-        Device.check(!Data.CapAutoStopBackwardItemCount && i == BeltConst.BELT_RIC_BACKWARD, JposConst.JPOS_E_ILLEGAL, "Unsupported direction: " + i);
-        Device.check(!Data.CapAutoStopForwardItemCount && i == BeltConst.BELT_RIC_FORWARD, JposConst.JPOS_E_ILLEGAL, "Unsupported direction: " + i);
+        checkMember(i, new long[]{BELT_RIC_BACKWARD, BELT_RIC_FORWARD}, JPOS_E_ILLEGAL, "Invalid direction: " + i);
+        check(!Data.CapAutoStopBackwardItemCount && i == BELT_RIC_BACKWARD, JPOS_E_ILLEGAL, "Unsupported direction: " + i);
+        check(!Data.CapAutoStopForwardItemCount && i == BELT_RIC_FORWARD, JPOS_E_ILLEGAL, "Unsupported direction: " + i);
         BeltInterface.resetItemCount(i);
         logCall("ResetItemCount");
     }

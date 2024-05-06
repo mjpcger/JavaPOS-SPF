@@ -20,6 +20,10 @@ package de.gmxhome.conrad.jpos.jpos_base.belt;
 import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
 import de.gmxhome.conrad.jpos.jpos_base.JposDeviceFactory;
 import jpos.*;
+import jpos.config.JposEntry;
+
+import static jpos.JposConst.*;
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
 
 /**
  * General part of Belt factory for JPOS devices using this framework.
@@ -33,13 +37,24 @@ public class Factory extends JposDeviceFactory {
      * @return BeltService object.
      * @throws JposException If property set could not be retrieved.
      */
+    @Deprecated
     public BeltService addDevice(int index, JposDevice dev) throws JposException {
-        BeltService service;
+        return addDevice(index, dev, CurrentEntry);
+    }
+
+    /**
+     * Perform basic initialization of given device and property set. Links property
+     * set and driver to each other and sets driver specific property defaults.
+     * @param index Belt  property set index.
+     * @param dev Belt implementation instance derived from JposDevice to be used by the service.
+     * @param entry Property list from jpos configuration.
+     * @return BeltService object.
+     * @throws JposException If property set could not be retrieved.
+     */
+    public BeltService addDevice(int index, JposDevice dev, JposEntry entry) throws JposException {
         BeltProperties props = dev.getBeltProperties(index);
-        JposDevice.check(props == null, JposConst.JPOS_E_FAILURE, "Missing implementation of getBeltProperties()");
-        service = (BeltService) (props.EventSource = new BeltService(props, dev));
-        props.Device = dev;
-        props.Claiming = dev.ClaimedBelt;
+        validateJposConfiguration(props, dev, dev.ClaimedBelt, entry);
+        BeltService service = (BeltService) (props.EventSource = new BeltService(props, dev));
         dev.changeDefaults(props);
         props.addProperties(dev.Belts);
         service.DeviceInterface = service.BeltInterface = props;

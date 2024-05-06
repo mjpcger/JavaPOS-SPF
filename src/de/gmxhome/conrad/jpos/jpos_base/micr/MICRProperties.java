@@ -19,6 +19,10 @@ package de.gmxhome.conrad.jpos.jpos_base.micr;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static jpos.MICRConst.*;
+
 /**
  * Class containing the MICR specific properties, their default values and default implementations of
  * MICRInterface.
@@ -116,12 +120,12 @@ public class MICRProperties extends JposCommonProperties implements MICRInterfac
 
     @Override
     public void checkNoData() throws JposException {
-        Device.checkext(CheckType == 0, MICRConst.JPOS_EMICR_NODATA, "Data not present");
+        checkext(CheckType == 0, JPOS_EMICR_NODATA, "Data not present");
     }
 
     @Override
     public void checkBusy() throws JposException {
-        Device.check(State != JposConst.JPOS_S_IDLE, JposConst.JPOS_E_BUSY, "Output in progress or error detected");
+        check(State != JPOS_S_IDLE, JPOS_E_BUSY, "Output in progress or error detected");
     }
 
     @Override

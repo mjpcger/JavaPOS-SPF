@@ -30,7 +30,7 @@ public class AccessLog extends NumberTimeoutRequest {
     public int getType() {
         return Type;
     }
-    private int Type;
+    private final int Type;
 
     /**
      * Constructor. Stores given parameters for later use.

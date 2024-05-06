@@ -17,16 +17,19 @@
 package de.gmxhome.conrad.jpos.jpos_base;
 
 
-import jpos.JposConst;
 import jpos.JposException;
+import jpos.config.JposEntry;
 import jpos.events.JposEvent;
 import jpos.services.EventCallbacks;
-import net.bplaced.conrad.log4jpos.Level;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.JposConst.*;
+import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * Class containing common properties, property defaults, several values necessary for
@@ -65,15 +68,15 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     public String DeviceServiceDescription = "Default service implementation";
 
     /**
-     * UPOS property DeviceServiceVersion. Default: 1014000. Can be overwritten
+     * UPOS property DeviceServiceVersion. Default: 1016000. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public int DeviceServiceVersion = 1014000;
+    public int DeviceServiceVersion = 1016000;
 
     /**
      * UPOS property State.
      */
-    public int State = JposConst.JPOS_S_CLOSED;
+    public int State = JPOS_S_CLOSED;
 
     /**
      * UPOS property AsyncMode.
@@ -187,9 +190,28 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     public JposBase EventSource;
 
     /**
-     * Value of property AllowAlwaysSetProperties in jpos.xml for the specified device
+     * Storage for jpos.xml property AllowAlwaysSetProperties. Specifies how the service instance shall handle
+     * write access to writable properties while the device has not been claimed for exclusive-use devices:
+     * <br>If true, setting such properties will remain possible and it is up to the service how to handle the new value.
+     * Since no physical access to the device is allowed until the device has been claimed, the service can buffer the
+     * new value for later use after a successful call of method claim.
+     * <br>If false, only read access will be possible until the device has been claimed. If the application tries to
+     * change a writable property, a JposException will be thrown with error code E_NOTCLAIMED.
      */
     public boolean AllowAlwaysSetProperties = true;
+
+    /**
+     * Maximum time in milliseconds an event callback may block event processing (default: FOREVER). Only conforms to
+     * UPOS specification if FOREVER. lower values can lead to concurrent processing of event coroutines.
+     */
+    public int MaximumConfirmationEventWaitingTime = JPOS_FOREVER;
+
+    /**
+     * Specifies whether event handling conforms strictly to UPOS specification (all events handled in a first-in-first-out
+     * mammer) or not (data and input error can be bypassed by other events as long as DataEventEnabled is false). Since
+     * strict UPOS conformance is impractical, the default is false.
+     */
+    public boolean StrictFIFOEventHandling = false;
 
     /**
      * List containing SyncObject instances to be signalled after releasing a claimed object. Whenever a service
@@ -197,18 +219,18 @@ public abstract class JposCommonProperties implements JposBaseInterface {
      * and waits until the object will be signalled. During release or close, all objects within this list will be
      * signalled to allow all waiting instances to try claiming again.
      */
-    final public List<SyncObject> ClaimWaiters = new LinkedList<SyncObject>();
+    final public List<SyncObject> ClaimWaiters = new LinkedList<>();
 
     /**
      * Event list, holds at least events until they can be fired. As long as DataEventEnabled = false,
      * data events and (input) error events will be put into DataEventList instead.
      */
-    final public List<JposEvent> EventList = new LinkedList<JposEvent>();
+    final public List<JposEvent> EventList = new LinkedList<>();
 
     /**
      * Event list, holds all data and input error events until they can be fired.
      */
-    protected final List<JposEvent> DataEventList = new LinkedList<JposEvent>();
+    protected final List<JposEvent> DataEventList = new LinkedList<>();
 
     /**
      * List of all property sets sharing the same UPOS device.
@@ -256,7 +278,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     /**
      * Array holding the property sets of the device service that claimed this device class.
      */
-    public JposCommonProperties[] Claiming;
+    public JposCommonProperties[] Claiming = {null};
 
     /**
      * Holds the value to be set in StatusUpdateEvents fired due to FlagWhenIdle = true
@@ -266,15 +288,15 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     /**
      * Flag that specifies whether the device supports deprecated methods in cases where UPOS specifies that a service
      * may throw an exception with error code E_DEPRECATED. This is the case whenever deprecation started more than 2
-     * minor release numbers before the current UPOS release. Since this implementation is for UPOS release 1.14, this
-     * affects methods that are deprecated since UPOS version 1.11 or earlier.
+     * minor release numbers before the current UPOS release. Since this implementation is for UPOS release 1.16, this
+     * affects methods that are deprecated since UPOS version 1.13 or earlier.
      */
     public boolean AllowDeprecatedMethods = false;
 
     /**
      * Synchronization object for delayed status update event firing.
      */
-    SyncObject DelayedStatusUpdateEventWaiter = new SyncObject();
+    final SyncObject DelayedStatusUpdateEventWaiter = new SyncObject();
 
     /**
      * Delayed status update event for later firing.
@@ -284,7 +306,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     /**
      * List holding asynchronous output requests whenever service is in error state.
      */
-    public List<JposOutputRequest> SuspendedCommands = new ArrayList<JposOutputRequest>();
+    public List<JposOutputRequest> SuspendedCommands = new ArrayList<>();
 
     /**
      * Currently executed output requests if the service supports concurrent method execution. If a service supports
@@ -295,7 +317,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     /**
      * List holding asynchronous output requests which allow concurrent processing whenever service is in error state.
      */
-    public List<JposOutputRequest> SuspendedConcurrentCommands = new ArrayList<JposOutputRequest>();
+    public List<JposOutputRequest> SuspendedConcurrentCommands = new ArrayList<>();
 
     private SyncObject StatusWaiter = null;
 
@@ -328,7 +350,55 @@ public abstract class JposCommonProperties implements JposBaseInterface {
      */
     protected JposCommonProperties(int dev) {
         Index = dev;
-        Claiming = null;
+    }
+
+    /**
+     * Checks jpos entries for service specific jpos property values and set corresponding service values.
+     * @param entry JposEntry instance that contains all jpos properties for the device. Only service specific
+     *                      entries are of interest here, device specific entries should be processed by the corresponding
+     *                      checkProperties method of the device implementation derived from JposDevice.
+     * @throws JposException a service related property is invalid or a mandatory service related property is missing.
+     */
+    @SuppressWarnings("deprecation")
+    public void checkProperties(JposEntry entry) throws JposException {
+        try {
+            Object o = entry.getPropertyValue("AllowAlwaysSetProperties");
+            int val;
+            if (o != null)
+                Device.AllowAlwaysSetProperties = AllowAlwaysSetProperties = Boolean.parseBoolean(o.toString());
+            if ((o = entry.getPropertyValue("MaximumConfirmationEventWaitingTime")) != null && (val = Integer.parseInt(o.toString())) > 0)
+                Device.MaximumConfirmationEventWaitingTime = MaximumConfirmationEventWaitingTime = val;
+            if ((o = entry.getPropertyValue("StrictFIFOEventHandling")) != null)
+                Device.StrictFIFOEventHandling = StrictFIFOEventHandling = Boolean.parseBoolean(o.toString());
+            if ((o = entry.getPropertyValue("jposVersion")) != null) {
+                String[] versionparts = o.toString().split("\\.");
+                int version = 0;
+                for (int i = 0; i < 3; i++) {
+                    version *= 1000;
+                    if (i < versionparts.length) {
+                        int component = Integer.parseInt(versionparts[i]);
+                        checkRange(component, i < 2 ? 1 : 0, 999, JPOS_E_ILLEGAL, "Bad JposVersion: " + o);
+                        version += Integer.parseInt(versionparts[i]);
+                    }
+                }
+                check(DeviceServiceVersion < version, JPOS_E_NOSERVICE, "Unsupported version: " + o);
+                String baseClassName = entry.getPropertyValue("deviceCategory") + "Service" + version / 1000000 + (version % 1000000) / 1000;
+                try {
+                    Class.forName("jpos.services." + baseClassName);
+                } catch (ClassNotFoundException e) {
+                    throw new JposException(JPOS_E_NOSERVICE, "Unsupported version: " + o, e);
+                }
+                DeviceServiceVersion = (version / 1000) * 1000;
+                Device.JposVersion = version;
+            }
+        } catch (Exception e) {
+            throw new JposException(JPOS_E_NOSERVICE, e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+        }
+    }
+
+    public void checkForDeprecation(int firstDeprecatedVersion, String message) throws JposException {
+        if (firstDeprecatedVersion + 2000 < DeviceServiceVersion)
+            check(!AllowDeprecatedMethods, JPOS_E_DEPRECATED, message);
     }
 
     /**
@@ -341,9 +411,9 @@ public abstract class JposCommonProperties implements JposBaseInterface {
         DeviceEnabled = false;
         DataEventEnabled = false;
         FreezeEvents = false;
-        PowerState = JposConst.JPOS_PS_UNKNOWN;
+        PowerState = JPOS_PS_UNKNOWN;
         CheckHealthText = "";
-        PowerNotify = JposConst.JPOS_PN_DISABLED;
+        PowerNotify = JPOS_PN_DISABLED;
         FlagWhenIdle = false;
         AsyncMode = false;
         ErrorString = "";
@@ -426,6 +496,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     /**
      * remove this from the list of property sets.
      */
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     public void removeFromPropertySetList() {
         if (DevProps != null) {
             synchronized (DevProps) {
@@ -525,6 +596,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     }
 
     @Override
+    @SuppressWarnings("AssignmentUsedAsCondition")
     public void dataEventEnabled(boolean b) throws JposException {
         if (DataEventEnabled = b) {
             synchronized (EventList) {
@@ -534,10 +606,11 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     }
 
     @Override
+    @SuppressWarnings("AssignmentUsedAsCondition")
     public void flagWhenIdle(boolean b) throws JposException {
         synchronized (Device.AsyncProcessorRunning) {
             if (FlagWhenIdle = b) {
-                if (State == JposConst.JPOS_S_IDLE) {
+                if (State == JPOS_S_IDLE) {
                     Device.handleEvent(new JposStatusUpdateEvent(EventSource, FlagWhenIdleStatusValue));
                 }
             }
@@ -565,7 +638,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
 
     @Override
     public void close() throws JposException {
-        State = JposConst.JPOS_S_CLOSED;
+        State = JPOS_S_CLOSED;
     }
 
     @Override
@@ -575,17 +648,13 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     @Override
     public DirectIO directIO(int command, int[] data, Object object) throws JposException {
         Method asyncdio = null;
-        DirectIO retval = null;
         try {
             asyncdio = EventSource.DeviceInterface.getClass().getMethod("directIO", DirectIO.class);
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
-        retval = new DirectIO(this, command, data, object);
-
-        if (asyncdio == null || asyncdio.getDeclaringClass() == JposCommonProperties.class)
-            return null;
-        return retval;
+        return asyncdio == null || asyncdio.getDeclaringClass() == JposCommonProperties.class ?
+                null : new DirectIO(this, command, data, object);
     }
 
     @Override
@@ -595,7 +664,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     @Override
     public void open() throws JposException {
         initOnOpen();
-        State = JposConst.JPOS_S_IDLE;
+        State = JPOS_S_IDLE;
     }
 
     @Override
@@ -609,8 +678,8 @@ public abstract class JposCommonProperties implements JposBaseInterface {
             }
         }
         newJposOutputRequest().clearAll();
-        if (State != JposConst.JPOS_S_IDLE) {
-            State = JposConst.JPOS_S_IDLE;
+        if (State != JPOS_S_IDLE) {
+            State = JPOS_S_IDLE;
             EventSource.logSet("State");
         }
         if (FlagWhenIdle) {
@@ -623,7 +692,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     public void clearInput() throws JposException {
         synchronized (EventList) {
             if (UsesSubsystemUnits) {
-                for (List<JposEvent> list : new List[]{EventList, DataEventList}) {
+                for (List<JposEvent> list : getArrayOf(0, EventList, DataEventList)) {
                     for (int i = 0; i < list.size(); ) {
                         JposEvent ev = list.get(i);
                         i = conditionalDataEventRemoval(list, CurrentUnitID, i, ev);
@@ -636,7 +705,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
                     JposEvent ev = EventList.get(i);
                     if (ev instanceof JposDataEvent)
                         EventList.remove(ev);
-                    else if (ev instanceof JposErrorEvent && ((JposErrorEvent) ev).getErrorLocus() != JposConst.JPOS_EL_OUTPUT)
+                    else if (ev instanceof JposErrorEvent && ((JposErrorEvent) ev).getErrorLocus() != JPOS_EL_OUTPUT)
                         EventList.remove(ev);
                     else
                         i++;
@@ -650,12 +719,11 @@ public abstract class JposCommonProperties implements JposBaseInterface {
             newJposOutputRequest().clearInput();
         }
         Device.processEventList(this);
-        State = JposConst.JPOS_S_IDLE;
+        State = JPOS_S_IDLE;
     }
 
     private int conditionalInputErrorEventRemoval(List<JposEvent> list, int bit, int i, JposEvent ev) {
-        if (ev instanceof UnitInputErrorEvent) {
-            UnitInputErrorEvent event = (UnitInputErrorEvent) ev;
+        if (ev instanceof UnitInputErrorEvent event) {
             if ((event.Units & bit) != 0) {
                 list.remove(i);
             }
@@ -667,8 +735,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     }
 
     private int conditionalDataEventRemoval(List<JposEvent> list, int bit, int i, JposEvent ev) {
-        if (ev instanceof UnitDataEvent) {
-            UnitDataEvent event = (UnitDataEvent) ev;
+        if (ev instanceof UnitDataEvent event) {
             if ((event.Unit & bit) != 0) {
                 list.remove(i);
                 DataCount--;
@@ -682,10 +749,10 @@ public abstract class JposCommonProperties implements JposBaseInterface {
 
     @Override
     public void retryInput() throws JposException {
-        State = JposConst.JPOS_S_IDLE;
+        State = JPOS_S_IDLE;
         EventSource.logSet("State");
         clearErrorProperties();
-        Device.log(Level.DEBUG, LogicalName + ": Enter Retry input...");
+        Device.log(DEBUG, LogicalName + ": Enter Retry input...");
     }
 
     @Override
@@ -705,17 +772,17 @@ public abstract class JposCommonProperties implements JposBaseInterface {
             UnitOutputRequest checker = new UnitOutputRequest(this, CurrentUnitID);
             checker.clearOutput();
             int remainingCommands = checker.countCommands();
-            if (State != JposConst.JPOS_S_IDLE && remainingCommands == 0) {
-                State = JposConst.JPOS_S_IDLE;
-                Device.log(Level.DEBUG, LogicalName + ": State <- " + JposConst.JPOS_S_IDLE);
+            if (State != JPOS_S_IDLE && remainingCommands == 0) {
+                State = JPOS_S_IDLE;
+                Device.log(DEBUG, LogicalName + ": State <- " + JPOS_S_IDLE);
             }
-            else if (State != JposConst.JPOS_S_BUSY && remainingCommands != 0) {
-                State = JposConst.JPOS_S_BUSY;
-                Device.log(Level.DEBUG, LogicalName + ": State <- " + JposConst.JPOS_S_BUSY);
+            else if (State != JPOS_S_BUSY && remainingCommands != 0) {
+                State = JPOS_S_BUSY;
+                Device.log(DEBUG, LogicalName + ": State <- " + JPOS_S_BUSY);
             }
             if (FlagWhenIdle && remainingCommands != 0) {
                 FlagWhenIdle = false;
-                Device.log(Level.DEBUG, LogicalName + ": FlagWhenIdle <- " + FlagWhenIdleStatusValue);
+                Device.log(DEBUG, LogicalName + ": FlagWhenIdle <- " + FlagWhenIdleStatusValue);
                 Device.handleEvent(new JposStatusUpdateEvent(EventSource, FlagWhenIdleStatusValue));
             }
         }
@@ -723,15 +790,15 @@ public abstract class JposCommonProperties implements JposBaseInterface {
             synchronized (EventList) {
                 for (int i = 0; i < EventList.size();) {
                     JposEvent ev = EventList.get(i);
-                    if (ev instanceof JposErrorEvent && ((JposErrorEvent) ev).getErrorLocus() == JposConst.JPOS_EL_OUTPUT)
+                    if (ev instanceof JposErrorEvent && ((JposErrorEvent) ev).getErrorLocus() == JPOS_EL_OUTPUT)
                         EventList.remove(i);
                     else
                         ++i;
                 }
             }
             newJposOutputRequest().clearOutput();
-            if (State != JposConst.JPOS_S_IDLE) {
-                State = JposConst.JPOS_S_IDLE;
+            if (State != JPOS_S_IDLE) {
+                State = JPOS_S_IDLE;
                 EventSource.logSet("State");
             }
             if (FlagWhenIdle) {
@@ -765,7 +832,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     @Override
     public void retryOutput() throws JposException {
         new JposOutputRequest(this).reactivate();
-        Device.log(Level.DEBUG, LogicalName + ": Enter Retry output...");
+        Device.log(DEBUG, LogicalName + ": Enter Retry output...");
     }
 
     @Override

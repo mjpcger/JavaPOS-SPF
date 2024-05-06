@@ -18,11 +18,11 @@ package SamplePOSPrinter;
 
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import de.gmxhome.conrad.jpos.jpos_base.cashdrawer.*;
-import jpos.JposConst;
-import jpos.JposException;
+import jpos.*;
 import jpos.config.JposEntry;
-import jpos.loader.JposServiceInstance;
-import jpos.loader.JposServiceInstanceFactory;
+import jpos.loader.*;
+
+import static jpos.JposConst.*;
 
 /**
  * Factory class for sample printer device CashDrawer implementation
@@ -42,7 +42,7 @@ public class CashDrawerFactory extends Factory implements JposServiceInstanceFac
                     if (create) {
                         dev = new Device(port);
                     } else if (!(any instanceof Device))
-                        throw new JposException(JposConst.JPOS_E_NOSERVICE, "Different devices on same port: " + port);
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: " + port);
                     else {
                         dev = (Device) any;
                     }
@@ -54,11 +54,11 @@ public class CashDrawerFactory extends Factory implements JposServiceInstanceFac
                     return drw;
                 }
             }
-            throw new JposException(JposConst.JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
+            throw new JposException(JPOS_E_NOSERVICE, "Bad device category " + deviceClass);
         } catch (JposException e) {
             throw e;
         } catch (Exception e) {
-            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid or missing JPOS property", e);
+            throw new JposException(JPOS_E_NOSERVICE, "Invalid or missing JPOS property", e);
         }
     }
 }

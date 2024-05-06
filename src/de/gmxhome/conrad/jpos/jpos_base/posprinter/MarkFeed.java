@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.posprinter;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.POSPrinterConst.*;
+
 /**
  * Output request executor for POSPrinter method MarkFeed.
  */
@@ -31,7 +33,7 @@ public class MarkFeed extends OutputRequest {
         return Type;
     }
 
-    private int Type;
+    private final int Type;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -49,7 +51,7 @@ public class MarkFeed extends OutputRequest {
     public void invoke() throws JposException {
         POSPrinterService svc = (POSPrinterService)Props.EventSource;
         if (EndSync == null) {
-            svc.extendedErrorCheck(POSPrinterConst.PTR_S_RECEIPT);
+            svc.extendedErrorCheck(PTR_S_RECEIPT);
         }
         svc.POSPrinterInterface.markFeed(this);
     }

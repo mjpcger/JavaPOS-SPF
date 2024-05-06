@@ -23,6 +23,8 @@ import jpos.events.JposEvent;
 
 import java.util.*;
 
+import static jpos.PINPadConst.*;
+
 /**
  * Class containing the PIN pad specific properties, their default values and default implementations of
  * PINPadInterface.
@@ -53,7 +55,7 @@ public class PINPadProperties extends JposCommonProperties implements PINPadInte
      * UPOS property CapDisplay. Default: DISP_NONE. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int CapDisplay = PINPadConst.PPAD_DISP_NONE;
+    public int CapDisplay = PPAD_DISP_NONE;
     /**
      * UPOS property CapKeyboard. Default: false. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
@@ -63,7 +65,7 @@ public class PINPadProperties extends JposCommonProperties implements PINPadInte
      * UPOS property CapLanguage. Default: LANG_NONE. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
      */
-    public int CapLanguage = PINPadConst.PPAD_LANG_NONE;
+    public int CapLanguage = PPAD_LANG_NONE;
     /**
      * UPOS property CapMACCalculation. Default: false. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.
@@ -109,19 +111,19 @@ public class PINPadProperties extends JposCommonProperties implements PINPadInte
     /**
      * UPOS property Track1Data. Default: an empty byte array.
      */
-    public byte[] Track1Data = new byte[0];
+    public byte[] Track1Data = {};
     /**
      * UPOS property Track2Data. Default: an empty byte array.
      */
-    public byte[] Track2Data = new byte[0];
+    public byte[] Track2Data = {};
     /**
      * UPOS property Track3Data. Default: an empty byte array.
      */
-    public byte[] Track3Data = new byte[0];
+    public byte[] Track3Data = {};
     /**
      * UPOS property Track4Data. Default: an empty byte array.
      */
-    public byte[] Track4Data = new byte[0];
+    public byte[] Track4Data = {};
     /**
      * UPOS property TransactionType. Default: null. Must be overwritten by application before calling BeginEFTTransaction.
      */

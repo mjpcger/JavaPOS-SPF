@@ -29,14 +29,14 @@ public class PlaySound extends JposOutputRequest {
      * @return Audio file name or sound ID.
      */
     public String getFileName() { return FileName; }
-    private String FileName;
+    private final String FileName;
 
     /**
      * Specifies whether loop playback shall be performed.
      * @return true for loop playback.
      */
     public boolean getLoop() { return Loop; }
-    private boolean Loop;
+    private final boolean Loop;
     /**
      * Constructor. Stores given parameters for later use.
      * @param props       Property set of device service.

@@ -22,15 +22,16 @@ import jpos.services.*;
 
 import java.util.Vector;
 
+@SuppressWarnings({"unused","SynchronizeOnNonFinalField"})
 public class Lights extends BaseJposControl implements JposConst, LightsControl116 {
-    protected Vector directIOListeners;
-    protected Vector statusUpdateListeners;
+    protected Vector<DirectIOListener> directIOListeners;
+    protected Vector<StatusUpdateListener> statusUpdateListeners;
 
     public Lights() {
         deviceControlDescription = "JavaPOS Lights Dummy Control";
         deviceControlVersion = deviceVersion115 + 1000;
-        directIOListeners = new Vector();
-        statusUpdateListeners = new Vector();
+        directIOListeners = new Vector<>();
+        statusUpdateListeners = new Vector<>();
     }
 
     protected class Callbacks implements EventCallbacks {
@@ -42,8 +43,8 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         @Override
         public void fireDirectIOEvent(DirectIOEvent directIOEvent) {
             synchronized (directIOListeners) {
-                for (Object listener : directIOListeners)
-                    ((DirectIOListener) listener).directIOOccurred(directIOEvent);
+                for (DirectIOListener listener : directIOListeners)
+                    listener.directIOOccurred(directIOEvent);
             }
         }
 
@@ -58,8 +59,8 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         @Override
         public void fireStatusUpdateEvent(StatusUpdateEvent statusUpdateEvent) {
             synchronized (statusUpdateListeners) {
-                for (Object listener : statusUpdateListeners)
-                    ((StatusUpdateListener)listener).statusUpdateOccurred(statusUpdateEvent);
+                for (StatusUpdateListener listener : statusUpdateListeners)
+                    listener.statusUpdateOccurred(statusUpdateEvent);
             }
         }
 
@@ -81,11 +82,14 @@ public class Lights extends BaseJposControl implements JposConst, LightsControl1
         } else {
             int version = 12;
             try {
-                service = (LightsService112) baseService; version++;
-                service = (LightsService113) baseService; version++;
-                service = (LightsService114) baseService; version++;
-                service = (LightsService115) baseService; version++;
-                service = (LightsService116) baseService; version++;
+                for (Class<?> current : new Class<?>[]{LightsService112.class, LightsService113.class,
+                        LightsService114.class, LightsService115.class, LightsService116.class}) {
+                    if (current.isInstance(service))
+                        version++;
+                    else
+                        break;
+                }
+                service = baseService;
             } catch (Exception e) {
                 if (i >= version * 1000 + 1000000)
                     throw new JposException(JPOS_E_NOSERVICE, "LightsService1" + version + " not fully implemented", e);

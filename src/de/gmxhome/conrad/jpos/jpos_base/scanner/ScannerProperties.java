@@ -19,6 +19,8 @@ package de.gmxhome.conrad.jpos.jpos_base.scanner;
 import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.*;
 
+import static jpos.ScannerConst.*;
+
 /**
  * Class containing the scanner specific properties, their default values and default implementations of
  * ScannerInterface.
@@ -30,7 +32,7 @@ public class ScannerProperties extends JposCommonProperties implements ScannerIn
      * Default value of ScanData property. Default: Zero-length byte array. Can be overwritten
      * by objects derived from JposDevice within the changeDefaults method.
      */
-    public byte[] ScanDataDef = new byte[0];
+    public byte[] ScanDataDef = {};
     /**
      * UPOS property DecodeData.
      */
@@ -68,7 +70,7 @@ public class ScannerProperties extends JposCommonProperties implements ScannerIn
     public void clearDataProperties() {
         super.clearDataProperties();
         ScanData = ScanDataLabel = ScanDataDef;
-        ScanDataType = ScannerConst.SCAN_SDT_UNKNOWN;
+        ScanDataType = SCAN_SDT_UNKNOWN;
 
     }
 

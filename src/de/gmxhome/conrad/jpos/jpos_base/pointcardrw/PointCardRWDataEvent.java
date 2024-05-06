@@ -28,17 +28,17 @@ public class PointCardRWDataEvent extends JposDataEvent {
     /**
      * Array containing 6 Strings with track data. Empty strings if a track has not been read.
      */
-    public String[] Tracks;
+    public final String[] Tracks;
 
     /**
      * Array containing the state values of the 6 tracks to be stored in ReadState1 and ReadState2.
      */
-    public Integer[] State;
+    public final Integer[] State;
 
     /**
      * Array containing the length in bytes of the 6 tracks to be stored in RecvLength1 and RecvLength2.
      */
-    public Integer[] Length;
+    public final Integer[] Length;
 
     /**
      * Constructor.

@@ -17,8 +17,6 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.rfidscanner;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
-import de.gmxhome.conrad.jpos.jpos_base.smartcardrw.SmartCardRWService;
 import jpos.JposException;
 
 /**

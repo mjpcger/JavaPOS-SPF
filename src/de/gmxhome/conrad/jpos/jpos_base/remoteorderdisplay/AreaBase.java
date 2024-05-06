@@ -16,9 +16,10 @@
 
 package de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay;
 
-import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
-import jpos.JposConst;
-import jpos.JposException;
+import de.gmxhome.conrad.jpos.jpos_base.*;
+import jpos.*;
+
+import static jpos.JposConst.*;
 
 /**
  * Output request class for remote order display methods using row, column, height and width parameters to specify a
@@ -33,7 +34,7 @@ public class AreaBase extends PositionBase {
     public int getHeight() {
         return Height;
     }
-    private int Height;
+    private final int Height;
 
     /**
      * Retrieves parameter width of remote order display method. See UPOS specification of the specific method for further
@@ -43,7 +44,7 @@ public class AreaBase extends PositionBase {
     public int getWidth() {
         return Width;
     }
-    private int Width;
+    private final int Width;
 
     /**
      * Constructor. Stores given parameters for later use.
@@ -71,6 +72,6 @@ public class AreaBase extends PositionBase {
         RemoteOrderDisplayService svc = (RemoteOrderDisplayService) data.EventSource;
         int errorunits = svc.validateCoordinates(getUnits(), getRow(), getColumn());
         errorunits |= svc.validateCoordinates(getUnits(), getRow() + getHeight() - 1, getColumn() + getWidth() - 1);
-        svc.check(errorunits != 0, errorunits, JposConst.JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits, EndSync != null);
+        svc.check(errorunits != 0, errorunits, JPOS_E_ILLEGAL, 0, "Illegal region for units specified by " + errorunits, EndSync != null);
     }
 }
