@@ -30,7 +30,6 @@ public class DeviceMonitor extends BaseJposControl implements JposConst, DeviceM
     public DeviceMonitor() {
         deviceControlDescription = "JavaPOS DeviceMonitor Dummy Control";
         deviceControlVersion = deviceVersion115 + 1000;
-        errorListeners = new Vector();
         directIOListeners = new Vector<>();
         statusUpdateListeners = new Vector<>();
         dataListeners = new Vector<>();
