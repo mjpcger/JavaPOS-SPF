@@ -42,7 +42,7 @@ public class PINPadFactory extends Factory implements JposServiceInstanceFactory
                     if (create) {
                         dev = new PINPadDevice("SamplePINPad");
                     } else if (!(any instanceof PINPadDevice))
-                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: SampleRFIDScanner");
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: SamplePINPad");
                     else {
                         dev = (PINPadDevice) any;
                     }

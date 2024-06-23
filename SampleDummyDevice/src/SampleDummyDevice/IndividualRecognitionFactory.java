@@ -43,7 +43,7 @@ public class IndividualRecognitionFactory extends Factory implements JposService
                     if (create) {
                         dev = new IndividualRecognitionDevice("SampleIndividualRecognition");
                     } else if (!(any instanceof IndividualRecognitionDevice))
-                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: SampleGraphicDisplay");
+                        throw new JposException(JPOS_E_NOSERVICE, "Different devices on same port: SampleIndividualRecognition");
                     else {
                         dev = (IndividualRecognitionDevice) any;
                     }
