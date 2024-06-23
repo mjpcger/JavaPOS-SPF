@@ -42,6 +42,7 @@ public class Factory extends JposDeviceFactory {
         validateJposConfiguration(props, dev, dev.ClaimedVoiceRecognition, entry);
         VoiceRecognitionService service = (VoiceRecognitionService) (props.EventSource = new VoiceRecognitionService(props, dev));
         dev.changeDefaults(props);
+        check(props.LanguageList == null || props.LanguageList.length() == 0, JPOS_E_NOSERVICE, "Uninitialized LanguageList");
         props.addProperties(dev.VoiceRecognitions);
         service.DeviceInterface = service.VoiceRecognition = props;
         return service;

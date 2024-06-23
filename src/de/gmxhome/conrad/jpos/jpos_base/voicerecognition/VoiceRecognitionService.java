@@ -21,6 +21,12 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 import jpos.JposException;
 import jpos.services.VoiceRecognitionService116;
 
+import java.util.ArrayList;
+
+import static de.gmxhome.conrad.jpos.jpos_base.JposBaseDevice.member;
+import static jpos.JposConst.JPOS_E_BUSY;
+import static jpos.JposConst.JPOS_E_ILLEGAL;
+
 /**
  * VoiceRecognition service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
@@ -32,8 +38,9 @@ public class VoiceRecognitionService extends JposBase implements VoiceRecognitio
      * @param props  Property set.
      * @param device Device implementation object.
      */
-    public VoiceRecognitionService(JposCommonProperties props, JposDevice device) {
+    public VoiceRecognitionService(VoiceRecognitionProperties props, JposDevice device) {
         super(props, device);
+        Data = props;
     }
 
     /**
@@ -41,64 +48,150 @@ public class VoiceRecognitionService extends JposBase implements VoiceRecognitio
      * to the property set. Almost always the same object as Data.
      */
     public VoiceRecognitionInterface VoiceRecognition;
+    private final VoiceRecognitionProperties Data;
 
     @Override
     public boolean getCapLanguage() throws JposException {
-        return false;
+        logGet("CapLanguage");
+        checkOpened();
+        return Data.CapLanguage;
     }
 
     @Override
     public String getHearingDataPattern() throws JposException {
-        return null;
+        logGet("HearingDataPattern");
+        checkEnabled();
+        return Data.HearingDataPattern;
     }
 
     @Override
     public String getHearingDataWord() throws JposException {
-        return null;
+        logGet("HearingDataWord");
+        checkEnabled();
+        return Data.HearingDataWord;
     }
 
     @Override
     public String getHearingDataWordList() throws JposException {
-        return null;
+        logGet("HearingDataWordList");
+        checkEnabled();
+        return Data.HearingDataWordList;
     }
 
     @Override
     public int getHearingResult() throws JposException {
-        return 0;
+        logGet("HearingResult");
+        checkEnabled();
+        check(Data.HearingResult == null, JPOS_E_ILLEGAL, "HearingResult not present");
+        return Data.HearingResult;
     }
 
     @Override
     public int getHearingStatus() throws JposException {
-        return 0;
+        logGet("HearingStatus");
+        checkEnabled();
+        return Data.HearingStatus;
     }
 
     @Override
     public String getLanguageList() throws JposException {
-        return null;
+        logGet("LanguageList");
+        checkOpened();
+        return Data.LanguageList;
     }
 
     @Override
-    public void startHearingFree(String s) throws JposException {
-
+    public void startHearingFree(String language) throws JposException {
+        logPreCall("StartHearingFree", removeOuterArraySpecifier(new Object[]{language}, Device.MaxArrayStringElements));
+        checkEnabled();
+        check(!member(language, Data.LanguageList.split(",")), JPOS_E_ILLEGAL, "Invalid language: " + language);
+        synchronized (Device.AsyncProcessorRunning) {
+            check(Props.AsyncInputActive, JPOS_E_BUSY, "Hearing something is active");
+            StartHearingFree request = VoiceRecognition.startHearingFree(language);
+            if (request != null)
+                request.enqueue();
+        }
+        logCall("StartHearingFree");
     }
 
     @Override
-    public void startHearingSentence(String s, String s1, String s2) throws JposException {
-
+    public void startHearingSentence(String language, String wordList, String patternList) throws JposException {
+        logPreCall("StartHearingSentence", removeOuterArraySpecifier(new Object[]{language, wordList, patternList}, Device.MaxArrayStringElements));
+        checkEnabled();
+        check(!member(language, Data.LanguageList.split(",")), JPOS_E_ILLEGAL, "Invalid language: " + language);
+        String[] words = (wordList == null ? "" : wordList).split(",");
+        ArrayList<String> ids = new ArrayList<>();
+        for (String word : words) {
+            String[] idCandidates = word.split(":");
+            check(idCandidates.length < 2 || ids.contains(idCandidates[0]), JPOS_E_ILLEGAL, "Invalid word list: " + wordList);
+            for (String part : idCandidates) {
+                check(part.length() == 0, JPOS_E_ILLEGAL, "Invalid word list component: " + word);
+            }
+            ids.add(idCandidates[0]);
+        }
+        String[] patterns = (patternList == null ? "" : patternList).split(",");
+        ArrayList<String> pids = new ArrayList<>();
+        for (String pattern : patterns) {
+            String[] idSentence = pattern.split(":");
+            check(idSentence.length != 2, JPOS_E_ILLEGAL, "Invalid pattern:" + pattern);
+            check(idSentence[0].length() == 0 || pids.contains(idSentence[0]), JPOS_E_ILLEGAL, "Duplicate or empty pattern id: " + idSentence[0]);
+            pids.add(idSentence[0]);
+            for (int i = idSentence[1].indexOf('['); ++i > 0; i = idSentence[1].indexOf('[')) {
+                int j = idSentence[1].indexOf(']');
+                check(j < i, JPOS_E_ILLEGAL, "Invalid pattern: " + pattern);
+                check(!ids.contains(idSentence[1].substring(i, j)), JPOS_E_ILLEGAL, "Invalid wordGroupId in pattern: " + pattern);
+                idSentence[1] = idSentence[1].substring(j + 1);
+            }
+        }
+        synchronized (Device.AsyncProcessorRunning) {
+            check(Props.AsyncInputActive, JPOS_E_BUSY, "Hearing something is active\"");
+            StartHearingSentence request = VoiceRecognition.startHearingSentence(language, wordList, patternList);
+            if (request != null)
+                request.enqueue();
+        }
+        logCall("StartHearingSentence");
     }
 
     @Override
-    public void startHearingWord(String s, String s1) throws JposException {
-
+    public void startHearingWord(String language, String wordList) throws JposException {
+        logPreCall("StartHearingWord", removeOuterArraySpecifier(new Object[]{language, wordList}, Device.MaxArrayStringElements));
+        checkEnabled();
+        check(!member(language, Data.LanguageList.split(",")), JPOS_E_ILLEGAL, "Invalid language: " + language);
+        String[] words = (wordList == null ? "" : wordList).split(",");
+        for (String word : words) {
+            check(word.length() == 0, JPOS_E_ILLEGAL, "Empty or duplicate word: " + wordList);
+        }
+        synchronized (Device.AsyncProcessorRunning) {
+            check(Props.AsyncInputActive, JPOS_E_BUSY, "Hearing something is active\"");
+            StartHearingWord request = VoiceRecognition.startHearingWord(language, wordList);
+            if (request != null)
+                request.enqueue();
+        }
+        logCall("StartHearingWord");
     }
 
     @Override
-    public void startHearingYesNo(String s) throws JposException {
-
+    public void startHearingYesNo(String language) throws JposException {
+        logPreCall("StartHearingYesNo", removeOuterArraySpecifier(new Object[]{language}, Device.MaxArrayStringElements));
+        checkEnabled();
+        check(!member(language, Data.LanguageList.split(",")), JPOS_E_ILLEGAL, "Invalid language: " + language);
+        synchronized (Device.AsyncProcessorRunning) {
+            check(Props.AsyncInputActive, JPOS_E_BUSY, "Hearing something is active\"");
+            StartHearingYesNo request = VoiceRecognition.startHearingYesNo(language);
+            if (request != null)
+                request.enqueue();
+        }
+        logCall("StartHearingYesNo");
     }
 
     @Override
     public void stopHearing() throws JposException {
-
+        logPreCall("StopHearing");
+        checkEnabled();
+        synchronized (Device.AsyncProcessorRunning) {
+            check(!Props.AsyncInputActive, JPOS_E_ILLEGAL, "Hearing something has not been started");
+            VoiceRecognition.stopHearing();
+        }
+        logCall("StartHearingYesNo");
     }
 }
