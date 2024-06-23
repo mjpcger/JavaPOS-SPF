@@ -18,6 +18,7 @@
 package de.gmxhome.conrad.jpos.jpos_base;
 
 import javax.swing.*;
+import javax.swing.plaf.OptionPaneUI;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -135,6 +136,100 @@ public class SynchronizedMessageBox {
             JposOutputRequest.JposRequestThread.ActiveMessageBoxes.remove(this);
         }
         return Result;
+    }
+
+    /**
+     * Input result. Is null while input dialog has not been finished. If not null, it holds
+     * the input value.
+     */
+    String InputResult = null;
+
+    /**
+     * Create an input message box and wait until input has been finished or a timeout occurs. If at least
+     * one option has been specified, a combo box containing the options as selectable input will be generated. Otherwise,
+     * a text field can be filled.
+     * @param message       Message to be displayed.
+     * @param title         Message box title.
+     * @param options       Options for combo box or null for simple input field.
+     * @param defaultOption The default value.
+     * @param messageType   JOptionPane message type.
+     * @param timeout       timeout in milliseconds. If &le; 0, no timeout handling will occur.
+     * @return      The selected or entered input value or null in case of cancellation or timeout.
+     */
+    @SuppressWarnings("unused")
+    public String synchronizedInputBox(final String message, final String title, final String[] options, final String defaultOption, final int messageType, final int timeout) {
+        InputResult = null;
+        synchronized (JposOutputRequest.JposRequestThread.ActiveMessageBoxes) {
+            JposOutputRequest.JposRequestThread.ActiveMessageBoxes.add(this);
+        }
+        SwingUtilities.invokeLater(() -> {
+            String result = null;
+            try {
+                Box = new JOptionPane(message, messageType, DEFAULT_OPTION, null, null, DEFAULT_OPTION);
+                Box.setWantsInput(true);
+                if (options != null && options.length > 0)
+                    Box.setSelectionValues(options);
+                Box.setInitialSelectionValue(defaultOption);
+                Box.setInputValue(null);
+                Dialog = Box.createDialog(title);
+                if (CurrentPosition != null)
+                    Dialog.setLocation(CurrentPosition);
+                if (Timer[0] == null) {
+                    Dialog.addComponentListener(new ComponentAdapter() {
+                        @Override
+                        public void componentShown(ComponentEvent e) {
+                            super.componentShown(e);
+                            Timer[0] = new Timer(Integer.MAX_VALUE, (ActionEvent ignore) -> {
+                                synchronized (Sync) {
+                                    if (Dialog != null && Dialog.isVisible() && InputResult == null) {
+                                        Box.setValue(CLOSED_OPTION);
+                                        Dialog.setVisible(false);
+                                    }
+                                }
+                                Timer[0].stop();
+                            });
+                            if (timeout > 0) {
+                                Timer[0].setInitialDelay(timeout);
+                                Timer[0].start();
+                            }
+                        }
+                    });
+                } else if (timeout > 0) {
+                    Timer[0].setInitialDelay(timeout);
+                    Timer[0].restart();
+                }
+                Dialog.setAlwaysOnTop(true);
+                Dialog.setModalExclusionType(java.awt.Dialog.ModalExclusionType.APPLICATION_EXCLUDE);
+                if (timeout > 0) {
+                    Dialog.setVisible(true);
+                    if (Timer[0] != null)
+                        Timer[0].stop();
+                } else
+                    Dialog.setVisible(true);
+                Object input = Box.getInputValue();
+                if (input != null) {
+                    if (input instanceof String) {
+                        result = input.toString();
+                    }
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+                Ready.signal();
+            } finally {
+                synchronized (Sync) {
+                    InputResult = result;
+                    Ready.signal();
+                    CurrentPosition = Dialog.getLocation();
+                    Dialog.dispose();
+                    Dialog = null;
+                }
+            }
+        });
+        Ready.suspend(INFINITE);
+        synchronized (JposOutputRequest.JposRequestThread.ActiveMessageBoxes) {
+            JposOutputRequest.JposRequestThread.ActiveMessageBoxes.remove(this);
+        }
+        return InputResult;
     }
 
     /**
