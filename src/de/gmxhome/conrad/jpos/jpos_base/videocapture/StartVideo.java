@@ -28,6 +28,9 @@ public class StartVideo extends JposInputRequest {
      * Constructor. Stores given parameters for later use.
      *
      * @param props Property set of device service.
+     * @param fileName The name of the video file to be recorded.
+     * @param overWrite Specifies whether the file shall be overwritten in case it just exists.
+     * @param recordingTime Maximum recording time in seconds.
      */
     public StartVideo(JposCommonProperties props, String fileName, boolean overWrite, int recordingTime) {
         super(props);
