@@ -26,6 +26,8 @@ import java.util.*;
 import jpos.services.*;
 import net.bplaced.conrad.log4jpos.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties.ExclusiveNo;
+import static de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties.ExclusiveYes;
 import static de.gmxhome.conrad.jpos.jpos_base.JposDeviceFactory.CurrentEntry;
 import static de.gmxhome.conrad.jpos.jpos_base.SyncObject.INFINITE;
 import static jpos.JposConst.*;
@@ -683,14 +685,14 @@ public class JposBaseDevice {
         JposCommonProperties props = event.getPropertySet();
         synchronized (props.EventList) {
             if (props.DeviceEnabled) {
-                if (props.AutoDisable) {
-                    props.EventSource.setDeviceEnabled(false);
-                }
                 log(DEBUG, props.LogicalName + ": Buffer Data Event: [" + event.toLogString() + "]");
                 props.EventList.add(event);
                 props.DataCount++;
                 props.EventSource.logSet("DataCount");
                 processEventList(props);
+                if (props.AutoDisable) {
+                    props.EventSource.setDeviceEnabled(false);
+                }
             }
         }
     }
@@ -742,11 +744,11 @@ public class JposBaseDevice {
             for (int j = 0; j < props.DevProps.size(); j++) {
                 JposCommonProperties dev = props.DevProps.get(j);
                 synchronized (dev.EventList) {
-                    if (dev.DeviceEnabled) {
-                        JposStatusUpdateEvent ev;
-                        ev = (dev == props) ? event : event.copyEvent((JposBase)event.getSource());
-                        if (!ev.block()) {
-                            ev.setAndCheckStatusProperties();
+                    JposStatusUpdateEvent ev;
+                    ev = (dev == props) ? event : event.copyEvent((JposBase) event.getSource());
+                    if (!ev.block()) {
+                        ev.setAndCheckStatusProperties();
+                        if (dev.DeviceEnabled) {
                             dev.EventList.add(ev);
                             log(DEBUG, dev.LogicalName + ": Buffer StatusUpdateEvent: [" + ev.toLogString() + "]");
                             processEventList(dev);
@@ -767,9 +769,11 @@ public class JposBaseDevice {
     public void handleEvent(JposOutputCompleteEvent event) throws JposException {
         JposCommonProperties props = event.getPropertySet();
         synchronized (props.EventList) {
-            props.EventList.add(event);
-            log(DEBUG, props.LogicalName + ": Buffer OutputCompleteEvent: [" + event.toLogString() + "]");
-            processEventList(props);
+            if (props.DeviceEnabled) {
+                props.EventList.add(event);
+                log(DEBUG, props.LogicalName + ": Buffer OutputCompleteEvent: [" + event.toLogString() + "]");
+                processEventList(props);
+            }
         }
     }
 
@@ -783,9 +787,11 @@ public class JposBaseDevice {
     public void handleEvent(JposTransitionEvent event) throws JposException {
         JposCommonProperties props = event.getPropertySet();
         synchronized (props.EventList) {
-            props.EventList.add(event);
-            log(DEBUG, props.LogicalName + ": Buffer TransitionEvent: [" + event.toLogString() + "]");
-            processEventList(props);
+            if (props.DeviceEnabled) {
+                props.EventList.add(event);
+                log(DEBUG, props.LogicalName + ": Buffer TransitionEvent: [" + event.toLogString() + "]");
+                processEventList(props);
+            }
         }
     }
 
@@ -799,11 +805,12 @@ public class JposBaseDevice {
     public void handleEvent(JposDirectIOEvent event) throws JposException {
         JposCommonProperties props = event.getPropertySet();
         synchronized (props.EventList) {
-            props.EventList.add(event);
-            log(DEBUG, props.LogicalName + ": Buffer DirectIOEvent: [" + event.toLogString() + "]");
-            processEventList(props);
+            if (props.DeviceEnabled) {
+                props.EventList.add(event);
+                log(DEBUG, props.LogicalName + ": Buffer DirectIOEvent: [" + event.toLogString() + "]");
+                processEventList(props);
+            }
         }
-
     }
 
     private final Map<List<JposCommonProperties>, List<SyncObject>> StatusWaitingObjects = new HashMap<>();
@@ -1059,9 +1066,9 @@ public class JposBaseDevice {
                     log(DEBUG, Props.LogicalName + ": Fire Buffered Status Update Event: [" + stevent.toLogString() + "]");
                 } else if (devent != null) {
                     try {
-                        Props.EventSource.setDataEventEnabled(false);
                         Props.DataCount--;
                         Props.EventSource.logSet("DataCount");
+                        Props.EventSource.setDataEventEnabled(false);
                         Props.EventCB.fireDataEvent(devent);
                     } catch (Throwable e) {
                         e.printStackTrace();
