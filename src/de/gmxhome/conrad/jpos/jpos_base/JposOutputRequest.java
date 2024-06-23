@@ -683,6 +683,7 @@ public class JposOutputRequest implements Runnable {
      * @return  The resulting status update event.
      */
     public JposStatusUpdateEvent createIdleEvent() {
-        return new JposStatusUpdateEvent(Props.EventSource, Props.FlagWhenIdleStatusValue);
+        return Props.FlagWhenIdleStatusValue == null ? null :
+                new JposStatusUpdateEvent(Props.EventSource, Props.FlagWhenIdleStatusValue);
     }
 }

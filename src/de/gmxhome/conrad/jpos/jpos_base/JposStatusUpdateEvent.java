@@ -66,7 +66,7 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
             default -> {
                 if (state > JPOS_SUE_UF_PROGRESS && state <= JPOS_SUE_UF_PROGRESS + 100)
                     return true;
-                if (state == props.FlagWhenIdleStatusValue) {
+                if (Objects.equals(state, props.FlagWhenIdleStatusValue)) {
                     props.FlagWhenIdle = false;
                     return true;
                 }
@@ -157,9 +157,9 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
     /**
      * Retrieves the values of a given set of properties. The names of the properties to be retrieved will be passed
      * as an array of String. The corresponding values will be returned in an array of Object with the same size (or
-     * size 0 properties is null), in the same order. For example, if properties is {"Status", "Result"}, the returned
+     * size 0 if properties is null), in the same order. For example, if properties is {"Status", "Result"}, the returned
      * array is { <i>value of Status</i>, <i>value of Result</i>}. If a property does not exist, "[error]" will be
-     * stored in the correcsponding place within the returned array.
+     * stored in the corresponding place within the returned array.
      * @param properties Array of names of properties to be retrieved.
      * @return Array of property values.
      */
@@ -262,7 +262,7 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
             default -> {
                 if (state > JPOS_SUE_UF_PROGRESS && state <= JPOS_SUE_UF_PROGRESS + 100)
                     return "Firmware Update (" + (state - JPOS_SUE_UF_PROGRESS) + "%)";
-                if (state == getPropertySet().FlagWhenIdleStatusValue && state != 0)
+                if (Objects.equals(state, getPropertySet().FlagWhenIdleStatusValue))
                     return "Device idle";
             }
         }

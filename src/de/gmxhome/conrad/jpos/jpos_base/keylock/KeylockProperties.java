@@ -63,7 +63,6 @@ public class KeylockProperties extends JposCommonProperties implements KeylockIn
     public KeylockProperties(int dev) {
         super(dev);
         ExclusiveUse = ExclusiveNo;
-        FlagWhenIdleStatusValue = -1;   // To avoid FlagWhenIdle handling for LOCK_KP_ELECTRONIC
     }
 
     @Override

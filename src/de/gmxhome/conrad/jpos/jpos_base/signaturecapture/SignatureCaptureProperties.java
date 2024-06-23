@@ -84,7 +84,6 @@ public class SignatureCaptureProperties extends JposCommonProperties implements 
     protected SignatureCaptureProperties(int dev) {
         super(dev);
         ExclusiveUse = ExclusiveYes;
-        FlagWhenIdleStatusValue = -1;   // To avoid FlagWhenIdle handling for CASH_SUE_DRAWERCLOSED
     }
 
     @Override

@@ -27,10 +27,7 @@ import static net.bplaced.conrad.log4jpos.Level.*;
 
 /**
  * RemoteOrderDisplay service implementation. For more details about getter, setter and method implementations,
- * see JposBase.<br>
- * Special handling has been added to method DirectIO: Due to the fact that UPOS does not support a FlagWhenIdle
- * property for remote order displays, two commands have been added to the UPOS standard. See the description of
- * method DirectIO for details.
+ * see JposBase.
  */
 public class RemoteOrderDisplayService extends JposBase implements RemoteOrderDisplayService116 {
     private final RemoteOrderDisplayProperties Data;

@@ -65,7 +65,6 @@ public class LightsProperties extends JposCommonProperties implements LightsInte
     protected LightsProperties(int dev) {
         super(dev);
         ExclusiveUse = ExclusiveYes;
-        FlagWhenIdleStatusValue = -1;   // To avoid FlagWhenIdle handling for CASH_SUE_DRAWERCLOSED
     }
 
     @Override

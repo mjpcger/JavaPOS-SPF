@@ -55,7 +55,6 @@ public class MotionSensorProperties extends JposCommonProperties implements Moti
     {
         super(dev);
         ExclusiveUse = ExclusiveNo;
-        FlagWhenIdleStatusValue = -1;   // To avoid FlagWhenIdle handling for CASH_SUE_DRAWERCLOSED
     }
 
     @Override

@@ -205,7 +205,6 @@ public class POSPowerProperties extends JposCommonProperties implements POSPower
     protected POSPowerProperties(int dev) {
         super(dev);
         ExclusiveUse = ExclusiveAllowed;
-        FlagWhenIdleStatusValue = -1;   // To avoid FlagWhenIdle handling for CASH_SUE_DRAWERCLOSED
     }
 
     @Override

@@ -45,7 +45,6 @@ public class GateProperties extends JposCommonProperties implements GateInterfac
     {
         super(dev);
         ExclusiveUse = ExclusiveAllowed;
-        FlagWhenIdleStatusValue = -1;   // To avoid FlagWhenIdle handling for CASH_SUE_DRAWERCLOSED
     }
 
     @Override

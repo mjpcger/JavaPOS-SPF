@@ -283,7 +283,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     /**
      * Holds the value to be set in StatusUpdateEvents fired due to FlagWhenIdle = true
      */
-    public int FlagWhenIdleStatusValue = 0;
+    public Integer FlagWhenIdleStatusValue = null;
 
     /**
      * Flag that specifies whether the device supports deprecated methods in cases where UPOS specifies that a service
