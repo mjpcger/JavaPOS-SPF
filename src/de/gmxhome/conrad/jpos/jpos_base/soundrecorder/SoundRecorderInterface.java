@@ -46,7 +46,7 @@ public interface SoundRecorderInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapRecordingLevel is true or recordingLevel equals the current value of RecordingLevel,</li>
-     *     <li>0 &le; recordingLevel &le 100.</li>
+     *     <li>0 &le; recordingLevel &le; 100.</li>
      * </ul>
      *
      * @param recordingLevel New recording level between 0 and 100.

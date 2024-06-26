@@ -36,6 +36,7 @@ public class SoundPlayerStatusUpdateEvent extends JposStatusUpdateEvent {
      *
      * @param source Source, for services implemented with this framework, the (<i>deviceclass</i>.)<i>DeviceClass</i>Service object.
      * @param state  Status, see UPOS specification.
+     * @param outputID Output ID of the sound that finished asynchronous processing.
      */
     public SoundPlayerStatusUpdateEvent(JposBase source, int state, int outputID) {
         super(source, state);

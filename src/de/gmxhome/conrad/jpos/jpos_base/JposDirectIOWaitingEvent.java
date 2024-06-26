@@ -23,6 +23,9 @@ package de.gmxhome.conrad.jpos.jpos_base;
  * whenever the callback may change data or obj.
  */
 public class JposDirectIOWaitingEvent extends JposDirectIOEvent{
+    /**
+     * Object to be used to wait until event handler returns.
+     */
     private final SyncObject Waiter = new SyncObject();
 
     /**

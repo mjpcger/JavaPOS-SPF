@@ -31,6 +31,7 @@ public interface VideoCaptureInterface extends JposBaseInterface {
      * value to application. Can be overwritten within derived class, if necessary. Default processing is to update
      * RemainingRecordingTimeInSec to the recording time as given in the start method, subtracted by the no. of seconds
      * since start method call.
+     * @throws JposException If update of RemainingRecordingTimeInSec fails.
      */
     public void updateRemainingRecordingTimeInSec() throws JposException;
 
@@ -92,7 +93,7 @@ public interface VideoCaptureInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapBrightness is true or brightness equals the current value of Brightness,</li>
-     *     <li>0 &le; brightness &le 100.</li>
+     *     <li>0 &le; brightness &le; 100.</li>
      * </ul>
      *
      * @param brightness New brightness level between 0 and 100.
@@ -106,7 +107,7 @@ public interface VideoCaptureInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapContrast is true or contrast equals the current value of Contrast,</li>
-     *     <li>0 &le; contrast &le 100.</li>
+     *     <li>0 &le; contrast &le; 100.</li>
      * </ul>
      *
      * @param contrast New contrast level between 0 and 100.
@@ -120,7 +121,7 @@ public interface VideoCaptureInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapExposure is true or exposure equals the current value of Exposure,</li>
-     *     <li>0 &le; exposure &le 100.</li>
+     *     <li>0 &le; exposure &le; 100.</li>
      * </ul>
      *
      * @param exposure New exposure level between 0 and 100.
@@ -134,7 +135,7 @@ public interface VideoCaptureInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapGain is true or gain equals the current value of Gain,</li>
-     *     <li>0 &le; gain &le 100.</li>
+     *     <li>0 &le; gain &le; 100.</li>
      * </ul>
      *
      * @param gain New gain level between 0 and 100.
@@ -161,7 +162,7 @@ public interface VideoCaptureInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapHue is true or hue equals the current value of Hue,</li>
-     *     <li>0 &le; hue &le 100.</li>
+     *     <li>0 &le; hue &le; 100.</li>
      * </ul>
      *
      * @param hue New hue level between 0 and 100.
@@ -191,7 +192,7 @@ public interface VideoCaptureInterface extends JposBaseInterface {
      *     <li>Device is enabled,</li>
      *     <li>CapPhoto is true,</li>
      *     <li>CapPhotoFrameRate is true or photoFrameRate equals the current value of PhotoFrameRate,</li>
-     *     <li>1 &le; photoFrameRate &le PhotoMaxFrameRate.</li>
+     *     <li>1 &le; photoFrameRate &le; PhotoMaxFrameRate.</li>
      * </ul>
      *
      * @param photoFrameRate New photo frame rate between 1 and PhotoMaxFrameRate.
@@ -235,7 +236,7 @@ public interface VideoCaptureInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapSaturation is true or saturation equals the current value of Saturation,</li>
-     *     <li>0 &le; saturation &le 100.</li>
+     *     <li>0 &le; saturation &le; 100.</li>
      * </ul>
      *
      * @param saturation New saturation level between 0 and 100.
@@ -309,7 +310,7 @@ public interface VideoCaptureInterface extends JposBaseInterface {
      *     <li>Device is enabled,</li>
      *     <li>CapVideo is true,</li>
      *     <li>CapVideoFrameRate is true or videoFrameRate equals the current value of VideoFrameRate,</li>
-     *     <li>1 &le; videoFrameRate &le VideoMaxFrameRate.</li>
+     *     <li>1 &le; videoFrameRate &le; VideoMaxFrameRate.</li>
      * </ul>
      *
      * @param videoFrameRate New video frame rate between 1 and VideoMaxFrameRate.
@@ -413,7 +414,7 @@ public interface VideoCaptureInterface extends JposBaseInterface {
      *
      *
      * @param fileName      Indicates the video target located on host, HardTotals device or both, depending on Storage property.
-     * @param overWrite     Specifies whether the sound file shall be overwritten if just present. If false, StartRecording
+     * @param overWrite     Specifies whether the image file shall be overwritten if just present. If false, TakePhoto
      *                      will fail if the specified file just exists.
      * @param timeout       Specifies the recording timeout in milliseconds.
      * @throws JposException    If an error occurs.

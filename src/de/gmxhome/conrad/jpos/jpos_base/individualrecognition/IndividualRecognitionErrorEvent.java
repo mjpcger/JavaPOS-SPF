@@ -23,6 +23,9 @@ import jpos.JposException;
 import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
 import static jpos.JposConst.*;
 
+/**
+ * Error event implementation for IndividualRecognition devices.
+ */
 @SuppressWarnings("unused")
 public class IndividualRecognitionErrorEvent extends JposErrorEvent {
     /**
@@ -47,6 +50,8 @@ public class IndividualRecognitionErrorEvent extends JposErrorEvent {
      * @param errorcode Error code, see UPOS specification.
      * @param extended  Extended error code, see UPOS specification.
      * @param data   One or two new values for properties IndividualIDs and (optional) IndividualRecognitionInformation.
+     * @throws JposException If no or more than three data parameters have been specified or if null has been specified
+     * as error text.
      */
     public IndividualRecognitionErrorEvent(JposBase source, int errorcode, int extended, String... data) throws JposException {
         super(source, errorcode, extended, JPOS_EL_INPUT, data.length == 3 ? data[2] : "");
@@ -60,11 +65,11 @@ public class IndividualRecognitionErrorEvent extends JposErrorEvent {
     public void setErrorProperties() {
         super.setErrorProperties();
         IndividualRecognitionProperties data = (IndividualRecognitionProperties) getPropertySet();
-        if (IDs != null && !data.IndividualIDs.equals(IDs)) {
+        if (IDs != null && !IDs.equals(data.IndividualIDs)) {
             data.IndividualIDs = IDs;
             data.EventSource.logSet("IndividualIDs");
         }
-        if (Information != null && !data.IndividualRecognitionInformation.equals(Information)) {
+        if (Information != null && !Information.equals(data.IndividualRecognitionInformation)) {
             data.IndividualRecognitionInformation = Information;
             data.EventSource.logSet("IndividualRecognitionInformation");
         }

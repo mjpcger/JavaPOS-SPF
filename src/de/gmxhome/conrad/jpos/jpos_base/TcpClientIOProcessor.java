@@ -186,6 +186,9 @@ public class TcpClientIOProcessor extends UniqueIOProcessor {
         }
     }
 
+    /**
+     * Socket bound to this IO processor.
+     */
     Socket Sock = null;
 
     @Override

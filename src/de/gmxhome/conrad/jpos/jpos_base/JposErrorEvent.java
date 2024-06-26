@@ -18,6 +18,8 @@ package de.gmxhome.conrad.jpos.jpos_base;
 
 import de.gmxhome.conrad.jpos.jpos_base.bumpbar.BumpBarService;
 import de.gmxhome.conrad.jpos.jpos_base.checkscanner.CheckScannerService;
+import de.gmxhome.conrad.jpos.jpos_base.gesturecontrol.GestureControlService;
+import de.gmxhome.conrad.jpos.jpos_base.graphicdisplay.GraphicDisplayService;
 import de.gmxhome.conrad.jpos.jpos_base.imagescanner.ImageScannerService;
 import de.gmxhome.conrad.jpos.jpos_base.micr.MICRService;
 import de.gmxhome.conrad.jpos.jpos_base.msr.MSRService;
@@ -26,6 +28,9 @@ import de.gmxhome.conrad.jpos.jpos_base.poskeyboard.POSKeyboardService;
 import de.gmxhome.conrad.jpos.jpos_base.remoteorderdisplay.RemoteOrderDisplayService;
 import de.gmxhome.conrad.jpos.jpos_base.scanner.ScannerService;
 import de.gmxhome.conrad.jpos.jpos_base.signaturecapture.SignatureCaptureService;
+import de.gmxhome.conrad.jpos.jpos_base.soundplayer.SoundPlayerService;
+import de.gmxhome.conrad.jpos.jpos_base.speechsynthesis.SpeechSynthesisService;
+import de.gmxhome.conrad.jpos.jpos_base.videocapture.VideoCaptureService;
 import jpos.*;
 import jpos.events.*;
 
@@ -120,12 +125,19 @@ public class JposErrorEvent extends ErrorEvent {
         }
     }
 
+    /**
+     * Array or valid error response values.
+     */
     private final long[] validErrorResponses = { JPOS_ER_CLEAR, JPOS_ER_RETRY, JPOS_ER_CONTINUEINPUT };
 
+    /**
+     * Array of all classes which do not allow ER_CONTINUEINPUT as ErrorResponse.
+     */
     private final Class<?>[] invalidContinueClasses = {
             BumpBarService.class, CheckScannerService.class, ImageScannerService.class, MICRService.class,
             MSRService.class, PINPadService.class, POSKeyboardService.class, RemoteOrderDisplayService.class,
-            ScannerService.class, SignatureCaptureService.class
+            ScannerService.class, SignatureCaptureService.class, VideoCaptureService.class, SoundPlayerService.class,
+            SpeechSynthesisService.class, GestureControlService.class, GraphicDisplayService.class
     };
 
     /**

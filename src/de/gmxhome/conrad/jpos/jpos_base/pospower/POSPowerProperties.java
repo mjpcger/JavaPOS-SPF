@@ -28,7 +28,6 @@ import static jpos.POSPowerConst.*;
  * For details about properties, methods and method parameters, see UPOS specification, chapter POS Power.
  */
 public class POSPowerProperties extends JposCommonProperties implements POSPowerInterface {
-    public int NewSueValue = PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS;
     /**
      * UPOS property CapBatteryCapacityRemaining. Default: false. Can be overwritten by objects derived from JposDevice within the
      * changeDefaults method.

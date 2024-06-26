@@ -59,6 +59,10 @@ public class PositionBase extends UnitOutputRequest {
         Column = column;
     }
 
+    /**
+     * Checks whether the current position is valid for all selected units.
+     * @throws JposException if the position is invalid for at least one of the specified units.
+     */
     protected void checkPositionValid() throws JposException {
         RemoteOrderDisplayProperties data = (RemoteOrderDisplayProperties) (Props);
         RemoteOrderDisplayService svc = (RemoteOrderDisplayService) data.EventSource;

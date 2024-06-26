@@ -25,6 +25,9 @@ import jpos.loader.*;
 
 import static jpos.JposConst.*;
 
+/**
+ * Factory class for sample VideoCapture device implementation
+ */
 @SuppressWarnings("unused")
 public class VideoCaptureFactory extends Factory implements JposServiceInstanceFactory {
     @Override

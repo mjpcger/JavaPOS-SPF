@@ -26,7 +26,7 @@ import jpos.*;
  * Further details about error handling can be found in introduction - Device Behavior Models - Errors.
  * <br>No final parts have been specified for methods FirstTag, NextTag and PreviousTag because these methods
  * will be handled completely by the service. A specific service implementation must only fill all tag data into
- * an RFIDScannerDataEvent an fire that event, The remainder will be handled via standard event handling and via
+ * an RFIDScannerDataEvent and fire that event, The remainder will be handled via standard event handling and via
  * standard method implementations within the RFIDScannerService object.
  */
 public interface RFIDScannerInterface extends JposBaseInterface {

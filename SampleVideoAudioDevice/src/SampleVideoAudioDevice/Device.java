@@ -52,7 +52,7 @@ import static net.bplaced.conrad.log4jpos.Level.*;
  *     Property must be specified with attribute type="Integer".</li>
  *     <li>AudioChannel<i>n</i>: Name of the <i>n</i>'th Audio channel, one of the texts shown as "audio device name" in
  *     VLC device recording open dialog. Several names may be specified, but with consecutive numbers <i>n</i>, always
- *     starting with 1.<br
+ *     starting with 1.<br>
  *     Keep in mind:
  *         <ul>
  *             <li>SoundRecorder will work only if at least <b>AudioChannel1</b> has been specified.</li>
@@ -99,6 +99,10 @@ public class Device extends JposDevice {
 
     private boolean CommonRecording = false;
 
+    /**
+     * The device implementation. See parent for further details.
+     * @param id  Device ID, not used by implementation.
+     */
     public Device(String id) {
         super(id);
         int devcount = 1;

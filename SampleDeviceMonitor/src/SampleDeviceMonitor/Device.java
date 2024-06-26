@@ -34,6 +34,10 @@ import static jpos.JposConst.*;
  * JposDevice based implementation of JavaPOS DeviceMonitor device service implementation for the mass storage devices.
  */
 public class Device extends JposDevice {
+    /**
+     * The device implementation. See parent for further details.
+     * @param id  Device ID, not used by implementation.
+     */
     protected Device(String id) {
         super(id);
         deviceMonitorInit(1);

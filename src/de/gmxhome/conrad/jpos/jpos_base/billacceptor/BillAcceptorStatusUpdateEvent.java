@@ -26,6 +26,9 @@ import static jpos.BillAcceptorConst.*;
  * Status update event implementation for BillAcceptor devices.
  */
 public class BillAcceptorStatusUpdateEvent extends JposStatusUpdateEvent {
+    /**
+     * Value to be stored in property DepositState if state is STATUS_JAMOK.
+     */
     private final int DepositState;
 
     /**

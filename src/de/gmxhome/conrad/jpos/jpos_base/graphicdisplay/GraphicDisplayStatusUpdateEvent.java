@@ -26,6 +26,9 @@ import static jpos.GraphicDisplayConst.*;
  */
 @SuppressWarnings("unused")
 public class GraphicDisplayStatusUpdateEvent extends JposStatusUpdateEvent {
+    /**
+     * Value for property URL.
+     */
     private final String URL;
 
     /**

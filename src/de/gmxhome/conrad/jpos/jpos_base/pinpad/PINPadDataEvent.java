@@ -27,7 +27,15 @@ import static jpos.PINPadConst.*;
  * Data event implementation for PINPad devices.
  */
 public class PINPadDataEvent extends JposDataEvent {
-    private final String AdditionalSecurityInformation, EncryptedPIN;
+    /**
+     * Value for property AdditionalSecurityInformation
+     */
+    private final String AdditionalSecurityInformation;
+
+    /**
+     * Value for property EncryptedPIN
+     */
+    private final String EncryptedPIN;
 
     /**
      * Since PINPadConst.PPAD_TIMEOUT was missing in previous JavaPOS versions, this property could be used instead.

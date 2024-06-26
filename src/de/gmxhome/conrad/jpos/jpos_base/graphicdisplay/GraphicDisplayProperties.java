@@ -22,6 +22,11 @@ import jpos.*;
 
 import static jpos.GraphicDisplayConst.*;
 
+/**
+ * Interface for methods that implement property setter and method calls for the GraphicDisplay device category.
+ * For details about properties, methods and method parameters, see UPOS specification, chapter Graphic Display.
+ * Further details about error handling can be found in introduction - Device Behavior Models - Errors.
+ */
 public class GraphicDisplayProperties extends JposCommonProperties implements GraphicDisplayInterface {
     /**
      * UPOS property Brightness. Default: 0. Should be overwritten by objects derived from JposDevice within the

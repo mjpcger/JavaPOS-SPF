@@ -49,6 +49,10 @@ import static jpos.SmartCardRWConst.*;
 public class SCRWDevice extends JposDevice implements Runnable {
     private int CardReadyDelay = 1000;
 
+    /**
+     * The device implementation. See parent for further details.
+     * @param id  Device ID, not used by implementation.
+     */
     protected SCRWDevice(String id) {
         super(id);
         smartCardRWInit(1);
@@ -130,7 +134,7 @@ public class SCRWDevice extends JposDevice implements Runnable {
     private boolean CardInserted = false;
     private long LastActionTime;
     private boolean ToBeFinished = false;
-    SynchronizedMessageBox TheBox;
+    private SynchronizedMessageBox TheBox;
 
     @Override
     @SuppressWarnings("SynchronizeOnNonFinalField")

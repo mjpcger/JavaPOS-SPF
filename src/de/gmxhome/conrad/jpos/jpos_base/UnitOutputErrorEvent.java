@@ -28,7 +28,7 @@ public class UnitOutputErrorEvent extends JposErrorEvent {
     public final int Units;
 
     /**
-     * Constructor.
+     * Constructor for output error event.
      * @param source    Source, for services implemented with this framework, the (<i>class</i>.)<i>Class</i>Service object.
      * @param errorcode Error code.
      * @param extended  Extended errorcode.
@@ -40,8 +40,17 @@ public class UnitOutputErrorEvent extends JposErrorEvent {
         Units = units;
     }
 
-    UnitOutputErrorEvent(JposBase o, int errorcode, int extended, int locus, int units, String text) {
-        super(o, errorcode, extended, locus, text);
+    /**
+     * Constructor for input or output error event.
+     * @param source    Source, for services implemented with this framework, the (<i>class</i>.)<i>Class</i>Service object.
+     * @param errorcode Error code.
+     * @param extended  Extended errorcode.
+     * @param locus     Error locus, one of JPOS_EL_OUTPUT or JPOS_EL_INPUT.
+     * @param units     Subsystem units that forced the event. Value to be stored in property EventUnits.
+     * @param text      Error message. Value to be stored in property EventString.
+     */
+    UnitOutputErrorEvent(JposBase source, int errorcode, int extended, int locus, int units, String text) {
+        super(source, errorcode, extended, locus, text);
         Units = units;
     }
 

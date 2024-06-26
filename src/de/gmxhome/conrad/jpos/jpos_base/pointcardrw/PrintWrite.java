@@ -25,6 +25,9 @@ import java.util.*;
 import static jpos.JposConst.*;
 import static jpos.PointCardRWConst.*;
 
+/**
+ * Output request executor for PointCardRW method PrintWrite.
+ */
 public class PrintWrite extends JposOutputRequest {
     /**
      * PointCardRW method PrintWrite parameter kind, see UPOS specification.

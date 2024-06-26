@@ -34,6 +34,11 @@ import static jpos.JposConst.*;
 class SampleUdpDeviceBillDispenserProperties extends BillDispenserProperties {
     private final BeltCashboxDrawer Dev;
 
+    /**
+     * Constructor. Gets instance of Device to be used as communication object. Device index for
+     * sample is always 0.
+     * @param dev Instance of Device this object belongs to.
+     */
     protected SampleUdpDeviceBillDispenserProperties(BeltCashboxDrawer dev) {
         super(0);
         Dev = dev;

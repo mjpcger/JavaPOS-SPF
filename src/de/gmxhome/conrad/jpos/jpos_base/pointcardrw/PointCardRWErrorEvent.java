@@ -24,6 +24,9 @@ import java.util.Arrays;
 
 import static jpos.JposConst.*;
 
+/**
+ * Error event implementation for PointCardRW devices.
+ */
 public class PointCardRWErrorEvent extends JposErrorEvent {
     /**
      * Array containing 6 Strings with track data. Empty strings if a track has not been read.

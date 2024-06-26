@@ -26,6 +26,9 @@ import static jpos.CoinAcceptorConst.*;
  * Status update event implementation for CoinAcceptor devices.
  */
 public class CoinAcceptorStatusUpdateEvent extends JposStatusUpdateEvent {
+    /**
+     * New value for DepositStatus property
+     */
     private final int DepositState;
 
     /**

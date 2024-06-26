@@ -270,6 +270,11 @@ public class JposBaseDevice {
          */
         boolean Serialized;
 
+        /**
+         * Thread to be used to perform an input or output request (asynchronously). Used whenever a device supports
+         * concurrent asynchronous processing.
+         * @param request request to be executed using this thread.
+         */
         RequestRunner(JposOutputRequest request) {
             Request = request;
             Serialized = concurrentProcessingSupported(request) == null;

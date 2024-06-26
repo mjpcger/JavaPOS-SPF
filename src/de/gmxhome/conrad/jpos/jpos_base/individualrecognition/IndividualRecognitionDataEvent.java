@@ -23,6 +23,9 @@ import jpos.*;
 import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
 import static jpos.JposConst.*;
 
+/**
+ * Data event implementation for IndividualRecognition devices.
+ */
 @SuppressWarnings("unused")
 public class IndividualRecognitionDataEvent extends JposDataEvent {
     /**
@@ -45,6 +48,7 @@ public class IndividualRecognitionDataEvent extends JposDataEvent {
      * @param source Source, for services implemented with this framework, the (<i>deviceclass</i>.)<i>DeviceClass</i>Service object.
      * @param state  Status, see UPOS specification.
      * @param data   One or two new values for properties IndividualIDs and (optional) IndividualRecognitionInformation.
+     * @throws JposException If no or more than two data parameters have been passed.
      */
     public IndividualRecognitionDataEvent(JposBase source, int state, String... data) throws JposException {
         super(source, state);

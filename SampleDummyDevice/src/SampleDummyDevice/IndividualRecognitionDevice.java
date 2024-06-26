@@ -45,10 +45,14 @@ import static jpos.JposConst.*;
  *     </li>
  * </ul>
  * Property IndividualRecognitionFilter will contain one line per Individual<i>N</i> properties (line delimiter CR, LF
- * or CR LF). Each line has the following format: "ID:%n;%e,Gender:%g;%f,Age:%a;%b", where<ul>%n specifies the individual ID,<br>
- * %e specifies whether the individual shall be enabled,<br>%g specifies whether gender is recognizable,<br>%f specifies whether
- * gender recognition is enabled,<br>%a specifies whether age is recognizable and<br>%b specifies whether age recognition is
- * enabled.</ul>
+ * or CR LF). Each line has the following format: "ID:%n;%e,Gender:%g;%f,Age:%a;%b", where<dl>
+ * <dt>%n specifies the individual ID,</dt>
+ * <dt>%e specifies whether the individual shall be enabled,</dt>
+ * <dt>%g specifies whether gender is recognizable,</dt>
+ * <dt>%f specifies whether gender recognition is enabled,</dt>
+ * <dt>%a specifies whether age is recognizable and</dt>
+ * <dt>%b specifies whether age recognition is enabled.</dt>
+ * </dl>
  * Keep in mind: %a, %b, %e, %g and %f are placeholders for either the letter Y or N. Y means enabled or recognizable, N
  * means disabled or not recognizable. If gender or age is not recognizable, it cannot be enabled.<br>
  * <b>Example:</b><br>
@@ -58,13 +62,17 @@ import static jpos.JposConst.*;
  *     <li>name="Individual2" value="Name=Jane Doe,PIN=2468013579,Gender=female"</li>
  *     <li>name="Individual3" value="Name=Hue Doe,PIN=1234567890,Age=45"</li>
  * </ul>
- * Then the initial value of IndividualRecognitionFilter will be<ul>
- *     ID:1;Y,Gender:Y;Y,Age:Y;Y<br>
- *     ID:2;Y,Gender:Y;Y,Age:N;N<br>
- *     ID:3;Y,Gender:N;N,Age:Y;Y
- * </ul>
+ * Then the initial value of IndividualRecognitionFilter will be<dl>
+ *     <dt>ID:1;Y,Gender:Y;Y,Age:Y;Y</dt>
+ *     <dt>ID:2;Y,Gender:Y;Y,Age:N;N</dt>
+ *     <dt>ID:3;Y,Gender:N;N,Age:Y;Y</dt>
+ * </dl>
  */
 public class IndividualRecognitionDevice extends JposDevice {
+    /**
+     * The device implementation. See parent for further details.
+     * @param id  Device ID, not used by implementation.
+     */
     protected IndividualRecognitionDevice(String id) {
         super(id);
         individualRecognitionInit(1);

@@ -152,5 +152,16 @@ public interface VoiceRecognitionInterface extends JposBaseInterface {
      */
     void startHearingYesNo(StartHearingYesNo request) throws JposException;
 
+
+    /**
+     * Final part of StopHearing method. Can be overwritten within derived classes, if necessary.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>Hearing something is in progress.</li>
+     * </ul>
+     *
+     * @throws JposException    See UPOS specification, method StopHearing.
+     */
     void stopHearing() throws JposException;
 }

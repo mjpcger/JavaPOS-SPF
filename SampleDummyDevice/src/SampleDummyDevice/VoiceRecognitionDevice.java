@@ -35,10 +35,7 @@ import static jpos.VoiceRecognitionConst.*;
 /**
  * JposDevice based dummy implementation for JavaPOS VoiceRecognition device service implementation.
  * No real hardware. All read data with dummy values, operator interaction via InputDialog boxes.<br>
- * Supported configuration values for VoiceRecognition in jpos.xml can be used to set the corresponding property values:
- * <ul>
- * </ul>
- * In addition, the following device specific settings can be configured via jpos.xml:
+ * The following device specific settings can be configured via jpos.xml:
  * <ul>
  *     <li>LanguageList: Value of LanguageList property. Default: en-US. Can be set to another value if other languages
  *     shall be supported.</li>
@@ -49,6 +46,10 @@ import static jpos.VoiceRecognitionConst.*;
  * used in any really existing cash register application.
  */
 public class VoiceRecognitionDevice extends JposDevice {
+    /**
+     * The device implementation. See parent for further details.
+     * @param id  Device ID, not used by implementation.
+     */
     protected VoiceRecognitionDevice(String id) {
         super(id);
         voiceRecognitionInit(1);

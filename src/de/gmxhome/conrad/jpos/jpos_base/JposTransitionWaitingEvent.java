@@ -24,6 +24,9 @@ package de.gmxhome.conrad.jpos.jpos_base;
  * pString.
  */
 public class JposTransitionWaitingEvent extends JposTransitionEvent {
+    /**
+     * Object to be used to wait until event handler returns.
+     */
     private final SyncObject Waiter = new SyncObject();
 
     /**

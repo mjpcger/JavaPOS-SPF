@@ -68,6 +68,9 @@ public class DelayedStatusUpdateEvent extends JposStatusUpdateEvent implements R
         return new DelayedStatusUpdateEvent(o, getStatus());
     }
 
+    /**
+     * Timeout for delayed event firing.
+     */
     private long Timeout;
 
     /**

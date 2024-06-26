@@ -26,6 +26,9 @@ import static jpos.POSPowerConst.*;
  * Status update event implementation for POSPower devices.
  */
 public class POSPowerStatusUpdateEvent extends JposStatusUpdateEvent {
+    /**
+     * Value for property AdditionalData
+     */
     private final int AdditionalData;
 
     /**

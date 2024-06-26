@@ -777,6 +777,9 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         return notnull ? ret : new EscUnknown(temp, subtype, value);
     }
 
+    /**
+     * Base class for display data details, such as control characters, display data, escape sequences, ….
+     */
     public abstract static class DisplayDataPart {}
 
     /**

@@ -31,6 +31,9 @@ import static net.bplaced.conrad.log4jpos.Level.DEBUG;
  * for serial communication. Includes functionality for automatic data logging.
  */
 public class SerialIOProcessor extends UniqueIOProcessor {
+    /**
+     * Constructor of the adapter class.
+     */
     static Constructor<?> NewSerialPort;
 
     static {

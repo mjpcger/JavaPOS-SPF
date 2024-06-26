@@ -27,7 +27,11 @@ public class TakePhoto extends JposInputRequest {
     /**
      * Constructor. Stores given parameters for later use.
      *
-     * @param props Property set of device service.
+     * @param props     Property set of device service.
+     * @param fileName      Indicates the video target located on host, HardTotals device or both, depending on Storage property.
+     * @param overWrite     Specifies whether the image file shall be overwritten if just present. If false, TakePhoto
+     *                      will fail if the specified file just exists.
+     * @param timeout       Specifies the recording timeout in milliseconds.
      */
     public TakePhoto(JposCommonProperties props, String fileName, boolean overWrite, int timeout) {
         super(props);

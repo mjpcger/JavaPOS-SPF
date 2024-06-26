@@ -28,6 +28,11 @@ public class StartRecording extends JposInputRequest {
      * Constructor. Stores given parameters for later use.
      *
      * @param props Property set of device service.
+     * @param fileName      Indicates the video target located on host, HardTotals device or both, depending on Storage property.
+     * @param overWrite     Specifies whether the sound file shall be overwritten if just present. If false, StartRecording
+     *                      will fail if the specified file just exists.
+     * @param recordingTime Specifies the recording time in seconds. If FOREVER, method StopRecording must be used to finish
+     *                      the recording process.
      */
     public StartRecording(SoundRecorderProperties props, String fileName, boolean overWrite, int recordingTime) {
         super(props);

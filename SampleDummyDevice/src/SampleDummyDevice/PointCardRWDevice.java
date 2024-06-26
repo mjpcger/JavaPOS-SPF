@@ -55,6 +55,10 @@ import static net.bplaced.conrad.log4jpos.Level.*;
  */
 @SuppressWarnings("unused")
 public class PointCardRWDevice extends JposDevice implements Runnable {
+    /**
+     * The device implementation. See parent for further details.
+     * @param id  Device ID, not used by implementation.
+     */
     protected PointCardRWDevice(String id) {
         super(id);
         pointCardRWInit(1);
@@ -236,7 +240,7 @@ public class PointCardRWDevice extends JposDevice implements Runnable {
     }
 
     // Convert byte array back to String. Returns empty string if codepage is invalid
-    static String fromBytes(int codepage, byte[] source) {
+    private static String fromBytes(int codepage, byte[] source) {
         if (codepage == PCRW_CS_ASCII)
             codepage = CP_US;
         if (!member(codepage, CodePages) || source == null)
@@ -285,7 +289,7 @@ public class PointCardRWDevice extends JposDevice implements Runnable {
     }
 
     private Card[] TheCards;
-    Card CurrentCard = null;
+    private Card CurrentCard = null;
 
     private enum State {
         Idle,
@@ -297,8 +301,8 @@ public class PointCardRWDevice extends JposDevice implements Runnable {
     };
     private final State[] Status = {State.Idle};
     private SyncObject StatusChangeWaiter = null;
-    SynchronizedMessageBox TheBox = new SynchronizedMessageBox();
-    Thread Handler = null;
+    private final SynchronizedMessageBox TheBox = new SynchronizedMessageBox();
+    private Thread Handler = null;
     @Override
     public void run() {
         String title = "Dummy PointCardRW Simulator";

@@ -81,61 +81,7 @@ import static net.bplaced.conrad.log4jpos.Level.*;
  *     specified timeout is less than or equal to MinClaimTimeout. Default: 100.</li>
  *     <li>PollDelay: The interval for printer status polling if response is "1" (currently not available), default: 200.</li>
  *     <li>Port: The IPv4 address of the device. Must always be specified and not empty. Notation: address:port, where
- *     add     * Sample device specific class. The device uses the following commands:
- *      * <ul>
- *      *     <li>p%d\3			Set print line width. Parameters: Line width (must be &ge; 28).</li>
- *      *     <li>l%d\3			Lock or unlock terminal. Parameters: 0: unlock, 1: lock</li>
- *      *     <li>b\3				Begin transaction. s, v or r must follow.</li>
- *      *     <li>s%f\3			Set sale amount. Parameters: Amount.</li>
- *      *     <li>c%d\2%d\3		Commit operation. Parameters: No. of transaction to be committed, result (0: Verification
- *      *                          error, 1: Signature verified). Mandatory after sign-based sale operations.</li>
- *      *     <li>r%f\3			Set return amount. Parameters: Amount.</li>
- *      *     <li>v%d\3			Void transaction. Parameters: No. of transaction to be voided.</li>
- *      *     <li>a\3				Abort operation.</li>
- *      * </ul>
- *      * In addition, the device sends the following responses:
- *      * <ul>
- *      *     <li>L%d\3										Lock terminal. Parameters: Result code (0: OK, 4: just locked).</li>
- *      *     <li>U%d\3										Unlock terminal. Parameters: Result code (0: OK, 4: just unlocked).</li>
- *      *     <li>B%d\3										Begin transaction. Parameters: Result code (0: OK, 4: just locked,
- *      *                                                      6: waiting for commit, 7: authorization active).</li>
- *      *     <li>E%d\3										End. Parameters: Result code (0: OK, 3: Abort, 4: locked, 5: no
- *      *                                                      transaction, 6: wait for commit, 7: other operation active,
- *      *                                                      8: invalid transaction).</li>
- *      *     <li>E%d\2%s\2%s\2%s\2%s\2%s\2%s\2%s\2%s\2%s\3 	End processing. Parameters: Result code (0: OK, 1: wait for commit,
- *      *                                                      2: Error), Result code (0: no error), approval result (0: OK,
- *      *                                                      1111: check, else error), balance, tip (included in balance),
- *      *                                                      card issuer (abbreviation, see IssuerList), card no (last 4 digits),
- *      *                                                      expiration date, transaction number, transaction time (format
- *      *                                                      YYYYmmddTHHMMSS).</li>
- *      * </ul>
- *      * The device sends the following status messages:
- *      * <ul>
- *      *     <li>D%d\2%s\3					Display line. Parameters: line no (0-3), contents (UTF-8).</li>
- *      *     <li>P%d\2%s\3					Print ticket. Parameters: count (1-2), ticket data (UTF-8), may contain line feeds.</li>
- *      * </ul>
- *      * The contents of all display lines sent from the simulator will be passed via property pString of TransitionEvent
- *      * events with EventNumber = TE_NOTIFY_BUSY, the line number (1 - 4) will be passed in pData.
- *      * <br>In addition, the contents of line 2 will be analysed to detect the following transitions:
- *      * <ul>
- *      *     <li>Line 2, Swipe Card: Triggers transition event with EventNumber TE_NOTIFY_TOUCH. Next change of line 2
- *      *     triggers transition event with EventNumber TE_NOTIFY_CAPTURE_CARD</li>
- *      *     <li>Line 2, Enter PIN: Triggers transition event with EventNumber TE_NOTIFY_PIN.</li>
- *      *     <li>Line 2, Waiting...: Triggers transition event with EventNumber TE_NOTIFY_CENTER_CHECK. Next change of
- *      *     line 2 triggers transition event with EventNumber TE_NOTIFY_CENTER_CHECK_COMPLETE</li>
- *      * </ul>
- *      * The contents of the following display lines will be passed via property pString of TransitionEvent events with
- *      * EventNumber TE_NOTIFY_INVALID_OPERATION or TE_NOTIFY_COMPLETE:
- *      *     <li>Line 3, *** ABORTED ***</li>
- *      *     <li>Line 3, *** SUCCESS ***</li>
- *      *     <li>Line 3, *** READY ***</li>
- *      *     <li>Line 3, *** LOCKED ***</li>
- *      * </ul>
- *      * Ticket data will be passed via transition event with EventNumber = TE_CONFIRM_DEVICE_DATA via property pString,
- *      * the ticket count (1 or 2) via pData. To confirm error free processing of ticket data, the application sets
- *      * AdditionalSecurityInformation to "0", in case of an error to "1". Currently, this feedback will not be checked.
- *      * <br>If AsyncMode is false, TransitionEvent events will not be used. In this case, ticket data
- *      * <br>The device will be connected via TCP.ress is a IPv4 address and port the TCP port of the device.</li>
+ *     address is a IPv4 address and port the TCP port of the device.</li>
  *     <li>RequestTimeout: Maximum time the service object waits for the reception of a response frame after sending a
  *     request to the target, in milliseconds. Default: 1000.</li>
  *     <li>TicketWidth: Length of one ticket line passed vie TransitionEvent. Must be a value between 28 and 99

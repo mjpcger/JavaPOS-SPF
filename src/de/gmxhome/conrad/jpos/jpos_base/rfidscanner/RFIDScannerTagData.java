@@ -27,18 +27,36 @@ public class RFIDScannerTagData {
     private final int TagProtocol;
     private final byte[] TagUserData;
 
+    /**
+     * Retrieves tag ID.
+     * @return Tag specific ID value.
+     */
     public byte[] getTagID() {
         return Arrays.copyOf(TagID, TagID.length);
     }
 
+    /**
+     * Retrieves TagProtocol
+     * @return Tag specific protocol value.
+     */
     public int getTagProtocol() {
         return TagProtocol;
     }
 
+    /**
+     * Retrieves TagUserData property.
+     * @return Value of tag specific user data.
+     */
     public byte[] getTagUserData() {
         return Arrays.copyOf(TagUserData, TagUserData.length);
     }
 
+    /**
+     * Creates instance of an RFID tag data element
+     * @param tagID       Tag ID.
+     * @param tagUserData Tag specific used data.
+     * @param tagProtocol Tag specific protocol value.
+     */
     public RFIDScannerTagData(byte[] tagID, byte[] tagUserData, int tagProtocol) {
         TagID = Arrays.copyOf(tagID, tagID.length);
         TagUserData = Arrays.copyOf(tagUserData, tagUserData.length);

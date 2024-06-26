@@ -26,11 +26,17 @@ import de.gmxhome.conrad.jpos.jpos_base.*;
 public class DeviceMonitorDataEvent extends JposDataEvent {
     /**
      * DeviceData contents belonging to this data event.
+     * @return DeviceData in the form of "deviceID: value" as specified in the constructor.
      */
     public String getDeviceData() {
         return DeviceData;
     }
+
+    /**
+     * Device data as specified within the UPOS specification.
+     */
     private final String DeviceData;
+
     /**
      * Constructor. Parameters passed to base class unchanged.
      *

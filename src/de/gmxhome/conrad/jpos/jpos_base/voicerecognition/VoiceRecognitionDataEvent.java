@@ -42,6 +42,7 @@ public class VoiceRecognitionDataEvent extends JposDataEvent {
      * @param word   Words to be stored in HearingDataWord if pattern has not been specified, otherwise word information
      *               as specified in UPOS specification for property HearingDataWordList.
      * @param pattern If specified, pattern to be stored in HearingDataPattern.
+     * @throws JposException If more than one pattern parameter has been specified.
      *
      */
     public VoiceRecognitionDataEvent(JposBase source, int state, int result, String word, String... pattern) throws JposException {

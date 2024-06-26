@@ -30,9 +30,27 @@ import static jpos.JposConst.*;
  * Status update event implementation for CashChanger devices.
  */
 public class CashChangerStatusUpdateEvent extends JposStatusUpdateEvent {
+    /**
+     * Exception will not be thrown, the exception properties ErrorCode and ErrorCodeExtended will be used to fill the
+     * corresponding result code properties instead. If null, the result code properties will be set to the values reserved for
+     * error-free processing.
+     */
     private final JposException Exception;
+
+    /**
+     * Status value.
+     */
     private final Integer State;
+
+    /**
+     * Array of possible status values when deposit is not in progress.
+     */
     private static final long[] OutOfDepositStates = { CHAN_STATUS_DEPOSIT_END, CHAN_STATUS_DEPOSIT_NONE };
+
+    /**
+     * Flag to be used to check whether the devise is in a deposit operation or not. If this is not known,
+     * InDepositOperation will be null.
+     */
     private final Boolean InDepositOperation;
 
     /**

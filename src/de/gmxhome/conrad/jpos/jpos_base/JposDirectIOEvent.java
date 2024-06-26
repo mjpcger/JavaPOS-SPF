@@ -64,6 +64,9 @@ public class JposDirectIOEvent extends DirectIOEvent {
     public void setDirectIOProperties() {
     }
 
+    /**
+     * Write protection flag. If true, neither a call to setData nor to setObject will change this event.
+     */
     boolean WriteProtected = false;
 
     @Override

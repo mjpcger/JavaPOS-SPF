@@ -58,6 +58,10 @@ import static jpos.JposConst.*;
  * used in any really existing cash register application.
  */
 public class GraphicDisplayDevice extends JposDevice {
+    /**
+     * The device implementation. See parent for further details.
+     * @param id  Device ID, not used by implementation.
+     */
     protected GraphicDisplayDevice(String id) {
         super(id);
         graphicDisplayInit(1);

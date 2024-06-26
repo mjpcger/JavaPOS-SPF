@@ -53,7 +53,11 @@ import static jpos.PINPadConst.*;
  * the BeginEFTTransaction method: "SAMPLE".
  */
 public class PINPadDevice extends JposDevice implements Runnable {
-    protected PINPadDevice(String id) throws JposException {
+    /**
+     * The device implementation. See parent for further details.
+     * @param id  Device ID, not used by implementation.
+     */
+    protected PINPadDevice(String id) {
         super(id);
         pINPadInit(1);
         PhysicalDeviceDescription = "Dummy PINPad simulator";

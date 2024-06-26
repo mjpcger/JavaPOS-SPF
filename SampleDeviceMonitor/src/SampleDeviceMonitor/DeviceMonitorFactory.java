@@ -25,6 +25,9 @@ import jpos.loader.*;
 
 import static jpos.JposConst.*;
 
+/**
+ * Factory class for sample DeviceMonitor device implementation
+ */
 @SuppressWarnings("unused")
 public class DeviceMonitorFactory extends Factory implements JposServiceInstanceFactory {
     @Override

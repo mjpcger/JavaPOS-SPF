@@ -26,6 +26,9 @@ import java.util.*;
  * Data event implementation for RFIDScanner devices.
  */
 public class RFIDScannerDataEvent extends JposDataEvent {
+    /**
+     * RFID tags that have been read.
+     */
     final List<RFIDScannerTagData> ScannedTags;
 
     /**

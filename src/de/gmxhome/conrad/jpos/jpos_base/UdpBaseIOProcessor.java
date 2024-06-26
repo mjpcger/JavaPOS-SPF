@@ -32,6 +32,9 @@ import static jpos.JposConst.JPOS_E_FAILURE;
 import static jpos.JposConst.JPOS_E_ILLEGAL;
 import static net.bplaced.conrad.log4jpos.Level.ERROR;
 
+/**
+ * Base class for UDP IO processors. Implements common parts for client and server UDP sockets.
+ */
 public abstract class UdpBaseIOProcessor extends UniqueIOProcessor implements Runnable {
     /**
      * Stores JposDevice and port of derived IO processors. The device will

@@ -31,6 +31,10 @@ public class FiscalPrinterErrorEvent extends JposErrorEvent {
     public int getLevel() {
         return Level;
     }
+
+    /**
+     * The ErrorLevel value.
+     */
     private final int Level;
 
     /**
@@ -40,6 +44,10 @@ public class FiscalPrinterErrorEvent extends JposErrorEvent {
     public int getOutputID() {
         return OutputID;
     }
+
+    /**
+     * The output ID.
+     */
     private final int OutputID;
 
     /**
@@ -49,6 +57,10 @@ public class FiscalPrinterErrorEvent extends JposErrorEvent {
     public int getState() {
         return State;
     }
+
+    /**
+     * the new ErrorState value.
+     */
     private final int State;
 
     /**
@@ -58,6 +70,10 @@ public class FiscalPrinterErrorEvent extends JposErrorEvent {
     public int getStation() {
         return Station;
     }
+
+    /**
+     * The ErrorStation value.
+     */
     private final int Station;
 
     /**
@@ -67,6 +83,10 @@ public class FiscalPrinterErrorEvent extends JposErrorEvent {
     public String getMessage() {
         return Message;
     }
+
+    /**
+     * The error message.
+     */
     private final String Message;
 
     /**

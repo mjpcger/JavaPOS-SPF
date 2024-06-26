@@ -210,6 +210,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of BeltProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public BeltProperties getBeltProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -267,6 +268,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of BillAcceptorProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public BillAcceptorProperties getBillAcceptorProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -324,6 +326,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of BillDispenserProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public BillDispenserProperties getBillDispenserProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -381,6 +384,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of BiometricsProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public BiometricsProperties getBiometricsProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -438,6 +442,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of BumpBarProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public BumpBarProperties getBumpBarProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -495,6 +500,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of CashChangerProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public CashChangerProperties getCashChangerProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -555,6 +561,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of CashDrawerProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public CashDrawerProperties getCashDrawerProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -612,6 +619,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of CheckScannerProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public CheckScannerProperties getCheckScannerProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -669,6 +677,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of CoinAcceptorProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public CoinAcceptorProperties getCoinAcceptorProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -726,6 +735,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of CATProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public CATProperties getCATProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -783,6 +793,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of CoinDispenserProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public CoinDispenserProperties getCoinDispenserProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -840,6 +851,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of DeviceMonitorProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public DeviceMonitorProperties getDeviceMonitorProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -897,6 +909,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of ElectronicJournalProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public ElectronicJournalProperties getElectronicJournalProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -956,6 +969,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of ElectronicValueRWProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public ElectronicValueRWProperties getElectronicValueRWProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1013,6 +1027,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of FiscalPrinterProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public FiscalPrinterProperties getFiscalPrinterProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1070,6 +1085,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of GateProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public GateProperties getGateProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1127,6 +1143,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of GestureControlProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public GestureControlProperties getGestureControlProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1184,6 +1201,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of GraphicDisplayProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public GraphicDisplayProperties getGraphicDisplayProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1241,6 +1259,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of HardTotalsProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public HardTotalsProperties getHardTotalsProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1298,6 +1317,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of ImageScannerProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public ImageScannerProperties getImageScannerProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1356,6 +1376,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of IndividualRecognitionProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public IndividualRecognitionProperties getIndividualRecognitionProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1413,6 +1434,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of ItemDispenserProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public ItemDispenserProperties getItemDispenserProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1469,6 +1491,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of KeylockProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public KeylockProperties getKeylockProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1526,6 +1549,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of LightsProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public LightsProperties getLightsProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1582,6 +1606,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of LineDisplayProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public LineDisplayProperties getLineDisplayProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1639,6 +1664,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of MICRProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public MICRProperties getMICRProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1696,6 +1722,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of MotionSensorProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public MotionSensorProperties getMotionSensorProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1753,6 +1780,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of MSRProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public MSRProperties getMSRProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1810,6 +1838,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of PINPadProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public PINPadProperties getPINPadProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1867,6 +1896,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of PointCardRWProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public PointCardRWProperties getPointCardRWProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1923,6 +1953,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of POSKeyboardProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public POSKeyboardProperties getPOSKeyboardProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -1980,6 +2011,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of POSPowerProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public POSPowerProperties getPOSPowerProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -2037,6 +2069,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of POSPrinterProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public POSPrinterProperties getPOSPrinterProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -2094,6 +2127,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of RemoteOrderDisplayProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public RemoteOrderDisplayProperties getRemoteOrderDisplayProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -2151,6 +2185,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of RFIDScannerProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public RFIDScannerProperties getRFIDScannerProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -2208,6 +2243,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of ScaleProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public ScaleProperties getScaleProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -2264,6 +2300,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of ScannerProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public ScannerProperties getScannerProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -2321,6 +2358,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of SignatureCaptureProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public SignatureCaptureProperties getSignatureCaptureProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -2378,6 +2416,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of SmartCardRWProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public SmartCardRWProperties getSmartCardRWProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -2435,6 +2474,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of SoundPlayerProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public SoundPlayerProperties getSoundPlayerProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -2492,6 +2532,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of SoundRecorderProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public SoundRecorderProperties getSoundRecorderProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -2549,6 +2590,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of SpeechSynthesisProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public SpeechSynthesisProperties getSpeechSynthesisProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -2605,6 +2647,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of ToneIndicatorProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public ToneIndicatorProperties getToneIndicatorProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -2662,6 +2705,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of VideoCaptureProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public VideoCaptureProperties getVideoCaptureProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");
@@ -2719,6 +2763,7 @@ public class JposDevice extends JposBaseDevice {
      *
      * @param index Device index, see constructor of JposCommonProperties.
      * @return Instance of VoiceRecognitionProperties that matches the requirements of the corresponding device service.
+     * @throws JposException If individual implementation of this method is missing.
      */
     public VoiceRecognitionProperties getVoiceRecognitionProperties(int index) throws JposException {
         throw new JposException(JPOS_E_NOSERVICE, "Missing implementation of getBumpBarProperties()");

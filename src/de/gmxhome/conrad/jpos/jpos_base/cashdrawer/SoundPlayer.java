@@ -34,7 +34,7 @@ public class SoundPlayer implements Runnable {
     private static final int SAMPLERATE = 48000;
     private Thread Player = null;
     private enum SoundPlayerState {OFF, OPEN, STARTED};
-    SoundPlayerState State = SoundPlayerState.OFF;
+    private SoundPlayerState State = SoundPlayerState.OFF;
 
 
     /**

@@ -27,7 +27,16 @@ import static jpos.JposConst.*;
  * Status update event implementation for BillDispenser devices.
  */
 public class BillDispenserStatusUpdateEvent extends JposStatusUpdateEvent {
+    /**
+     * Exception will not be thrown, the exception properties ErrorCode and ErrorCodeExtended will be used to fill the
+     * corresponding result code properties instead. If null, the result code properties will be set to the values reserved for
+     * error-free processing.
+     */
     private final JposException Exception;
+
+    /**
+     * Value to be set in property DeviceStatus, if specified within constructor.
+     */
     private final int DeviceState;
 
     /**

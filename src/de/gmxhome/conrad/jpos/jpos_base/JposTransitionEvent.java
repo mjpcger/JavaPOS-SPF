@@ -60,6 +60,9 @@ public class JposTransitionEvent extends TransitionEvent {
     public void setTransitionProperties() {
     }
 
+    /**
+     * Write protection flag. If true, neither a call to setData nor to setString will change this event.
+     */
     boolean WriteProtected = false;
 
     @Override

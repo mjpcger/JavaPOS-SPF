@@ -22,6 +22,9 @@ import de.gmxhome.conrad.jpos.jpos_base.JposOutputCompleteEvent;
 
 import java.util.Arrays;
 
+/**
+ * Output complete event implementation for PointCardRW devices.
+ */
 public class PointCardRWOutputCompleteEvent extends JposOutputCompleteEvent {
     /**
      * Array containing the state values of the 6 tracks to be stored in WriteState1 and WriteState2, one value per track.

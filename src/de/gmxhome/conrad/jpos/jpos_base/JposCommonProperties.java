@@ -396,6 +396,13 @@ public abstract class JposCommonProperties implements JposBaseInterface {
         }
     }
 
+    /**
+     * Checks whether a method may throw a JposException with error code JPOS_E_DEPRECATED.
+     * @param firstDeprecatedVersion Version when the method to be checked became deprecated.
+     * @param message                message to be used in JposException with JPOS_E_DEPRECATED will be thrown.
+     * @throws JposException If DeviceServiceVersion is more than two minor releases behind the deprecation and
+     * AllowDeprecatedMethods has not been set.
+     */
     public void checkForDeprecation(int firstDeprecatedVersion, String message) throws JposException {
         if (firstDeprecatedVersion + 2000 < DeviceServiceVersion)
             check(!AllowDeprecatedMethods, JPOS_E_DEPRECATED, message);

@@ -50,6 +50,11 @@ class SampleUdpDeviceCashChangerProperties extends CashChangerProperties {
         return "";
     }
 
+    /**
+     * Constructor. Gets instance of Device to be used as communication object. Device index for
+     * sample is always 0.
+     * @param dev Instance of Device this object belongs to.
+     */
     protected SampleUdpDeviceCashChangerProperties(BeltCashboxDrawer dev) {
         super(0);
         Dev = dev;

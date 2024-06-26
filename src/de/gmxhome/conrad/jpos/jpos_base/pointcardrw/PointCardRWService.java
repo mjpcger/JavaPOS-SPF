@@ -1007,6 +1007,14 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
             validateData(srv);
         }
 
+        /**
+         * Used to perform additional validation of the print data. To do this,
+         * simply the corresponding method of the PointCardRWInterface used by the given PointCardRWService will be called.
+         *
+         * @param srv PointCardRWService to be used for additional validation.
+         * @throws JposException If not precisely supported with ErrorCode E_ILLEGAL, if not supported and no workaround
+         *                       is possible, with ErrorCode E_FAILURE.
+         */
         void validateData(PointCardRWService srv) throws JposException {
             srv.PointCardRW.validateData(this);
         }
@@ -1039,6 +1047,14 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
             validateData(srv);
         }
 
+        /**
+         * Used to perform additional validation of the print data, if print output occurs. To do this,
+         * simply the corresponding method of the PointCardRWInterface used by the given PointCardRWService will be called.
+         *
+         * @param srv PointCardRWService to be used for additional validation.
+         * @throws JposException If not precisely supported with ErrorCode E_ILLEGAL, if not supported and no workaround
+         *                       is possible, with ErrorCode E_FAILURE.
+         */
         void validateData(PointCardRWService srv) throws JposException {
             srv.PointCardRW.validateData(this);
         }

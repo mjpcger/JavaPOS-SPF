@@ -69,6 +69,11 @@ public class RFIDDevice extends JposDevice implements Runnable {
     static final private int TagDisabled = 0x80;    // Flag for disabled (unaccessible) tag
     static final private int TagProtoMask = 0x1f;   // Mask for protocol bit number
 
+    /**
+     * The device implementation. See parent for further details.
+     * @param id  Device ID, not used by implementation.
+     * @throws JposException If implementation specific resources are not accessible or defective.
+     */
     protected RFIDDevice(String id) throws JposException {
         super(id);
         rFIDScannerInit(1);
@@ -92,9 +97,9 @@ public class RFIDDevice extends JposDevice implements Runnable {
             }
 
         } catch (IOException e) {
-            throw new JposException(JPOS_E_FAILURE, e.getMessage(), e);
+            throw new JposException(JPOS_E_NOSERVICE, e.getMessage(), e);
         }
-        check(Labels.size() == 0, JPOS_E_ILLEGAL, "No label in " + id);
+        check(Labels.size() == 0, JPOS_E_NOSERVICE, "No label in " + id);
     }
 
     private byte[] hexStringToByteArray(String s) throws JposException {
@@ -154,7 +159,7 @@ public class RFIDDevice extends JposDevice implements Runnable {
                         if (capability[j].equals(o.toString().toUpperCase()))
                             break;
                     }
-                    check(j == capability.length, JPOS_E_ILLEGAL, "Invalid value for property " + capability[PropName] + ": " + o.toString());
+                    check(j == capability.length, JPOS_E_NOSERVICE, "Invalid value for property " + capability[PropName] + ": " + o.toString());
                 }
                 LastEntries.put(capability[PropName], new String[]{ capability[PropType], o.toString()});
             }
