@@ -79,7 +79,7 @@ public class VoiceRecognitionStatusUpdateEvent extends JposStatusUpdateEvent {
             case VRCG_SUE_START_HEARING_WORD -> "VoiceRecognition Start Hearing Word";
             case VRCG_SUE_START_HEARING_YESNO -> "VoiceRecognition Start Hearing Yes / No";
             case VRCG_SUE_STOP_HEARING -> "VoiceRecognition Stop Hearing";
-            default -> "Unknown SoundRecorder Status Change: " + getStatus();
+            default -> "Unknown VoiceRecognition Status Change: " + getStatus();
         };
     }
 }

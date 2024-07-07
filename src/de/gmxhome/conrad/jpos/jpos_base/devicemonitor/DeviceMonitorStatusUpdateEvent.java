@@ -41,7 +41,7 @@ public class DeviceMonitorStatusUpdateEvent extends JposStatusUpdateEvent {
         return ret.length() > 0 ? ret : switch (getStatus()) {
             case DMON_SUE_START_MONITORING -> "DeviceMonitor Start Monitoring";
             case DMON_SUE_STOP_MONITORING -> "DeviceMonitor Stop Monitoring";
-            default -> "Unknown GraphicDisplay Status Change: " + getStatus();
+            default -> "Unknown DeviceMonitor Status Change: " + getStatus();
         };
     }
 }
