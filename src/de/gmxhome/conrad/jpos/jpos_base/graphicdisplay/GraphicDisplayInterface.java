@@ -21,7 +21,7 @@ import de.gmxhome.conrad.jpos.jpos_base.JposBaseInterface;
 import jpos.JposException;
 
 /**
- * Interface for methods that implement property setter and method calls for the GestureControl device category.
+ * Interface for methods that implement property setter and method calls for the GraphicDisplay device category.
  * For details about properties, methods and method parameters, see UPOS specification, chapter Gesture Control.
  * Further details about error handling can be found in introduction - Device Behavior Models - Errors.
  */
