@@ -68,7 +68,7 @@ public class GraphicDisplayDevice extends JposDevice {
         PhysicalDeviceDescription = "Dummy GraphicDisplay simulator";
         PhysicalDeviceName = "Dummy GraphicDisplay Simulator";
         CapPowerReporting = JPOS_PR_NONE;
-        }
+    }
 
     private String CapAssociatedHardTotalsDevice = "";
     private String ImageTypeList = "";

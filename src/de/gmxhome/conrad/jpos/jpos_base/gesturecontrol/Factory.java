@@ -22,6 +22,7 @@ import jpos.*;
 import jpos.config.JposEntry;
 
 import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static jpos.GestureControlConst.*;
 import static jpos.JposConst.*;
 
 /**
@@ -42,6 +43,17 @@ public class Factory extends JposDeviceFactory {
         validateJposConfiguration(props, dev, dev.ClaimedGestureControl, entry);
         GestureControlService service = (GestureControlService) (props.EventSource = new GestureControlService(props, dev));
         dev.changeDefaults(props);
+        check(props.CapStorage != GCTL_CST_HOST_ONLY && (props.CapAssociatedHardTotalsDevice == null || props.CapAssociatedHardTotalsDevice.equals("")),
+                JPOS_E_NOSERVICE, "HardTotals device name missing");
+        checkMember(props.CapStorage, new long[]{GCTL_CST_HARDTOTALS_ONLY, GCTL_CST_HOST_ONLY, GCTL_CST_ALL}, JPOS_E_NOSERVICE, "Invalid CapStorage: " + props.CapStorage);
+        check(props.CapMotionCreation && !props.CapMotion, JPOS_E_NOSERVICE, "CapMotionCreation invalid");
+        check(props.CapPoseCreation && !props.CapPose, JPOS_E_NOSERVICE, "CapPoseCreation invalid");
+        if (props.CapStorage != GCTL_CST_HOST_ONLY) {
+            HardTotals htdev = new HardTotals();
+            htdev.open(props.CapAssociatedHardTotalsDevice);
+            check(htdev.getCapSingleFile(), JPOS_E_NOSERVICE, "HardTotals with CapSingleFile=TRUE are not supported");
+            htdev.close();
+        }
         props.addProperties(dev.GestureControls);
         service.DeviceInterface = service.GestureControl = props;
         return service;
