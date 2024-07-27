@@ -137,6 +137,9 @@ public interface GestureControlInterface extends JposBaseInterface {
      *     <li>time is a positive value or FOREVER.</li>
      * </ul>
      *
+     * @param positionList Position in formation in comma-separated list. See UPOS specification for details.
+     * @param time         Specify time to complete operation in seconds. See UPOS specification for details.
+     * @param absolute     Specifies whether position is absolute or relative. See UPOS specification for details.
      * @return                  SetPosition object for use in final part.
      * @throws JposException    If an error occurs.
      */
@@ -165,6 +168,8 @@ public interface GestureControlInterface extends JposBaseInterface {
      *     <li>time is a positive value or FOREVER.</li>
      * </ul>
      *
+     * @param speedList Speed information in comma separated list as specified in UPOS 1.16 specification.
+     * @param time      Time to control device in second. See UPOS 1.16 specification for additional information.
      * @return                  SetSpeed object for use in final part.
      * @throws JposException    If an error occurs.
      */
@@ -192,6 +197,7 @@ public interface GestureControlInterface extends JposBaseInterface {
      *     <li>fileName is neither null,nor empty.</li>
      * </ul>
      *
+     * @param fileName Name of motion file or motion ID present in MotionList property.
      * @return                  StartMotion object for use in final part.
      * @throws JposException    If an error occurs.
      */
@@ -219,6 +225,7 @@ public interface GestureControlInterface extends JposBaseInterface {
      *     <li>fileName is neither null,nor empty.</li>
      * </ul>
      *
+     * @param fileName Name of pose file or pose ID present in PoseList property.
      * @return                  StartPose object for use in final part.
      * @throws JposException    If an error occurs.
      */
@@ -250,5 +257,5 @@ public interface GestureControlInterface extends JposBaseInterface {
      *                and only internal processing shall be performed, if necessary.
      * @throws JposException    If an error occurs.
      */
-    void stopControl(JposOutputRequest request, boolean abort);
+    void stopControl(JposOutputRequest request, boolean abort) throws JposException;
 }
