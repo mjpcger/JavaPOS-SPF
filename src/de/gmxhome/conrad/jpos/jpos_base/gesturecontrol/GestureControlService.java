@@ -209,7 +209,7 @@ public class GestureControlService extends JposBase implements GestureControlSer
         check(!Data.CapPoseCreation, JPOS_E_ILLEGAL, "Pose creation not supported");
         check(!Data.PoseCreationMode, JPOS_E_ILLEGAL, "Not in pose creation mode");
         checkFileName(fileName);
-        check(time < 0 && time != JPOS_FOREVER, JPOS_E_ILLEGAL, "time must be a positiv value or FOREVER");
+        check(time < 0 && time != JPOS_FOREVER, JPOS_E_ILLEGAL, "time must be a positive value or FOREVER");
         GestureControl.createPose(fileName, time);
         logCall("CreatePose");
     }

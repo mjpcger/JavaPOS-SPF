@@ -104,7 +104,7 @@ public interface GestureControlInterface extends JposBaseInterface {
      * </ul>
      *
      * @param fileName Name of pose file to be created.
-     * @param time Comma separated list of pose information.
+     * @param time     Time to reach the pose position in seconds.
      * @throws JposException    If an error occurs.
      */
     void createPose(String fileName, int time) throws JposException;
