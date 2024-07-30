@@ -214,6 +214,7 @@ public class SpeechSynthesisService extends JposBase implements SpeechSynthesisS
     public void speakImmediate(String text) throws JposException {
         logPreCall("SpeakImmediate", removeOuterArraySpecifier(new Object[]{text}, Device.MaxArrayStringElements));
         checkEnabled();
+        List<SpeechSynthesisProperties.TextPart> parsedText = SpeechSynthesisProperties.TextPart.parse(text);
         if (Data.State != JPOS_S_IDLE) {
             SpeechSynthesis.clearOutput();
             if (Data.OutputIDList.length() > 0) {
@@ -221,18 +222,8 @@ public class SpeechSynthesisService extends JposBase implements SpeechSynthesisS
                 logSet("OutputIDList");
             }
         }
-        List<SpeechSynthesisProperties.TextPart> parsedText = SpeechSynthesisProperties.TextPart.parse(text);
-        JposOutputRequest request = SpeechSynthesis.speak(parsedText);
-        if (request != null)
-            request.enqueue();
-        synchronized (Data.OutputIdListSync) {
-            if (Data.OutputIDList.length() == 0)
-                Data.OutputIDList = String.valueOf(Data.OutputID);
-            else
-                Data.OutputIDList += "," + Data.OutputID;
-            logSet("OutputIDList");
-        }
-        logAsyncCall("SpeakImmediate");
+       SpeechSynthesis.speakImmediate(parsedText);
+        logCall("SpeakImmediate");
     }
 
     @Override

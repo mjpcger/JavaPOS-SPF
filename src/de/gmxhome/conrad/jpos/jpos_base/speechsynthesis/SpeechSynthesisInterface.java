@@ -98,7 +98,6 @@ public interface SpeechSynthesisInterface extends JposBaseInterface {
      */
     void volume(int volume) throws JposException;
 
-
     /**
      * Validation part of Speak method. Can be overwritten within derived
      * classes, if necessary.
@@ -128,6 +127,23 @@ public interface SpeechSynthesisInterface extends JposBaseInterface {
      */
     void speak(Speak request) throws JposException;
 
+    /**
+     * Final part of SpeakImmediate method. Can be overwritten within derived
+     * classes, if necessary.
+     * This method shall only perform additional validation. It will be called before the service buffers the
+     * method call for asynchronous execution.
+     * This method will be called only if the following plausibility checks lead to a positive result:
+     * <ul>
+     *     <li>Device is enabled,</li>
+     *     <li>parsedText is formally valid (no unknown or bad formatted tags, no duplicates, ...</li>
+     * </ul>
+     * <b>Remark:</b> The default implementation simply calls speak(speak(parsedText)). If no special handling is
+     * necessary for speakImmediate, no special implementation will be necessary for this method.
+     *
+     * @param parsedText List of TextPart objects describing what and how some text shall be spoken.
+     * @throws JposException    If an error occurs.
+     */
+    void speakImmediate(List<SpeechSynthesisProperties.TextPart> parsedText) throws JposException;
 
     /**
      * Final part of StopCurrentSpeaking method. Can be overwritten in derived class, if necessary.

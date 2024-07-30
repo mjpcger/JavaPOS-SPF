@@ -19,10 +19,13 @@ package SampleDummyDevice;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
 import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
+import de.gmxhome.conrad.jpos.jpos_base.SyncObject;
 import de.gmxhome.conrad.jpos.jpos_base.speechsynthesis.Speak;
 import de.gmxhome.conrad.jpos.jpos_base.speechsynthesis.SpeechSynthesisProperties;
 import jpos.JposException;
 import jpos.config.JposEntry;
+
+import java.util.List;
 
 import static jpos.JposConst.JPOS_E_NOSERVICE;
 import static jpos.JposConst.JPOS_PR_NONE;
@@ -102,6 +105,30 @@ public class SpeechSynthesis extends JposDevice {
                         check(voices[j].equalsIgnoreCase(voices[i]), JPOS_E_NOSERVICE, "Duplicate voice in VoiceList: " + o);
                 }
             }
+        }
+
+        @Override
+        public void speakImmediate(List<TextPart> text) throws JposException {
+            super.speakImmediate(text);
+            int factor = Speed;
+            SyncObject waiting = new SyncObject();
+            for (TextPart part : text) {
+                if (part.Text != null) {
+                    for (int j = 0; j < part.Text.length(); j++) {
+                        System.out.print(part.Text.charAt(j));
+                        int tio = (int) (CharacterTimeout * 100L / factor);
+                        waiting.suspend(tio);
+                    }
+                } else {
+                    if (part.Speed != null)
+                        factor = part.Speed;
+                    if (part.Pause != null)
+                        waiting.suspend(part.Pause);
+                    if (part.Reset)
+                        factor = 100;
+                }
+            }
+            System.out.println();
         }
 
         @Override

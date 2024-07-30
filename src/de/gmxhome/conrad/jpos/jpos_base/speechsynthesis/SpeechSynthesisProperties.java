@@ -20,6 +20,7 @@ package de.gmxhome.conrad.jpos.jpos_base.speechsynthesis;
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
 import jpos.JposException;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -271,17 +272,30 @@ public class SpeechSynthesisProperties extends JposCommonProperties implements S
     }
 
     @Override
+    public void speak(Speak speech) throws JposException {
+
+    }
+
+    @Override
+    public void speakImmediate(List<TextPart> parsedText) throws JposException {
+        try {
+            List<TextPart> xxx;
+            Method si = getClass().getMethod("speakImmediate", List.class);
+            if (si.getDeclaringClass().equals(SpeechSynthesisProperties.class)) {
+                Speak request = speak(parsedText);
+                if (request != null)
+                    speak(request);
+            }
+        } catch (NoSuchMethodException ignore) {}
+    }
+
+    @Override
     public void stopCurrentSpeaking() throws JposException {
 
     }
 
     @Override
     public void stopSpeaking(int outputID) throws JposException {
-
-    }
-
-    @Override
-    public void speak(Speak speech) throws JposException {
 
     }
 }
