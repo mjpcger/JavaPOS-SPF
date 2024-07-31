@@ -22,11 +22,12 @@ import jpos.JposException;
 import jpos.services.GestureControlService116;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import static de.gmxhome.conrad.jpos.jpos_base.JposBaseDevice.member;
 import static jpos.GestureControlConst.*;
-import static jpos.JposConst.JPOS_E_ILLEGAL;
-import static jpos.JposConst.JPOS_FOREVER;
+import static jpos.JposConst.*;
 
 /**
  * GestureControl service implementation. For more details about getter, setter and method implementations,
@@ -177,6 +178,16 @@ public class GestureControlService extends JposBase implements GestureControlSer
         logSet("Storage");
     }
 
+    List<Integer> OutputIDs = new ArrayList<>();
+
+    @Override
+    public void clearOutput() throws JposException {
+        super.clearOutput();
+        synchronized (Device.AsyncProcessorRunning) {
+            OutputIDs.clear();
+        }
+    }
+
     private void checkFileName(String fileName) throws JposException {
         check(fileName == null, JPOS_E_ILLEGAL, "File name must not be null");
         if (Data.Storage != GCTL_ST_HOST) {
@@ -232,6 +243,7 @@ public class GestureControlService extends JposBase implements GestureControlSer
         check(time < 0 && time != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid time: " + time);
         if (GestureControl.setPosition(positionList, time, absolute) instanceof SetPosition req)
             req.enqueue();
+        OutputIDs.add(Data.OutputID);
         logAsyncCall("SetPosition");
     }
 
@@ -243,6 +255,7 @@ public class GestureControlService extends JposBase implements GestureControlSer
         check(time < 0 && time != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid time: " + time);
         if (GestureControl.setSpeed(speedList, time) instanceof SetSpeed req)
             req.enqueue();
+        OutputIDs.add(Data.OutputID);
         logAsyncCall("SetSpeed");
     }
 
@@ -253,6 +266,7 @@ public class GestureControlService extends JposBase implements GestureControlSer
         check(fileName == null || fileName.equals(""), JPOS_E_ILLEGAL, "Filename must not be empty");
         if (GestureControl.startMotion(fileName) instanceof StartMotion req)
             req.enqueue();
+        OutputIDs.add(Data.OutputID);
         logAsyncCall("StartMotion");
     }
 
@@ -263,6 +277,7 @@ public class GestureControlService extends JposBase implements GestureControlSer
         check(fileName == null || fileName.equals(""), JPOS_E_ILLEGAL, "Filename must not be empty");
         if (GestureControl.startPose(fileName) instanceof StartPose req)
             req.enqueue();
+        OutputIDs.add(Data.OutputID);
         logAsyncCall("StartPose");
     }
 
@@ -270,31 +285,16 @@ public class GestureControlService extends JposBase implements GestureControlSer
     public void stopControl(int outputID) throws JposException {
         logPreCall("StopControl", removeOuterArraySpecifier(new Object[]{outputID}, Device.MaxArrayStringElements));
         checkEnabled();
-        JposOutputRequest req = null;
-        boolean abort = true;
         synchronized (Device.AsyncProcessorRunning) {
-            if (Device.CurrentCommand.OutputID == outputID && Device.CurrentCommand.Props == Data)
-                req = Device.CurrentCommand;
-            else {
-                for (JposOutputRequest request : Device.PendingCommands) {
-                    if (request.OutputID == outputID && request.Props == Data) {
-                        Device.PendingCommands.remove(req = request);
-                        abort = false;
-                        break;
-                    }
-                }
-                if (req == null && Props.CurrentCommands != null) {
-                    for (JposOutputRequest request : Props.CurrentCommands) {
-                        if (request.OutputID == outputID) {
-                            req = request;
-                            break;
-                        }
-                    }
+            for (Integer id : OutputIDs) {
+                if (id == outputID) {
+                    GestureControl.stopControl(outputID);
+                    OutputIDs.remove(id);
+                    logCall("StopControl");
+                    return;
                 }
             }
-            check(req == null, JPOS_E_ILLEGAL, "Output request not running");
+            throw new JposException(JPOS_E_ILLEGAL, "Output request not running: " + outputID);
         }
-        GestureControl.stopControl(req, abort);
-        logCall("StopControl");
     }
 }

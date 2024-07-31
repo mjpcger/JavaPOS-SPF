@@ -18,6 +18,7 @@
 package de.gmxhome.conrad.jpos.jpos_base.gesturecontrol;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
+import de.gmxhome.conrad.jpos.jpos_base.JposOutputCompleteEvent;
 import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
 import jpos.JposException;
 
@@ -43,5 +44,16 @@ public class StartMotion extends JposOutputRequest {
     @Override
     public void invoke() throws JposException {
         ((GestureControlService) Props.EventSource).GestureControl.startMotion(this);
+    }
+
+    @Override
+    public JposOutputCompleteEvent createOutputEvent() {
+        for(Integer id : ((GestureControlService) Props.EventSource).OutputIDs) {
+            if (id == OutputID) {
+                ((GestureControlService) Props.EventSource).OutputIDs.remove(id);
+                break;
+            }
+        }
+        return super.createOutputEvent();
     }
 }

@@ -248,14 +248,11 @@ public interface GestureControlInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>request belongs to the property set of the calling service,</li>
-     *     <li>The specified OutputID value matches the OutputID of request.</li>
+     *     <li>outputID has been previously assigned to an uncompleted asynchronous operation.</li>
      * </ul>
      *
-     * @param request JposOutputRequest to be stopped.
-     * @param abort   If true, request must be aborted. Otherwise, request has been removed from PendingCommands list
-     *                and only internal processing shall be performed, if necessary.
+     * @param outputID OutputID of the method call to be terminated.
      * @throws JposException    If an error occurs.
      */
-    void stopControl(JposOutputRequest request, boolean abort) throws JposException;
+    void stopControl(int outputID) throws JposException;
 }

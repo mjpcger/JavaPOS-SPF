@@ -158,10 +158,19 @@ public class GestureControlDevice extends JposDevice {
         }
 
         @Override
-        public void stopControl(JposOutputRequest request, boolean abort) {
-            // The request is the one that shall be stopped
-            if (abort)
-                request.abortCommand(true);
+        public void stopControl(int outputID) throws JposException{
+            synchronized (Device.AsyncProcessorRunning) {
+                if (CurrentCommand != null && CurrentCommand.Props == this && CurrentCommand.OutputID == outputID)
+                    CurrentCommand.abortCommand(true);
+                else {
+                    for (JposOutputRequest req : PendingCommands) {
+                        if (req.Props == this && req.OutputID == outputID) {
+                            PendingCommands.remove(req);
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 }

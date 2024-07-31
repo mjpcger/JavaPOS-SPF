@@ -200,6 +200,6 @@ public class GestureControlProperties extends JposCommonProperties implements Ge
     }
 
     @Override
-    public void stopControl(JposOutputRequest request, boolean abort) {
+    public void stopControl(int abort) throws JposException {
     }
 }

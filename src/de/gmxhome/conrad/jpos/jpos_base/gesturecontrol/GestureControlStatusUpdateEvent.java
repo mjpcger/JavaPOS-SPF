@@ -25,7 +25,7 @@ import static jpos.GestureControlConst.GCTL_SUE_START_MOTION;
 import static jpos.GestureControlConst.GCTL_SUE_STOP_MOTION;
 
 /**
- * Status update event implementation for GraphicDisplay devices.
+ * Status update event implementation for GestureControl devices.
  */
 @SuppressWarnings("unused")
 public class GestureControlStatusUpdateEvent extends JposStatusUpdateEvent {
