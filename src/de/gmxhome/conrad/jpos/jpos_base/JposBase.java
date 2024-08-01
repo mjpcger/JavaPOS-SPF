@@ -775,6 +775,8 @@ public class JposBase implements BaseService {
         checkClaimed();
         check(!Props.DeviceEnabled && !enable, JPOS_E_DISABLED, "Device just disabled");
         check(Props.DeviceEnabled && enable, JPOS_E_ILLEGAL, "Device just enabled");
+        if (!enable && Props.ClearOutputOnDeviceDisable)
+            DeviceInterface.clearOutput();
         DeviceInterface.deviceEnabled(enable);
         logSet("DeviceEnabled");
         if (Props.PowerNotify == JPOS_PN_ENABLED) {

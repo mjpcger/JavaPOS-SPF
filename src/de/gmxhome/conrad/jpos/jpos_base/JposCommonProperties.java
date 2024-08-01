@@ -45,6 +45,11 @@ import static net.bplaced.conrad.log4jpos.Level.*;
  */
 public abstract class JposCommonProperties implements JposBaseInterface {
     /**
+     * Flag that specify how DeviceEnabled property shall work. Default: false. Must be set in devices which support
+     * asynchronous output.
+     */
+    public boolean ClearOutputOnDeviceDisable = false;
+    /**
      * Instance of JposDevice implementation that has been bound to this property set.
      */
     public JposDevice Device;

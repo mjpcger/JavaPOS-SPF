@@ -435,6 +435,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(BumpBarProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
@@ -711,6 +712,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(CATProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
@@ -885,6 +887,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(ElectronicJournalProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
@@ -944,6 +947,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(ElectronicValueRWProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
@@ -1003,6 +1007,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(FiscalPrinterProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
@@ -1136,6 +1141,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(GestureControlProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
@@ -1194,6 +1200,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(GraphicDisplayProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
@@ -1872,6 +1879,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(PointCardRWProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
@@ -2045,6 +2053,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(POSPrinterProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
@@ -2103,6 +2112,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(RemoteOrderDisplayProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
@@ -2161,6 +2171,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(RFIDScannerProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
@@ -2392,6 +2403,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(SmartCardRWProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
@@ -2467,6 +2479,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(SoundPlayerProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
@@ -2583,6 +2596,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(SpeechSynthesisProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
@@ -2640,6 +2654,7 @@ public class JposDevice extends JposBaseDevice {
     @SuppressWarnings("deprecation")
     public void changeDefaults(ToneIndicatorProperties props) {
         JposVersion = null;
+        props.ClearOutputOnDeviceDisable = true;
     }
 
     /**
