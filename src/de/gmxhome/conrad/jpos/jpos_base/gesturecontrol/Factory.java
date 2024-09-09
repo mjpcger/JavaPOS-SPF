@@ -45,6 +45,7 @@ public class Factory extends JposDeviceFactory {
         dev.changeDefaults(props);
         check(props.CapStorage != GCTL_CST_HOST_ONLY && (props.CapAssociatedHardTotalsDevice == null || props.CapAssociatedHardTotalsDevice.equals("")),
                 JPOS_E_NOSERVICE, "HardTotals device name missing");
+        service.validateListProperties(props);
         checkMember(props.CapStorage, new long[]{GCTL_CST_HARDTOTALS_ONLY, GCTL_CST_HOST_ONLY, GCTL_CST_ALL}, JPOS_E_NOSERVICE, "Invalid CapStorage: " + props.CapStorage);
         check(props.CapMotionCreation && !props.CapMotion, JPOS_E_NOSERVICE, "CapMotionCreation invalid");
         check(props.CapPoseCreation && !props.CapPose, JPOS_E_NOSERVICE, "CapPoseCreation invalid");

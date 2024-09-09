@@ -22,6 +22,12 @@ import de.gmxhome.conrad.jpos.jpos_base.JposOutputCompleteEvent;
 import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
 import jpos.JposException;
 
+import java.util.List;
+
+import static jpos.GestureControlConst.GCTL_SUE_START_MOTION;
+import static jpos.GestureControlConst.GCTL_SUE_STOP_MOTION;
+import static de.gmxhome.conrad.jpos.jpos_base.gesturecontrol.GestureControlProperties.*;
+
 /**
  * Output request executor for GestureControl method SetPosition.
  */
@@ -29,7 +35,7 @@ public class SetPosition extends JposOutputRequest {
     /**
      * Position information in comma separated list.
      */
-    public final String PositionList;
+    public final List<JointParameter> PositionList;
 
     /**
      * Device control completion time in seconds.
@@ -48,7 +54,7 @@ public class SetPosition extends JposOutputRequest {
      * @param time         Device control completion time in seconds.
      * @param absolute     Position information contain absolute values if true, otherwise relative values.
      */
-    public SetPosition(JposCommonProperties props, String positionList, int time, boolean absolute) {
+    public SetPosition(JposCommonProperties props, List<JointParameter> positionList, int time, boolean absolute) {
         super(props);
         PositionList = positionList;
         Time = time;
@@ -57,7 +63,12 @@ public class SetPosition extends JposOutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((GestureControlService) Props.EventSource).GestureControl.setPosition(this);
+        Device.handleEvent(new GestureControlStatusUpdateEvent(Props.EventSource, GCTL_SUE_START_MOTION));
+        try {
+            ((GestureControlService) Props.EventSource).GestureControl.setPosition(this);
+        } finally {
+            Device.handleEvent(new GestureControlStatusUpdateEvent(Props.EventSource, GCTL_SUE_STOP_MOTION));
+        }
     }
 
     @Override

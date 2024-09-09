@@ -22,6 +22,9 @@ import de.gmxhome.conrad.jpos.jpos_base.JposOutputCompleteEvent;
 import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
 import jpos.JposException;
 
+import static jpos.GestureControlConst.GCTL_SUE_START_MOTION;
+import static jpos.GestureControlConst.GCTL_SUE_STOP_MOTION;
+
 /**
  * Output request executor for GestureControl method StartPose.
  */
@@ -43,7 +46,12 @@ public class StartPose extends JposOutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((GestureControlService) Props.EventSource).GestureControl.startPose(this);
+        Device.handleEvent(new GestureControlStatusUpdateEvent(Props.EventSource, GCTL_SUE_START_MOTION));
+        try {
+            ((GestureControlService) Props.EventSource).GestureControl.startPose(this);
+        } finally {
+            Device.handleEvent(new GestureControlStatusUpdateEvent(Props.EventSource, GCTL_SUE_STOP_MOTION));
+        }
     }
 
     @Override

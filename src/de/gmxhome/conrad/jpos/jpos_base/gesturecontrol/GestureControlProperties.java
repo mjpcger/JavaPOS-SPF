@@ -21,6 +21,10 @@ import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
 import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
 import jpos.JposException;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static jpos.GestureControlConst.*;
 
 /**
@@ -37,7 +41,7 @@ public class GestureControlProperties extends JposCommonProperties implements Ge
 
     /**
      * UPOS property AutoModeList. Default: An empty string. Can be overwritten by
-     * objects derived from JposDevice within the changeDefaults method.
+     * objects derived from JposDevice until the changeDefaults method finishes.
      */
     public String AutoModeList = "";
 
@@ -79,14 +83,14 @@ public class GestureControlProperties extends JposCommonProperties implements Ge
     public int CapStorage = GCTL_CST_HOST_ONLY;
 
     /**
-     * UPOS property JointList. Default: An empty string. Can be overwritten by
-     * objects derived from JposDevice within the changeDefaults method.
+     * UPOS property JointList. Default: An empty string. Must be overwritten by
+     * objects derived from JposDevice until the changeDefaults method finishes.
      */
     public String JointList = "";
 
     /**
-     * UPOS property MotionList. Default: An empty string. Coa be overwritten by
-     * objects derived from JposDevice within the changeDefaults method.
+     * UPOS property MotionList. Default: An empty string. Can be overwritten by
+     * objects derived from JposDevice until the changeDefaults method finishes.
      */
     public String MotionList = "";
 
@@ -97,7 +101,7 @@ public class GestureControlProperties extends JposCommonProperties implements Ge
 
     /**
      * UPOS property PoseList. Default: An empty string. Can be overwritten by
-     * objects derived from JposDevice within the changeDefaults method.
+     * objects derived from JposDevice until the changeDefaults method finishes.
      */
     public String PoseList = "";
 
@@ -107,6 +111,37 @@ public class GestureControlProperties extends JposCommonProperties implements Ge
      * used by the GestureControl service.
      */
     public int Storage = GCTL_ST_HOST;
+
+    /**
+     * Helper class for parameters passed to some SetPosition and SetSpeed
+     */
+    static public class JointParameter {
+        /**
+         * JointID as part of a speedList or positionList parameter
+         */
+        public final String JointID;
+
+        /**
+         * Corresponding value of a speedList or positionList parameter
+         */
+        public final int    Value;
+
+        /**
+         * Constructor
+         * @param id    JointID or the parameter.
+         * @param value The corresponding parameter value.
+         */
+        JointParameter(String id, int value) {
+            JointID = id;
+            Value = value;
+        }
+    }
+
+    /**
+     * Map containing all JointIDs specified in JointList. Key is the JointID, value specifies whether its
+     * position range availability is 1 (true) or 0 (false).
+     */
+    Map<String, Boolean> JointIDs = new HashMap<>();
 
     /**
      * Constructor.
@@ -164,7 +199,7 @@ public class GestureControlProperties extends JposCommonProperties implements Ge
     }
 
     @Override
-    public JposOutputRequest setPosition(String positionList, int time, boolean absolute) throws JposException {
+    public JposOutputRequest setPosition(List<JointParameter> positionList, int time, boolean absolute) throws JposException {
         return new SetPosition(this, positionList, time, absolute);
     }
 
@@ -173,7 +208,7 @@ public class GestureControlProperties extends JposCommonProperties implements Ge
     }
 
     @Override
-    public JposOutputRequest setSpeed(String speedList, int time) throws JposException {
+    public JposOutputRequest setSpeed(List<JointParameter> speedList, int time) throws JposException {
         return new SetSpeed(this, speedList, time);
     }
 

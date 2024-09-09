@@ -22,9 +22,9 @@ import jpos.JposException;
 import jpos.services.GestureControlService116;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
+import static de.gmxhome.conrad.jpos.jpos_base.gesturecontrol.GestureControlProperties.*;
 import static de.gmxhome.conrad.jpos.jpos_base.JposBaseDevice.member;
 import static jpos.GestureControlConst.*;
 import static jpos.JposConst.*;
@@ -67,7 +67,7 @@ public class GestureControlService extends JposBase implements GestureControlSer
             mode = "";
         checkEnabled();
         String[] allowed = Data.AutoModeList.split(",");
-        check(!member(mode, allowed) && mode.length() > 0, JPOS_E_ILLEGAL, "Invalid mode: " + mode);
+        check(mode.length() > 0 && !member(mode, allowed), JPOS_E_ILLEGAL, "Invalid mode: " + mode);
         GestureControl.autoMode(mode);
         logSet("AutoMode");
     }
@@ -207,6 +207,7 @@ public class GestureControlService extends JposBase implements GestureControlSer
         check(!Data.CapMotionCreation, JPOS_E_ILLEGAL, "Motion creation not supported");
         checkFileName(fileName);
         check(poseList == null || poseList.length() == 0, JPOS_E_ILLEGAL, "Empty pose list not supported");
+        poseList = poseList.replaceAll("\\s", "");
         for (String pose : poseList.split(","))
             check(pose.length() == 0, JPOS_E_ILLEGAL, "Invalid pose list: " + poseList);
         GestureControl.createMotion(fileName, poseList);
@@ -231,6 +232,7 @@ public class GestureControlService extends JposBase implements GestureControlSer
         checkEnabled();
         check(position == null || position.length != 1, JPOS_E_ILLEGAL, "position must be int[1]");
         check(jointID == null || jointID.equals(""), JPOS_E_ILLEGAL, "JointID empty");
+        check(!(Data.JointIDs.containsKey(jointID) && Data.JointIDs.get(jointID)), JPOS_E_ILLEGAL, "Invalid jointID: " + jointID);
         GestureControl.getPosition(jointID, position);
         logCall("GetPosition");
     }
@@ -240,8 +242,22 @@ public class GestureControlService extends JposBase implements GestureControlSer
         logPreCall("SetPosition", removeOuterArraySpecifier(new Object[]{positionList, time, absolute}, Device.MaxArrayStringElements));
         checkEnabled();
         check(positionList == null || positionList.equals(""), JPOS_E_ILLEGAL, "Empty positionList");
+        List<JointParameter> positions = new ArrayList<>();
+        for (String position : positionList.replaceAll("\\s", "").split(",")) {
+            String[] parts = position.split(":");
+            check(parts.length != 2, JPOS_E_ILLEGAL, "Invalid position: " + position);
+            check(!Data.JointIDs.containsKey(parts[0]) || !Data.JointIDs.get(parts[0]), JPOS_E_ILLEGAL, "Invalid JointID: " + parts[0]);
+            try {
+                int value = Integer.parseInt(parts[1]);
+                if (!absolute)
+                    check(value < -100 || 100 < value, JPOS_E_ILLEGAL, "Position out of range : " + position);
+                positions.add(new JointParameter(parts[0], value));
+            } catch (NumberFormatException e) {
+                throw new JposException(JPOS_E_ILLEGAL, "Invalid");
+            }
+        }
         check(time < 0 && time != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid time: " + time);
-        if (GestureControl.setPosition(positionList, time, absolute) instanceof SetPosition req)
+        if (GestureControl.setPosition(positions, time, absolute) instanceof SetPosition req)
             req.enqueue();
         OutputIDs.add(Data.OutputID);
         logAsyncCall("SetPosition");
@@ -252,8 +268,21 @@ public class GestureControlService extends JposBase implements GestureControlSer
         logPreCall("SetSpeed", removeOuterArraySpecifier(new Object[]{speedList, time}, Device.MaxArrayStringElements));
         checkEnabled();
         check(speedList == null || speedList.equals(""), JPOS_E_ILLEGAL, "Empty speedList");
+        List<JointParameter> positions = new ArrayList<>();
+        for(String entry : speedList.replaceAll("\\s", "").split(",")) {
+            String[] parts = entry.split(":");
+            check(parts.length != 2, JPOS_E_ILLEGAL, "Invalid speed entry: " + entry);
+            check(!Data.JointIDs.containsKey(parts[0]), JPOS_E_ILLEGAL, "Invalid JointID: " + parts[0]);
+            try {
+                int value = Integer.parseInt(parts[1]);
+                check(value < -100 || value > 100, JPOS_E_ILLEGAL, "Speed value out of range in " + entry);
+                positions.add(new JointParameter(parts[0], value));
+            } catch (NumberFormatException e) {
+                throw new JposException(JPOS_E_ILLEGAL, "Invalid speed value in " + entry);
+            }
+        }
         check(time < 0 && time != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid time: " + time);
-        if (GestureControl.setSpeed(speedList, time) instanceof SetSpeed req)
+        if (GestureControl.setSpeed(positions, time) instanceof SetSpeed req)
             req.enqueue();
         OutputIDs.add(Data.OutputID);
         logAsyncCall("SetSpeed");
@@ -295,6 +324,46 @@ public class GestureControlService extends JposBase implements GestureControlSer
                 }
             }
             throw new JposException(JPOS_E_ILLEGAL, "Output request not running: " + outputID);
+        }
+    }
+
+    /**
+     * Checks whether property JointList matches the format as specified in UPOS specification:<ul>
+     *     <li>Consists of entries separated by comma,</li>
+     *     <li>Each entry starts with the JointID and a position range availability parameter of "0" or "1",
+     *     separated by a doublepoint (:).</li>
+     *     <li>Some examples for valid entries: <ul>
+     *         <li>Joint01_Roll:1</li>
+     *         <li>Wheel_Turn:0</li>
+     *     </ul>.</li>
+     *     <li>All JointIDs must be unique.</li>
+     * </ul>
+     * In addition, AutoModeList, MotionList and PoseList will be verified:<ul>
+     *     <li>Consist of entries separated by comma,</li>
+     *     <li>all entries must be unique.</li>
+     * </ul>
+     * Whitespace within AutoModeList, JointList, MotionList and PoseList will be removed.
+     *
+     * @param props Property containing the list properties to be verified.
+     * @throws JposException, if one of the lists contain invalid entries.
+     */
+    public void validateListProperties(GestureControlProperties props) throws JposException {
+        String[] entries = (props.MotionList = props.MotionList.replaceAll("\\s", "")).split(",");
+        check(entries.length != new TreeSet<>(Arrays.asList(entries)).size(), JPOS_E_NOSERVICE, "Duplicate in MotionList: " + props.MotionList);
+        entries = (props.AutoModeList = props.AutoModeList.replaceAll("\\s", "")).split(",");
+        check(entries.length != new TreeSet<>(Arrays.asList(entries)).size(), JPOS_E_NOSERVICE, "Duplicate in AutoModeList: " + props.AutoModeList);
+        entries = (props.PoseList = props.PoseList.replaceAll("\\s", "")).split(",");
+        check(entries.length != new TreeSet<>(Arrays.asList(entries)).size(), JPOS_E_NOSERVICE, "Duplicate in PoseList: " + props.PoseList);
+        if ((props.JointList = props.JointList.replaceAll("\\s", "")).length() > 0) {
+            for (String entry : props.JointList.split(",")) {
+                String[] parts = entry.split(":");
+                check(parts.length != 2, JPOS_E_NOSERVICE, "Invalid entry in JointList: " + entry);
+                check(Data.JointIDs.containsKey(parts[0]), JPOS_E_NOSERVICE, "Duplicate JointID in JointList: " + entry);
+                boolean hasPositionRangeAvailability = parts[1].equals("1");
+                check(!(parts[1].equals("0") || hasPositionRangeAvailability), JPOS_E_NOSERVICE,
+                        "Invalid position range availability in JointID " + parts[0] + " of JointList: " + parts[1]);
+                Data.JointIDs.put(parts[0], hasPositionRangeAvailability);
+            }
         }
     }
 }

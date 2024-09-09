@@ -22,6 +22,12 @@ import de.gmxhome.conrad.jpos.jpos_base.JposOutputCompleteEvent;
 import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
 import jpos.JposException;
 
+import java.util.List;
+
+import static de.gmxhome.conrad.jpos.jpos_base.gesturecontrol.GestureControlProperties.*;
+import static jpos.GestureControlConst.GCTL_SUE_START_MOTION;
+import static jpos.GestureControlConst.GCTL_SUE_STOP_MOTION;
+
 /**
  * Output request executor for GestureControl method SetSpeed.
  */
@@ -29,7 +35,7 @@ public class SetSpeed extends JposOutputRequest {
     /**
      * Speed information in comma separated list.
      */
-    public final String SpeedList;
+    public final List<JointParameter> SpeedList;
 
     /**
      * Device control time in seconds.
@@ -42,7 +48,7 @@ public class SetSpeed extends JposOutputRequest {
      * @param speedList Speed information in comma separated list.
      * @param time      Device control time in seconds.
      */
-    public SetSpeed(JposCommonProperties props, String speedList, int time) {
+    public SetSpeed(JposCommonProperties props, List<JointParameter> speedList, int time) {
         super(props);
         SpeedList = speedList;
         Time = time;
@@ -50,7 +56,12 @@ public class SetSpeed extends JposOutputRequest {
 
     @Override
     public void invoke() throws JposException {
-        ((GestureControlService) Props.EventSource).GestureControl.setSpeed(this);
+        Device.handleEvent(new GestureControlStatusUpdateEvent(Props.EventSource, GCTL_SUE_START_MOTION));
+        try {
+            ((GestureControlService) Props.EventSource).GestureControl.setSpeed(this);
+        } finally {
+            Device.handleEvent(new GestureControlStatusUpdateEvent(Props.EventSource, GCTL_SUE_STOP_MOTION));
+        }
     }
 
     @Override

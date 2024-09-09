@@ -19,12 +19,12 @@ package SampleDummyDevice;
 
 import de.gmxhome.conrad.jpos.jpos_base.JposDevice;
 import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
-import de.gmxhome.conrad.jpos.jpos_base.gate.GateStatusUpdateEvent;
 import de.gmxhome.conrad.jpos.jpos_base.gesturecontrol.*;
 import jpos.JposException;
 import jpos.config.JposEntry;
 
-import static jpos.GestureControlConst.GCTL_SUE_START_MOTION;
+import java.util.List;
+
 import static jpos.JposConst.JPOS_E_NOSERVICE;
 import static jpos.JposConst.JPOS_PR_NONE;
 
@@ -60,9 +60,15 @@ public class GestureControlDevice extends JposDevice {
         props.DeviceServiceVersion += 1;
         props.DeviceServiceDescription = "Gesture control service for sample dummy device";
         // Set your defaults here
+        // To allow all tests, set all capabilities to true
         props.CapMotion = props.CapMotionCreation = props.CapPose = props.CapPoseCreation = true;
         props.AutoModeList = "Auto";
-        // Real implementations should initialize JointList, MotionList and PoseList here as well.
+        // Real implementations should initialize JointList, MotionList and PoseList here as well. However,
+        // in this implementation, there is no functionality behind these items, but they are necessary to perform
+        // tests.
+        props.JointList = "Joint_Pitch:1,Joint_Roll:1,Joint_Yaw:1,Wheel_Turn:1,Wheel_Move:0";
+        props.MotionList = "greeting,following";
+        props.PoseList = "smile,nod";
     }
     @Override
     public GestureControlProperties getGestureControlProperties(int index) {
@@ -99,7 +105,7 @@ public class GestureControlDevice extends JposDevice {
         }
 
         @Override
-        public JposOutputRequest setPosition(String positionList, int time, boolean absolute) throws JposException {
+        public JposOutputRequest setPosition(List<JointParameter> positionList, int time, boolean absolute) throws JposException {
             // positionList should be checked for correctness here.
             return super.setPosition(positionList, time, absolute);
         }
@@ -111,7 +117,7 @@ public class GestureControlDevice extends JposDevice {
         }
 
         @Override
-        public JposOutputRequest setSpeed(String speedList, int time) throws JposException {
+        public JposOutputRequest setSpeed(List<JointParameter> speedList, int time) throws JposException {
             // speedList should be checked for correctness here
             return new SetSpeed(this, speedList, time);
         }
@@ -130,13 +136,8 @@ public class GestureControlDevice extends JposDevice {
 
         @Override
         public void startMotion(StartMotion request) throws JposException {
-            handleEvent(new GestureControlStatusUpdateEvent(EventSource, GCTL_SUE_START_MOTION));
-            try {
-                // No real processing, waiting only MethodTimeout seconds or until stop
-                request.Waiting.suspend(MethodTimeout * 1000);
-            } finally {
-                handleEvent(new GestureControlStatusUpdateEvent(EventSource, GCTL_SUE_START_MOTION));
-            }
+            // No real processing, waiting only MethodTimeout seconds or until stop
+            request.Waiting.suspend(MethodTimeout * 1000);
         }
 
         @Override

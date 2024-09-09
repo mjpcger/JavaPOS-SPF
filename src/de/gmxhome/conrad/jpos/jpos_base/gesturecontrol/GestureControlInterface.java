@@ -21,6 +21,9 @@ import de.gmxhome.conrad.jpos.jpos_base.JposBaseInterface;
 import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
 import jpos.JposException;
 
+import java.util.List;
+import static de.gmxhome.conrad.jpos.jpos_base.gesturecontrol.GestureControlProperties.*;
+
 /**
  * Interface for methods that implement property setter and method calls for the GestureControl device category.
  * For details about properties, methods and method parameters, see UPOS specification, chapter Gesture Control.
@@ -34,7 +37,7 @@ public interface GestureControlInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>mode is neither the empty string nor one of the modes listed in AutoModeList.</li>
+     *     <li>mode is one of the modes listed in AutoModeList.</li>
      * </ul>
      * @param mode New value for AutoMode.
      * @throws JposException If an error occurs.
@@ -79,6 +82,7 @@ public interface GestureControlInterface extends JposBaseInterface {
      *     <li>Otherwise, fileName matches the requirements for fileName as specified for HardTotals devices (&lt; 10
      *     characters in range 0x20 - 0x7f, empty if CapSingleFile of HardTotals device is true),</li>
      *     <li>poseList is neither null nor empty,</li>
+     *     <li>poseList does not contain any whitespace character,</li>
      *     <li>All elements specified in poseList are not empty.</li>
      * </ul>
      *
@@ -115,7 +119,7 @@ public interface GestureControlInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>jointID is not empty,</li>
+     *     <li>jointID is present in JointList with position range availability 1,</li>
      *     <li>Dimension of position is 1.</li>
      * </ul>
      *
@@ -133,17 +137,21 @@ public interface GestureControlInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>positionList is an array with length 1,</li>
+     *     <li>positionList neither empty nor null,</li>
+     *     <li>whitespace characters have been removed from positionList,</li>
+     *     <li>positionList contains only JointIDs present in JointList with position range availability = 1,</li>
+     *     <li>position values are valid integer values. If absolute is false, values between -100 and 100. </li>
      *     <li>time is a positive value or FOREVER.</li>
      * </ul>
      *
-     * @param positionList Position in formation in comma-separated list. See UPOS specification for details.
+     * @param positionList List of Position information from comma-separated list. See GestureControlProperties.JointParameter
+     *                     for detail.
      * @param time         Specify time to complete operation in seconds. See UPOS specification for details.
      * @param absolute     Specifies whether position is absolute or relative. See UPOS specification for details.
      * @return                  SetPosition object for use in final part.
      * @throws JposException    If an error occurs.
      */
-    JposOutputRequest setPosition(String positionList, int time, boolean absolute) throws JposException;
+    JposOutputRequest setPosition(List<JointParameter> positionList, int time, boolean absolute) throws JposException;
 
     /**
      * Final part of SetPosition method. Can be overwritten within derived classes, if necessary.
@@ -168,12 +176,13 @@ public interface GestureControlInterface extends JposBaseInterface {
      *     <li>time is a positive value or FOREVER.</li>
      * </ul>
      *
-     * @param speedList Speed information in comma separated list as specified in UPOS 1.16 specification.
+     * @param speedList List of speed information from comma separated list. See GestureControlProperties.JointParameter
+     *                  for details.
      * @param time      Time to control device in second. See UPOS 1.16 specification for additional information.
      * @return                  SetSpeed object for use in final part.
      * @throws JposException    If an error occurs.
      */
-    JposOutputRequest setSpeed(String speedList, int time) throws JposException;
+    JposOutputRequest setSpeed(List<JointParameter> speedList, int time) throws JposException;
 
     /**
      * Final part of SetSpeed method. Can be overwritten within derived classes, if necessary.
