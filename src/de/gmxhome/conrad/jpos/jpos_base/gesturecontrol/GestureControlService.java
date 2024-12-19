@@ -32,6 +32,12 @@ import static jpos.JposConst.*;
 /**
  * GestureControl service implementation. For more details about getter, setter and method implementations,
  * see JposBase.
+ * <br>This service supports the following properties in jpos.xml in addition to the properties listed in JposBaseDevice:
+ * <ul>
+ *     <li>NoPositionRangeAvailabilityCheck: Specifies whether jointIDs of joints without a position range are valid in
+ *     method getPosition or setPosition. Default: false. If true, position range availability will not be checked and
+ *     therefore jointIDs without position range will not be rejected by this framework.</li>
+ * </ul>
  */
 public class GestureControlService extends JposBase implements GestureControlService116 {
     private final GestureControlProperties Data;
@@ -232,7 +238,9 @@ public class GestureControlService extends JposBase implements GestureControlSer
         checkEnabled();
         check(position == null || position.length != 1, JPOS_E_ILLEGAL, "position must be int[1]");
         check(jointID == null || jointID.equals(""), JPOS_E_ILLEGAL, "JointID empty");
-        check(!(Data.JointIDs.containsKey(jointID) && Data.JointIDs.get(jointID)), JPOS_E_ILLEGAL, "Invalid jointID: " + jointID);
+        check(!Data.JointIDs.containsKey(jointID), JPOS_E_ILLEGAL, "Invalid jointID: " + jointID);
+        check(Data.NoPositionRangeAvailabilityCheck || !Data.JointIDs.get(jointID), JPOS_E_ILLEGAL, "jointID without position range: " + jointID);
+        check(!(Data.JointIDs.containsKey(jointID)), JPOS_E_ILLEGAL, "Invalid jointID: " + jointID);
         GestureControl.getPosition(jointID, position);
         logCall("GetPosition");
     }
@@ -246,11 +254,11 @@ public class GestureControlService extends JposBase implements GestureControlSer
         for (String position : positionList.replaceAll("\\s", "").split(",")) {
             String[] parts = position.split(":");
             check(parts.length != 2, JPOS_E_ILLEGAL, "Invalid position: " + position);
-            check(!Data.JointIDs.containsKey(parts[0]) || !Data.JointIDs.get(parts[0]), JPOS_E_ILLEGAL, "Invalid JointID: " + parts[0]);
+            check(!Data.JointIDs.containsKey(parts[0]), JPOS_E_ILLEGAL, "Invalid JointID: " + parts[0]);
+            check(Data.NoPositionRangeAvailabilityCheck || !Data.JointIDs.get(parts[0]), JPOS_E_ILLEGAL, "jointID without position range: " + parts[0]);
             try {
                 int value = Integer.parseInt(parts[1]);
-                if (!absolute)
-                    check(value < -100 || 100 < value, JPOS_E_ILLEGAL, "Position out of range : " + position);
+                check(value < -100 || 100 < value, JPOS_E_ILLEGAL, "Position out of range : " + position);
                 positions.add(new JointParameter(parts[0], value));
             } catch (NumberFormatException e) {
                 throw new JposException(JPOS_E_ILLEGAL, "Invalid");

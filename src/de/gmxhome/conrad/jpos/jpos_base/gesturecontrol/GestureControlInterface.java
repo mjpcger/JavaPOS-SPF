@@ -119,7 +119,8 @@ public interface GestureControlInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
-     *     <li>jointID is present in JointList with position range availability 1,</li>
+     *     <li>jointID is present in JointList and - if NoPositionRangeAvailabilityCheck is false -
+     *      with position range availability value 1,</li>
      *     <li>Dimension of position is 1.</li>
      * </ul>
      *
@@ -139,8 +140,9 @@ public interface GestureControlInterface extends JposBaseInterface {
      *     <li>Device is enabled,</li>
      *     <li>positionList neither empty nor null,</li>
      *     <li>whitespace characters have been removed from positionList,</li>
-     *     <li>positionList contains only JointIDs present in JointList with position range availability = 1,</li>
-     *     <li>position values are valid integer values. If absolute is false, values between -100 and 100. </li>
+     *     <li>positionList contains only JointIDs present in JointList and - if NoPositionRangeAvailabilityCheck is false -
+     *     with position range availability value 1,</li>
+     *     <li>position values are integer values between -100 and 100, </li>
      *     <li>time is a positive value or FOREVER.</li>
      * </ul>
      *
