@@ -144,14 +144,6 @@ public class GestureControlProperties extends JposCommonProperties implements Ge
      */
     Map<String, Boolean> JointIDs = new HashMap<>();
 
-
-    /**
-     * Specifies whether joints which have no position range can be specified in method getPosition or setPosition. Such
-     * joints can only be specified if NoPositionRangeAvailabilityCheck is true.
-     * Default: false. Can be overwritten via NoPositionRangeAvailabilityCheck property in jpos.xml.
-     */
-    public boolean NoPositionRangeAvailabilityCheck = false;
-
     /**
      * Constructor.
      *
@@ -159,14 +151,6 @@ public class GestureControlProperties extends JposCommonProperties implements Ge
      */
     protected GestureControlProperties(int dev) {
         super(dev);
-    }
-
-    @Override
-    public void checkProperties(JposEntry entry) throws JposException {
-        super.checkProperties(entry);
-        try {
-            NoPositionRangeAvailabilityCheck = Boolean.parseBoolean(entry.getPropertyValue("CheckPositionRangeAvailability").toString());
-        } catch (Exception ignore) {}
     }
 
     @Override
