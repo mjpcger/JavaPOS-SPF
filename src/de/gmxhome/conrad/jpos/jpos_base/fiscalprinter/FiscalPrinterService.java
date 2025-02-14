@@ -754,6 +754,44 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         return Data.DescriptionLength;
     }
 
+    private Map<Integer, Map<String, int[]>> ValidVatRates = null;
+
+    private void updateValidVatRates() {
+        try {
+            String[] data = {""};
+            getData(FPTR_GD_VAT_ID_LIST, null, data);
+            Map<Integer, Map<String, int[]>> validRates = new HashMap<>();
+            for (String vatentry : data[0].split(";")) {
+                String[] vatinfo = vatentry.split(":");
+                if (vatinfo.length == 3) {
+                    int id = Integer.parseInt(vatinfo[0].replaceAll(" ", ""));
+                    String name = vatinfo[2];
+                    String[] optargs = vatinfo[1].replaceAll(" ", "").split(",");
+                    Map<String, int[]> rateinfo = new HashMap<>();
+                    if (optargs.length == 1 && optargs[0].equals(""))
+                        rateinfo.put(name, null);
+                    else {
+                        int[] args = new int[optargs.length];
+                        for (int i = 0; i < optargs.length; i++)
+                            args[i] = Integer.parseInt(optargs[i]);
+                        rateinfo.put(name, args);
+                    }
+                    validRates.put(id, rateinfo);
+                }
+            }
+            ValidVatRates = validRates;
+        } catch (Exception ignore) {
+            ValidVatRates = null;
+        }
+    }
+
+    @Override
+    public void setDeviceEnabled(boolean yes) throws JposException {
+        super.setDeviceEnabled(yes);
+        if (yes && Data.CapHasVatTable)
+            updateValidVatRates();
+    }
+
     @Override
     public boolean getDuplicateReceipt() throws JposException {
         checkOpened();
@@ -1117,9 +1155,14 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         check(!Data.CapFixedOutput, JPOS_E_ILLEGAL, "Non-fiscal fixed text printing not supported");
         checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Cannot change to non-fiscal document state");
         switch (station) {
-            case FPTR_S_RECEIPT -> check(!Data.CapRecPresent, JPOS_E_ILLEGAL, "Unsupported station: Receipt");
-            case FPTR_S_SLIP -> check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "Unsupported station: Slip");
-            default -> throw new JposException(JPOS_E_ILLEGAL, "Invalid station: " + station);
+            case FPTR_S_RECEIPT:
+                check(!Data.CapRecPresent, JPOS_E_ILLEGAL, "Unsupported station: Receipt");
+                break;
+            case FPTR_S_SLIP:
+                check(!Data.CapSlpPresent, JPOS_E_ILLEGAL, "Unsupported station: Slip");
+                break;
+            default:
+                throw new JposException(JPOS_E_ILLEGAL, "Invalid station: " + station);
         }
         FiscalPrinterInterface.beginFixedOutput(station, documentType);
         logCall("BeginFixedOutput");
@@ -1141,6 +1184,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         logPreCall("BeginItemList", removeOuterArraySpecifier(new Object[]{vatID}, Device.MaxArrayStringElements));
         checkEnabled();
         check(!Data.CapItemList, JPOS_E_ILLEGAL, "Non-fiscal item list printing not supported");
+        check(ValidVatRates != null && !ValidVatRates.containsKey(vatID), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatID);
         checkext(Data.PrinterState != FPTR_PS_MONITOR, JPOS_EFPTR_WRONG_STATE, "Cannot change to item list state");
         FiscalPrinterInterface.beginItemList(vatID);
         logCall("BeginItemList");
@@ -1270,7 +1314,8 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
     @Override
     public void getData(int dataItem, int[] optArgs, String[] data) throws JposException {
         logPreCall("GetData", removeOuterArraySpecifier(new Object[]{dataItem, optArgs, "..."}, Device.MaxArrayStringElements));
-        long[] allowedstr = { FPTR_GD_FIRMWARE, FPTR_GD_PRINTER_ID, FPTR_GD_TENDER, };
+        long[] needOptArgs = { FPTR_GD_TENDER, FPTR_GD_LINECOUNT, FPTR_GD_DESCRIPTION_LENGTH };
+        long[] allowedstr = { FPTR_GD_FIRMWARE, FPTR_GD_PRINTER_ID, FPTR_GD_TENDER, FPTR_GD_VAT_ID_LIST};
         long[] allowedint = {
                 FPTR_GD_MID_VOID, FPTR_GD_RECEIPT_NUMBER, FPTR_GD_NUMB_CONFIG_BLOCK, FPTR_GD_NUMB_CURRENCY_BLOCK,
                 FPTR_GD_NUMB_HDR_BLOCK, FPTR_GD_NUMB_RESET_BLOCK, FPTR_GD_NUMB_VAT_BLOCK, FPTR_GD_FISCAL_DOC,
@@ -1282,8 +1327,8 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
                 FPTR_GD_CURRENT_TOTAL, FPTR_GD_DAILY_TOTAL, FPTR_GD_GRAND_TOTAL, FPTR_GD_NOT_PAID, FPTR_GD_REFUND,
                 FPTR_GD_REFUND_VOID
         };
-        check(optArgs == null || data == null, JPOS_E_ILLEGAL, "Unexpected null pointer argument");
-        check(optArgs.length * data.length != 1, JPOS_E_ILLEGAL, "Bad dimension of argument pointer");
+        check(member(dataItem, needOptArgs) && (optArgs == null || optArgs.length != 1), JPOS_E_ILLEGAL, "optArgs not int[1]");
+        check(data == null || data.length != 1, JPOS_E_ILLEGAL, "data not String[1]");
         checkEnabled();
         checkBusySync();
         if (member(dataItem, allowedstr))
@@ -1300,7 +1345,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
                     : Long.toString(longdata[0]);
         } else
             throw new JposException(JPOS_E_ILLEGAL, "Data item invalid: " + dataItem);
-        logCall("GetData", removeOuterArraySpecifier(new Object[]{dataItem, optArgs[0], data[0]}, Device.MaxArrayStringElements));
+        logCall("GetData", removeOuterArraySpecifier(new Object[]{dataItem, optArgs, data}, Device.MaxArrayStringElements));
     }
 
     @Override
@@ -1323,6 +1368,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
                 FPTR_GT_SURCHARGE, FPTR_GT_SURCHARGE_VOID, FPTR_GT_VAT, FPTR_GT_VAT_CATEGORY
         };
         checkEnabled();
+        check(ValidVatRates != null && !ValidVatRates.containsKey(vatID), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatID);
         check(data == null, JPOS_E_ILLEGAL, "Unexpected null pointer argument");
         check(data.length != 1, JPOS_E_ILLEGAL, "Bad dimension of argument pointer");
         checkMember(optArgs, allowed, JPOS_E_ILLEGAL, "Totalizer invalid: " + optArgs);
@@ -1339,6 +1385,21 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         logPreCall("GetVatEntry", removeOuterArraySpecifier(new Object[]{vatID, optArgs, "..."}, Device.MaxArrayStringElements));
         checkEnabled();
         check(!Data.CapHasVatTable, JPOS_E_ILLEGAL, "No VAT table");
+        if (ValidVatRates != null) {
+            check(!ValidVatRates.containsKey(vatID), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatID);
+            for (int[] arglist : ValidVatRates.get(vatID).values()) {
+                if (arglist == null)
+                    break;
+                boolean error = true;
+                for (int opt : arglist) {
+                    if (opt == vatID) {
+                        error = false;
+                        break;
+                    }
+                }
+                check(error, JPOS_E_ILLEGAL, "Invalid VAT ID: " + vatID);
+            }
+        }
         check(vatRate == null, JPOS_E_ILLEGAL, "Unexpected null pointer argument");
         check(vatRate.length != 1, JPOS_E_ILLEGAL, "Bad dimension of argument pointer");
         FiscalPrinterInterface.getVatEntry(vatID, optArgs, vatRate);
@@ -1404,6 +1465,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         checkext(price < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
         checkext(quantity < 0, JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
         checkext(adjustment < 0, JPOS_EFPTR_BAD_PRICE, "adjustment must be >= 0");
+        check(ValidVatRates != null && !ValidVatRates.containsKey(vatInfo), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatInfo);
         callIt(FiscalPrinterInterface.printRecVoidItem(description, price, quantity, adjustmentType, adjustment, vatInfo), "PrintRecVoidItem");
     }
 
@@ -1548,6 +1610,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         check(!Data.CapSetVatTable, JPOS_E_ILLEGAL, "Setting VAT table not supported");
         check(Data.DayOpened, JPOS_E_ILLEGAL, "Day open");
         FiscalPrinterInterface.setVatTable();
+        updateValidVatRates();
         logCall("SetVatTable");
     }
 
@@ -1602,6 +1665,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         check(!Data.CapItemList, JPOS_E_ILLEGAL, "Item list not supported");
         checkext(Data.PrinterState != FPTR_PS_ITEM_LIST, JPOS_EFPTR_WRONG_STATE, "Not in item list");
         checkext(Data.CapReservedWord && itemName.lastIndexOf(Data.ReservedWord) >= 0, JPOS_EFPTR_BAD_ITEM_DESCRIPTION, "Item name contains reserved word");
+        check(ValidVatRates != null && !ValidVatRates.containsKey(vatID), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatID);
         FiscalPrinterInterface.verifyItem(itemName, vatID);
         logCall("VerifyItem");
     }
@@ -1688,6 +1752,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         checkReserved(description, "description");
         checkext(price < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
         checkext(quantity < 0, JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
+        check(ValidVatRates != null && !ValidVatRates.containsKey(vatInfo), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatInfo);
         checkext(unitPrice < 0, JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
         checkReserved(unitName, "unitName");
         callIt(FiscalPrinterInterface.printRecItem(description, price, quantity, vatInfo, unitPrice, unitName), "PrintRecItem");
@@ -1711,6 +1776,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         check(!Data.CapPositiveAdjustment && member(adjustmentType, allowedpositive), JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
         checkReserved(description, "description");
         checkext(amount <= 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "amount must be > 0");
+        check(ValidVatRates != null && !ValidVatRates.containsKey(vatInfo), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatInfo);
         callIt(FiscalPrinterInterface.printRecItemAdjustment(adjustmentType, description, amount, vatInfo), "PrintRecItemAdjustment");
     }
 
@@ -1732,6 +1798,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         check(!Data.CapPositiveAdjustment && member(adjustmentType, allowedpositive), JPOS_E_ILLEGAL, "Unsupported adjustment: " + adjustmentType);
         checkReserved(description, "description");
         checkext(amount <= 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "amount must be > 0");
+        check(ValidVatRates != null && !ValidVatRates.containsKey(vatInfo), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatInfo);
         callIt(FiscalPrinterInterface.printRecItemAdjustmentVoid(adjustmentType, description, amount, vatInfo), "PrintRecItemAdjustmentVoid");
     }
 
@@ -1751,6 +1818,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         checkReserved(description, "description");
         checkext(price < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
         checkext(quantity < 0, JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
+        check(ValidVatRates != null && !ValidVatRates.containsKey(vatInfo), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatInfo);
         checkext(unitPrice < 0, JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
         check(specialTax < 0, JPOS_E_ILLEGAL, "specialTax must be >= 0");
         checkReserved(unitName, "unitName");
@@ -1769,6 +1837,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
         checkext(price < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
+        check(ValidVatRates != null && !ValidVatRates.containsKey(vatInfo), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatInfo);
         check(specialTax < 0, JPOS_E_ILLEGAL, "specialTax must be >= 0");
         callIt(FiscalPrinterInterface.printRecItemFuelVoid(description, price, vatInfo, specialTax), "PrintRecItemFuelVoid");
     }
@@ -1787,6 +1856,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         checkReserved(description, "description");
         checkext(amount < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
         checkext(quantity < 0, JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
+        check(ValidVatRates != null && !ValidVatRates.containsKey(vatInfo), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatInfo);
         checkext(unitAmount < 0, JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
         checkReserved(unitName, "unitName");
         callIt(FiscalPrinterInterface.printRecItemRefund(description, amount, quantity, vatInfo, unitAmount, unitName), "PrintRecItemRefund");
@@ -1806,6 +1876,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         checkReserved(description, "description");
         checkext(amount < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
         checkext(quantity < 0, JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
+        check(ValidVatRates != null && !ValidVatRates.containsKey(vatInfo), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatInfo);
         checkext(unitAmount < 0, JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
         checkReserved(unitName, "unitName");
         callIt(FiscalPrinterInterface.printRecItemRefundVoid(description, amount, quantity, vatInfo, unitAmount, unitName), "PrintRecItemRefundVoid");
@@ -1825,6 +1896,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         checkReserved(description, "description");
         checkext(price < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
         checkext(quantity < 0, JPOS_EFPTR_BAD_ITEM_QUANTITY, "quantity must be >= 0");
+        check(ValidVatRates != null && !ValidVatRates.containsKey(vatInfo), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatInfo);
         checkext(unitPrice < 0, JPOS_EFPTR_BAD_PRICE, "unitPrice must be >= 0");
         checkReserved(unitName, "unitName");
         callIt(FiscalPrinterInterface.printRecItemVoid(description, price, quantity, vatInfo, unitPrice, unitName), "PrintRecItemVoid");
@@ -1914,10 +1986,11 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         boolean percent = member(adjustmentType, percentTypes);
         StringBuilder vatAdjustmentBuilder = new StringBuilder();
         for (String adjustment : adjustments) {
-            String[] value = adjustment.split(",");
+            String[] value = adjustment.replaceAll(" ", "").split(",");
             check(value.length != 2, JposConst.JPOS_E_ILLEGAL, "Mal-formatted vatAdjustment parameter");
             try {
                 int vatid = Integer.parseInt(value[0]);
+                check(ValidVatRates != null && !ValidVatRates.containsKey(vatid), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatid);
                 boolean percentvalue = value[1].charAt(value[1].length() - 1) == '%';
                 if (percentvalue)
                     value[1] = value[1].substring(0, value[1].length() - 1);
@@ -1947,6 +2020,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
         checkext(amount < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
+        check(ValidVatRates != null && !ValidVatRates.containsKey(vatInfo), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatInfo);
         callIt(FiscalPrinterInterface.printRecRefund(description, amount, vatInfo), "PrintRecRefund");
     }
 
@@ -1961,6 +2035,7 @@ public class FiscalPrinterService extends JposBase implements FiscalPrinterServi
         ifSyncCheckBusyCoverPaper(getFiscalStation());
         checkReserved(description, "description");
         checkext(amount < 0, JPOS_EFPTR_BAD_ITEM_AMOUNT, "price must be >= 0");
+        check(ValidVatRates != null && !ValidVatRates.containsKey(vatInfo), JPOS_E_ILLEGAL, "Invalid VAT id: " + vatInfo);
         callIt(FiscalPrinterInterface.printRecRefundVoid(description, amount, vatInfo), "PrintRecRefundVoid");
     }
 

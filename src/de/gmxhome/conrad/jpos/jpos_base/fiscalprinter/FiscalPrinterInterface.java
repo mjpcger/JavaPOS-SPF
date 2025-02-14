@@ -300,6 +300,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapItemList is true,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatID is valid,</li>
      *     <li>PrinterState is PS_MONITOR (not in any other kind of document).</li>
      * </ul>
      * vatID will not be checked because it has no predefined allowed value range. Valid values are specified
@@ -495,7 +496,8 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>AsyncMode is true or State is not S_BUSY,</li>
-     *     <li>optArgs and data are not null and are of length 1,</li>
+     *     <li>data is not null and of length 1,</li>
+     *     <li>If dataItem is FPTR_GD_TENDER, FPTR_GD_LINECOUNT or FPTR_GD_DESCRIPTION_LENGTH, optArgs is not null and of length 1,</li>
      *     <li>dataItem is one of the GD_ values as described for method GetData.</li>
      *     <li>dataItem is <b>not</b> one of GD_MID_VOID, GD_RECEIPT_NUMBER, one of the GD_ numbers for fiscal memory counts,
      *     one of the GD_ values for counter, GD_LINECOUNT or GD_DESCRIPTION_LENGTH, if final part for counters,
@@ -521,7 +523,8 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>AsyncMode is true or State is not S_BUSY,</li>
-     *     <li>optArgs and data are not null and are of length 1,</li>
+     *     <li>data is not null and of length 1,</li>
+     *     <li>If dataItem is FPTR_GD_LINECOUNT or FPTR_GD_DESCRIPTION_LENGTH, optArgs is not null and of length 1,</li>
      *     <li>dataItem is one of GD_MID_VOID, GD_RECEIPT_NUMBER, one of the GD_ numbers for fiscal memory counts,
      *     one of the GD_ values for counter, GD_LINECOUNT or GD_DESCRIPTION_LENGTH.</li>
      * </ul>
@@ -539,7 +542,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>AsyncMode is true or State is not S_BUSY,</li>
-     *     <li>optArgs and data are not null and are of length 1,</li>
+     *     <li>data is not null and of length 1,</li>
      *     <li>dataItem is one of GD_CURRENT_TOTAL, GD_DAILY_TOTAL, GD_GRAND_TOTAL, GD_NOT_PAID, GD_REFUND or GD_REFUND_VOID.</li>
      * </ul>
      * In this version of GetData, the requested totalizer must be returned in a currency value, implemented as
@@ -593,6 +596,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * This method will be called only if the following plausibility checks lead to a positive result:
      * <ul>
      *     <li>Device is enabled,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatID is valid,</li>
      *     <li>data is not null and is of length 1,</li>
      *     <li>optArgs is one of the GT_ values as described for method GetTotalizer.</li>
      * </ul>
@@ -612,6 +616,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>CapHasVatTable is true.</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatID and optArgs are valid,</li>
      *     <li>vatRate is not null and is of length 1,</li>
      * </ul>
      *
@@ -919,6 +924,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>CapHasVatTable is true,</li>
      *     <li>CapItemList is true,</li>
      *     <li>PrinterState is PS_ITEM_LIST,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatID is valid,</li>
      *     <li>If CapReservedWord is true: itemName does not contain the contents of property ReservedWord.</li>
      * </ul>
      * <b>Attention:</b> Each service implementation that supports verifying items must perform additional
@@ -1132,6 +1138,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>PrinterState is PS_FISCAL_RECEIPT,</li>
      *     <li>CapFiscalReceiptType is false or FiscalReceiptType is RT_SALES, RT_SERVICE, RT_SIMPLE_INVOICE or RT_REFUND,</li>
      *     <li>amount quantity and price are &ge; 0,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatInfo is valid,</li>
      *     <li>description and unitName are not null and do not contain the reserved word, if any.</li>
      * </ul>
      * In addition, If AsyncMode is false:
@@ -1197,6 +1204,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>if CapPositiveAdjustment is false, adjustmentType is one of AT_AMOUNT_DISCOUNT, AT_COUPON_AMOUNT_DISCOUNT,
      * AT_PERCENTAGE_DISCOUNT, AT_PERCENTAGE_SURCHARGE or AT_COUPON_PERCENTAGE_DISCOUNT,</li>
      *     <li>amount &gt; 0,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatInfo is valid,</li>
      *     <li>description is not null and do not contain the reserved word, if any.</li>
      * </ul>
      * In addition, If AsyncMode is false:
@@ -1260,6 +1268,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>if CapPositiveAdjustment is false, adjustmentType is one of AT_AMOUNT_DISCOUNT, AT_COUPON_AMOUNT_DISCOUNT,
      * AT_PERCENTAGE_DISCOUNT, AT_PERCENTAGE_SURCHARGE or AT_COUPON_PERCENTAGE_DISCOUNT,</li>
      *     <li>amount &gt; 0,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatInfo is valid,</li>
      *     <li>description is not null and do not contain the reserved word, if any.</li>
      * </ul>
      * In addition, If AsyncMode is false:
@@ -1315,6 +1324,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>PrinterState is PS_FISCAL_RECEIPT,</li>
      *     <li>CapFiscalReceiptType is false or FiscalReceiptType is RT_SALES, RT_SERVICE, RT_SIMPLE_INVOICE or RT_REFUND,</li>
      *     <li>amount, quantity, price and specialTax are &ge; 0,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatInfo is valid,</li>
      *     <li>description, unitName and specialTaxName are not null and do not contain the reserved word, if any.</li>
      * </ul>
      * In addition, If AsyncMode is false:
@@ -1372,6 +1382,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>PrinterState is PS_FISCAL_RECEIPT,</li>
      *     <li>CapFiscalReceiptType is false or FiscalReceiptType is RT_SALES, RT_SERVICE, RT_SIMPLE_INVOICE or RT_REFUND,</li>
      *     <li>price and specialTax are &ge; 0,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatInfo is valid,</li>
      *     <li>description is not null and does not contain the reserved word, if any.</li>
      * </ul>
      * In addition, If AsyncMode is false:
@@ -1425,6 +1436,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>PrinterState is PS_FISCAL_RECEIPT,</li>
      *     <li>CapFiscalReceiptType is false or FiscalReceiptType is RT_SALES, RT_SERVICE, RT_SIMPLE_INVOICE or RT_REFUND,</li>
      *     <li>amount, quantity and price are &ge; 0,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatInfo is valid,</li>
      *     <li>description and unitName are not null and do not contain the reserved word, if any.</li>
      * </ul>
      * In addition, If AsyncMode is false:
@@ -1482,6 +1494,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>PrinterState is PS_FISCAL_RECEIPT,</li>
      *     <li>CapFiscalReceiptType is false or FiscalReceiptType is RT_SALES, RT_SERVICE or RT_REFUND,</li>
      *     <li>amount, quantity and price are &ge; 0,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatInfo is valid,</li>
      *     <li>description and unitName are not null and do not contain the reserved word, if any.</li>
      * </ul>
      * In addition, If AsyncMode is false:
@@ -1539,6 +1552,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>PrinterState is PS_FISCAL_RECEIPT,</li>
      *     <li>CapFiscalReceiptType is false or FiscalReceiptType is RT_SALES, RT_SERVICE or RT_REFUND,</li>
      *     <li>amount, quantity and price are &ge; 0,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatInfo is valid,</li>
      *     <li>description and unitName are not null and do not contain the reserved word, if any.</li>
      * </ul>
      * In addition, If AsyncMode is false:
@@ -1743,6 +1757,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>description is not null and does not contain the reserved word, if any,</li>
      *     <li>vatAdjustment is not null and consists of no more than NumVatRates value pairs, each consisting of two values:
      *     An integer (the vat id) and a currency value (decimal number with maximum 4 decimals,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, all these vat ids are valid,</li>
      *     <li>Each vat id occurs only once within vatAdjustment.</li>
      * </ul>
      * In addition, If AsyncMode is false:
@@ -1812,6 +1827,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     AT_AMOUNT_DISCOUNT, AT_AMOUNT_SURCHARGE and AT_COUPON_AMOUNT_DISCOUNT,</li>
      *     <li>vatAdjustment is not null and consists of no more than NumVatRates value pairs, each consisting of two values:
      *     An integer (the vat id) and a currency value (decimal number with maximum 4 decimals,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, all these vat ids are valid,</li>
      *     <li>Each vat id occurs only once within vatAdjustment.</li>
      * </ul>
      * In addition, If AsyncMode is false:
@@ -1861,6 +1877,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     AT_AMOUNT_DISCOUNT, AT_AMOUNT_SURCHARGE and AT_COUPON_AMOUNT_DISCOUNT,</li>
      *     <li>vatAdjustment is not null and consists of no more than NumVatRates value pairs, each consisting of two values:
      *     An integer (the vat id) and a currency value (decimal number with maximum 4 decimals,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, all these vat ids are valid,</li>
      *     <li>Each vat id occurs only once within vatAdjustment.</li>
      * </ul>
      * In addition, If AsyncMode is false:
@@ -1921,6 +1938,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>PrinterState is PS_FISCAL_RECEIPT,</li>
      *     <li>CapFiscalReceiptType is false or FiscalReceiptType is RT_SALES, RT_SERVICE or RT_REFUND,</li>
      *     <li>amount is &ge; 0,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatInfo is valid,</li>
      *     <li>description is not null and do not contain the reserved word, if any.</li>
      * </ul>
      * In addition, If AsyncMode is false:
@@ -1975,6 +1993,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>PrinterState is PS_FISCAL_RECEIPT,</li>
      *     <li>CapFiscalReceiptType is false or FiscalReceiptType is RT_SALES, RT_SERVICE or RT_REFUND,</li>
      *     <li>amount is &ge; 0,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatInfo is valid,</li>
      *     <li>description is not null and do not contain the reserved word, if any.</li>
      * </ul>
      * In addition, If AsyncMode is false:
@@ -2348,6 +2367,7 @@ public interface FiscalPrinterInterface extends JposBaseInterface {
      *     <li>if CapPositiveAdjustment is false, adjustmentType is one of AT_AMOUNT_DISCOUNT, AT_COUPON_AMOUNT_DISCOUNT,
      * AT_PERCENTAGE_DISCOUNT, AT_PERCENTAGE_SURCHARGE or AT_COUPON_PERCENTAGE_DISCOUNT,</li>
      *     <li>adjustment, quantity and price are &ge; 0,</li>
+     *     <li>If service supports FPTR_GD_VAT_ID_LIST, vatInfo is valid,</li>
      *     <li>description is not null and does not contain the reserved word, if any.</li>
      * </ul>
      * In addition, If AsyncMode is false:
