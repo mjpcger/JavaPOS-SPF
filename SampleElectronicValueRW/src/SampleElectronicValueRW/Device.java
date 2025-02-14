@@ -518,12 +518,12 @@ public class Device extends JposDevice implements Runnable {
         if (resp.length() == 0)
             throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + request.getTimeout() + " milliseconds");
         switch (Result = Integer.parseInt(resp.substring(1))) {
-            case 4 ->
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Terminal locked");
-            case 6 ->
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Confirmation requested");
-            case 7 ->
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Authorization just activated");
+        case 4:
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Terminal locked");
+        case 6:
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Confirmation requested");
+        case 7:
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Authorization just activated");
         }
         SequenceNumber = request.getSequenceNumber();
     }
@@ -588,14 +588,14 @@ public class Device extends JposDevice implements Runnable {
         if (resp.length() == 0)
             throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
         switch (Result = Integer.parseInt(resp.substring(1))) {
-            case 4 -> // Device locked:
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Terminal locked");
-            case 5 -> // Not in transaction: Ignore.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Not in transaction");
-            case 7 -> // No confirmation requested.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "No confirmation requested");
-            case 8 -> // Invalid transaction number:
-                    throw new JposException(JPOS_E_ILLEGAL, Result, "Invalid transaction number: " + transno);
+        case 4: // Device locked:
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Terminal locked");
+        case 5: // Not in transaction: Ignore.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Not in transaction");
+        case 7: // No confirmation requested.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "No confirmation requested");
+        case 8: // Invalid transaction number:
+            throw new JposException(JPOS_E_ILLEGAL, Result, "Invalid transaction number: " + transno);
         }
     }
 
@@ -614,18 +614,20 @@ public class Device extends JposDevice implements Runnable {
             throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + request.getTimeout() + " milliseconds");
         int codeEndIndex = resp.indexOf(STX);
         switch (Result = Integer.parseInt(resp.substring(1, codeEndIndex > 0 ? codeEndIndex : resp.length()))) {
-            case 4 -> // Device locked:
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Terminal locked");
-            case 5 -> // Not in transaction: Ignore.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Not in transaction");
-            case 6 -> // Waiting for commit.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Waiting for commit");
-            case 7 -> // No confirmation requested.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Authorization active");
-            case 3 -> // Operation abort confirmed
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Authorization aborted");
-            case 0, 1, 2 -> // Transaction OK, Wait for commit, Authorization failure
-                    setTransactionProperties(request, resp);
+        case 4: // Device locked:
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Terminal locked");
+        case 5: // Not in transaction: Ignore.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Not in transaction");
+        case 6: // Waiting for commit.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Waiting for commit");
+        case 7: // No confirmation requested.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Authorization active");
+        case 3: // Operation abort confirmed
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Authorization aborted");
+        case 0:
+        case 1:
+        case 2: // Transaction OK, Wait for commit, Authorization failure
+            setTransactionProperties(request, resp);
         }
     }
 
@@ -650,18 +652,20 @@ public class Device extends JposDevice implements Runnable {
             throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + request.getTimeout() + " milliseconds");
         int codeEndIndex = resp.indexOf(STX);
         switch (Result = Integer.parseInt(resp.substring(1, codeEndIndex > 0 ? codeEndIndex : resp.length()))) {
-            case 4 -> // Device locked:
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Terminal locked");
-            case 5 -> // Not in transaction: Ignore.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Not in transaction");
-            case 6 -> // Waiting for commit.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Waiting for commit");
-            case 7 -> // No confirmation requested.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Authorization active");
-            case 8 -> // No confirmation requested.
-                    throw new JposException(JPOS_E_ILLEGAL, Result, "Invalid approval code: " + props.ApprovalCode);
-            case 0, 1, 2 -> // Transaction OK, Wait for commit, Authorization failure
-                    setTransactionProperties(request, resp);
+        case 4: // Device locked:
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Terminal locked");
+        case 5: // Not in transaction: Ignore.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Not in transaction");
+        case 6: // Waiting for commit.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Waiting for commit");
+        case 7: // No confirmation requested.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_COMMANDERROR, "Authorization active");
+        case 8: // No confirmation requested.
+            throw new JposException(JPOS_E_ILLEGAL, Result, "Invalid approval code: " + props.ApprovalCode);
+        case 0:
+        case 1:
+        case 2: // Transaction OK, Wait for commit, Authorization failure
+            setTransactionProperties(request, resp);
         }
     }
 
@@ -685,6 +689,7 @@ public class Device extends JposDevice implements Runnable {
         if (params.length >= 9) {
             ElectronicValueRWProperties props = (ElectronicValueRWProperties)getClaimingInstance(ClaimedElectronicValueRW, 0);
             synchronized (props.TypedResults) {
+                props.TypedResults.putNumber("POSTransactionNumber", request.getSequenceNumber());
                 props.CenterResultCode = params[1];
                 String name = "", value = "";
                 try {
@@ -721,7 +726,7 @@ public class Device extends JposDevice implements Runnable {
             int expmonth = Integer.parseInt(params[6].substring(0, 2));
             Date temp;
             if (expmonth > 0 && expmonth <= 12) {
-                props.TypedResults.put("AccountNumber", props.AccountNumber = "XXXXXXXXXXXX" + params[5]);
+                props.TypedResults.put("AccountNumber", props.AccountNumber = params[5]);
                 String LastDay = LastDayOfMonth[expmonth - 1];
                 // This routine works only until year 2099 (Only optimists believe UPOS 1.15 survives until 2099)
                 if (LastDay.length() == 0)
@@ -742,16 +747,16 @@ public class Device extends JposDevice implements Runnable {
 
     private void checkErrorCondition(String[] params) throws JposException {
         switch (Integer.parseInt(params[0])) {
-            case 100 ->   // Abort by user
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Aborted by customer");
-            case 101 ->   // Card locked
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_CENTERERROR, "Card locked");
-            case 102 ->   // Retain card
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_CENTERERROR, "Retain card");
-            case 103 ->   // Card error
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_CENTERERROR, "Card error");
-            case 104 ->   // Approval error
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_CENTERERROR, "Approval error");
+        case 100:   // Abort by user
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_RESET, "Aborted by customer");
+        case 101:   // Card locked
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_CENTERERROR, "Card locked");
+        case 102:   // Retain card
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_CENTERERROR, "Retain card");
+        case 103:   // Card error
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_CENTERERROR, "Card error");
+        case 104:   // Approval error
+            throw new JposException(JPOS_E_EXTENDED, JPOS_EEVRW_CENTERERROR, "Approval error");
         }
     }
 
