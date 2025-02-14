@@ -42,7 +42,7 @@ public class CashChangerFactory extends Factory implements JposServiceInstanceFa
                     boolean created = any != null;
                     if (!created) {
                         dev = new BeltCashboxDrawer(port);
-                    } else if (!(any instanceof Device))
+                    } else if (!(any instanceof BeltCashboxDrawer))
                         throw new JposException(JPOS_E_NOSERVICE, "Port " + port + " used by " + any.getClass().getName());
                     else {
                         dev = (BeltCashboxDrawer) any;

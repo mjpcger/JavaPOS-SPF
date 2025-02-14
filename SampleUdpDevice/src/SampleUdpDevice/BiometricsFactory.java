@@ -42,7 +42,7 @@ public class BiometricsFactory extends Factory implements JposServiceInstanceFac
                     boolean created = any != null;
                     if (!created) {
                         dev = new Biometrics(port);
-                    } else if (!(any instanceof Device))
+                    } else if (!(any instanceof Biometrics))
                         throw new JposException(JPOS_E_NOSERVICE, "Port " + port + " used by " + any.getClass().getName());
                     else {
                         dev = (Biometrics) any;
