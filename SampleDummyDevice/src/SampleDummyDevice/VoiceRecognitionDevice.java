@@ -197,12 +197,12 @@ public class VoiceRecognitionDevice extends JposDevice {
             try {
                 if (Request == null) {
                     getInput("Voice Recognition Inactive");
-                } else if (Request instanceof StartHearingSentence hearSentence) {
-                    handleHearingSentence(hearSentence);
-                } else if (Request instanceof StartHearingWord hearWord) {
-                    handleHearingWord(hearWord);
-                } else if (Request instanceof StartHearingYesNo hearYesNo) {
-                    handleHearingYesNo(hearYesNo);
+                } else if (Request instanceof StartHearingSentence) {
+                    handleHearingSentence((StartHearingSentence) Request);
+                } else if (Request instanceof StartHearingWord) {
+                    handleHearingWord((StartHearingWord) Request);
+                } else if (Request instanceof StartHearingYesNo) {
+                    handleHearingYesNo((StartHearingYesNo) Request);
                 } else {
                     handleHearingFree();
                 }
@@ -263,7 +263,7 @@ public class VoiceRecognitionDevice extends JposDevice {
 
         private String skipToNextWord(boolean match, String phrase, int wordEnd) {
             if (match && wordEnd >= 0) {
-                while (match && wordEnd < phrase.length() && phrase.charAt(wordEnd) == ' ')
+                while (wordEnd < phrase.length() && phrase.charAt(wordEnd) == ' ')
                     ++wordEnd;
                 return phrase.substring(wordEnd);
             }
