@@ -525,7 +525,7 @@ public interface POSPrinterInterface extends JposBaseInterface {
      *     <li>Device is enabled,</li>
      *     <li>station is S_JOURNAL, S_RECEIPT or S_SLIP.</li>
      * </ul>
-     * This method will be called before data will be checked using the methods validateData with POSPrinterService.PrintDataPart,
+     * This method will be called before data will be checked using the methods validateData with POSPrinterService.PrintDataPart
      * objects as second parameter. Since these methods should
      * check everything that must be checked, it should not be necessary to overwrite this method. However, if a
      * service overwrites this method, it may throw a JposException with error code 0 to signal that successful
@@ -994,9 +994,9 @@ public interface POSPrinterInterface extends JposBaseInterface {
      * <ul>
      *     <li>Device is enabled,</li>
      *     <li>If AsyncMode is false: State is S_IDLE, paper present, cover closed and if present, cartridge is operational,</li>
-     *     <li>station, data, symbology, height, width, alignment and textPosition have been validated with validateBarcode.</li>
+     *     <li>station, data, symbology, height, width, alignment and textPosition have been validated with validateData.</li>
      * </ul>
-     * If a service supports upside down printing, this method must be overwritten. It must at least be check
+     * If a service supports upside down printing, this method must be overwritten. It must at least be checked
      * whether the service is inside upside down printing mode without activated rotated barcode printing.
      *
      * @param station       Print station, see UPOS method PrintBarCode.
