@@ -98,7 +98,7 @@ proc server {fd ip port} {
         set Fd $fd
     }
     puts "Connect from $ip:$port"
-    fconfigure $fd -buffering line -encoding binary -translation binary
+    fconfigure $fd -buffering line -translation binary
     fileevent $fd readable "reader $fd"
 }
 

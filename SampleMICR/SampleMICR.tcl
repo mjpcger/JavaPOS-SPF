@@ -104,7 +104,7 @@ proc service {fd addr port} {
 	if {$Fd == ""} {
 		puts "Connect from $addr:$port accepted, fd = $fd"
 		set Fd $fd
-		fconfigure $fd -blocking 0 -buffering none -translation binary -encoding binary
+		fconfigure $fd -blocking 0 -buffering none -translation binary
 		fileevent $Fd readable {processInput}
 	} {
 		puts "Connect from $addr:$port rejected"

@@ -349,7 +349,7 @@ proc waitConnect {fd ip port} {
 		close $fd
 		puts "Reject connect from $ip:$port"
 	} {
-		fconfigure $fd -blocking 0 -buffering none -translation binary -encoding binary
+		fconfigure $fd -blocking 0 -buffering none -translation binary
 		fileevent $fd readable processData
 		set Fd $fd
 		puts "Connect from $ip:$port, waiting for data"
@@ -369,7 +369,7 @@ proc startstop {} {
 		} {
 			if {[set mode [lindex $Modes [.a.m.b current]]] == "" || [catch {
 				set SFd [open $Port r+]
-				fconfigure $SFd -blocking 1 -buffering none -translation binary -encoding binary -mode $mode -timeout 10
+				fconfigure $SFd -blocking 1 -buffering none -translation binary -mode $mode -timeout 10
 				fileevent $SFd readable processData	
 				set Fd $SFd
 			}]} {
