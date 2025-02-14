@@ -25,6 +25,11 @@ import java.text.*;
 import java.util.*;
 
 import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
+import static de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw.ElectronicValueRWService.BoolTags;
+import static de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw.ElectronicValueRWService.CurrencyTags;
+import static de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw.ElectronicValueRWService.DateTimeTags;
+import static de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw.ElectronicValueRWService.EnumTagsValues;
+import static de.gmxhome.conrad.jpos.jpos_base.electronicvaluerw.ElectronicValueRWService.NumberTags;
 import static jpos.ElectronicValueRWConst.*;
 import static jpos.JposConst.*;
 
@@ -463,7 +468,7 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
 
     /**
      * Specifies whether enumeration values will be checked against the list of enumerations specified in the corresponding
-     * UPOS specification (true) or not (false). In the latter case, any value can be passes for an enumeration value
+     * UPOS specification (true) or not (false). In the latter case, any value can be passed for an enumeration value
      * and the specific service implementation must decide whether the given value shall be supported. Default is true.
      */
     public boolean StrongEnumerationCheck = true;
@@ -557,12 +562,7 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
     }
 
     private boolean checkCurrencyTag(String tag, String value) throws JposException {
-        String[] currencies = {"Amount", "AmountForPoint", "Balance", "BalanceOfPoint", "ChargeableAmount",
-                "InsufficientAmount", "LastTimeBalance", "OtherAmount", "RequestedAutoChargeAmount", "SettledAmount",
-                "SettledAutoChargeAmount", "SettledOther-Amount", "TaxOthers", "TotalAmountOfAddition",
-                "TotalAmountOfSubtraction", "TotalAmountOfTransaction", "TotalAmountOfUncompletedAddition",
-                "TotalAmountOfUncompletedSubtraction", "TotalAmountOfUncompletedVoid", "TotalAmountOfVoid"};
-        for(String name : currencies) {
+        for(String name : CurrencyTags) {
             if (name.equals(tag)) {
                 try {
                     Long.parseLong(value);
@@ -576,40 +576,20 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
     }
 
     private boolean checkEnumTag(String tag, String value) throws JposException {
-        String[] enums = {
-                "AuthenticationStatus,EVRW_TAG_AS_AUTHENTICATED,EVRW_TAG_AS_UNAUTHENTICATED",
-                "CancelTransactionType,EVRW_TAG_CTT_CANCEL,EVRW_TAG_CTT_CHARGE,EVRW_TAG_CTT_RETURN,EVRW_TAG_CTT_SALES",
-                "ChargeMethod,EVRW_TAG_CM_CASH,EVRW_TAG_CM_CREDIT,EVRW_TAG_CM_POINT",
-                "NegativeInformationType,EVRW_TAG_NIT_ALL,EVRW_TAG_NIT_UPDATED",
-                "PaymentCondition,EVRW_TAG_PC_ INSTALLMENT_2,EVRW_TAG_PC_ INSTALLMENT_3,EVRW_TAG_PC_BONUS_1," +
-                        "EVRW_TAG_PC_BONUS_2,EVRW_TAG_PC_BONUS_3,EVRW_TAG_PC_BONUS_4,EVRW_TAG_PC_BONUS_5," +
-                        "EVRW_TAG_PC_BONUS_COMBINATION_1,EVRW_TAG_PC_BONUS_COMBINATION_2,EVRW_TAG_PC_BONUS_COMBINATION_3," +
-                        "EVRW_TAG_PC_BONUS_COMBINATION_4,EVRW_TAG_PC_INSTALLMENT_1,EVRW_TAG_PC_LUMP,EVRW_TAG_PC_REVOLVING",
-                "PaymentMethod,EVRW_TAG_PM_COMBINED,EVRW_TAG_PM_FULL_SETTLEMENT",
-                "PaymentMethodForPoint,EVRW_TAG_PMFP_CASH,EVRW_TAG_PMFP_CREDIT,EVRW_TAG_PMFP_EM,EVRW_TAG_PMFP_OTHER",
-                "ResultOnSettlement,EVRW_TAG_ROS_NG,EVRW_TAG_ROS_OK,EVRW_TAG_ROS_UNKNOWN",
-                "SummaryTermType,EVRW_TAG_STT_1,EVRW_TAG_STT_2,EVRW_TAG_STT_3",
-                "TransactionType,EVRW_TAG_TT_ADD,EVRW_TAG_TT_CANCEL_CHARGE,EVRW_TAG_TT_CANCEL_RETURN," +
-                        "EVRW_TAG_TT_CANCEL_SALES,EVRW_TAG_TT_COMPLETION,EVRW_TAG_TT_GET_LOG,EVRW_TAG_TT_PRE-SALES," +
-                        "EVRW_TAG_TT_READ,EVRW_TAG_TT_RETURN,EVRW_TAG_TT_SUBTRACT,EVRW_TAG_TT_WRITE"
-        };
-        for(String name : enums) {
-            String[] tagvals = name.split(",");
-            if (tagvals[0].equals(tag)) {
-                for (int i = 1; i < tagvals.length; i++) {
-                    if (tagvals[i].equals(value))
+        for (int i = 0; i < EnumTagsValues.length; i += 2) {
+            if (EnumTagsValues[0].equals(tag)) {
+                for (Object val : (Object[])EnumTagsValues[i + 1]) {
+                    if (val.equals(value) || (val instanceof Integer && Integer.toString((int) val).equals(value)))
                         return true;
                 }
                 throw new JposException(JPOS_E_ILLEGAL, "Bad format for tag name " + tag + ": " + value);
             }
         }
-        return tag.equals("VOIDorRETURN") || tag.equals("VoidTransactionType");
+        return false;
     }
 
     private boolean checkBoolenTag(String tag, String value) throws JposException {
-        String[] bools = {"AutoCharge", "ForceOnlineCheck", "LogCheck", "SignatureFlag", "SoundAssistFlag",
-                "UILCDControl", "UILEDControl", "UISOUNDControl"};
-        for(String name : bools) {
+        for(String name : BoolTags) {
             if (name.equals(tag)) {
                 if (value.equals("True") || value.equals("False")) {
                     return true;
@@ -622,15 +602,7 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
     }
 
     private boolean checkNumberTag(String tag, String value) throws JposException {
-        String[] numbers = {"CardTransactionNumber", "ChargeableCount", "EffectiveDaysOfKey",
-                "EndEVRWTransactionNumber", "EndPOSTransactionNumber", "EVRWID", "EVRWTransactionNumber", "MediumID",
-                "ModuleID", "NumberOfAddition", "NumberOfEVRWTransactionLog", "NumberOfFreeEVRWTransactionLog",
-                "NumberOfRecord", "NumberOfSentEVRWTransactionLog", "NumberOfSubtraction", "NumberOfTransaction",
-                "NumberOfUncompletedAddition", "NumberOfUncompletedSubtraction", "NumberOfUncompletedVoid",
-                "NumberOfVoid", "Point", "POSTransactionNumber", "RegistrableServiceCapacity", "ResponseCode1",
-                "ResponseCode2", "RetryTimeout", "SettledPoint", "SettlementNumber", "StartEVRWTransactionNumber",
-                "StartPOSTransactionNumber", "TouchTimeout"};
-        for(String name : numbers) {
+        for(String name : NumberTags) {
             if (name.equals(tag)) {
                 try {
                     Integer.parseInt(value);
@@ -644,10 +616,7 @@ public class ElectronicValueRWProperties extends JposCommonProperties implements
     }
 
     private boolean checkDateTimeTag(String tag, String value) throws JposException {
-        String[] datetimes = {"AccessLogLastDateTime", "DateTime", "EndDateTime", "EVRWDataUpdateDateTime",
-                "EVRWDateTime", "ExpirationDate", "KeyExpirationDateTime", "KeyUpdateDateTime", "LastUsedDateTime",
-                "NegativeInformationUpdateDateTime", "POSDateTime", "StartDateTime"};
-        for(String name : datetimes) {
+        for(String name : DateTimeTags) {
             if (name.equals(tag)) {
                 try {
                     new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").parse(value);

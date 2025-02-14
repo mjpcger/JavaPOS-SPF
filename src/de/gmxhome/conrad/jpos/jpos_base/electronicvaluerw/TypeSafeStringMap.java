@@ -30,8 +30,9 @@ import java.util.*;
  * TypeSafeStringMap object, where the <i>tag</i> specifies a unique String that identifies a parameter and <i>type</i>
  * is one of String.class (for Datetime values), Long.class (for currency values), Integer.class (for Number values),
  * Boolean.class (for Boolean values) or int[] (for Enumerated values, contains all valid integer values). See the UPOS
- * specification, chapter 15.5.31, for a description of the UPOS types Datetime, Currency, Number, Boolean and Enumerated.
- * A special case are tags of type String. They must not be specified, they are the default.
+ * specification, chapter Electronic Value RW, method retrieveResultInformation, for a description of the UPOS types
+ * Datetime, Currency, Number, Boolean and Enumerated. A special case are tags of type String. They must not be specified,
+ * they are the default.
  * <br>The given values will be stored as String (String and Datetime values), Long (Currency values), Integer (Number
  * and Enumerated values) or Boolean (Boolean values) objects. Method put and putAll convert the value string to the
  * type specified by the tag (the key). If conversion fails, an exception (NullPointerException, ArithmeticException,
@@ -132,10 +133,9 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
      *     <li>type == Integer.class: tag is of type Numeric, a 32-bit integer value.</li>
      *     <li>type == Long.class: tag is of type Currency, a 64-bit integer value which represents a decimal value with
      *     implicit 4 decimals. A value of 1234567 represents a Currency value of 123.4567.</li>
-     *     <li>type instanceof int[]: tag is of type Enumerated and type is an array that contains all documented valid
-     *     values.</li>
-     *     <li>type instanceof java.lang.reflect.Field[]: tag is of type Enumerated and type is an array of Field
-     *     objects which correspond to the ElectronicValueRWConst constants allowed for that tag.</li>
+     *     <li>type instanceof Object[]: tag is of type Enumerated and type is an array that contains all documented
+     *     named values, either as integer value for name-less enumerated values or as instance of java.lang.reflect.Field
+     *     objects for named values specified in class ElectronicValueRWConst.</li>
      * </ul>
      * @param key   Name of tag with a length &gt; 0.
      * @param type  Object representing the type of the tag.
@@ -144,18 +144,22 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
     public static void addTagType(String key, Object type) {
         if (key.length() > 0) {
             if (type != null) {
-                if (type instanceof Field[] constants) {
-                    SIVals[] validvalues = new SIVals[constants.length];
-                    for (int i = 0; i < constants.length; i++) {
+                if (type.getClass().isArray()) {
+                    SIVals[] validvalues = new SIVals[Array.getLength(type)];
+                    for (int i = 0; i < Array.getLength(type); i++) {
                         try {
-                            validvalues[i] = new SIVals(constants[i].getName(), constants[i].getInt(null));
+                            Object value = Array.get(type, i);
+                            if (value instanceof Integer)
+                                validvalues[i] = new SIVals(null,(int) value);
+                            else
+                                validvalues[i] = new SIVals(((Field)value).getName(), ((Field)value).getInt(null));
                         } catch (Exception e) {
                             String msg = e.getClass().getSimpleName() + (e.getMessage() == null ? "" : e.getMessage());
                             throw new RuntimeException(msg);
                         }
                     }
                     type = validvalues;
-                } else if (!(type instanceof int[] || type == String.class || type == Boolean.class || type == Integer.class || type == Long.class))
+                } else if (!(type == String.class || type == Boolean.class || type == Integer.class || type == Long.class))
                     throw new RuntimeException("Bad type identifier: " + type.getClass().getSimpleName());
                 Types.put(key, type);
             }
@@ -337,15 +341,8 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
      */
     public Integer putEnumerated(String key, int value) {
         Object o = Types.get(key);
-        if (o instanceof int[]) {
-            int[] valid = (int[]) o;
-            for (int j : valid) {
-                if (value == j)
-                    return (Integer) Me.put(key, value);
-            }
-        } else if (o instanceof SIVals[]) {
-            SIVals[] valid = (SIVals[]) o;
-            for (SIVals siVals : valid) {
+        if (o instanceof SIVals[]) {
+            for (SIVals siVals : (SIVals[]) o) {
                 if (value == siVals.Value)
                     return (Integer) Me.put(key, value);
             }
@@ -399,9 +396,13 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
             if (type == null)
                 return Integer.toString((Integer) val);
             else if (type instanceof SIVals[]) { // Enumerated with named elements
-                for (SIVals def : (SIVals[])type) {
-                    if (def.Value == (Integer) val)
-                        return def.Key;
+                for (SIVals def : (SIVals[]) type) {
+                    if (def.Value == (Integer) val) {
+                        if (def.Key != null)
+                            return def.Key;
+                        else
+                            break;
+                    }
                 }
             }
             return Integer.toString((Integer) val);
@@ -409,7 +410,6 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
     }
 
     @Override
-    @SuppressWarnings("AssignmentUsedAsCondition")
     public String put(String key, String value) {
         String ret = get(key);
         Object type = Types.get(key);
@@ -432,18 +432,6 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
                     Me.put(key, Integer.parseInt(value));
                 } else if (type == Long.class) {    // Currency
                     Me.put(key, new BigDecimal(value).scaleByPowerOfTen(4).longValueExact());
-                } else if (type instanceof int[] intArray) { // Enumerated, no symbols
-                    int val = Integer.parseInt(value);
-                    if (StrongEnumerationCheck) {
-                        boolean valid = false;
-                        for (int v : intArray) {
-                            if (valid = v == val)
-                                break;
-                        }
-                        if (!valid)
-                            throw new NullPointerException();
-                    }
-                    Me.put(key, val);
                 } else {    // SIVals[]              // Enumerated, symbols
                     Integer val = null;
                     if (UseEnumeratedValues) {
@@ -459,7 +447,7 @@ public class TypeSafeStringMap implements Map<String,String>, Cloneable {
                             val = v;
                     } else {
                         for (SIVals fld : (SIVals[]) type) {
-                            if (value.equals(fld.Key)) {
+                            if (value.equals(fld.Key) || (fld.Key == null && fld.Value == Integer.parseInt(value))) {
                                 val = fld.Value;
                                 break;
                             }

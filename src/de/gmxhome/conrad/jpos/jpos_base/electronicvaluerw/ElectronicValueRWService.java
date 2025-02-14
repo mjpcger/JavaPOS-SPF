@@ -22,6 +22,7 @@ import jpos.*;
 import jpos.services.*;
 
 import java.lang.reflect.*;
+import java.util.Arrays;
 
 import static de.gmxhome.conrad.jpos.jpos_base.JposDevice.*;
 import static jpos.ElectronicValueRWConst.*;
@@ -829,43 +830,66 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
         ElectronicValueRW.enumerateCardServices();
         logCall("EnumerateCardServices");
     }
-    static private final Object[] EnumTagsValues = {
-            "AuthenticationStatus", new String[]{ "EVRW_TAG_AS_AUTHENTICATED", "EVRW_TAG_AS_UNAUTHENTICATED" },
-            "CancelTransactionType", new String[]{ "EVRW_TAG_CTT_CANCEL", "EVRW_TAG_CTT_CHARGE", "EVRW_TAG_CTT_RETURN", "EVRW_TAG_CTT_SALES" },
-            "ChargeMethod", new String[]{ "EVRW_TAG_CM_CASH", "EVRW_TAG_CM_CREDIT", "EVRW_TAG_CM_POINT" },
-            "NegativeInformationType", new String[]{ "EVRW_TAG_NIT_ALL", "EVRW_TAG_NIT_UPDATED" },
-            "PaymentCondition", new String[]{
+
+    /**
+     * Array of tag names and names of corresponding enum values. Even number of elements. Odd elements have type
+     * String and specify the name of an enumeration tag. The following even element is of type Object[] and contains
+     * the names of the values that are valid for that tag for named tag values or the value itself for unnamed tag
+     * values as Integer.
+     */
+    static final Object[] EnumTagsValues = {
+            "AuthenticationStatus", new Object[]{ "EVRW_TAG_AS_AUTHENTICATED", "EVRW_TAG_AS_UNAUTHENTICATED" },
+            "CancelTransactionType", new Object[]{ "EVRW_TAG_CTT_CANCEL", "EVRW_TAG_CTT_CHARGE", "EVRW_TAG_CTT_RETURN", "EVRW_TAG_CTT_SALES" },
+            "ChargeMethod", new Object[]{ "EVRW_TAG_CM_CASH", "EVRW_TAG_CM_CREDIT", "EVRW_TAG_CM_POINT" },
+            "NegativeInformationType", new Object[]{ "EVRW_TAG_NIT_ALL", "EVRW_TAG_NIT_UPDATED" },
+            "PaymentCondition", new Object[]{
                     "EVRW_TAG_PC_INSTALLMENT_1", "EVRW_TAG_PC_INSTALLMENT_2", "EVRW_TAG_PC_INSTALLMENT_3",
                     "EVRW_TAG_PC_BONUS_1", "EVRW_TAG_PC_BONUS_2", "EVRW_TAG_PC_BONUS_3", "EVRW_TAG_PC_BONUS_4", "EVRW_TAG_PC_BONUS_5",
                     "EVRW_TAG_PC_BONUS_COMBINATION_1", "EVRW_TAG_PC_BONUS_COMBINATION_2", "EVRW_TAG_PC_BONUS_COMBINATION_3", "EVRW_TAG_PC_BONUS_COMBINATION_4",
                     "EVRW_TAG_PC_LUMP", "EVRW_TAG_PC_REVOLVING"
             },
-            "PaymentMethod", new String[]{ "EVRW_TAG_PM_COMBINED", "EVRW_TAG_PM_FULL_SETTLEMENT" },
-            "PaymentMethodForPoint", new String[]{ "EVRW_TAG_PMFP_CASH", "EVRW_TAG_PMFP_CREDIT", "EVRW_TAG_PMFP_EM", "EVRW_TAG_PMFP_OTHER" },
-            "ResultOnSettlement", new String[]{ "EVRW_TAG_ROS_NG", "EVRW_TAG_ROS_OK", "EVRW_TAG_ROS_UNKNOWN" },
-            "SummaryTermType", new String[]{ "EVRW_TAG_STT_1", "EVRW_TAG_STT_2", "EVRW_TAG_STT_3" },
-            "TransactionType", new String[]{
+            "PaymentMethod", new Object[]{ "EVRW_TAG_PM_COMBINED", "EVRW_TAG_PM_FULL_SETTLEMENT" },
+            "PaymentMethodForPoint", new Object[]{ "EVRW_TAG_PMFP_CASH", "EVRW_TAG_PMFP_CREDIT", "EVRW_TAG_PMFP_EM", "EVRW_TAG_PMFP_OTHER" },
+            "ResultOnSettlement", new Object[]{ "EVRW_TAG_ROS_NG", "EVRW_TAG_ROS_OK", "EVRW_TAG_ROS_UNKNOWN" },
+            "SummaryTermType", new Object[]{ "EVRW_TAG_STT_1", "EVRW_TAG_STT_2", "EVRW_TAG_STT_3" },
+            "TransactionType", new Object[]{
                     "EVRW_TAG_TT_CANCEL_CHARGE", "EVRW_TAG_TT_CANCEL_RETURN", "EVRW_TAG_TT_CANCEL_SALES", "EVRW_TAG_TT_GET_LOG",
                     "EVRW_TAG_TT_READ", "EVRW_TAG_TT_WRITE", "EVRW_TAG_TT_ADD", "EVRW_TAG_TT_SUBTRACT",
                     "EVRW_TAG_TT_RETURN", "EVRW_TAG_TT_COMPLETION", "EVRW_TAG_TT_PRE_SALES"
             },
-            "VOIDorRETURN", new int[]{ 1 /* Void */ , 2 /* Return */ },
-            "VoidTransactionType", new int[]{ 1 /* Cash */ , 2 /* Exchanging points */ }
+            "VOIDorRETURN", new Object[]{ "EVRW_TAG_VR_VOID" , "EVRW_TAG_VR_RETURN" },
+            "VoidTransactionType", new Object[]{ "EVRW_TAG_VTT_SALES" , "EVRW_TAG_VTT_CHARGE", "EVRW_TAG_VTT_CANCEL", "EVRW_TAG_VTT_RETURN" }
     };
-    static private final String[] DateTimeTags = {
+
+    /**
+     * Array of names of DateTime tags.
+     */
+    static final String[] DateTimeTags = {
             "AccessLogLastDateTime", "DateTime", "EndDateTime", "EVRWDataUpdateDateTime", "EVRWDateTime", "ExpirationDate",
             "KeyExpirationDateTime", "KeyUpdateDateTime", "LastUsedDateTime", "NegativeInformationUpdateDateTime", "POSDateTime", "StartDateTime"
     };
-    static private final String[] CurrencyTags = {
+
+    /**
+     * Array of names of currency tags.
+     */
+    static final String[] CurrencyTags = {
             "Amount", "AmountForPoint", "Balance", "BalanceOfPoint", "ChargeableAmount", "InsufficientAmount", "LastTimeBalance",
             "OtherAmount", "RequestedAutoChargeAmount", "SettledAmount", "SettledAutoChargeAmount", "SettledOther-Amount", "TaxOthers",
             "TotalAmountOfAddition", "TotalAmountOfSubtraction", "TotalAmountOfTransaction", "TotalAmountOfUncompletedAddition",
             "TotalAmountOfUncompletedSubtraction", "TotalAmountOfUncompletedVoid", "TotalAmountOfVoid"
     };
-    static private final String[] BoolTags = {
+
+    /**
+     * Array of names of boolean tags.
+     */
+    static final String[] BoolTags = {
             "AutoCharge", "ForceOnlineCheck", "LogCheck", "SignatureFlag", "SoundAssistFlag", "UILCDControl", "UILEDControl", "UISOUNDControl"
     };
-    static private final String[] NumberTags = {
+
+    /**
+     * Array of names of number tags.
+     */
+    static final String[] NumberTags = {
             "CardTransactionNumber", "ChargeableCount", "EffectiveDaysOfKey", "EndEVRWTransactionNumber", "EndPOSTransactionNumber",
             "EVRWID", "EVRWTransactionNumber", "MediumID", "ModuleID", "NumberOfAddition", "NumberOfEVRWTransactionLog", "NumberOfFreeEVRWTransactionLog",
             "NumberOfRecord", "NumberOfSentEVRWTransactionLog", "NumberOfSubtraction", "NumberOfTransaction", "NumberOfUncompletedAddition",
@@ -877,15 +901,18 @@ public class ElectronicValueRWService extends JposBase implements ElectronicValu
     static {
         for (int i = 0; i < EnumTagsValues.length; i += 2) {
             Object values = EnumTagsValues[i + 1];
-            if (values instanceof String[]) {
+            Object[] valueNames = (Object[]) values;
+            Object[] fields = new Object[valueNames.length];
+            int k = 0;
+            for (int j = 0; j < fields.length; j++) {
                 try {
-                    String[] valueNames = (String[]) values;
-                    Field[] fields = new Field[valueNames.length];
-                    for (int j = 0; j < fields.length; j++)
-                        fields[j] = ElectronicValueRWConst.class.getField(valueNames[j]);
-                    values = fields;
+                    if (valueNames[j] instanceof Integer)
+                        fields[k++] = valueNames[j];
+                    else
+                        fields[k++] = ElectronicValueRWConst.class.getField(valueNames[j].toString());
                 } catch (NoSuchFieldException | SecurityException ignored) {}
             }
+            values = Arrays.copyOf(fields, k);
             TypeSafeStringMap.addTagType((String) EnumTagsValues[i], values);
         }
         for (String s : DateTimeTags)
