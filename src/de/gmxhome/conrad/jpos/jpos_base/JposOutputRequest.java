@@ -466,15 +466,17 @@ public class JposOutputRequest implements Runnable {
                 request.reset();
                 Props.State = JPOS_S_ERROR;
             }
-            while (Props.CurrentCommands.size() > 0) {
-                request = Props.CurrentCommands.get(0);
-                Props.SuspendedConcurrentCommands.add(request);
-                Props.CurrentCommands.remove(request);
-                if (request == this)
-                    request.reset();
-                else
-                    request.abortCommand(true);
-                Props.State = JPOS_S_ERROR;
+            if (Props.CurrentCommands != null) {
+                while (Props.CurrentCommands.size() > 0) {
+                    request = Props.CurrentCommands.get(0);
+                    Props.SuspendedConcurrentCommands.add(request);
+                    Props.CurrentCommands.remove(request);
+                    if (request == this)
+                        request.reset();
+                    else
+                        request.abortCommand(true);
+                    Props.State = JPOS_S_ERROR;
+                }
             }
             while (i < Device.PendingCommands.size()) {
                 if (Device.PendingCommands.get(i).Props == Props) {
