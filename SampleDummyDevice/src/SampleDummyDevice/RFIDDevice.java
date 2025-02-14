@@ -222,28 +222,27 @@ public class RFIDDevice extends JposDevice implements Runnable {
         TheBox = new SynchronizedMessageBox();
         while (RFIDScanners[0].size() > 0 && !ToBeFinished) {
             switch (ReaderState) {
-                case idle -> {
-                    message = "Present an RFID label for operation. Select an option when ready";
-                    options = new String[]{"Label Failed", "Label Present"};
-                    if (TheBox.synchronizedConfirmationBox(message, title, options, options[1], INFORMATION_MESSAGE, JPOS_FOREVER) < 0)
-                        continue;
-                    ReaderState = handleReadResult();
-                }
-                case gotTags -> {
-                    message = "Got Label: " + toString(Labels.get(LabelIndex)) + "Select option for the label";
-                    options = new String[]{"OK, Finish", "OK, Continue", "Error, Retry", "Error, Give Up"};
-                    if (TheBox.synchronizedConfirmationBox(message, title, options, options[0], INFORMATION_MESSAGE, JPOS_FOREVER) < 0)
-                        continue;
-                    if ((ReaderState = handleLabelResult()) == Status.idle)
-                        LabelIndex = LabelIndex < Labels.size() - 1 ? LabelIndex + 1 : 0;
-                }
-                case errorTags -> {
-                    message = "Label present but not readable. Select option";
-                    options = new String[]{"Finish", "Retry OK", "Retry Failed"};
-                    if (TheBox.synchronizedConfirmationBox(message, title, options, options[0], INFORMATION_MESSAGE, JPOS_FOREVER) < 0)
-                        continue;
-                    ReaderState = handleErrorResult();
-                }
+            case idle:
+                message = "Present an RFID label for operation. Select an option when ready";
+                options = new String[]{"Label Failed", "Label Present"};
+                if (TheBox.synchronizedConfirmationBox(message, title, options, options[1], INFORMATION_MESSAGE, JPOS_FOREVER) < 0)
+                    continue;
+                ReaderState = handleReadResult();
+                break;
+            case gotTags:
+                message = "Got Label: " + toString(Labels.get(LabelIndex)) + "Select option for the label";
+                options = new String[]{"OK, Finish", "OK, Continue", "Error, Retry", "Error, Give Up"};
+                if (TheBox.synchronizedConfirmationBox(message, title, options, options[0], INFORMATION_MESSAGE, JPOS_FOREVER) < 0)
+                    continue;
+                if ((ReaderState = handleLabelResult()) == Status.idle)
+                    LabelIndex = LabelIndex < Labels.size() - 1 ? LabelIndex + 1 : 0;
+                break;
+            case errorTags:
+                message = "Label present but not readable. Select option";
+                options = new String[]{"Finish", "Retry OK", "Retry Failed"};
+                if (TheBox.synchronizedConfirmationBox(message, title, options, options[0], INFORMATION_MESSAGE, JPOS_FOREVER) < 0)
+                    continue;
+                ReaderState = handleErrorResult();
             }
         }
     }
@@ -293,10 +292,17 @@ public class RFIDDevice extends JposDevice implements Runnable {
         Status ret = (TheBox.Result == PresentToIdleOK || TheBox.Result == PresentToIdleNOK) ? Status.idle : (TheBox.Result == PresentToPresent ? Status.gotTags : Status.errorTags);
         synchronized (TheRunner) {
             switch (CurrentOp) {
-                case lock -> finishLock();
-                case disable -> finishDisable();
-                case writeData -> finishWrite();
-                case writeId -> finishID();
+            case lock:
+                finishLock();
+                break;
+            case disable:
+                finishDisable();
+                break;
+            case writeData:
+                finishWrite();
+                break;
+            case writeId:
+                finishID();
             }
         }
         return ret;
@@ -550,11 +556,6 @@ public class RFIDDevice extends JposDevice implements Runnable {
         }
 
         @Override
-        public ReadTags readTags(int cmd, byte[] filterID, byte[] filtermask, int start, int length, int timeout, byte[] password) throws JposException {
-            return new ReadTags(this, cmd, filterID, filtermask, start, length, timeout, password);
-        }
-
-        @Override
         @SuppressWarnings("SynchronizeOnNonFinalField")
         public void readTags(ReadTags request) throws JposException {
             SyncObject waiter;
@@ -577,11 +578,6 @@ public class RFIDDevice extends JposDevice implements Runnable {
         }
 
         @Override
-        public DisableTag disableTag(byte[] tagID, int timeout, byte[] password) throws JposException {
-            return new DisableTag(this, tagID, timeout, password);
-        }
-
-        @Override
         @SuppressWarnings("SynchronizeOnNonFinalField")
         public void disableTag(DisableTag request) throws JposException {
             SyncObject waiter;
@@ -595,11 +591,6 @@ public class RFIDDevice extends JposDevice implements Runnable {
             }
             result[2] = waiter.suspend(request.getTimeout() == JPOS_FOREVER ? INFINITE : request.getTimeout());
             checkResult(result);
-        }
-
-        @Override
-        public LockTag lockTag(byte[] tagID, int timeout, byte[] password) throws JposException {
-            return new LockTag(this, tagID, timeout, password);
         }
 
         @Override
@@ -619,11 +610,6 @@ public class RFIDDevice extends JposDevice implements Runnable {
         }
 
         @Override
-        public WriteTagData writeTagData(byte[] tagID, byte[] userdata, int start, int timeout, byte[] password) throws JposException {
-            return new WriteTagData(this, tagID, userdata, start, timeout, password);
-        }
-
-        @Override
         @SuppressWarnings("SynchronizeOnNonFinalField")
         public void writeTagData(WriteTagData request) throws JposException {
             SyncObject waiter;
@@ -639,11 +625,6 @@ public class RFIDDevice extends JposDevice implements Runnable {
             }
             result[2] = waiter.suspend(request.getTimeout() == JPOS_FOREVER ? INFINITE : request.getTimeout());
             checkResult(result);
-        }
-
-        @Override
-        public WriteTagID writeTagID(byte[] sourceID, byte[] destID, int timeout, byte[] password) throws JposException {
-            return new WriteTagID(this, sourceID, destID, timeout, password);
         }
 
         @Override
