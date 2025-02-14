@@ -52,8 +52,8 @@ public class OutputPrintRequest extends OutputRequest {
      * @param request Request to be modified if the conditions are met.
      */
     static void setSynchronousPrinting(OutputRequest request) {
-        if ((request instanceof OutputPrintRequest && !request.Props.AsyncMode) || request instanceof PrintImmediate)
-            ((OutputPrintRequest)request).SynchronousPrinting = true;
+        if (request instanceof OutputPrintRequest && (!request.Props.AsyncMode || request instanceof PrintImmediate))
+            ((OutputPrintRequest) request).SynchronousPrinting = true;
     }
 
     /**
