@@ -41,10 +41,11 @@ public class CATStatusUpdateEvent extends JposStatusUpdateEvent {
         CATProperties props = (CATProperties) getPropertySet();
         int status = getStatus();
         switch (status) {
-            case CAT_LOGSTATUS_OK, CAT_LOGSTATUS_NEARFULL, CAT_LOGSTATUS_FULL -> {
-                props.LogStatus = status;
-                return true;
-            }
+        case CAT_LOGSTATUS_OK:
+        case CAT_LOGSTATUS_NEARFULL:
+        case CAT_LOGSTATUS_FULL:
+            props.LogStatus = status;
+            return true;
         }
         return false;
     }
@@ -53,10 +54,15 @@ public class CATStatusUpdateEvent extends JposStatusUpdateEvent {
     public boolean checkStatusCorresponds() {
         CATProperties props = (CATProperties) getPropertySet();
         int status = getStatus();
-        return super.checkStatusCorresponds() || switch (status) {
-            case CAT_LOGSTATUS_OK, CAT_LOGSTATUS_NEARFULL, CAT_LOGSTATUS_FULL -> props.LogStatus == status;
-            default -> false;
-        };
+        if (super.checkStatusCorresponds())
+            return true;
+        switch (status) {
+        case CAT_LOGSTATUS_OK:
+        case CAT_LOGSTATUS_NEARFULL:
+        case CAT_LOGSTATUS_FULL:
+            return props.LogStatus == status;
+        }
+        return false;
     }
 
     @Override
@@ -77,11 +83,14 @@ public class CATStatusUpdateEvent extends JposStatusUpdateEvent {
         String ret = super.toLogString();
         if (ret.length() > 0)
             return ret;
-        return switch (getStatus()) {
-            case CAT_LOGSTATUS_OK -> "CAT Dealing Log OK";
-            case CAT_LOGSTATUS_NEARFULL -> "CAT Dealing Log Nearly Full";
-            case CAT_LOGSTATUS_FULL -> "CAT Dealing Log Full";
-            default -> "Unknown CAT Status Change: " + getStatus();
-        };
+        switch (getStatus()) {
+        case CAT_LOGSTATUS_OK:
+            return "CAT Dealing Log OK";
+        case CAT_LOGSTATUS_NEARFULL:
+            return "CAT Dealing Log Nearly Full";
+        case CAT_LOGSTATUS_FULL:
+            return "CAT Dealing Log Full";
+        }
+        return  "Unknown CAT Status Change: " + getStatus();
     }
 }

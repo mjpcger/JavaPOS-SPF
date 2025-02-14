@@ -634,7 +634,7 @@ public abstract class JposCommonProperties implements JposBaseInterface {
         int count = 0;
         synchronized(DataEventList) {
             for (JposEvent ev : DataEventList) {
-                if (ev instanceof UnitDataEvent && ((UnitDataEvent)ev).Unit == CurrentUnitID) {
+                if (ev instanceof UnitDataEvent && ((UnitDataEvent) ev).Unit == CurrentUnitID) {
                     count++;
                 }
             }
@@ -735,8 +735,8 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     }
 
     private int conditionalInputErrorEventRemoval(List<JposEvent> list, int bit, int i, JposEvent ev) {
-        if (ev instanceof UnitInputErrorEvent event) {
-            if ((event.Units & bit) != 0) {
+        if (ev instanceof UnitInputErrorEvent) {
+            if ((((UnitInputErrorEvent) ev).Units & bit) != 0) {
                 list.remove(i);
             }
             else {
@@ -747,8 +747,8 @@ public abstract class JposCommonProperties implements JposBaseInterface {
     }
 
     private int conditionalDataEventRemoval(List<JposEvent> list, int bit, int i, JposEvent ev) {
-        if (ev instanceof UnitDataEvent event) {
-            if ((event.Unit & bit) != 0) {
+        if (ev instanceof UnitDataEvent) {
+            if ((((UnitDataEvent) ev).Unit & bit) != 0) {
                 list.remove(i);
                 DataCount--;
             }

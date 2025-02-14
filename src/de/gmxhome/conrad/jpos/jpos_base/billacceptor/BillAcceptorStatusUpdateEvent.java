@@ -62,14 +62,22 @@ public class BillAcceptorStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         BillAcceptorProperties props = (BillAcceptorProperties)getPropertySet();
         switch (getStatus()) {
-            case BACC_STATUS_FULL -> props.FullStatus = BACC_STATUS_FULL;
-            case BACC_STATUS_NEARFULL -> props.FullStatus = BACC_STATUS_NEARFULL;
-            case BACC_STATUS_FULLOK -> props.FullStatus = BACC_STATUS_OK;
-            case BACC_STATUS_JAM -> props.DepositStatus = BACC_STATUS_DEPOSIT_JAM;
-            case BACC_STATUS_JAMOK -> props.DepositStatus = DepositState;
-            default -> {
+            case BACC_STATUS_FULL:
+                props.FullStatus = BACC_STATUS_FULL;
+            break;
+            case BACC_STATUS_NEARFULL:
+                props.FullStatus = BACC_STATUS_NEARFULL;
+                break;
+            case BACC_STATUS_FULLOK:
+                props.FullStatus = BACC_STATUS_OK;
+                break;
+            case BACC_STATUS_JAM:
+                props.DepositStatus = BACC_STATUS_DEPOSIT_JAM;
+                break;
+            case BACC_STATUS_JAMOK:
+                props.DepositStatus = DepositState;
+            default:
                 return false;
-            }
         }
         return  true;
     }
@@ -77,13 +85,20 @@ public class BillAcceptorStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public boolean checkStatusCorresponds() {
         BillAcceptorProperties props = (BillAcceptorProperties)getPropertySet();
-        return super.checkStatusCorresponds() || switch (getStatus()) {
-            case BACC_STATUS_FULL, BACC_STATUS_NEARFULL -> props.FullStatus == getStatus();
-            case BACC_STATUS_FULLOK -> props.FullStatus == BACC_STATUS_OK;
-            case BACC_STATUS_JAM -> props.DepositStatus == BACC_STATUS_DEPOSIT_JAM;
-            case BACC_STATUS_JAMOK -> props.DepositStatus == DepositState;
-            default -> false;
-        };
+        if (super.checkStatusCorresponds())
+            return true;
+        switch (getStatus()) {
+            case BACC_STATUS_FULL:
+            case BACC_STATUS_NEARFULL:
+                return props.FullStatus == getStatus();
+            case BACC_STATUS_FULLOK:
+                return props.FullStatus == BACC_STATUS_OK;
+            case BACC_STATUS_JAM:
+                return props.DepositStatus == BACC_STATUS_DEPOSIT_JAM;
+            case BACC_STATUS_JAMOK:
+                return props.DepositStatus == DepositState;
+        }
+        return false;
     }
 
     @Override
@@ -96,13 +111,20 @@ public class BillAcceptorStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case BACC_STATUS_FULL -> "BillAcceptor Slot Full";
-            case BACC_STATUS_NEARFULL -> "BillAcceptor Slot Nearly Full";
-            case BACC_STATUS_FULLOK -> "BillAcceptor Slot Under Limit";
-            case BACC_STATUS_JAM -> "BillAcceptor Status Jam";
-            case BACC_STATUS_JAMOK -> "BillAcceptor Status No Jam";
-            default -> "Unknown BillAcceptor Status Change: " + getStatus();
-        };
+       if (ret.length() > 0)
+           return ret;
+       switch (getStatus()) {
+            case BACC_STATUS_FULL:
+                return "BillAcceptor Slot Full";
+            case BACC_STATUS_NEARFULL:
+                return "BillAcceptor Slot Nearly Full";
+            case BACC_STATUS_FULLOK:
+                return "BillAcceptor Slot Under Limit";
+            case BACC_STATUS_JAM:
+                return "BillAcceptor Status Jam";
+            case BACC_STATUS_JAMOK:
+                return "BillAcceptor Status No Jam";
+        }
+        return "Unknown BillAcceptor Status Change: " + getStatus();
     }
 }

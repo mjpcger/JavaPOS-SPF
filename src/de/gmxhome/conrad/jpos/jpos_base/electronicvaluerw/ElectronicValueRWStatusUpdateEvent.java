@@ -42,33 +42,54 @@ public class ElectronicValueRWStatusUpdateEvent extends JposStatusUpdateEvent {
         ElectronicValueRWProperties props = (ElectronicValueRWProperties)getPropertySet();
         int status = getStatus();
         switch (status) {
-            case EVRW_SUE_LS_OK -> props.LogStatus = EVRW_LS_OK;
-            case EVRW_SUE_LS_NEARFULL -> props.LogStatus = EVRW_LS_NEARFULL;
-            case EVRW_SUE_LS_FULL -> props.LogStatus = EVRW_LS_FULL;
-            case EVRW_SUE_DS_NOCARD -> props.LogStatus = EVRW_DS_NOCARD;
-            case EVRW_SUE_DS_DETECTED -> props.LogStatus = EVRW_DS_DETECTED;
-            case EVRW_SUE_DS_ENTERED -> props.LogStatus = EVRW_DS_ENTERED;
-            case EVRW_SUE_DS_CAPTURED -> props.LogStatus = EVRW_DS_CAPTURED;
-            default -> {
+            default:
                 return false;
-            }
-        };
+            case EVRW_SUE_LS_OK:
+                props.LogStatus = EVRW_LS_OK;
+                break;
+            case EVRW_SUE_LS_NEARFULL:
+                props.LogStatus = EVRW_LS_NEARFULL;
+                break;
+            case EVRW_SUE_LS_FULL:
+                props.LogStatus = EVRW_LS_FULL;
+                break;
+            case EVRW_SUE_DS_NOCARD:
+                props.LogStatus = EVRW_DS_NOCARD;
+                break;
+            case EVRW_SUE_DS_DETECTED:
+                props.LogStatus = EVRW_DS_DETECTED;
+                break;
+            case EVRW_SUE_DS_ENTERED:
+                props.LogStatus = EVRW_DS_ENTERED;
+                break;
+            case EVRW_SUE_DS_CAPTURED:
+                props.LogStatus = EVRW_DS_CAPTURED;
+        }
         return true;
     }
 
     @Override
     public boolean checkStatusCorresponds() {
         ElectronicValueRWProperties props = (ElectronicValueRWProperties)getPropertySet();
-        return super.checkStatusCorresponds() || switch (getStatus()) {
-            case EVRW_SUE_LS_OK -> props.LogStatus == EVRW_LS_OK;
-            case EVRW_SUE_LS_NEARFULL -> props.LogStatus == EVRW_LS_NEARFULL;
-            case EVRW_SUE_LS_FULL -> props.LogStatus == EVRW_LS_FULL;
-            case EVRW_SUE_DS_NOCARD -> props.LogStatus == EVRW_DS_NOCARD;
-            case EVRW_SUE_DS_DETECTED -> props.LogStatus == EVRW_DS_DETECTED;
-            case EVRW_SUE_DS_ENTERED -> props.LogStatus == EVRW_DS_ENTERED;
-            case EVRW_SUE_DS_CAPTURED -> props.LogStatus == EVRW_DS_CAPTURED;
-            default -> false;
-        };
+        if (super.checkStatusCorresponds())
+            return true;
+        switch (getStatus()) {
+        case EVRW_SUE_LS_OK:
+            return props.LogStatus == EVRW_LS_OK;
+        case EVRW_SUE_LS_NEARFULL:
+            return props.LogStatus == EVRW_LS_NEARFULL;
+        case EVRW_SUE_LS_FULL:
+            return props.LogStatus == EVRW_LS_FULL;
+        case EVRW_SUE_DS_NOCARD:
+            return props.LogStatus == EVRW_DS_NOCARD;
+        case EVRW_SUE_DS_DETECTED:
+            return props.LogStatus == EVRW_DS_DETECTED;
+        case EVRW_SUE_DS_ENTERED:
+            return props.LogStatus == EVRW_DS_ENTERED;
+        case EVRW_SUE_DS_CAPTURED:
+            return props.LogStatus == EVRW_DS_CAPTURED;
+        }
+        return false;
     }
 
     @Override
@@ -81,15 +102,24 @@ public class ElectronicValueRWStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case EVRW_SUE_LS_OK -> "ElectronicValueRW Dealing Log OK";
-            case EVRW_SUE_LS_NEARFULL -> "ElectronicValueRW Dealing Log Nearly Full";
-            case EVRW_SUE_LS_FULL -> "ElectronicValueRW Dealing Log Full";
-            case EVRW_SUE_DS_NOCARD -> "ElectronicValueRW Detected NOCARD";
-            case EVRW_SUE_DS_DETECTED -> "ElectronicValueRW Detected Card";
-            case EVRW_SUE_DS_ENTERED -> "ElectronicValueRW Detected Card Entered";
-            case EVRW_SUE_DS_CAPTURED -> "ElectronicValueRW Detected Card Captured";
-            default -> "Unknown ElectronicValueRW Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+        case EVRW_SUE_LS_OK:
+            return "ElectronicValueRW Dealing Log OK";
+        case EVRW_SUE_LS_NEARFULL:
+            return "ElectronicValueRW Dealing Log Nearly Full";
+        case EVRW_SUE_LS_FULL:
+            return "ElectronicValueRW Dealing Log Full";
+        case EVRW_SUE_DS_NOCARD:
+            return "ElectronicValueRW Detected NOCARD";
+        case EVRW_SUE_DS_DETECTED:
+            return "ElectronicValueRW Detected Card";
+        case EVRW_SUE_DS_ENTERED:
+            return "ElectronicValueRW Detected Card Entered";
+        case EVRW_SUE_DS_CAPTURED:
+            return "ElectronicValueRW Detected Card Captured";
+        }
+        return "Unknown ElectronicValueRW Status Change: " + getStatus();
     }
 }

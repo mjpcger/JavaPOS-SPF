@@ -146,92 +146,92 @@ public class SCRWDevice extends JposDevice implements Runnable {
         while (SmartCardRWs[0].size() > 0 && !ToBeFinished) {
             SmartCardRWProperties props;
             switch (ReaderState) {
-                case idle -> {
-                    message = "A card must be inserted. Press 'Card Inserted' when ready.";
-                    options = new String[]{"Card Inserted"};
-                    TheBox.synchronizedConfirmationBox(message, title, options, options[0], INFORMATION_MESSAGE, JPOS_FOREVER);
-                    synchronized (ReaderState) {
-                        ReaderState = Status.gotCard;
-                        if (WaitCardInserted != null) {
-                            WaitCardInserted.signal();
-                            WaitCardInserted = null;
-                        }
-                        props = getProperties();
+            case idle:
+                message = "A card must be inserted. Press 'Card Inserted' when ready.";
+                options = new String[]{"Card Inserted"};
+                TheBox.synchronizedConfirmationBox(message, title, options, options[0], INFORMATION_MESSAGE, JPOS_FOREVER);
+                synchronized (ReaderState) {
+                    ReaderState = Status.gotCard;
+                    if (WaitCardInserted != null) {
+                        WaitCardInserted.signal();
+                        WaitCardInserted = null;
                     }
-                    if (props != null) {
-                        try {
-                            handleEvent(new SmartCardRWStatusUpdateEvent(props.EventSource, SC_SUE_CARD_PRESENT));
-                        } catch (JposException ignore) {}
-                    }
+                    props = getProperties();
                 }
-                case gotCard -> {
-                    message = "The card you inserted must become readable. This will happen in " + CardReadyDelay + "milliseconds, but can be changed via option button.";
-                    options = new String[]{"Ready for reading", "Card not readable"};
-                    TheBox.synchronizedConfirmationBox(message, title, options, options[1], INFORMATION_MESSAGE, CardReadyDelay);
-                    JposErrorEvent errev = null;
-                    JposDataEvent dataev = null;
-                    synchronized (ReaderState) {
-                        props = getProperties();
-                        if (TheBox.Result != 0) {
-                            ReaderState = Status.cardRemovable;
-                            if (props.CapCardErrorDetection)
-                                errev = new JposErrorEvent(props.EventSource, JPOS_E_EXTENDED, JPOS_ESC_TORN, JPOS_EL_INPUT, "Card unexpectedly removed");
-                            else
-                                errev = new JposErrorEvent(props.EventSource, JPOS_E_FAILURE, 0, JPOS_EL_INPUT, "Card unexpectedly removed");
-                        } else {
-                            ReaderState = Status.cardReadable;
-                            LastActionTime = System.currentTimeMillis();
-                            dataev = new JposDataEvent(props.EventSource, 0);
-                            props.TransactionInProgress = true;
-                        }
-                    }
+                if (props != null) {
                     try {
-                        if (errev != null)
-                            handleEvent(errev);
-                        else
-                            handleEvent(dataev);
+                        handleEvent(new SmartCardRWStatusUpdateEvent(props.EventSource, SC_SUE_CARD_PRESENT));
                     } catch (JposException ignore) {}
                 }
-                case cardReadable -> {
-                    message = "The card is now readable and writeable....";
-                    options = new String[]{"Finish Operation", "AbortOperation"};
-                    int timeout = (int) (CardReadyDelay - (System.currentTimeMillis() - LastActionTime));
-                    TheBox.synchronizedConfirmationBox(message, title, options, options[1], INFORMATION_MESSAGE, timeout <= 0 ? 1 : timeout);
-                    if (System.currentTimeMillis() - LastActionTime < CardReadyDelay && TheBox.Result < 0)
-                        continue;
-                    JposStatusUpdateEvent suev = null;
-                    synchronized (ReaderState) {
-                        (props = getProperties()).TransactionInProgress = false;
-                        if (TheBox.Result == 0) {
-                            ReaderState = Status.cardRemovable;
-                        } else {
-                            ReaderState = Status.idle;
-                            suev = new SmartCardRWStatusUpdateEvent(props.EventSource, SC_SUE_NO_CARD);
-                        }
-                    }
-                    if (suev != null) {
-                        try {
-                            handleEvent(suev);
-                        } catch (JposException ignore) {}
+                break;
+            case gotCard:
+                message = "The card you inserted must become readable. This will happen in " + CardReadyDelay + "milliseconds, but can be changed via option button.";
+                options = new String[]{"Ready for reading", "Card not readable"};
+                TheBox.synchronizedConfirmationBox(message, title, options, options[1], INFORMATION_MESSAGE, CardReadyDelay);
+                JposErrorEvent errev = null;
+                JposDataEvent dataev = null;
+                synchronized (ReaderState) {
+                    props = getProperties();
+                    if (TheBox.Result != 0) {
+                        ReaderState = Status.cardRemovable;
+                        if (props.CapCardErrorDetection)
+                            errev = new JposErrorEvent(props.EventSource, JPOS_E_EXTENDED, JPOS_ESC_TORN, JPOS_EL_INPUT, "Card unexpectedly removed");
+                        else
+                            errev = new JposErrorEvent(props.EventSource, JPOS_E_FAILURE, 0, JPOS_EL_INPUT, "Card unexpectedly removed");
+                    } else {
+                        ReaderState = Status.cardReadable;
+                        LastActionTime = System.currentTimeMillis();
+                        dataev = new JposDataEvent(props.EventSource, 0);
+                        props.TransactionInProgress = true;
                     }
                 }
-                case cardAborted, cardRemovable -> {
-                    message = "Operation has been finished or aborted. Press 'Card Removed' to continue.";
-                    options = new String[]{"Card Removed"};
-                    TheBox.synchronizedConfirmationBox(message, title, options, options[0], INFORMATION_MESSAGE, JPOS_FOREVER);
-                    synchronized (ReaderState) {
+                try {
+                    if (errev != null)
+                        handleEvent(errev);
+                    else
+                        handleEvent(dataev);
+                } catch (JposException ignore) {}
+                break;
+            case cardReadable:
+                message = "The card is now readable and writeable....";
+                options = new String[]{"Finish Operation", "AbortOperation"};
+                int timeout = (int) (CardReadyDelay - (System.currentTimeMillis() - LastActionTime));
+                TheBox.synchronizedConfirmationBox(message, title, options, options[1], INFORMATION_MESSAGE, timeout <= 0 ? 1 : timeout);
+                if (System.currentTimeMillis() - LastActionTime < CardReadyDelay && TheBox.Result < 0)
+                    continue;
+                JposStatusUpdateEvent suev = null;
+                synchronized (ReaderState) {
+                    (props = getProperties()).TransactionInProgress = false;
+                    if (TheBox.Result == 0) {
+                        ReaderState = Status.cardRemovable;
+                    } else {
                         ReaderState = Status.idle;
-                        if (WaitCardRemoved != null) {
-                            WaitCardRemoved.signal();
-                            WaitCardRemoved = null;
-                        }
-                        props = getProperties();
+                        suev = new SmartCardRWStatusUpdateEvent(props.EventSource, SC_SUE_NO_CARD);
                     }
-                    if (props != null) {
-                        try {
-                            handleEvent(new SmartCardRWStatusUpdateEvent(props.EventSource, SC_SUE_NO_CARD));
-                        } catch (JposException ignore) {}
+                }
+                if (suev != null) {
+                    try {
+                        handleEvent(suev);
+                    } catch (JposException ignore) {}
+                }
+                break;
+            case cardAborted:
+            case cardRemovable:
+                message = "Operation has been finished or aborted. Press 'Card Removed' to continue.";
+                options = new String[]{"Card Removed"};
+                TheBox.synchronizedConfirmationBox(message, title, options, options[0], INFORMATION_MESSAGE, JPOS_FOREVER);
+                synchronized (ReaderState) {
+                    ReaderState = Status.idle;
+                    if (WaitCardRemoved != null) {
+                        WaitCardRemoved.signal();
+                        WaitCardRemoved = null;
                     }
+                    props = getProperties();
+                }
+                if (props != null) {
+                    try {
+                        handleEvent(new SmartCardRWStatusUpdateEvent(props.EventSource, SC_SUE_NO_CARD));
+                    } catch (JposException ignore) {}
                 }
             }
         }

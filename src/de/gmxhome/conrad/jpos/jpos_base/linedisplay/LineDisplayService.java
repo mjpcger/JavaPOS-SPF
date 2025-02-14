@@ -242,13 +242,25 @@ public class LineDisplayService extends JposBase implements LineDisplayService11
         check(Data.CapCursorType == DISP_CCT_NONE || Data.CapCursorType == DISP_CCT_FIXED, JPOS_E_ILLEGAL, "Cursor type cannot be set");
         check((i & DISP_CT_BLINK) != 0 && (Data.CapCursorType & DISP_CCT_BLINK) == 0, JPOS_E_ILLEGAL, "Blinking cursor not supported");
         switch (i & ~DISP_CT_BLINK ) {
-            case DISP_CT_NONE -> throw new JposException(JPOS_E_ILLEGAL, "Cursor type not supported");
-            case DISP_CT_BLOCK -> check((Data.CapCursorType & DISP_CCT_BLOCK) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
-            case DISP_CT_HALFBLOCK -> check((Data.CapCursorType & DISP_CCT_HALFBLOCK) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
-            case DISP_CT_UNDERLINE -> check((Data.CapCursorType & DISP_CCT_UNDERLINE) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
-            case DISP_CT_REVERSE -> check((Data.CapCursorType & DISP_CCT_REVERSE) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
-            case DISP_CT_OTHER -> check((Data.CapCursorType & DISP_CCT_OTHER) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
-            default -> throw new JposException(JPOS_E_ILLEGAL, "Invalid cursor type: " + i);
+            case DISP_CT_NONE:
+                throw new JposException(JPOS_E_ILLEGAL, "Cursor type not supported");
+            case DISP_CT_BLOCK:
+                check((Data.CapCursorType & DISP_CCT_BLOCK) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
+                break;
+            case DISP_CT_HALFBLOCK:
+                check((Data.CapCursorType & DISP_CCT_HALFBLOCK) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
+                break;
+            case DISP_CT_UNDERLINE:
+                check((Data.CapCursorType & DISP_CCT_UNDERLINE) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
+                break;
+            case DISP_CT_REVERSE:
+                check((Data.CapCursorType & DISP_CCT_REVERSE) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
+                break;
+            case DISP_CT_OTHER:
+                check((Data.CapCursorType & DISP_CCT_OTHER) == 0, JPOS_E_ILLEGAL, "Cursor type not supported");
+                break;
+            default:
+                throw new JposException(JPOS_E_ILLEGAL, "Invalid cursor type: " + i);
         }
         checkNoChangedOrClaimed(Data.CursorType, i);
         LineDisplayInterface.cursorType(i);

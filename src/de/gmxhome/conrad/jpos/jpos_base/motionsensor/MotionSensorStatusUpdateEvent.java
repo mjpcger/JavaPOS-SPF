@@ -44,23 +44,30 @@ public class MotionSensorStatusUpdateEvent extends DelayedStatusUpdateEvent {
         super.setLateProperties();
         MotionSensorProperties props = (MotionSensorProperties)getPropertySet();
         switch (getStatus()) {
-            case MOTION_M_ABSENT -> props.Motion = false;
-            case MOTION_M_PRESENT -> props.Motion = true;
-            default -> {
-                return;
-            }
+        case MOTION_M_ABSENT:
+            props.Motion = false;
+            break;
+        case MOTION_M_PRESENT:
+            props.Motion = true;
+            break;
+        default:
+            return;
         }
         props.signalWaiter();
     }
 
     @Override
     public boolean checkStatusCorresponds() {
+        if (super.checkStatusCorresponds())
+            return true;
         MotionSensorProperties props = (MotionSensorProperties)getPropertySet();
-        return super.checkStatusCorresponds() || switch (getStatus()) {
-            case MOTION_M_ABSENT -> !props.Motion;
-            case MOTION_M_PRESENT -> props.Motion;
-            default -> false;
-        };
+        switch (getStatus()) {
+            case MOTION_M_ABSENT:
+                return !props.Motion;
+            case MOTION_M_PRESENT:
+                return props.Motion;
+        }
+        return false;
     }
 
     @Override
@@ -79,11 +86,15 @@ public class MotionSensorStatusUpdateEvent extends DelayedStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case MOTION_M_PRESENT -> "Motion detected";
-            case MOTION_M_ABSENT -> "No motion detected";
-            default -> "Unknown Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+        case MOTION_M_PRESENT:
+            return "Motion detected";
+        case MOTION_M_ABSENT:
+            return "No motion detected";
+        }
+        return "Unknown Status Change: " + getStatus();
     }
 
     @Override

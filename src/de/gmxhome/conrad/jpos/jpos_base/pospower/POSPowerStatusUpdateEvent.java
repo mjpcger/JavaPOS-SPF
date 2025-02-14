@@ -76,36 +76,68 @@ public class POSPowerStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         POSPowerProperties props = (POSPowerProperties)getPropertySet();
         switch (getStatus()) {
-            case PWR_SUE_UPS_FULL -> props.UPSChargeState = PWR_UPS_FULL;
-            case PWR_SUE_UPS_WARNING -> props.UPSChargeState = PWR_UPS_WARNING;
-            case PWR_SUE_UPS_LOW -> props.UPSChargeState = PWR_UPS_LOW;
-            case PWR_SUE_UPS_CRITICAL -> props.UPSChargeState = PWR_UPS_CRITICAL;
-            case PWR_SUE_BAT_CAPACITY_REMAINING -> props.BatteryCapacityRemaining = AdditionalData;
-            case PWR_SUE_PWR_SOURCE -> props.PowerSource = AdditionalData;
-            case PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS -> props.BatteryCapacityRemainingInSeconds = AdditionalData;
-            case PWR_SUE_FAN_STOPPED, PWR_SUE_FAN_RUNNING, PWR_SUE_TEMPERATURE_HIGH, PWR_SUE_TEMPERATURE_OK, PWR_SUE_SHUTDOWN,
-                    PWR_SUE_BAT_LOW, PWR_SUE_BAT_CRITICAL, PWR_SUE_RESTART, PWR_SUE_STANDBY, PWR_SUE_USER_STANDBY, PWR_SUE_SUSPEND, PWR_SUE_USER_SUSPEND -> {}
-            default -> {
+            case PWR_SUE_UPS_FULL:
+                props.UPSChargeState = PWR_UPS_FULL;
+                break;
+            case PWR_SUE_UPS_WARNING:
+                props.UPSChargeState = PWR_UPS_WARNING;
+                break;
+            case PWR_SUE_UPS_LOW:
+                props.UPSChargeState = PWR_UPS_LOW;
+                break;
+            case PWR_SUE_UPS_CRITICAL:
+                props.UPSChargeState = PWR_UPS_CRITICAL;
+                break;
+            case PWR_SUE_BAT_CAPACITY_REMAINING:
+                props.BatteryCapacityRemaining = AdditionalData;
+                break;
+            case PWR_SUE_PWR_SOURCE:
+                props.PowerSource = AdditionalData;
+                break;
+            case PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS:
+                props.BatteryCapacityRemainingInSeconds = AdditionalData;
+                break;
+            case PWR_SUE_FAN_STOPPED:
+            case PWR_SUE_FAN_RUNNING:
+            case PWR_SUE_TEMPERATURE_HIGH:
+            case PWR_SUE_TEMPERATURE_OK:
+            case PWR_SUE_SHUTDOWN:
+            case PWR_SUE_BAT_LOW:
+            case PWR_SUE_BAT_CRITICAL:
+            case PWR_SUE_RESTART:
+            case PWR_SUE_STANDBY:
+            case PWR_SUE_USER_STANDBY:
+            case PWR_SUE_SUSPEND:
+            case PWR_SUE_USER_SUSPEND:
+                break;
+            default:
                 return false;
-            }
         }
         return true;
     }
 
     @Override
     public boolean checkStatusCorresponds() {
+        if (super.checkStatusCorresponds())
+            return true;
         POSPowerProperties props = (POSPowerProperties)getPropertySet();
-        return super.checkStatusCorresponds() || switch (getStatus()) {
-            case PWR_SUE_UPS_FULL -> props.UPSChargeState == PWR_UPS_FULL;
-            case PWR_SUE_UPS_WARNING -> props.UPSChargeState == PWR_UPS_WARNING;
-            case PWR_SUE_UPS_LOW -> props.UPSChargeState == PWR_UPS_LOW;
-            case PWR_SUE_UPS_CRITICAL -> props.UPSChargeState == PWR_UPS_CRITICAL;
-            case PWR_SUE_BAT_CAPACITY_REMAINING -> props.BatteryCapacityRemaining == AdditionalData;
-            case PWR_SUE_PWR_SOURCE -> props.PowerSource == AdditionalData;
-            case PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS ->
-                    props.BatteryCapacityRemainingInSeconds == AdditionalData;
-            default -> false;
-        };
+        switch (getStatus()) {
+            case PWR_SUE_UPS_FULL:
+                return props.UPSChargeState == PWR_UPS_FULL;
+            case PWR_SUE_UPS_WARNING:
+                return props.UPSChargeState == PWR_UPS_WARNING;
+            case PWR_SUE_UPS_LOW:
+                return props.UPSChargeState == PWR_UPS_LOW;
+            case PWR_SUE_UPS_CRITICAL:
+                return props.UPSChargeState == PWR_UPS_CRITICAL;
+            case PWR_SUE_BAT_CAPACITY_REMAINING:
+                return props.BatteryCapacityRemaining == AdditionalData;
+            case PWR_SUE_PWR_SOURCE:
+                return props.PowerSource == AdditionalData;
+            case PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS:
+                return props.BatteryCapacityRemainingInSeconds == AdditionalData;
+        }
+        return false;
     }
 
     @Override
@@ -134,33 +166,59 @@ public class POSPowerStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case PWR_SUE_UPS_FULL -> "UPS full";
-            case PWR_SUE_UPS_WARNING -> "UPS at 50%";
-            case PWR_SUE_UPS_LOW -> "UPS low";
-            case PWR_SUE_UPS_CRITICAL -> "UPS critical";
-            case PWR_SUE_BAT_CAPACITY_REMAINING -> "Battery capacity at" + AdditionalData + "%";
-            case PWR_SUE_PWR_SOURCE -> switch (AdditionalData) {
-                case PWR_SOURCE_NA -> "Power source not available";
-                case PWR_SOURCE_AC -> "Power source is AC line";
-                case PWR_SOURCE_BATTERY -> "Power source is system battery";
-                case PWR_SOURCE_BACKUP -> "Power source is backup";
-                default -> "Unknown power source: " + AdditionalData;
-            };
-            case PWR_SUE_FAN_STOPPED -> "Fan stopped";
-            case PWR_SUE_FAN_RUNNING -> "Fan running";
-            case PWR_SUE_TEMPERATURE_HIGH -> "Temperature high";
-            case PWR_SUE_TEMPERATURE_OK -> "Temperature OK";
-            case PWR_SUE_SHUTDOWN -> "Shutdown started";
-            case PWR_SUE_BAT_LOW -> "Battery low";
-            case PWR_SUE_BAT_CRITICAL -> "Battery critical";
-            case PWR_SUE_RESTART -> "System restart";
-            case PWR_SUE_STANDBY -> "System standby";
-            case PWR_SUE_USER_STANDBY -> "User-initiated system standby";
-            case PWR_SUE_SUSPEND -> "System suspend";
-            case PWR_SUE_USER_SUSPEND -> "User-initiated system suspend";
-            case PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS -> "Battery empty in " + AdditionalData + " seconds";
-            default -> "Unknown Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+        case PWR_SUE_UPS_FULL:
+            return "UPS full";
+        case PWR_SUE_UPS_WARNING:
+            return "UPS at 50%";
+        case PWR_SUE_UPS_LOW:
+            return "UPS low";
+        case PWR_SUE_UPS_CRITICAL:
+            return "UPS critical";
+        case PWR_SUE_BAT_CAPACITY_REMAINING:
+            return "Battery capacity at" + AdditionalData + "%";
+        case PWR_SUE_PWR_SOURCE:
+            switch (AdditionalData) {
+            case PWR_SOURCE_NA:
+                return "Power source not available";
+            case PWR_SOURCE_AC:
+                return "Power source is AC line";
+            case PWR_SOURCE_BATTERY:
+                return "Power source is system battery";
+            case PWR_SOURCE_BACKUP:
+                return "Power source is backup";
+            default:
+                return "Unknown power source: " + AdditionalData;
+            }
+        case PWR_SUE_FAN_STOPPED:
+            return "Fan stopped";
+        case PWR_SUE_FAN_RUNNING:
+            return "Fan running";
+        case PWR_SUE_TEMPERATURE_HIGH:
+            return "Temperature high";
+        case PWR_SUE_TEMPERATURE_OK:
+            return "Temperature OK";
+        case PWR_SUE_SHUTDOWN:
+            return "Shutdown started";
+        case PWR_SUE_BAT_LOW:
+            return "Battery low";
+        case PWR_SUE_BAT_CRITICAL:
+            return "Battery critical";
+        case PWR_SUE_RESTART:
+            return "System restart";
+        case PWR_SUE_STANDBY:
+            return "System standby";
+        case PWR_SUE_USER_STANDBY:
+            return "User-initiated system standby";
+        case PWR_SUE_SUSPEND:
+            return "System suspend";
+        case PWR_SUE_USER_SUSPEND:
+            return "User-initiated system suspend";
+        case PWR_SUE_BAT_CAPACITY_REMAINING_IN_SECONDS:
+            return "Battery empty in " + AdditionalData + " seconds";
+        }
+        return "Unknown Status Change: " + getStatus();
     }
 }

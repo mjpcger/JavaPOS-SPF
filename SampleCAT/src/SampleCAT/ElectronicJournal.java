@@ -214,11 +214,14 @@ public class ElectronicJournal extends ElectronicJournalProperties {
                 if (length > HEADSIZE) {
                     long pos = 0;
                     switch (type) {
-                        default -> {
-                            return "";
-                        }
-                        case EJ_MT_DOCUMENT, EJ_MT_TAIL -> DataFile[index].seek(pos = length - FRAMESIZE);
-                        case EJ_MT_HEAD -> DataFile[index].seek(pos = HEADSIZE);
+                    default:
+                        return "";
+                    case EJ_MT_DOCUMENT:
+                    case EJ_MT_TAIL:
+                        DataFile[index].seek(pos = length - FRAMESIZE);
+                        break;
+                    case EJ_MT_HEAD:
+                        DataFile[index].seek(pos = HEADSIZE);
                     }
                     DataFile[index].read(mark);
                     return storeLastMarker(index, pos, new String(mark));

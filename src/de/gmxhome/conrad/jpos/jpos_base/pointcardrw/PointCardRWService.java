@@ -1237,22 +1237,20 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
             if (type == 'C' && valueispresent) {
                 EscScale esc = new EscScale();
                 switch (subtype) {
-                    case 0 -> {
-                        return getEscScaleForSubtypeZero(obj, value, esc);
-                    }
-                    case 'h' -> {
-                        esc.ScaleHorizontal = true;
-                        esc.ScaleVertical = false;
-                        esc.ScaleValue = value;
-                    }
-                    case 'v' -> {
-                        esc.ScaleHorizontal = false;
-                        esc.ScaleVertical = true;
-                        esc.ScaleValue = value;
-                    }
-                    default -> {
-                        return obj;
-                    }
+                case 0:
+                    return getEscScaleForSubtypeZero(obj, value, esc);
+                case 'h':
+                    esc.ScaleHorizontal = true;
+                    esc.ScaleVertical = false;
+                    esc.ScaleValue = value;
+                    break;
+                case 'v':
+                    esc.ScaleHorizontal = false;
+                    esc.ScaleVertical = true;
+                    esc.ScaleValue = value;
+                    break;
+                default:
+                    return obj;
                 }
                 return esc;
             }
@@ -1262,22 +1260,23 @@ public class PointCardRWService extends JposBase implements PointCardRWService11
         private static PrintDataPart getEscScaleForSubtypeZero(PrintDataPart obj, int value, EscScale esc) {
             esc.ScaleValue = 2;
             switch (value) {
-                case 1 -> {
-                    esc.ScaleValue = 1;
-                    esc.ScaleHorizontal = esc.ScaleVertical = false;
-                }
-                case 2 -> {
-                    esc.ScaleHorizontal = true;
-                    esc.ScaleVertical = false;
-                }
-                case 3 -> {
-                    esc.ScaleHorizontal = false;
-                    esc.ScaleVertical = true;
-                }
-                case 4 -> esc.ScaleHorizontal = esc.ScaleVertical = true;
-                default -> {
-                    return obj;
-                }
+            case 1:
+                esc.ScaleValue = 1;
+                esc.ScaleHorizontal = esc.ScaleVertical = false;
+                break;
+            case 2:
+                esc.ScaleHorizontal = true;
+                esc.ScaleVertical = false;
+                break;
+            case 3:
+                esc.ScaleHorizontal = false;
+                esc.ScaleVertical = true;
+                break;
+            case 4:
+                esc.ScaleHorizontal = esc.ScaleVertical = true;
+                break;
+            default:
+                return obj;
             }
             return esc;
         }

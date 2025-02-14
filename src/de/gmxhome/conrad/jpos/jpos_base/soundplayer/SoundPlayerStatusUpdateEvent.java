@@ -49,25 +49,24 @@ public class SoundPlayerStatusUpdateEvent extends JposStatusUpdateEvent {
         SoundPlayerProperties data = (SoundPlayerProperties) ((JposBase) getSource()).Props;
         synchronized (this) {
             switch (getStatus()) {
-                case SPLY_SUE_START_PLAY_SOUND -> {
-                    synchronized (data.OutputIdListSync) {
-                        data.OutputIDList = data.OutputIDList.length() == 0 ? Integer.toString(OutputID) : data.OutputIDList + "," + OutputID;
+            case SPLY_SUE_START_PLAY_SOUND:
+                synchronized (data.OutputIdListSync) {
+                    data.OutputIDList = data.OutputIDList.length() == 0 ? Integer.toString(OutputID) : data.OutputIDList + "," + OutputID;
+                }
+                break;
+            case SPLY_SUE_STOP_PLAY_SOUND:
+                synchronized (data.OutputIdListSync) {
+                    String[] parts = data.OutputIDList.split(",");
+                    StringBuilder newList = new StringBuilder();
+                    for (String part : parts) {
+                        if (OutputID != Integer.parseInt(part))
+                            newList.append(',').append(part);
                     }
+                    data.OutputIDList = newList.substring(1);
                 }
-                case SPLY_SUE_STOP_PLAY_SOUND -> {
-                    synchronized (data.OutputIdListSync) {
-                        String[] parts = data.OutputIDList.split(",");
-                        StringBuilder newList = new StringBuilder();
-                        for (String part : parts) {
-                            if (OutputID != Integer.parseInt(part))
-                                newList.append(',').append(part);
-                        }
-                        data.OutputIDList = newList.substring(1);
-                    }
-                }
-                default -> {
-                    return false;
-                }
+                break;
+            default:
+                return false;
             }
         }
         ((SoundPlayerService) getSource()).logSet("OutputIDList");
@@ -77,10 +76,14 @@ public class SoundPlayerStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case SPLY_SUE_START_PLAY_SOUND -> "SoundPlayer Start Play Sound, ID: " + OutputID;
-            case SPLY_SUE_STOP_PLAY_SOUND -> "SoundPlayer Stop Play Sound, ID: " + OutputID;
-            default -> "Unknown SoundPlayer Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+            case SPLY_SUE_START_PLAY_SOUND:
+                return "SoundPlayer Start Play Sound, ID: " + OutputID;
+            case SPLY_SUE_STOP_PLAY_SOUND:
+                return "SoundPlayer Stop Play Sound, ID: " + OutputID;
+        }
+        return "Unknown SoundPlayer Status Change: " + getStatus();
     }
 }

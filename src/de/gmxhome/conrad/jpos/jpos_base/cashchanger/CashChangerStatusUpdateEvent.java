@@ -105,31 +105,41 @@ public class CashChangerStatusUpdateEvent extends JposStatusUpdateEvent {
         CashChangerProperties props = (CashChangerProperties) getPropertySet();
         int state = getStatus();
         switch (state) {
-            case CHAN_STATUS_EMPTYOK -> props.DeviceStatus = CHAN_STATUS_EMPTYOK;
-            case CHAN_STATUS_FULLOK -> props.FullStatus = CHAN_STATUS_OK;
-            case CHAN_STATUS_FULL, CHAN_STATUS_NEARFULL -> props.FullStatus = state;
-            case CHAN_STATUS_EMPTY, CHAN_STATUS_NEAREMPTY -> {
+        default:
+            return false;
+        case CHAN_STATUS_EMPTYOK:
+            props.DeviceStatus = CHAN_STATUS_EMPTYOK;
+            break;
+        case CHAN_STATUS_FULLOK:
+            props.FullStatus = CHAN_STATUS_OK;
+            break;
+        case CHAN_STATUS_FULL:
+        case CHAN_STATUS_NEARFULL:
+            props.FullStatus = state;
+            break;
+        case CHAN_STATUS_EMPTY:
+        case CHAN_STATUS_NEAREMPTY: {
                 if (!InDepositOperation)
                     props.DeviceStatus = state;
             }
-            case CHAN_STATUS_JAM -> {
+            break;
+        case CHAN_STATUS_JAM: {
                 if (InDepositOperation)
                     props.DepositStatus = CHAN_STATUS_DEPOSIT_JAM;
                 else
                     props.DeviceStatus = CHAN_STATUS_JAM;
             }
-            case CHAN_STATUS_JAMOK -> {
+            break;
+        case CHAN_STATUS_JAMOK: {
                 if (InDepositOperation)
                     props.DepositStatus = State;
                 else
                     props.DeviceStatus = State;
             }
-            case CHAN_STATUS_ASYNC -> {
+            break;
+        case CHAN_STATUS_ASYNC: {
                 props.AsyncResultCode = Exception == null ? JPOS_SUCCESS : Exception.getErrorCode();
                 props.AsyncResultCodeExtended = Exception == null ? 0 : Exception.getErrorCodeExtended();
-            }
-            default -> {
-                return false;
             }
         }
         return true;
@@ -138,17 +148,28 @@ public class CashChangerStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public boolean checkStatusCorresponds() {
         CashChangerProperties props = (CashChangerProperties) getPropertySet();
-        return super.checkStatusCorresponds() || switch (getStatus()) {
-            case CHAN_STATUS_EMPTY, CHAN_STATUS_NEAREMPTY -> props.DeviceStatus == getStatus();
-            case CHAN_STATUS_EMPTYOK -> Objects.equals(props.DeviceStatus, State);
-            case CHAN_STATUS_JAM -> InDepositOperation ? props.DepositStatus == CHAN_STATUS_DEPOSIT_JAM : props.DeviceStatus == getStatus();
-            case CHAN_STATUS_JAMOK -> InDepositOperation ? Objects.equals(props.DepositStatus, State) : Objects.equals(props.DeviceStatus, State);
-            case CHAN_STATUS_FULL, CHAN_STATUS_NEARFULL -> props.FullStatus == getStatus();
-            case CHAN_STATUS_FULLOK -> props.FullStatus == CHAN_STATUS_OK;
-            case CHAN_STATUS_ASYNC -> props.AsyncResultCode == (Exception == null ? JPOS_SUCCESS : Exception.getErrorCode()) &&
+        if (super.checkStatusCorresponds())
+            return true;
+        switch (getStatus()) {
+        case CHAN_STATUS_EMPTY:
+        case CHAN_STATUS_NEAREMPTY:
+            return props.DeviceStatus == getStatus();
+        case CHAN_STATUS_EMPTYOK:
+            return Objects.equals(props.DeviceStatus, State);
+        case CHAN_STATUS_JAM:
+            return InDepositOperation ? props.DepositStatus == CHAN_STATUS_DEPOSIT_JAM : props.DeviceStatus == getStatus();
+        case CHAN_STATUS_JAMOK:
+            return InDepositOperation ? Objects.equals(props.DepositStatus, State) : Objects.equals(props.DeviceStatus, State);
+        case CHAN_STATUS_FULL:
+        case CHAN_STATUS_NEARFULL:
+            return props.FullStatus == getStatus();
+        case CHAN_STATUS_FULLOK:
+            return props.FullStatus == CHAN_STATUS_OK;
+        case CHAN_STATUS_ASYNC:
+            return props.AsyncResultCode == (Exception == null ? JPOS_SUCCESS : Exception.getErrorCode()) &&
                     props.AsyncResultCodeExtended == (Exception == null ? 0 : Exception.getErrorCodeExtended());
-            default -> false;
-        };
+        }
+        return false;
     }
 
     @Override
@@ -161,17 +182,28 @@ public class CashChangerStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-         return ret.length() > 0 ? ret :switch (getStatus()) {
-            case CHAN_STATUS_EMPTY -> "CashChanger Slot Empty";
-            case CHAN_STATUS_NEAREMPTY -> "CashChanger Slot Nearly Empty";
-            case CHAN_STATUS_EMPTYOK -> "CashChanger Slots OK";
-            case CHAN_STATUS_JAM -> "CashChanger Jam";
-            case CHAN_STATUS_JAMOK -> "CashChanger No Jam";
-            case CHAN_STATUS_FULL -> "CashChanger Slot Full";
-            case CHAN_STATUS_NEARFULL -> "CashChanger Slot Nearly Full";
-            case CHAN_STATUS_FULLOK -> "CashChanger Slots Under Limit";
-            case CHAN_STATUS_ASYNC -> "CashChanger Async Method Finished";
-            default -> "Unknown CashChanger Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+        case CHAN_STATUS_EMPTY:
+            return "CashChanger Slot Empty";
+        case CHAN_STATUS_NEAREMPTY:
+            return "CashChanger Slot Nearly Empty";
+        case CHAN_STATUS_EMPTYOK:
+            return "CashChanger Slots OK";
+        case CHAN_STATUS_JAM:
+            return "CashChanger Jam";
+        case CHAN_STATUS_JAMOK:
+            return "CashChanger No Jam";
+        case CHAN_STATUS_FULL:
+            return "CashChanger Slot Full";
+        case CHAN_STATUS_NEARFULL:
+            return "CashChanger Slot Nearly Full";
+        case CHAN_STATUS_FULLOK:
+            return "CashChanger Slots Under Limit";
+        case CHAN_STATUS_ASYNC:
+            return "CashChanger Async Method Finished";
     }
+        return "Unknown CashChanger Status Change: " + getStatus();
     }
+}

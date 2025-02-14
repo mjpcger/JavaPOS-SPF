@@ -42,10 +42,14 @@ public class GestureControlStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case GCTL_SUE_START_MOTION -> "GestureControl Start Motion";
-            case GCTL_SUE_STOP_MOTION -> "GestureControl Stop Motion";
-            default -> "Unknown SpeechSynthesis Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+        case GCTL_SUE_START_MOTION:
+            return "GestureControl Start Motion";
+        case GCTL_SUE_STOP_MOTION:
+            return "GestureControl Stop Motion";
+        }
+        return "Unknown SpeechSynthesis Status Change: " + getStatus();
     }
 }

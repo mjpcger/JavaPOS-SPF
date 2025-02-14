@@ -40,11 +40,14 @@ public class MSRStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         MSRProperties props = (MSRProperties)getPropertySet();
         switch (getStatus()) {
-            case MSR_SUE_DEVICE_AUTHENTICATED -> props.DeviceAuthenticated = true;
-            case MSR_SUE_DEVICE_DEAUTHENTICATED -> props.DeviceAuthenticated = false;
-            default -> {
-                return false;
-            }
+        case MSR_SUE_DEVICE_AUTHENTICATED:
+            props.DeviceAuthenticated = true;
+            break;
+        case MSR_SUE_DEVICE_DEAUTHENTICATED:
+            props.DeviceAuthenticated = false;
+            break;
+        default:
+            return false;
         }
         props.signalWaiter();
         return true;
@@ -52,12 +55,16 @@ public class MSRStatusUpdateEvent extends JposStatusUpdateEvent {
 
     @Override
     public boolean checkStatusCorresponds() {
+        if (super.checkStatusCorresponds())
+            return true;
         MSRProperties props = (MSRProperties)getPropertySet();
-        return super.checkStatusCorresponds()  || switch (getStatus()) {
-            case MSR_SUE_DEVICE_AUTHENTICATED -> props.DeviceAuthenticated;
-            case MSR_SUE_DEVICE_DEAUTHENTICATED -> !props.DeviceAuthenticated;
-            default -> false;
-        };
+        switch (getStatus()) {
+        case MSR_SUE_DEVICE_AUTHENTICATED:
+            return props.DeviceAuthenticated;
+        case MSR_SUE_DEVICE_DEAUTHENTICATED:
+            return !props.DeviceAuthenticated;
+        }
+        return false;
     }
 
     @Override
@@ -76,10 +83,14 @@ public class MSRStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case MSR_SUE_DEVICE_AUTHENTICATED -> "Device Authenticated";
-            case MSR_SUE_DEVICE_DEAUTHENTICATED -> "Device De-Authenticated";
-            default -> "Unknown Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+        case MSR_SUE_DEVICE_AUTHENTICATED:
+            return "Device Authenticated";
+        case MSR_SUE_DEVICE_DEAUTHENTICATED:
+            return "Device De-Authenticated";
+        }
+        return "Unknown Status Change: " + getStatus();
     }
 }

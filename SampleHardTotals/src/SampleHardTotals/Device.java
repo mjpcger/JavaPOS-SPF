@@ -566,7 +566,8 @@ public class Device extends JposDevice {
                             byte[] data = new byte[e.Size];
                             Arrays.fill(data, ((SetAll) cr).getValue());
                             System.arraycopy(data, 0, FileBuffer, e.Offset, e.Size);
-                        } else if (cr instanceof Write wr) {
+                        } else if (cr instanceof Write) {
+                            Write wr = (Write) cr;
                             System.arraycopy(wr.getData(), 0, FileBuffer, e.Offset + wr.getOffset(), wr.getCount());
                         }
                     }

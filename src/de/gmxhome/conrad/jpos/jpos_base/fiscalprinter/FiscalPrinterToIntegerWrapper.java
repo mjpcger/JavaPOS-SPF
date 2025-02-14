@@ -1084,11 +1084,15 @@ public class FiscalPrinterToIntegerWrapper implements JposServiceInstanceFactory
             Service.getData(dataItem, optArgs, data);
             // If conversion is necessary depends on dataItem and optArgs:
             switch (dataItem) {
-                case FPTR_GD_CURRENT_TOTAL, FPTR_GD_DAILY_TOTAL, FPTR_GD_GRAND_TOTAL, FPTR_GD_NOT_PAID, FPTR_GD_REFUND, FPTR_GD_REFUND_VOID -> {
-                    try {
-                        data[0] = new BigDecimal(Long.parseLong(data[0])).scaleByPowerOfTen(-4).stripTrailingZeros().toPlainString();
-                    } catch (Exception ignored) {}    // Return unchanged data in case of data format error
-                }
+            case FPTR_GD_CURRENT_TOTAL:
+            case FPTR_GD_DAILY_TOTAL:
+            case FPTR_GD_GRAND_TOTAL:
+            case FPTR_GD_NOT_PAID:
+            case FPTR_GD_REFUND:
+            case FPTR_GD_REFUND_VOID:
+                try {
+                    data[0] = new BigDecimal(Long.parseLong(data[0])).scaleByPowerOfTen(-4).stripTrailingZeros().toPlainString();
+                } catch (Exception ignored) {}    // Return unchanged data in case of data format error
             }
         }
 

@@ -60,13 +60,21 @@ public class GraphicDisplayStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         GraphicDisplayService srv = (GraphicDisplayService) getSource();
         switch (getStatus()) {
-            case GDSP_SUE_START_LOAD_WEBPAGE -> srv.UrlLoading = true;
-            case GDSP_SUE_FINISH_LOAD_WEBPAGE, GDSP_SUE_CANCEL_LOAD_WEBPAGE -> srv.UrlLoading = false;
-            case GDSP_SUE_START_PLAY_VIDEO -> srv.VideoPlaying = true;
-            case GDSP_SUE_STOP_PLAY_VIDEO -> srv.VideoPlaying = false;
-            default -> {
-                return false;
-            }
+        case GDSP_SUE_START_LOAD_WEBPAGE:
+            srv.UrlLoading = true;
+            break;
+        case GDSP_SUE_FINISH_LOAD_WEBPAGE:
+        case GDSP_SUE_CANCEL_LOAD_WEBPAGE:
+            srv.UrlLoading = false;
+            break;
+        case GDSP_SUE_START_PLAY_VIDEO:
+            srv.VideoPlaying = true;
+            break;
+        case GDSP_SUE_STOP_PLAY_VIDEO:
+            srv.VideoPlaying = false;
+            break;
+        default:
+            return false;
         }
         return true;
     }
@@ -77,12 +85,17 @@ public class GraphicDisplayStatusUpdateEvent extends JposStatusUpdateEvent {
         GraphicDisplayProperties props = (GraphicDisplayProperties) getPropertySet();
         Integer loadstate;
         switch (getStatus()) {
-            case GDSP_SUE_START_LOAD_WEBPAGE -> loadstate = GDSP_LSTATUS_START;
-            case GDSP_SUE_FINISH_LOAD_WEBPAGE -> loadstate = GDSP_LSTATUS_FINISH;
-            case GDSP_SUE_CANCEL_LOAD_WEBPAGE -> loadstate = GDSP_LSTATUS_CANCEL;
-            default -> {
-                return;
-            }
+        case GDSP_SUE_START_LOAD_WEBPAGE:
+            loadstate = GDSP_LSTATUS_START;
+            break;
+        case GDSP_SUE_FINISH_LOAD_WEBPAGE:
+            loadstate = GDSP_LSTATUS_FINISH;
+            break;
+        case GDSP_SUE_CANCEL_LOAD_WEBPAGE:
+            loadstate = GDSP_LSTATUS_CANCEL;
+            break;
+        default:
+            return;
         }
         if (!loadstate.equals(props.LoadStatus)) {
             props.LoadStatus = loadstate;
@@ -97,15 +110,24 @@ public class GraphicDisplayStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret :switch (getStatus()) {
-            case GDSP_SUE_START_IMAGE_LOAD -> "GraphicDisplay Start Load Image";
-            case GDSP_SUE_END_IMAGE_LOAD -> "GraphicDisplay End Load Image";
-            case GDSP_SUE_START_LOAD_WEBPAGE -> "GraphicDisplay Start Load Web Page" + (URL == null ? "" : " " + URL);
-            case GDSP_SUE_FINISH_LOAD_WEBPAGE -> "GraphicDisplay Finish Load Web Page " + (URL == null ? "" : " " + URL);
-            case GDSP_SUE_CANCEL_LOAD_WEBPAGE -> "GraphicDisplay Cancel Load Web Page " + (URL == null ? "" : " " + URL);
-            case GDSP_SUE_START_PLAY_VIDEO -> "GraphicDisplay Start Play Video";
-            case GDSP_SUE_STOP_PLAY_VIDEO -> "GraphicDisplay Stop Play Video";
-            default -> "Unknown GraphicDisplay Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+        case GDSP_SUE_START_IMAGE_LOAD:
+            return "GraphicDisplay Start Load Image";
+        case GDSP_SUE_END_IMAGE_LOAD:
+            return "GraphicDisplay End Load Image";
+        case GDSP_SUE_START_LOAD_WEBPAGE:
+            return "GraphicDisplay Start Load Web Page" + (URL == null ? "" : " " + URL);
+        case GDSP_SUE_FINISH_LOAD_WEBPAGE:
+            return "GraphicDisplay Finish Load Web Page " + (URL == null ? "" : " " + URL);
+        case GDSP_SUE_CANCEL_LOAD_WEBPAGE:
+            return "GraphicDisplay Cancel Load Web Page " + (URL == null ? "" : " " + URL);
+        case GDSP_SUE_START_PLAY_VIDEO:
+            return "GraphicDisplay Start Play Video";
+        case GDSP_SUE_STOP_PLAY_VIDEO:
+            return "GraphicDisplay Stop Play Video";
+        }
+        return "Unknown GraphicDisplay Status Change: " + getStatus();
     }
 }

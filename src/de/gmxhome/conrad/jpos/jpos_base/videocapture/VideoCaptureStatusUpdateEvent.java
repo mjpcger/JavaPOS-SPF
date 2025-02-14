@@ -40,12 +40,16 @@ public class VideoCaptureStatusUpdateEvent extends JposStatusUpdateEvent {
         String ret = super.toLogString();
         if (ret.length() > 0)
             return ret;
-        return switch (getStatus()) {
-            case VCAP_SUE_START_PHOTO -> "VideoCapture Start Taking Photo";
-            case VCAP_SUE_END_PHOTO -> "VideoCapture End Taking Photo";
-            case VCAP_SUE_START_VIDEO -> "VideoCapture Start Vidoe Recording";
-            case VCAP_SUE_STOP_VIDEO -> "VideoCapture Stop Video Recording";
-            default -> "Unknown VideoCapture Status Change: " + getStatus();
-        };
+        switch (getStatus()) {
+        case VCAP_SUE_START_PHOTO:
+            return "VideoCapture Start Taking Photo";
+        case VCAP_SUE_END_PHOTO:
+            return "VideoCapture End Taking Photo";
+        case VCAP_SUE_START_VIDEO:
+            return "VideoCapture Start Vidoe Recording";
+        case VCAP_SUE_STOP_VIDEO:
+            return "VideoCapture Stop Video Recording";
+        }
+        return "Unknown VideoCapture Status Change: " + getStatus();
     }
 }

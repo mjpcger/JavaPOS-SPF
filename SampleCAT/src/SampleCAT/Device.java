@@ -587,10 +587,17 @@ public class Device extends JposDevice implements Runnable{
                             String message = "Check Printer";
                             if (e.getErrorCode() != JPOS_E_EXTENDED) {
                                 switch (e.getErrorCodeExtended()) {
-                                    case JPOS_EPTR_COVER_OPEN -> message = "Close Printer Cover";
-                                    case JPOS_EPTR_REC_CARTRIDGE_EMPTY -> message = "Change Color Cartridge";
-                                    case JPOS_EPTR_REC_CARTRIDGE_REMOVED -> message = "Insert Color Cartridge";
-                                    case JPOS_EPTR_REC_EMPTY -> message = "Insert Paper";
+                                case JPOS_EPTR_COVER_OPEN:
+                                    message = "Close Printer Cover";
+                                    break;
+                                case JPOS_EPTR_REC_CARTRIDGE_EMPTY:
+                                    message = "Change Color Cartridge";
+                                    break;
+                                case JPOS_EPTR_REC_CARTRIDGE_REMOVED:
+                                    message = "Insert Color Cartridge";
+                                    break;
+                                case JPOS_EPTR_REC_EMPTY:
+                                    message = "Insert Paper";
                                 }
                             }
                             synchronizedMessageBox(message, "Printer Error", ERROR_MESSAGE);
@@ -605,12 +612,13 @@ public class Device extends JposDevice implements Runnable{
         @Override
         public void statusUpdateOccurred(StatusUpdateEvent statusUpdateEvent) {
             switch (statusUpdateEvent.getStatus()) {
-                case PTR_SUE_REC_CARTDRIGE_OK, PTR_SUE_REC_CARTRIDGE_EMPTY, PTR_SUE_REC_CARTRIDGE_NEAREMPTY -> {
-                    synchronized (this) {
-                        if (CleaningEndWaiter != null) {
-                            CleaningEndWaiter.signal();
-                            CleaningEndWaiter = null;
-                        }
+            case PTR_SUE_REC_CARTDRIGE_OK:
+            case PTR_SUE_REC_CARTRIDGE_EMPTY:
+            case PTR_SUE_REC_CARTRIDGE_NEAREMPTY:
+                synchronized (this) {
+                    if (CleaningEndWaiter != null) {
+                        CleaningEndWaiter.signal();
+                        CleaningEndWaiter = null;
                     }
                 }
             }
@@ -1131,9 +1139,12 @@ public class Device extends JposDevice implements Runnable{
             throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
         int code = Integer.parseInt(resp.substring(1));
         switch (code) {
-            case 4 -> throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Terminal locked");
-            case 6 -> throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Confirmation requested");
-            case 7 -> throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Authorization just activated");
+        case 4:
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Terminal locked");
+        case 6:
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Confirmation requested");
+        case 7:
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Authorization just activated");
         }
     }
 
@@ -1163,14 +1174,14 @@ public class Device extends JposDevice implements Runnable{
             throw new JposException(JPOS_E_TIMEOUT, 0, "No valid response within " + timeout + " milliseconds");
         int code = Integer.parseInt(resp.substring(1));
         switch (code) {
-            case 4 -> // Device locked:
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Terminal locked");
-            case 5 -> // Not in transaction: Ignore.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Not in transaction");
-            case 7 -> // No confirmation requested.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "No confirmation requested");
-            case 8 -> // Invalid transaction number:
-                    throw new JposException(JPOS_E_ILLEGAL, code, "Invalid transaction number: " + transno);
+        case 4: // Device locked:
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Terminal locked");
+        case 5: // Not in transaction: Ignore.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Not in transaction");
+        case 7: // No confirmation requested.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "No confirmation requested");
+        case 8: // Invalid transaction number:
+            throw new JposException(JPOS_E_ILLEGAL, code, "Invalid transaction number: " + transno);
         }
     }
 
@@ -1191,20 +1202,22 @@ public class Device extends JposDevice implements Runnable{
         int codeEndIndex = resp.indexOf(STX);
         int code = Integer.parseInt(resp.substring(1, codeEndIndex > 0 ? codeEndIndex : resp.length()));
         switch (code) {
-            case 4 -> // Device locked:
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Terminal locked");
-            case 5 -> // Not in transaction: Ignore.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Not in transaction");
-            case 6 -> // Waiting for commit.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Waiting for commit");
-            case 7 -> // No confirmation requested.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Authorization active");
-            case 3 -> // Operation abort confirmed
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Authorization aborted");
+        case 4: // Device locked:
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Terminal locked");
+        case 5: // Not in transaction: Ignore.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Not in transaction");
+        case 6: // Waiting for commit.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Waiting for commit");
+        case 7: // No confirmation requested.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Authorization active");
+        case 3: // Operation abort confirmed
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Authorization aborted");
             // Transaction OK
             // Wait for commit
-            case 0, 1, 2 -> // Authorization failure
-                    setTransactionProperties(refund ? 1 : 0, resp);
+        case 0:
+        case 1:
+        case 2: // Authorization failure
+            setTransactionProperties(refund ? 1 : 0, resp);
         }
     }
 
@@ -1224,20 +1237,22 @@ public class Device extends JposDevice implements Runnable{
         int codeEndIndex = resp.indexOf(STX);
         int code = Integer.parseInt(resp.substring(1, codeEndIndex > 0 ? codeEndIndex : resp.length()));
         switch (code) {
-            case 4 -> // Device locked:
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Terminal locked");
-            case 5 -> // Not in transaction: Ignore.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Not in transaction");
-            case 6 -> // Waiting for commit.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Waiting for commit");
-            case 7 -> // No confirmation requested.
-                    throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Authorization active");
-            case 8 -> // No confirmation requested.
-                    throw new JposException(JPOS_E_ILLEGAL, code, "Invalid transaction: " + transno);
+        case 4: // Device locked:
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Terminal locked");
+        case 5: // Not in transaction: Ignore.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Not in transaction");
+        case 6: // Waiting for commit.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Waiting for commit");
+        case 7: // No confirmation requested.
+            throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_COMMANDERROR, "Authorization active");
+        case 8: // No confirmation requested.
+            throw new JposException(JPOS_E_ILLEGAL, code, "Invalid transaction: " + transno);
             // Transaction OK
             // Wait for commit
-            case 0, 1, 2 -> // Authorization failure
-                    setTransactionProperties(2, resp);
+        case 0:
+        case 1:
+        case 2: // Authorization failure
+            setTransactionProperties(2, resp);
         }
     }
 
@@ -1274,24 +1289,26 @@ public class Device extends JposDevice implements Runnable{
             props.PaymentMedia = CAT_MEDIA_CREDIT;
             props.PaymentCondition = CAT_PAYMENT_DEBIT;
             switch (what) {
-                case 0 -> // Sale transaction
-                        props.TransactionType = CAT_TRANSACTION_SALES;
-                case 1 -> // Refund operation
-                        props.TransactionType = CAT_TRANSACTION_REFUND;
-                case 2 -> // Void operation
-                        props.TransactionType = CAT_TRANSACTION_VOID;
+            case 0: // Sale transaction
+                props.TransactionType = CAT_TRANSACTION_SALES;
+                break;
+            case 1: // Refund operation
+                props.TransactionType = CAT_TRANSACTION_REFUND;
+                break;
+            case 2: // Void operation
+                props.TransactionType = CAT_TRANSACTION_VOID;
             }
             switch (Integer.parseInt(params[0])) {
-                case 100 ->   // Abort by user
-                        throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Aborted by customer");
-                case 101 ->   // Card locked
-                        throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_CENTERERROR, "Card locked");
-                case 102 ->   // Retain card
-                        throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_CENTERERROR, "Retain card");
-                case 103 ->   // Card error
-                        throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_CENTERERROR, "Card error");
-                case 104 ->   // Approval error
-                        throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_CENTERERROR, "Approval error");
+            case 100:   // Abort by user
+                throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_RESET, "Aborted by customer");
+            case 101:   // Card locked
+                throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_CENTERERROR, "Card locked");
+            case 102:   // Retain card
+                throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_CENTERERROR, "Retain card");
+            case 103:   // Card error
+                throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_CENTERERROR, "Card error");
+            case 104:   // Approval error
+                throw new JposException(JPOS_E_EXTENDED, JPOS_ECAT_CENTERERROR, "Approval error");
             }
         }
         else

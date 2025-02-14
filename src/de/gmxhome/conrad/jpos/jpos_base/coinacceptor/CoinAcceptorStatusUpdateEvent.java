@@ -63,13 +63,20 @@ public class CoinAcceptorStatusUpdateEvent extends JposStatusUpdateEvent {
         CoinAcceptorProperties props = (CoinAcceptorProperties) getPropertySet();
         int state = getStatus();
         switch (state) {
-            case CACC_STATUS_FULL, CACC_STATUS_NEARFULL -> props.FullStatus = state;
-            case CACC_STATUS_FULLOK -> props.FullStatus = CACC_STATUS_OK;
-            case CACC_STATUS_JAM -> props.DepositStatus = CACC_STATUS_JAM;
-            case CACC_STATUS_JAMOK -> props.DepositStatus = DepositState;
-            default -> {
-                return false;
-            }
+        default:
+            return false;
+        case CACC_STATUS_FULL:
+        case CACC_STATUS_NEARFULL:
+            props.FullStatus = state;
+            break;
+        case CACC_STATUS_FULLOK:
+            props.FullStatus = CACC_STATUS_OK;
+            break;
+        case CACC_STATUS_JAM:
+            props.DepositStatus = CACC_STATUS_JAM;
+            break;
+        case CACC_STATUS_JAMOK:
+            props.DepositStatus = DepositState;
         }
         return true;
     }
@@ -77,14 +84,20 @@ public class CoinAcceptorStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public boolean checkStatusCorresponds() {
         CoinAcceptorProperties props = (CoinAcceptorProperties)getPropertySet();
-        return super.checkStatusCorresponds() || switch (getStatus()) {
-            case CACC_STATUS_FULL, CACC_STATUS_NEARFULL ->
-                    props.FullStatus == getStatus();
-            case CACC_STATUS_FULLOK -> props.FullStatus == CACC_STATUS_OK;
-            case CACC_STATUS_JAM -> props.DepositStatus == getStatus();
-            case CACC_STATUS_JAMOK -> props.DepositStatus == DepositState;
-            default -> false;
-        };
+        if (super.checkStatusCorresponds())
+            return true;
+        switch (getStatus()) {
+        case CACC_STATUS_FULL:
+            case CACC_STATUS_NEARFULL:
+                return props.FullStatus == getStatus();
+        case CACC_STATUS_FULLOK:
+            return props.FullStatus == CACC_STATUS_OK;
+        case CACC_STATUS_JAM:
+            return props.DepositStatus == getStatus();
+        case CACC_STATUS_JAMOK:
+            return props.DepositStatus == DepositState;
+        }
+        return false;
     }
 
     @Override
@@ -97,13 +110,20 @@ public class CoinAcceptorStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case CACC_STATUS_FULL -> "CoinAcceptor Slot Full";
-            case CACC_STATUS_NEARFULL -> "CoinAcceptor Slot Nearly Full";
-            case CACC_STATUS_FULLOK -> "CoinAcceptor Slot Under Limit";
-            case CACC_STATUS_JAM -> "CoinAcceptor Status Jam";
-            case CACC_STATUS_JAMOK -> "CoinAcceptor Status No Jam";
-            default -> "Unknown CoinAcceptor Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+        case CACC_STATUS_FULL:
+            return "CoinAcceptor Slot Full";
+        case CACC_STATUS_NEARFULL:
+            return "CoinAcceptor Slot Nearly Full";
+        case CACC_STATUS_FULLOK:
+            return "CoinAcceptor Slot Under Limit";
+        case CACC_STATUS_JAM:
+            return "CoinAcceptor Status Jam";
+        case CACC_STATUS_JAMOK:
+            return "CoinAcceptor Status No Jam";
+        }
+        return "Unknown CoinAcceptor Status Change: " + getStatus();
     }
 }

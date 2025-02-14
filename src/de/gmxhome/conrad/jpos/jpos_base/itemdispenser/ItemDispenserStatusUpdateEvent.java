@@ -42,13 +42,20 @@ public class ItemDispenserStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         ItemDispenserProperties props = (ItemDispenserProperties)getPropertySet();
         switch (getStatus()) {
-            case ITEM_SUE_EMPTY -> props.DispenserStatus = ITEM_DS_EMPTY;
-            case ITEM_SUE_NEAREMPTY -> props.DispenserStatus = ITEM_DS_NEAREMPTY;
-            case ITEM_SUE_OK -> props.DispenserStatus = ITEM_DS_OK;
-            case ITEM_SUE_JAM -> props.DispenserStatus = ITEM_DS_JAM;
-            default -> {
-                return false;
-            }
+        case ITEM_SUE_EMPTY:
+            props.DispenserStatus = ITEM_DS_EMPTY;
+            break;
+        case ITEM_SUE_NEAREMPTY:
+            props.DispenserStatus = ITEM_DS_NEAREMPTY;
+            break;
+        case ITEM_SUE_OK:
+            props.DispenserStatus = ITEM_DS_OK;
+            break;
+        case ITEM_SUE_JAM:
+            props.DispenserStatus = ITEM_DS_JAM;
+            break;
+        default:
+            return false;
         }
         props.signalWaiter();
         return true;
@@ -57,13 +64,19 @@ public class ItemDispenserStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public boolean checkStatusCorresponds() {
         ItemDispenserProperties props = (ItemDispenserProperties)getPropertySet();
-        return super.checkStatusCorresponds() || switch (getStatus()) {
-            case ITEM_SUE_EMPTY -> props.DispenserStatus == ITEM_DS_EMPTY;
-            case ITEM_SUE_NEAREMPTY -> props.DispenserStatus == ITEM_DS_NEAREMPTY;
-            case ITEM_SUE_OK -> props.DispenserStatus == ITEM_DS_OK;
-            case ITEM_SUE_JAM -> props.DispenserStatus == ITEM_DS_JAM;
-            default -> false;
-        };
+        if (super.checkStatusCorresponds())
+            return true;
+        switch (getStatus()) {
+        case ITEM_SUE_EMPTY:
+            return props.DispenserStatus == ITEM_DS_EMPTY;
+        case ITEM_SUE_NEAREMPTY:
+            return props.DispenserStatus == ITEM_DS_NEAREMPTY;
+        case ITEM_SUE_OK:
+            return props.DispenserStatus == ITEM_DS_OK;
+        case ITEM_SUE_JAM:
+            return props.DispenserStatus == ITEM_DS_JAM;
+        }
+        return false;
     }
 
     @Override
@@ -82,12 +95,18 @@ public class ItemDispenserStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case ITEM_SUE_EMPTY -> "Item Dispenser Empty";
-            case ITEM_SUE_NEAREMPTY -> "Item Dispenser Near Empty";
-            case ITEM_SUE_OK -> "Item Dispenser OK";
-            case ITEM_SUE_JAM -> "Item Dispenser Jam";
-            default -> "Unknown Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+            case ITEM_SUE_EMPTY:
+                return "Item Dispenser Empty";
+            case ITEM_SUE_NEAREMPTY:
+                return "Item Dispenser Near Empty";
+            case ITEM_SUE_OK:
+                return "Item Dispenser OK";
+            case ITEM_SUE_JAM:
+                return "Item Dispenser Jam";
+        }
+        return "Unknown Status Change: " + getStatus();
     }
 }

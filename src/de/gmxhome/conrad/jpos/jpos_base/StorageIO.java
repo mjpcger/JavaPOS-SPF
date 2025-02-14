@@ -148,7 +148,8 @@ public class StorageIO {
      */
     public long getOpenFileSize() {
         long ret = 0;
-        if (TheFile instanceof FileInputStream in) {
+        if (TheFile instanceof FileInputStream) {
+            FileInputStream in = (FileInputStream) TheFile;
             try {
                 ret = in.getChannel().size();
             } catch (IOException e) {

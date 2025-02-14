@@ -40,10 +40,14 @@ public class SpeechSynthesisStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case SPCH_SUE_START_SPEAK -> "SpeechSynthesis Start Speech Synthesis";
-            case SPCH_SUE_STOP_SPEAK -> "SpeechSynthesis Stop Speech Synthesis";
-            default -> "Unknown SpeechSynthesis Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+        case SPCH_SUE_START_SPEAK:
+            return "SpeechSynthesis Start Speech Synthesis";
+        case SPCH_SUE_STOP_SPEAK:
+            return "SpeechSynthesis Stop Speech Synthesis";
+        }
+        return "Unknown SpeechSynthesis Status Change: " + getStatus();
     }
 }

@@ -38,40 +38,66 @@ public class BiometricsStatusUpdateEvent extends JposStatusUpdateEvent {
 
     @Override
     public boolean checkStatusCorresponds() {
-        return super.checkStatusCorresponds() || switch (getStatus()) {
-            case BIO_SUE_RAW_DATA, BIO_SUE_MOVE_LEFT,
-                    BIO_SUE_MOVE_RIGHT, BIO_SUE_MOVE_DOWN,
-                    BIO_SUE_MOVE_UP, BIO_SUE_MOVE_CLOSER,
-                    BIO_SUE_MOVE_AWAY, BIO_SUE_MOVE_BACKWARD,
-                    BIO_SUE_MOVE_FORWARD, BIO_SUE_MOVE_SLOWER,
-                    BIO_SUE_MOVE_FASTER, BIO_SUE_SENSOR_DIRTY,
-                    BIO_SUE_FAILED_READ, BIO_SUE_SENSOR_READY,
-                    BIO_SUE_SENSOR_COMPLETE ->
-                    true;
-            default -> false;
-        };
+        if (super.checkStatusCorresponds())
+            return true;
+        switch (getStatus()) {
+        case BIO_SUE_RAW_DATA:
+        case BIO_SUE_MOVE_LEFT:
+        case BIO_SUE_MOVE_RIGHT:
+        case BIO_SUE_MOVE_DOWN:
+        case BIO_SUE_MOVE_UP:
+        case BIO_SUE_MOVE_CLOSER:
+        case BIO_SUE_MOVE_AWAY:
+        case BIO_SUE_MOVE_BACKWARD:
+        case BIO_SUE_MOVE_FORWARD:
+        case BIO_SUE_MOVE_SLOWER:
+        case BIO_SUE_MOVE_FASTER:
+        case BIO_SUE_SENSOR_DIRTY:
+        case BIO_SUE_FAILED_READ:
+        case BIO_SUE_SENSOR_READY:
+        case BIO_SUE_SENSOR_COMPLETE:
+            return true;
+        }
+        return false;
     }
 
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case BIO_SUE_RAW_DATA -> "Biometrics raw data";
-            case BIO_SUE_MOVE_LEFT -> "Biometrics move left";
-            case BIO_SUE_MOVE_RIGHT -> "Biometrics move right";
-            case BIO_SUE_MOVE_DOWN -> "Biometrics move down";
-            case BIO_SUE_MOVE_UP -> "Biometrics move up";
-            case BIO_SUE_MOVE_CLOSER -> "Biometrics move closer";
-            case BIO_SUE_MOVE_AWAY -> "Biometrics move away";
-            case BIO_SUE_MOVE_BACKWARD -> "Biometrics move backward";
-            case BIO_SUE_MOVE_FORWARD -> "Biometrics move forward";
-            case BIO_SUE_MOVE_SLOWER -> "Biometrics move slower";
-            case BIO_SUE_MOVE_FASTER -> "Biometrics move faster";
-            case BIO_SUE_SENSOR_DIRTY -> "Biometrics sensor dirty";
-            case BIO_SUE_FAILED_READ -> "Biometrics failed read";
-            case BIO_SUE_SENSOR_READY -> "Biometrics sensor ready";
-            case BIO_SUE_SENSOR_COMPLETE -> "Biometrics sensor complete";
-            default -> "Unknown Biometrics Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+            case BIO_SUE_RAW_DATA:
+                return "Biometrics raw data";
+            case BIO_SUE_MOVE_LEFT:
+                return "Biometrics move left";
+            case BIO_SUE_MOVE_RIGHT:
+                return "Biometrics move right";
+            case BIO_SUE_MOVE_DOWN:
+                return "Biometrics move down";
+            case BIO_SUE_MOVE_UP:
+                return "Biometrics move up";
+            case BIO_SUE_MOVE_CLOSER:
+                return "Biometrics move closer";
+            case BIO_SUE_MOVE_AWAY:
+                return "Biometrics move away";
+            case BIO_SUE_MOVE_BACKWARD:
+                return "Biometrics move backward";
+            case BIO_SUE_MOVE_FORWARD:
+                return "Biometrics move forward";
+            case BIO_SUE_MOVE_SLOWER:
+                return "Biometrics move slower";
+            case BIO_SUE_MOVE_FASTER:
+                return "Biometrics move faster";
+            case BIO_SUE_SENSOR_DIRTY:
+                return "Biometrics sensor dirty";
+            case BIO_SUE_FAILED_READ:
+                return "Biometrics failed read";
+            case BIO_SUE_SENSOR_READY:
+                return "Biometrics sensor ready";
+            case BIO_SUE_SENSOR_COMPLETE:
+                return "Biometrics sensor complete";
+        }
+        return "Unknown Biometrics Status Change: " + getStatus();
     }
 }

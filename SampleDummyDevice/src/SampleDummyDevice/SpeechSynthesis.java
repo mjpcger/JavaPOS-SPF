@@ -94,8 +94,8 @@ public class SpeechSynthesis extends JposDevice {
                 this.LanguageList = "en_US";
             }
             o = entries.getPropertyValue("CharacterTimeout");
-            if (o instanceof Integer value)
-                CharacterTimeout = value;
+            if (o instanceof Integer)
+                CharacterTimeout = (Integer) o;
             o = entries.getPropertyValue("VoiceList");
             if (o != null) {
                 String[] voices = o.toString().split(",");
@@ -164,8 +164,8 @@ public class SpeechSynthesis extends JposDevice {
         @Override
         public void stopCurrentSpeaking() throws JposException {
             synchronized (AsyncProcessorRunning) {
-                if (CurrentCommand != null && CurrentCommand instanceof Speak speak) {
-                    speak.abortCommand(true);
+                if (CurrentCommand != null && CurrentCommand instanceof Speak) {
+                    CurrentCommand.abortCommand(true);
                 }
             }
         }
@@ -178,8 +178,8 @@ public class SpeechSynthesis extends JposDevice {
                     CurrentCommand.abortCommand(true);
                 else {
                     for (JposOutputRequest req : PendingCommands) {
-                        if (req instanceof Speak speak && req.OutputID == outputID) {
-                            PendingCommands.remove(request = speak);
+                        if (req instanceof Speak && req.OutputID == outputID) {
+                            PendingCommands.remove(request = (Speak) req);
                             break;
                         }
                     }

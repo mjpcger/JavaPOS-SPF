@@ -45,11 +45,11 @@ public class CashDrawerStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         CashDrawerProperties props = (CashDrawerProperties)getPropertySet();
         switch (getStatus()) {
-            case CASH_SUE_DRAWERCLOSED, CASH_SUE_DRAWEROPEN -> {
+            case CASH_SUE_DRAWERCLOSED:
+            case CASH_SUE_DRAWEROPEN:
                 props.DrawerOpened = getStatus() == CASH_SUE_DRAWEROPEN;
                 props.signalWaiter();
                 return true;
-            }
         }
         return false;
     }
@@ -57,10 +57,14 @@ public class CashDrawerStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public boolean checkStatusCorresponds() {
         CashDrawerProperties props = (CashDrawerProperties)getPropertySet();
-        return super.checkStatusCorresponds() || switch (getStatus()) {
-            case CASH_SUE_DRAWERCLOSED, CASH_SUE_DRAWEROPEN -> props.DrawerOpened == (getStatus() == CASH_SUE_DRAWEROPEN);
-            default -> false;
-        };
+        if (super.checkStatusCorresponds())
+            return true;
+        switch (getStatus()) {
+        case CASH_SUE_DRAWERCLOSED:
+        case CASH_SUE_DRAWEROPEN:
+            return props.DrawerOpened == (getStatus() == CASH_SUE_DRAWEROPEN);
+        }
+        return false;
     }
 
     @Override
@@ -79,10 +83,14 @@ public class CashDrawerStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case CASH_SUE_DRAWERCLOSED -> "CashDrawer Closed";
-            case CASH_SUE_DRAWEROPEN -> "CashDrawer Opened";
-            default -> "Unknown Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+        case CASH_SUE_DRAWERCLOSED:
+            return  "CashDrawer Closed";
+        case CASH_SUE_DRAWEROPEN:
+            return  "CashDrawer Opened";
+        }
+        return  "Unknown Status Change: " + getStatus();
     }
 }

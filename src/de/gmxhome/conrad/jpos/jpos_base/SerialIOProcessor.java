@@ -265,16 +265,16 @@ public class SerialIOProcessor extends UniqueIOProcessor {
         }
         if (noErrorLog) {
             if (error instanceof NotFoundException)
-                throw new JposException(JPOS_E_NOEXIST, ((Exception) error).getMessage());
+                throw new JposException(JPOS_E_NOEXIST, ((NotFoundException) error).getMessage());
             else if (error instanceof Exception)
                 throw new JposException(JPOS_E_FAILURE, ((Exception) error).getMessage());
             else
                 throw new JposException(JPOS_E_ILLEGAL, error.toString());
         }
         if (error instanceof NotFoundException)
-            logerror("Open", JPOS_E_NOEXIST, (Exception) error);
+            logerror("Open", JPOS_E_NOEXIST, ((NotFoundException) error));
         else if (error instanceof Exception)
-            logerror("Open", JPOS_E_FAILURE, (Exception) error);
+            logerror("Open", JPOS_E_FAILURE, ((Exception) error));
         else
             logerror("Open", JPOS_E_ILLEGAL, error.toString());
     }

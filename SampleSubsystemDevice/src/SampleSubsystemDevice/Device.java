@@ -489,7 +489,8 @@ public class Device extends JposDevice implements Runnable {
             if (subsys != null) {
                 if (datum == '1') {
                     UnitOnline |= unit;
-                    if (subsys instanceof RemoteOrderDisplayProperties disp) {
+                    if (subsys instanceof RemoteOrderDisplayProperties) {
+                        RemoteOrderDisplayProperties disp = (RemoteOrderDisplayProperties) subsys;
                         disp.Unit[unitidx].Clocks = 1;
                         disp.Unit[unitidx].CapTouch = true;
                         disp.Unit[unitidx].VideoModesList = disp.VideoModesListDef;
@@ -1035,24 +1036,24 @@ public class Device extends JposDevice implements Runnable {
                 if ((units & (1 << u)) != 0) {
                     DisplayContents.CharAttributes[][] range = getRange(u, request.getRow(), request.getColumn(), request.getWidth(), request.getHeight());
                     switch (request.getFunction()) {
-                        case ROD_UA_SET -> {
-                            setAttributes(request, range);
-                        }
-                        case ROD_UA_INTENSITY_ON -> {
-                            switchIntensityOn(range);
-                        }
-                        case ROD_UA_INTENSITY_OFF -> {
-                            switchIntensityOff(range);
-                        }
-                        case ROD_UA_REVERSE_OFF, ROD_UA_REVERSE_ON -> {
-                            doReverseVideo(range);
-                        }
-                        case ROD_UA_BLINK_ON -> {
-                            switchBlinkingOn(range);
-                        }
-                        case ROD_UA_BLINK_OFF -> {
-                            swichtBlinkingOff(range);
-                        }
+                    case ROD_UA_SET:
+                        setAttributes(request, range);
+                        break;
+                    case ROD_UA_INTENSITY_ON:
+                        switchIntensityOn(range);
+                        break;
+                    case ROD_UA_INTENSITY_OFF:
+                        switchIntensityOff(range);
+                        break;
+                    case ROD_UA_REVERSE_OFF:
+                    case ROD_UA_REVERSE_ON:
+                        doReverseVideo(range);
+                        break;
+                    case ROD_UA_BLINK_ON:
+                        switchBlinkingOn(range);
+                        break;
+                    case ROD_UA_BLINK_OFF:
+                        swichtBlinkingOff(range);
                     }
                     updateRegion(request, u, range, request.getRow(), request.getColumn(), false);
                 }
@@ -1171,21 +1172,20 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public void controlClock(int units, int function, int clockid, int hour, int minute, int second, int row, int column, int attribute, int mode) throws JposException {
             switch (function) {
-                case ROD_CLK_START -> {
-                    startClock(units, hour, minute, second, row, column, attribute, mode);
-                }
-                case ROD_CLK_STOP -> {
-                    stopClock(units);
-                }
-                case ROD_CLK_PAUSE -> {
-                    pauseClock(units);
-                }
-                case ROD_CLK_RESUME -> {
-                    resumeClock(units);
-                }
-                case ROD_CLK_MOVE -> {
-                    moveClock(units, row, column);
-                }
+            case ROD_CLK_START:
+                startClock(units, hour, minute, second, row, column, attribute, mode);
+                break;
+            case ROD_CLK_STOP:
+                stopClock(units);
+                break;
+            case ROD_CLK_PAUSE:
+                pauseClock(units);
+                break;
+            case ROD_CLK_RESUME:
+                resumeClock(units);
+                break;
+            case ROD_CLK_MOVE:
+                moveClock(units, row, column);
             }
         }
 
@@ -1194,19 +1194,19 @@ public class Device extends JposDevice implements Runnable {
             int type = 0;
             String time = "";
             switch (mode) {
-                case ROD_CLK_SHORT:
-                    time = String.format("%1d:%02d", minute, second);
-                    break;
-                case ROD_CLK_NORMAL:
-                    time = String.format("%02d:%02d", minute, second);
-                    type = 1;
-                    break;
-                case ROD_CLK_24_LONG:
-                    type = 1;
-                case ROD_CLK_12_LONG:
-                    type += 2;
-                    time = String.format("%02d:%02d:%02d", hour, minute, second);
-                    break;
+            case ROD_CLK_SHORT:
+                time = String.format("%1d:%02d", minute, second);
+                break;
+            case ROD_CLK_NORMAL:
+                time = String.format("%02d:%02d", minute, second);
+                type = 1;
+                break;
+            case ROD_CLK_24_LONG:
+                type = 1;
+            case ROD_CLK_12_LONG:
+                type += 2;
+                time = String.format("%02d:%02d:%02d", hour, minute, second);
+                break;
             }
             Service.check(time.length() + column > COLUMNCOUNT, units, JPOS_E_ILLEGAL, 0, "Clock out of range");
             int fgcolor = attribute & 0xf;

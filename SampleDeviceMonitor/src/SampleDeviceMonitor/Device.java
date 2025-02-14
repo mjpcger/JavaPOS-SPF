@@ -132,33 +132,34 @@ public class Device extends JposDevice {
                                 int value = free.movePointRight(9).divide(capacity, HALF_EVEN).intValue();
                                 JposDataEvent ev = new DeviceMonitorDataEvent(EventSource, 0, ID, value);
                                 switch (mode) {
-                                    case DMON_MMODE_UPDATE -> {
-                                        if (oldvalue == null || oldvalue != value)
+                                case DMON_MMODE_UPDATE:
+                                    if (oldvalue == null || oldvalue != value)
+                                        handleEvent(ev);
+                                    break;
+                                case DMON_MMODE_STRADDLED:
+                                    if (oldvalue != null) {
+                                        if ((oldvalue > upper) != (value > upper))
                                             handleEvent(ev);
                                     }
-                                    case DMON_MMODE_STRADDLED -> {
-                                        if (oldvalue != null) {
-                                            if ((oldvalue > upper) != (value > upper))
-                                                handleEvent(ev);
-                                        }
-                                    }
-                                    case DMON_MMODE_HIGH -> {
-                                        if (value >= upper)
-                                            handleEvent(ev);
-                                    }
-                                    case DMON_MMODE_LOW -> {
-                                        if (value <= upper)
-                                            handleEvent(ev);
-                                    }
-                                    case DMON_MMODE_WITHIN -> {
-                                        if (value <= upper && value >= lower)
-                                            handleEvent(ev);
-                                    }
-                                    case DMON_MMODE_OUTSIDE -> {
-                                        if (value > upper || value < lower)
-                                            handleEvent(ev);
-                                    }
-                                    case DMON_MMODE_POLLING -> handleEvent(ev);
+                                    break;
+                                case DMON_MMODE_HIGH:
+                                    if (value >= upper)
+                                        handleEvent(ev);
+                                    break;
+                                case DMON_MMODE_LOW:
+                                    if (value <= upper)
+                                        handleEvent(ev);
+                                    break;
+                                case DMON_MMODE_WITHIN:
+                                    if (value <= upper && value >= lower)
+                                        handleEvent(ev);
+                                    break;
+                                case DMON_MMODE_OUTSIDE:
+                                    if (value > upper || value < lower)
+                                        handleEvent(ev);
+                                    break;
+                                case DMON_MMODE_POLLING:
+                                    handleEvent(ev);
                                 }
                                 oldvalue = value;
                             } catch (Exception ignored) {}

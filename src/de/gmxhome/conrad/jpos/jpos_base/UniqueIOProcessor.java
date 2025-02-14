@@ -154,18 +154,19 @@ public class UniqueIOProcessor implements AutoCloseable {
         StringBuilder res = new StringBuilder();
         for (byte c : buffer) {
             switch (LoggingType) {
-                case LoggingTypeHexString -> res.append(String.format(" %02X", c & 0xff));
-                case LoggingTypeEscapeString -> {
-                    if (c < 0x20)
-                        res.append(String.format("\\%03o", (int) c & 0xff));
-                    else if (c == '\\')
-                        res.append("\\");
-                    else
-                        res.append(new String(new byte[]{c}));
-                }
-                case LoggingTypeNoLogging -> {
-                    return "...";
-                }
+            case LoggingTypeHexString:
+                res.append(String.format(" %02X", c & 0xff));
+                break;
+            case LoggingTypeEscapeString:
+                if (c < 0x20)
+                    res.append(String.format("\\%03o", (int) c & 0xff));
+                else if (c == '\\')
+                    res.append("\\");
+                else
+                    res.append(new String(new byte[]{c}));
+                break;
+            case LoggingTypeNoLogging:
+                return "...";
             }
         }
         return res.toString();

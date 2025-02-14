@@ -309,9 +309,12 @@ public class Device extends JposDevice{
             if ((o = entry.getPropertyValue("LoggingType")) != null) {
                 int type = Integer.parseInt(o.toString());
                 switch (type) {
-                    default -> throw new IOException("Unsupported logging type: " + o.toString());
-                    case LoggingTypeEscapeString, LoggingTypeHexString, LoggingTypeNoLogging ->
-                            LoggingType = type;
+                default:
+                    throw new IOException("Unsupported logging type: " + o.toString());
+                case LoggingTypeEscapeString:
+                case LoggingTypeHexString:
+                case LoggingTypeNoLogging:
+                    LoggingType = type;
                 }
             }
             if ((o = entry.getPropertyValue("RequestTimeout")) != null)

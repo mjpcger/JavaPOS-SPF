@@ -160,10 +160,17 @@ class LineDisplay extends LineDisplayProperties implements StatusUpdater {
     @Override
     public void scrollText(int direction, int units) throws JposException {
         switch (direction) {
-            case DISP_ST_UP -> scrollUp(units);
-            case DISP_ST_DOWN -> scrollDown(units);
-            case DISP_ST_LEFT -> scrollLeft(units);
-            case DISP_ST_RIGHT -> scrollRight(units);
+            case DISP_ST_UP:
+                scrollUp(units);
+                break;
+            case DISP_ST_DOWN:
+                scrollDown(units);
+                break;
+            case DISP_ST_LEFT:
+                scrollLeft(units);
+                break;
+            case DISP_ST_RIGHT:
+                scrollRight(units);
         }
         refreshWindow(0);
     }

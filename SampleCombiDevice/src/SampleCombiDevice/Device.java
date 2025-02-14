@@ -28,6 +28,7 @@ import de.gmxhome.conrad.jpos.jpos_base.scanner.*;
 import de.gmxhome.conrad.jpos.jpos_base.toneindicator.*;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 
 import static de.gmxhome.conrad.jpos.jpos_base.SerialIOProcessor.*;
@@ -340,9 +341,12 @@ public class Device extends JposDevice implements Runnable{
             if ((o = entry.getPropertyValue("LoggingType")) != null) {
                 int type = Integer.parseInt(o.toString());
                 switch (type) {
-                    default -> throw new IOException("Unsupported logging type: " + o.toString());
-                    case LoggingTypeEscapeString, LoggingTypeHexString, LoggingTypeNoLogging ->
-                            LoggingType = type;
+                default:
+                    throw new IOException("Unsupported logging type: " + o.toString());
+                case LoggingTypeEscapeString:
+                case LoggingTypeHexString:
+                case LoggingTypeNoLogging:
+                    LoggingType = type;
                 }
             }
             if ((o = entry.getPropertyValue("RequestTimeout")) != null)
@@ -430,7 +434,7 @@ public class Device extends JposDevice implements Runnable{
         Properties propertySet = new Properties();
         File propertyFile = new File(getClass().getName() + ".properties");
         if (propertyFile.exists()) {
-            try (BufferedInputStream istream = new BufferedInputStream(new FileInputStream(propertyFile))) {
+            try (BufferedInputStream istream = new BufferedInputStream(Files.newInputStream(propertyFile.toPath()))) {
                 propertySet.load(istream);
             } catch (Exception e) {
                 throw new JposException(JPOS_E_ILLEGAL, "Property file missing", e);
@@ -776,37 +780,36 @@ public class Device extends JposDevice implements Runnable{
                 next[0] = charIn[0];
                 offset = charIn.length;
                 switch (head[0] = next[0]) {
-                    case RespFromDisplay -> {
-                        Object e0 = respFromDisplay(next, offset, head);
-                        if (e0 != null) return e0;
-                    }
-                    case RespFromDrawer -> {
-                        Object e1 = respFromDrawer(next, offset, head);
-                        if (e1 != null) return e1;
-                    }
-                    case RespFromEKey -> {
-                        Object e2 = respFromEKey(next, offset, head);
-                        if (e2 != null) return e2;
-                    }
-                    case RespFromLock -> {
-                        Object e3 = respFromLock(next, offset, head);
-                        if (e3 != null) return e3;
-                    }
-                    case RespFromKeyboard -> {
-                        Object e4 = respFromKeyboard(next, offset, head);
-                        if (e4 != null) return e4;
-                    }
-                    case RespFromMsr -> {
-                        Object e5 = respFromMsr(next, offset, head);
-                        if (e5 != null) return e5;
-                    }
-                    case RespFromScanner -> {
-                        if (respFromScanner(next, offset)) return head;
-                    }
-                    case RespFromStatus -> {
-                        Object e6 = respFromStatus(next, offset, head);
-                        if (e6 != null) return e6;
-                    }
+                case RespFromDisplay:
+                    Object e0 = respFromDisplay(next, offset, head);
+                    if (e0 != null) return e0;
+                    break;
+                case RespFromDrawer:
+                    Object e1 = respFromDrawer(next, offset, head);
+                    if (e1 != null) return e1;
+                    break;
+                case RespFromEKey:
+                    Object e2 = respFromEKey(next, offset, head);
+                    if (e2 != null) return e2;
+                    break;
+                case RespFromLock:
+                    Object e3 = respFromLock(next, offset, head);
+                    if (e3 != null) return e3;
+                    break;
+                case RespFromKeyboard:
+                    Object e4 = respFromKeyboard(next, offset, head);
+                    if (e4 != null) return e4;
+                    break;
+                case RespFromMsr:
+                    Object e5 = respFromMsr(next, offset, head);
+                    if (e5 != null) return e5;
+                    break;
+                case RespFromScanner:
+                    if (respFromScanner(next, offset)) return head;
+                    break;
+                case RespFromStatus:
+                    Object e6 = respFromStatus(next, offset, head);
+                    if (e6 != null) return e6;
                 }
             }
             else {
@@ -852,25 +855,24 @@ public class Device extends JposDevice implements Runnable{
             int labelType = SCAN_SDT_UNKNOWN;
             int labelOffset = LabelPos + LabelLen;
             switch (next[LabelPos]) {
-                case LabelUpcA -> {
-                    targetOffset += UpcALen;
-                    labelType = SCAN_SDT_UPCA;
-                }
-                case LabelUpcE -> {
-                    targetOffset += UpcELen;
-                    labelType = SCAN_SDT_UPCE;
-                }
-                case LabelEan -> {
-                    if (readData(next, offset, offset + 1)) {
-                        offset++;
-                        if (next[LabelPos + LabelLen] == LabelEan8Flag) {
-                            targetOffset += Ean8Len;
-                            labelType = SCAN_SDT_EAN8;
-                            labelOffset++;
-                        } else {
-                            targetOffset += Ean13Len;
-                            labelType = SCAN_SDT_EAN13;
-                        }
+            case LabelUpcA:
+                targetOffset += UpcALen;
+                labelType = SCAN_SDT_UPCA;
+                break;
+            case LabelUpcE:
+                targetOffset += UpcELen;
+                labelType = SCAN_SDT_UPCE;
+                break;
+            case LabelEan:
+                if (readData(next, offset, offset + 1)) {
+                    offset++;
+                    if (next[LabelPos + LabelLen] == LabelEan8Flag) {
+                        targetOffset += Ean8Len;
+                        labelType = SCAN_SDT_EAN8;
+                        labelOffset++;
+                    } else {
+                        targetOffset += Ean13Len;
+                        labelType = SCAN_SDT_EAN13;
                     }
                 }
             }

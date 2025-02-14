@@ -332,12 +332,15 @@ public class BiometricsProperties extends JposCommonProperties implements Biomet
     public boolean checkBIRPurpose(byte[] bir, Boolean verify) {
         if (bir == null)
             return false;
-        return switch (new BiometricInformationRecord(bir).getPurpose()) {
-            case BiometricInformationRecord.PURPOSE_ENROLL -> true;
-            case BiometricInformationRecord.PURPOSE_ENROLL_FOR_VERIFICATION -> verify != null && verify;
-            case BiometricInformationRecord.PURPOSE_ENROLL_FOR_IDENTIFICATION -> verify != null && !verify;
-            default -> false;
-        };
+        switch (new BiometricInformationRecord(bir).getPurpose()) {
+        case BiometricInformationRecord.PURPOSE_ENROLL:
+            return true;
+        case BiometricInformationRecord.PURPOSE_ENROLL_FOR_VERIFICATION:
+            return verify != null && verify;
+        case BiometricInformationRecord.PURPOSE_ENROLL_FOR_IDENTIFICATION:
+            return verify != null && !verify;
+        }
+        return false;
     }
 
     @Override

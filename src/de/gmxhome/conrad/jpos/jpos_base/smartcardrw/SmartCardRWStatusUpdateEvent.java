@@ -42,10 +42,10 @@ public class SmartCardRWStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         SmartCardRWProperties props = (SmartCardRWProperties)getPropertySet();
         switch (getStatus()) {
-            case SC_SUE_NO_CARD, SC_SUE_CARD_PRESENT -> {
-                props.signalWaiter();
-                return true;
-            }
+        case SC_SUE_NO_CARD:
+        case SC_SUE_CARD_PRESENT:
+            props.signalWaiter();
+            return true;
         }
         return false;
     }
@@ -53,10 +53,14 @@ public class SmartCardRWStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case SC_SUE_NO_CARD -> "No Card";
-            case SC_SUE_CARD_PRESENT -> "Card Present";
-            default -> "Unknown Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+        case SC_SUE_NO_CARD:
+            return "No Card";
+        case SC_SUE_CARD_PRESENT:
+            return "Card Present";
+        }
+        return "Unknown Status Change: " + getStatus();
     }
 }

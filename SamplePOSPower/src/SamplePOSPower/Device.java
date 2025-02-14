@@ -232,15 +232,14 @@ public class Device extends JposDevice implements Runnable {
                 RemainingBatteryCapacityInSeconds = powerstate.BatteryLifeTime;
                 POSPowerSource = PWR_SOURCE_NA;
                 switch (powerstate.ACLineStatus) {
-                    case ACLineStatusOffline -> {
-                        POSPowerSource = PWR_SOURCE_BATTERY;
-                        if (NoACTick == 0)
-                            NoACTick = System.currentTimeMillis();
-                    }
-                    case ACLineStatusOnline -> {
-                        POSPowerSource = PWR_SOURCE_AC;
-                        NoACTick = 0;
-                    }
+                case ACLineStatusOffline:
+                    POSPowerSource = PWR_SOURCE_BATTERY;
+                    if (NoACTick == 0)
+                        NoACTick = System.currentTimeMillis();
+                    break;
+                case ACLineStatusOnline:
+                    POSPowerSource = PWR_SOURCE_AC;
+                    NoACTick = 0;
                 }
                 BatteryFlags = (byte) (powerstate.BatteryFlag & (BatteryFlagCritical | BatteryFlagLow));
             }
@@ -419,9 +418,12 @@ public class Device extends JposDevice implements Runnable {
         @Override
         public DirectIO directIO(int cmd, int[] data, Object obj) throws JposException {
             switch (cmd) {
-                case ERROR_MESSAGE, INFORMATION_MESSAGE, WARNING_MESSAGE, QUESTION_MESSAGE, PLAIN_MESSAGE -> {
-                    return super.directIO(cmd, data, obj);
-                }
+            case ERROR_MESSAGE:
+            case INFORMATION_MESSAGE:
+            case WARNING_MESSAGE:
+            case QUESTION_MESSAGE:
+            case PLAIN_MESSAGE:
+                return super.directIO(cmd, data, obj);
             }
             throw new JposException(JposConst.JPOS_E_ILLEGAL, "Invalid command: " + cmd);
         }

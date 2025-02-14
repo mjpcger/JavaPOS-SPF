@@ -186,9 +186,14 @@ public class JposErrorEvent extends ErrorEvent {
         if (!valid) {
             // Invalid response: recommended handling is default handling:
             switch (getErrorLocus()) {
-                case JPOS_EL_INPUT -> resp = JPOS_ER_CLEAR;
-                case JPOS_EL_INPUT_DATA -> resp = JPOS_ER_CONTINUEINPUT;
-                case JPOS_EL_OUTPUT -> resp = JPOS_ER_RETRY;
+                case JPOS_EL_INPUT:
+                    resp = JPOS_ER_CLEAR;
+                    break;
+                case JPOS_EL_INPUT_DATA:
+                    resp = JPOS_ER_CONTINUEINPUT;
+                    break;
+                case JPOS_EL_OUTPUT:
+                    resp = JPOS_ER_RETRY;
             }
         }
         super.setErrorResponse(resp);

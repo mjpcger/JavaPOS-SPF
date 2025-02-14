@@ -119,7 +119,8 @@ public class ESpeakDevice extends JposDevice {
         public void checkProperties(JposEntry entries) throws JposException {
             super.checkProperties(entries);
             Object o = entries.getPropertyValue("NormalSpeakSpeed");
-            if (o instanceof Integer speed) {
+            if (o instanceof Integer) {
+                int speed = (Integer) o;
                 check(speed < 80 || speed > 450, JPOS_E_NOSERVICE, "Invalid speak speed: " + speed);
                 NormalSpeakSpeed = speed;
             }
@@ -252,8 +253,8 @@ public class ESpeakDevice extends JposDevice {
         @Override
         public void stopCurrentSpeaking() throws JposException {
             synchronized (AsyncProcessorRunning) {
-                if (CurrentCommand != null && CurrentCommand instanceof Speak speak) {
-                    speak.abortCommand(true);
+                if (CurrentCommand != null && CurrentCommand instanceof Speak) {
+                    CurrentCommand.abortCommand(true);
                 }
             }
         }
@@ -262,12 +263,12 @@ public class ESpeakDevice extends JposDevice {
         public void stopSpeaking(int outputID) throws JposException {
             Speak request = null;
             synchronized (AsyncProcessorRunning) {
-                if (CurrentCommand instanceof Speak speak && speak.OutputID == outputID)
-                    speak.abortCommand(true);
+                if (CurrentCommand instanceof Speak && CurrentCommand.OutputID == outputID)
+                    CurrentCommand.abortCommand(true);
                 else {
                     for (JposOutputRequest req : PendingCommands) {
-                        if (req instanceof Speak speak && speak.OutputID == outputID) {
-                            PendingCommands.remove(request = speak);
+                        if (req instanceof Speak && req.OutputID == outputID) {
+                            PendingCommands.remove(request = (Speak) req);
                             break;
                         }
                     }

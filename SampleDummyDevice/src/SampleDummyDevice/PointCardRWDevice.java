@@ -707,8 +707,8 @@ public class PointCardRWDevice extends JposDevice implements Runnable {
                 List<PointCardRWService.PrintDataPart> parts = srv.outputDataParts(data);
                 int count = 0;
                 for(PointCardRWService.PrintDataPart part : parts) {
-                    if (part instanceof PointCardRWService.PrintData pd) {
-                        count += pd.getPrintData().length();
+                    if (part instanceof PointCardRWService.PrintData) {
+                        count += ((PointCardRWService.PrintData) part).getPrintData().length();
                     }
                 }
                 checkext(hposition + count >= LineChars || vposition >= MaxLines, JPOS_EPCRW_PRINTER, "Print out of print area");

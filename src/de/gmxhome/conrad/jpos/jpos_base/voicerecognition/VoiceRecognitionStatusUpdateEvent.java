@@ -49,14 +49,23 @@ public class VoiceRecognitionStatusUpdateEvent extends JposStatusUpdateEvent {
 
     private Integer getHearingStatus(VoiceRecognitionProperties props) {
         switch (getStatus()) {
-            case VRCG_SUE_START_HEARING_FREE -> status = VRCG_HSTATUS_FREE;
-            case VRCG_SUE_START_HEARING_SENTENCE -> status = VRCG_HSTATUS_SENTENCE;
-            case VRCG_SUE_START_HEARING_WORD -> status = VRCG_HSTATUS_WORD;
-            case VRCG_SUE_START_HEARING_YESNO -> status = VRCG_HSTATUS_YESNO;
-            case VRCG_SUE_STOP_HEARING -> status = VRCG_HSTATUS_NONE;
-            default -> {
-                return null;
-            }
+        case VRCG_SUE_START_HEARING_FREE:
+            status = VRCG_HSTATUS_FREE;
+            break;
+        case VRCG_SUE_START_HEARING_SENTENCE:
+            status = VRCG_HSTATUS_SENTENCE;
+            break;
+        case VRCG_SUE_START_HEARING_WORD:
+            status = VRCG_HSTATUS_WORD;
+            break;
+        case VRCG_SUE_START_HEARING_YESNO:
+            status = VRCG_HSTATUS_YESNO;
+            break;
+        case VRCG_SUE_STOP_HEARING:
+            status = VRCG_HSTATUS_NONE;
+            break;
+        default:
+            return null;
         }
         return status;
     }
@@ -73,13 +82,20 @@ public class VoiceRecognitionStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case VRCG_SUE_START_HEARING_FREE -> "VoiceRecognition Start Hearing Free";
-            case VRCG_SUE_START_HEARING_SENTENCE -> "VoiceRecognition Start Hearing Sentence";
-            case VRCG_SUE_START_HEARING_WORD -> "VoiceRecognition Start Hearing Word";
-            case VRCG_SUE_START_HEARING_YESNO -> "VoiceRecognition Start Hearing Yes / No";
-            case VRCG_SUE_STOP_HEARING -> "VoiceRecognition Stop Hearing";
-            default -> "Unknown VoiceRecognition Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+            case VRCG_SUE_START_HEARING_FREE:
+                return "VoiceRecognition Start Hearing Free";
+            case VRCG_SUE_START_HEARING_SENTENCE:
+                return "VoiceRecognition Start Hearing Sentence";
+            case VRCG_SUE_START_HEARING_WORD:
+                return "VoiceRecognition Start Hearing Word";
+            case VRCG_SUE_START_HEARING_YESNO:
+                return "VoiceRecognition Start Hearing Yes / No";
+            case VRCG_SUE_STOP_HEARING:
+                return "VoiceRecognition Stop Hearing";
+        }
+        return "Unknown VoiceRecognition Status Change: " + getStatus();
     }
 }

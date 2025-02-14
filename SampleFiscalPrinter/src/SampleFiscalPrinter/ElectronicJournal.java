@@ -233,12 +233,18 @@ class ElectronicJournal extends ElectronicJournalProperties implements StatusUpd
                 storedlastcurrent = storedlastprevious;
             }
             switch (markerType) {
-                case EJ_MT_SESSION_BEG -> marker[0] = session + "-1";
-                case EJ_MT_SESSION_END ->
-                        marker[0] = (session == Dev.CurrentPeriod ? session - 1 : session) + "-" + storedlastprevious;
-                case EJ_MT_DOCUMENT, EJ_MT_TAIL ->
-                        marker[0] = session + "-" + storedlastcurrent;
-                case EJ_MT_HEAD -> marker[0] = "0-1";
+            case EJ_MT_SESSION_BEG:
+                marker[0] = session + "-1";
+                break;
+            case EJ_MT_SESSION_END:
+                marker[0] = (session == Dev.CurrentPeriod ? session - 1 : session) + "-" + storedlastprevious;
+                break;
+            case EJ_MT_DOCUMENT:
+            case EJ_MT_TAIL:
+                marker[0] = session + "-" + storedlastcurrent;
+                break;
+            case EJ_MT_HEAD:
+                marker[0] = "0-1";
             }
         } catch (Exception e) {
             throw new JposException(JPOS_E_FAILURE, "Bad data structure: " + e.getMessage(), e);

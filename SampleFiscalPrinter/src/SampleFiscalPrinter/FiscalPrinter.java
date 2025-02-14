@@ -110,27 +110,26 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
     @Override
     public DirectIO directIO(int command, int[] data, Object obj) throws JposException {
         switch (command) {
-            case SAMPLEFISCALPRINTERDIO_EXECCOMMAND -> {
-                EventSource.checkClaimed();
-                data[0] = Dev.executeCommands(data[0], obj);
+        case SAMPLEFISCALPRINTERDIO_EXECCOMMAND:
+            EventSource.checkClaimed();
+            data[0] = Dev.executeCommands(data[0], obj);
+            break;
+        case SAMPLEFISCALPRINTERDIO_NONFISCALRECEIPTTRAILER:
+            check((data[0] & ~1) != 0, JPOS_E_ILLEGAL, "Invalid data, must be 0 or 1");
+            Dev.NonFiscalReceiptWithTrailer = data[0] == 0 ? "0" : "1";
+            break;
+        case SAMPLEFISCALPRINTERDIO_FISCALIZE:
+            EventSource.checkEnabled();
+            check("".equals(Dev.SerialNumber), JPOS_E_ILLEGAL, "Serial number not set");
+            check(Dev.CurrentPeriod > 0, JPOS_E_ILLEGAL, "Printer just fiscalized");
+            String[][] cmd = {new String[]{"fiscalize"}, null};
+            if (Dev.executeCommands(0, cmd) != 1) {
+                commandErrorException(cmd, new long[]{CLOSED});
             }
-            case SAMPLEFISCALPRINTERDIO_NONFISCALRECEIPTTRAILER -> {
-                check((data[0] & ~1) != 0, JPOS_E_ILLEGAL, "Invalid data, must be 0 or 1");
-                Dev.NonFiscalReceiptWithTrailer = data[0] == 0 ? "0" : "1";
-            }
-            case SAMPLEFISCALPRINTERDIO_FISCALIZE -> {
-                EventSource.checkEnabled();
-                check("".equals(Dev.SerialNumber), JPOS_E_ILLEGAL, "Serial number not set");
-                check(Dev.CurrentPeriod > 0, JPOS_E_ILLEGAL, "Printer just fiscalized");
-                String[][] cmd = {new String[]{"fiscalize"}, null};
-                if (Dev.executeCommands(0, cmd) != 1) {
-                    commandErrorException(cmd, new long[]{CLOSED});
-                }
-                attachWaiter();
-                Dev.PollWaiter.signal();
-                waitWaiter(INFINITE);
-                releaseWaiter();
-            }
+            attachWaiter();
+            Dev.PollWaiter.signal();
+            waitWaiter(INFINITE);
+            releaseWaiter();
         }
         return null;
     }
@@ -399,18 +398,15 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
     @Override
     public void getData(int dataItem, int[] optArgs, int[] data) throws JposException {
         switch (dataItem) {
-            case FPTR_GD_RECEIPT_NUMBER -> {
-                getCount(new String[]{"get", "Total", "Fiscal"}, data);
-                return;
-            }
-            case FPTR_GD_Z_REPORT -> {
-                data[0] = Dev.CurrentPeriod;
-                return;
-            }
-            case FPTR_GD_DESCRIPTION_LENGTH -> {
-                getDescriptionLength(optArgs[0], data);
-                return;
-            }
+        case FPTR_GD_RECEIPT_NUMBER:
+            getCount(new String[]{"get", "Total", "Fiscal"}, data);
+            return;
+        case FPTR_GD_Z_REPORT:
+            data[0] = Dev.CurrentPeriod;
+            return;
+        case FPTR_GD_DESCRIPTION_LENGTH:
+            getDescriptionLength(optArgs[0], data);
+            return;
         }
         throw new JposException(JPOS_E_ILLEGAL, "Unsupported dataItem: " + dataItem);
     }
@@ -418,24 +414,28 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
     @Override
     public void getData(int dataItem, int[] optArgs, long[] data) throws JposException {
         switch (dataItem) {
-            case FPTR_GD_CURRENT_TOTAL -> {
-                String[][] cmd = {new String[]{"getCurrentTotal", "0"}, null};
-                if (Dev.executeCommands(0, cmd) != 1 || !returnValuePresent(cmd)) {
-                    commandErrorException(cmd, new long[]{ITEMIZING, PAYING, FINALIZING});
-                    throw new JposException(JPOS_E_FAILURE, "Total not available");
-                }
-                data[0] = new BigDecimal(cmd[1][1]).multiply(new BigDecimal(CURRENCYFACTOR)).longValueExact();
+        case FPTR_GD_CURRENT_TOTAL:
+            String[][] cmd = {new String[]{"getCurrentTotal", "0"}, null};
+            if (Dev.executeCommands(0, cmd) != 1 || !returnValuePresent(cmd)) {
+                commandErrorException(cmd, new long[]{ITEMIZING, PAYING, FINALIZING});
+                throw new JposException(JPOS_E_FAILURE, "Total not available");
             }
-            case FPTR_GD_DAILY_TOTAL ->
-                getTotal(new String[]{"get", "Total", "All"}, data, "daily total");
-            case FPTR_GD_GRAND_TOTAL ->
-                getTotal(new String[]{"get", "GrandTotal"}, data, "grand total");
-            case FPTR_GD_NOT_PAID ->
-                getTotal(new String[]{"get", "Total", "Aborts"}, data, "aborted receipt total");
-            case FPTR_GD_REFUND ->
-                getTotal(new String[]{"get", "Total", "Refunds"}, data, "refund total");
-            default ->
-                    throw new JposException(JPOS_E_ILLEGAL, "Unsupported dataItem: " + dataItem);
+            data[0] = new BigDecimal(cmd[1][1]).multiply(new BigDecimal(CURRENCYFACTOR)).longValueExact();
+            break;
+        case FPTR_GD_DAILY_TOTAL:
+            getTotal(new String[]{"get", "Total", "All"}, data, "daily total");
+            break;
+        case FPTR_GD_GRAND_TOTAL:
+            getTotal(new String[]{"get", "GrandTotal"}, data, "grand total");
+            break;
+        case FPTR_GD_NOT_PAID:
+            getTotal(new String[]{"get", "Total", "Aborts"}, data, "aborted receipt total");
+            break;
+        case FPTR_GD_REFUND:
+            getTotal(new String[]{"get", "Total", "Refunds"}, data, "refund total");
+            break;
+        default:
+            throw new JposException(JPOS_E_ILLEGAL, "Unsupported dataItem: " + dataItem);
         }
     }
 
@@ -467,10 +467,20 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
 
     private void getDescriptionLength(int optArg, int[] data) throws JposException {
         switch (optArg) {
-            case FPTR_DL_ITEM, FPTR_DL_ITEM_ADJUSTMENT, FPTR_DL_REFUND, FPTR_DL_REFUND_VOID,
-                    FPTR_DL_SUBTOTAL_ADJUSTMENT, FPTR_DL_TOTAL, FPTR_DL_VOID_ITEM -> data[0] = MAXDESCRIPTIONLENGTH;
-            case FPTR_DL_VOID -> data[0] = MAXFISCALPRINTLINE;
-            default -> throw new JposException(JPOS_E_ILLEGAL, "Unsupported optArgs for description length: " + optArg);
+        case FPTR_DL_ITEM:
+        case FPTR_DL_ITEM_ADJUSTMENT:
+        case FPTR_DL_REFUND:
+        case FPTR_DL_REFUND_VOID:
+        case FPTR_DL_SUBTOTAL_ADJUSTMENT:
+        case FPTR_DL_TOTAL:
+        case FPTR_DL_VOID_ITEM:
+            data[0] = MAXDESCRIPTIONLENGTH;
+            break;
+        case FPTR_DL_VOID:
+            data[0] = MAXFISCALPRINTLINE;
+            break;
+        default:
+            throw new JposException(JPOS_E_ILLEGAL, "Unsupported optArgs for description length: " + optArg);
         }
     }
 
@@ -479,22 +489,25 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
         String[][]command;
         int result;
         switch (DateType) {
-            case FPTR_DT_RTC -> {
-                result = Dev.executeCommands(0, command = new String[][]{ { "getDate"}, null });
-                check(result != 1 || !returnValuePresent(command), JPOS_E_ILLEGAL, "RTC currently not available");
-                String rtc = command[1][1];
-                date[0] = rtc.substring(6, 8) + rtc.substring(4, 6) + rtc.substring(0, 4) + rtc.substring(8, 12);
-            }
-            case FPTR_DT_START -> {
-                result = Dev.executeCommands(0, command = new String[][]{
-                        DayOpened ? new String[]{"get", "Total", "Date"} : new String[]{"get", "Memory", Long.toString(Dev.CurrentPeriod - 1), "Date"},
-                        null
-                });
-                check(result != 1, JPOS_E_ILLEGAL, "Start date currently not available");
-                date[0] = new SimpleDateFormat("ddMMyyyyHHmm").format(new Date(Long.parseLong(command[1][1]) * 1000));
-            }
-            case FPTR_DT_CONF -> getLastTicketDateOfPeriod(date, 1, "CONF");
-            case FPTR_DT_EOD -> getLastTicketDateOfPeriod(date, Dev.CurrentPeriod, "EOD");
+        case FPTR_DT_RTC:
+            result = Dev.executeCommands(0, command = new String[][]{ { "getDate"}, null });
+            check(result != 1 || !returnValuePresent(command), JPOS_E_ILLEGAL, "RTC currently not available");
+            String rtc = command[1][1];
+            date[0] = rtc.substring(6, 8) + rtc.substring(4, 6) + rtc.substring(0, 4) + rtc.substring(8, 12);
+            break;
+        case FPTR_DT_START:
+            result = Dev.executeCommands(0, command = new String[][]{
+                    DayOpened ? new String[]{"get", "Total", "Date"} : new String[]{"get", "Memory", Long.toString(Dev.CurrentPeriod - 1), "Date"},
+                    null
+            });
+            check(result != 1, JPOS_E_ILLEGAL, "Start date currently not available");
+            date[0] = new SimpleDateFormat("ddMMyyyyHHmm").format(new Date(Long.parseLong(command[1][1]) * 1000));
+            break;
+        case FPTR_DT_CONF:
+            getLastTicketDateOfPeriod(date, 1, "CONF");
+            break;
+        case FPTR_DT_EOD:
+            getLastTicketDateOfPeriod(date, Dev.CurrentPeriod, "EOD");
         }
     }
 
@@ -530,7 +543,8 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
     public void getVatEntry(int vatID, int optArgs, int[] vatRate) throws JposException {
         check(vatID < 1 || vatID > MAXVATINDEX, JPOS_E_ILLEGAL, "Invalid vatID: " + vatID);
         Object e = processCommand(new String[]{"get", "VAT", Integer.toString(vatID)});
-        if (e instanceof String[] resp) {
+        if (e instanceof String[]) {
+            String[] resp = (String[]) e;
             try {
                 if (resp[0].charAt(0) == SUCCESS && resp.length == 2) {
                     int rate = new BigDecimal(resp[1]).multiply(new BigDecimal(CURRENCYFACTOR)).intValueExact();
@@ -541,8 +555,8 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
                 e = ee;
             }
         }
-        if (e instanceof Exception ee)
-            throw new JposException(JPOS_E_FAILURE, "Error getting VAT rate " + vatID + ": " + ee.getMessage(), ee);
+        if (e instanceof Exception)
+            throw new JposException(JPOS_E_FAILURE, "Error getting VAT rate " + vatID + ": " + ((Exception)e).getMessage(), (Exception) e);
         throw new JposException(JPOS_E_FAILURE, "Error getting VAT rate " + vatID);
     }
 
@@ -692,15 +706,16 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
                 commands = Dev.addCommand(commands, new String[]{"setTrainingMode", "0"});
             }
             switch (state[RECEIPT]) {
-                case NONFISCAL -> {
-                    String text = Dev.centeredLine(Dev.PrinterResetText);
-                    commands = Dev.addCommand(commands, new String[]{"nfPrint", "\n" + text});
-                    commands = Dev.addCommand(commands, new String[]{"nfEnd", Dev.NonFiscalReceiptWithTrailer});
-                }
-                case ITEMIZING, PAYING, FINALIZING -> {
-                    commands = Dev.addCommand(commands, new String[]{"fAbort", Dev.PrinterResetText});
-                    commands = Dev.addCommand(commands, new String[]{"fEnd"});
-                }
+            case NONFISCAL:
+                String text = Dev.centeredLine(Dev.PrinterResetText);
+                commands = Dev.addCommand(commands, new String[]{"nfPrint", "\n" + text});
+                commands = Dev.addCommand(commands, new String[]{"nfEnd", Dev.NonFiscalReceiptWithTrailer});
+                break;
+            case ITEMIZING:
+            case PAYING:
+            case FINALIZING:
+                commands = Dev.addCommand(commands, new String[]{"fAbort", Dev.PrinterResetText});
+                commands = Dev.addCommand(commands, new String[]{"fEnd"});
             }
             Dev.executeCommands(0, commands);
         }
@@ -904,20 +919,24 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
         String[] lines;
         String[][][] cmds = {};
         switch (request.getDocumentType() * 10 + request.getLineNumber()) {
-            case SAMPLEFISCALPRINTERFXO_SIGNON * 10 + SAMPLEFISCALPRINTERFXO_HEAD, SAMPLEFISCALPRINTERFXO_SIGNOFF * 10 + SAMPLEFISCALPRINTERFXO_HEAD -> {
-                lines = new String[request.getData().length() > 0 ? 3 : 2];
-                lines[0] = Dev.centeredLine(new String[]{"", Dev.SignOnHeader, Dev.SignOffHeader}[request.getDocumentType()]);
-                lines[1] = "";
-                if (lines.length > 2)
-                    lines[2] = String.format("%" + MAXFIXEDTEXTLENGTH + "s: %s", Dev.CashierName, request.getData());
-            }
-            case SAMPLEFISCALPRINTERFXO_SIGNON * 10 + SAMPLEFISCALPRINTERFXO_ON_CASHIER, SAMPLEFISCALPRINTERFXO_SIGNOFF * 10 + SAMPLEFISCALPRINTERFXO_OFF_CASHIER -> {
-                lines = new String[]{String.format("%" + MAXFIXEDTEXTLENGTH + "s: %s", Dev.CashierID, request.getData())};
-                cmds = Dev.addCommand(cmds, new String[]{"setCashier", request.getDocumentType() == SAMPLEFISCALPRINTERFXO_SIGNON ? request.getData() : "0"});
-            }
-            case SAMPLEFISCALPRINTERFXO_SIGNOFF * 10 + SAMPLEFISCALPRINTERFXO_OFF_SECRET ->
-                    lines = new String[]{String.format("%" + MAXFIXEDTEXTLENGTH + "s: %c%s%c", Dev.SecretText, SO, request.getData(), SI)};
-            default -> lines = new String[0];
+        case SAMPLEFISCALPRINTERFXO_SIGNON * 10 + SAMPLEFISCALPRINTERFXO_HEAD:
+        case SAMPLEFISCALPRINTERFXO_SIGNOFF * 10 + SAMPLEFISCALPRINTERFXO_HEAD:
+            lines = new String[request.getData().length() > 0 ? 3 : 2];
+            lines[0] = Dev.centeredLine(new String[]{"", Dev.SignOnHeader, Dev.SignOffHeader}[request.getDocumentType()]);
+            lines[1] = "";
+            if (lines.length > 2)
+                lines[2] = String.format("%" + MAXFIXEDTEXTLENGTH + "s: %s", Dev.CashierName, request.getData());
+            break;
+        case SAMPLEFISCALPRINTERFXO_SIGNON * 10 + SAMPLEFISCALPRINTERFXO_ON_CASHIER:
+        case SAMPLEFISCALPRINTERFXO_SIGNOFF * 10 + SAMPLEFISCALPRINTERFXO_OFF_CASHIER:
+            lines = new String[]{String.format("%" + MAXFIXEDTEXTLENGTH + "s: %s", Dev.CashierID, request.getData())};
+            cmds = Dev.addCommand(cmds, new String[]{"setCashier", request.getDocumentType() == SAMPLEFISCALPRINTERFXO_SIGNON ? request.getData() : "0"});
+            break;
+        case SAMPLEFISCALPRINTERFXO_SIGNOFF * 10 + SAMPLEFISCALPRINTERFXO_OFF_SECRET:
+            lines = new String[]{String.format("%" + MAXFIXEDTEXTLENGTH + "s: %c%s%c", Dev.SecretText, SO, request.getData(), SI)};
+            break;
+        default:
+            lines = new String[0];
         }
         for (String line : lines) {
             cmds = Dev.addCommand(cmds, new String[]{"nfPrint", line});
@@ -1593,11 +1612,20 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
                 EventSource.logSet("PowerState");
             }
             switch (recState) {
-                case CLOSED -> PrinterState = FPTR_PS_MONITOR;
-                case ITEMIZING -> PrinterState = FPTR_PS_FISCAL_RECEIPT;
-                case PAYING -> PrinterState = FPTR_PS_FISCAL_RECEIPT_TOTAL;
-                case FINALIZING -> PrinterState = FPTR_PS_FISCAL_RECEIPT_ENDING;
-                case NONFISCAL -> PrinterState = Dev.NonFiscalMinLineNo > 0 ? FPTR_PS_FIXED_OUTPUT : FPTR_PS_NONFISCAL;
+            case CLOSED:
+                PrinterState = FPTR_PS_MONITOR;
+                break;
+            case ITEMIZING:
+                PrinterState = FPTR_PS_FISCAL_RECEIPT;
+                break;
+            case PAYING:
+                PrinterState = FPTR_PS_FISCAL_RECEIPT_TOTAL;
+                break;
+            case FINALIZING:
+                PrinterState = FPTR_PS_FISCAL_RECEIPT_ENDING;
+                break;
+            case NONFISCAL:
+                PrinterState = Dev.NonFiscalMinLineNo > 0 ? FPTR_PS_FIXED_OUTPUT : FPTR_PS_NONFISCAL;
             }
             EventSource.logSet("PrinterState");
         }
@@ -1606,18 +1634,17 @@ class FiscalPrinter extends FiscalPrinterProperties implements StatusUpdater {
     private void updatePaperStates(char c, boolean fromDeviceEnabled) {
         FiscalPrinterStatusUpdateEvent ev = null;
         switch (c) {
-            case OK -> {
-                if (RecEmpty || RecNearEnd)
-                    ev = new FiscalPrinterStatusUpdateEvent(EventSource, FPTR_SUE_REC_PAPEROK);
-            }
-            case NEAREND -> {
-                if (RecEmpty || !RecNearEnd)
-                    ev = new FiscalPrinterStatusUpdateEvent(EventSource, FPTR_SUE_REC_NEAREMPTY);
-            }
-            default -> {
-                if (!RecEmpty)
-                    ev = new FiscalPrinterStatusUpdateEvent(EventSource, FPTR_SUE_REC_EMPTY);
-            }
+        case OK:
+            if (RecEmpty || RecNearEnd)
+                ev = new FiscalPrinterStatusUpdateEvent(EventSource, FPTR_SUE_REC_PAPEROK);
+            break;
+        case NEAREND:
+            if (RecEmpty || !RecNearEnd)
+                ev = new FiscalPrinterStatusUpdateEvent(EventSource, FPTR_SUE_REC_NEAREMPTY);
+            break;
+        default:
+            if (!RecEmpty)
+                ev = new FiscalPrinterStatusUpdateEvent(EventSource, FPTR_SUE_REC_EMPTY);
         }
         if (ev != null) {
             if (fromDeviceEnabled)

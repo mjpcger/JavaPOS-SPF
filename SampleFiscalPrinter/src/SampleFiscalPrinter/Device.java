@@ -1205,7 +1205,8 @@ public class Device extends JposDevice implements Runnable {
     int executeCommands(int data, Object obj) throws JposException {
         check(!(obj instanceof String[][][] || obj instanceof String[][] || obj instanceof String[]), JPOS_E_ILLEGAL, "Unsupported object type for obj");
         check(obj instanceof String[] && data > ((String[])obj).length, JPOS_E_ILLEGAL, "data[0] > obj.length");
-        if (obj instanceof String[] cmd) {
+        if (obj instanceof String[]) {
+            String[] cmd = (String[]) obj;
             String[] resp = sendrecv(Arrays.copyOf(cmd, data));
             if ((data = resp == null ? 0 : resp.length) > 0)
                 System.arraycopy(resp, 0, cmd, 0, Math.min(resp.length, cmd.length));

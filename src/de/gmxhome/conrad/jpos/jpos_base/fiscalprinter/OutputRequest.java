@@ -60,7 +60,8 @@ public class OutputRequest extends JposOutputRequest {
     @Override
     public JposErrorEvent createErrorEvent(JposException ex) {
         FiscalPrinterProperties props = (FiscalPrinterProperties) Props;
-        if (ex instanceof FiscalPrinterException fex) {
+        if (ex instanceof FiscalPrinterException) {
+            FiscalPrinterException fex = (FiscalPrinterException) ex;
             return new FiscalPrinterErrorEvent(Props.EventSource, ex.getErrorCode(), ex.getErrorCodeExtended(), fex.Level, OutputID, fex.State, fex.Station, ex.getMessage());
         }
         return new FiscalPrinterErrorEvent(Props.EventSource, ex.getErrorCode(), ex.getErrorCodeExtended(), Level, OutputID, props.PrinterState, Station, ex.getMessage());

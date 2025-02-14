@@ -1360,10 +1360,17 @@ public class POSPrinterService extends JposBase implements POSPrinterService116 
         }
         List<PrintDataPart> data = text == null ? new ArrayList<>() : outputDataParts(text);
         switch (station) {
-            case PTR_S_JOURNAL -> plausibilityCheckJournalData(data);
-            case PTR_S_RECEIPT -> plausibilityCheckReceiptData(data);
-            case PTR_S_SLIP -> plausibilityCheckSlipData(data);
-            default -> throw new JposException(JPOS_E_NOEXIST, "Invalid station: " + station);
+        case PTR_S_JOURNAL:
+            plausibilityCheckJournalData(data);
+            break;
+        case PTR_S_RECEIPT:
+            plausibilityCheckReceiptData(data);
+            break;
+        case PTR_S_SLIP:
+            plausibilityCheckSlipData(data);
+            break;
+        default:
+            throw new JposException(JPOS_E_NOEXIST, "Invalid station: " + station);
         }
         logCall("ValidateData");
     }
@@ -2567,22 +2574,20 @@ public class POSPrinterService extends JposBase implements POSPrinterService116 
             if (type == 'C' && valueispresent && !negated && escdata == null) {
                 EscScale esc = new EscScale();
                 switch (subtype) {
-                    case 0 -> {
-                        return getEscScaleForSubtypeZero(obj, value, esc);
-                    }
-                    case 'h' -> {
-                        esc.ScaleHorizontal = true;
-                        esc.ScaleVertical = false;
-                        esc.ScaleValue = value;
-                    }
-                    case 'v' -> {
-                        esc.ScaleHorizontal = false;
-                        esc.ScaleVertical = true;
-                        esc.ScaleValue = value;
-                    }
-                    default -> {
-                        return obj;
-                    }
+                case 0:
+                    return getEscScaleForSubtypeZero(obj, value, esc);
+                case 'h':
+                    esc.ScaleHorizontal = true;
+                    esc.ScaleVertical = false;
+                    esc.ScaleValue = value;
+                    break;
+                case 'v':
+                    esc.ScaleHorizontal = false;
+                    esc.ScaleVertical = true;
+                    esc.ScaleValue = value;
+                    break;
+                default:
+                    return obj;
                 }
                 return esc;
             }
@@ -2592,22 +2597,23 @@ public class POSPrinterService extends JposBase implements POSPrinterService116 
         private static PrintDataPart getEscScaleForSubtypeZero(PrintDataPart obj, int value, EscScale esc) {
             esc.ScaleValue = 2;
             switch (value) {
-                case 1 -> {
-                    esc.ScaleValue = 1;
-                    esc.ScaleHorizontal = esc.ScaleVertical = false;
-                }
-                case 2 -> {
-                    esc.ScaleHorizontal = true;
-                    esc.ScaleVertical = false;
-                }
-                case 3 -> {
-                    esc.ScaleHorizontal = false;
-                    esc.ScaleVertical = true;
-                }
-                case 4 -> esc.ScaleHorizontal = esc.ScaleVertical = true;
-                default -> {
-                    return obj;
-                }
+            case 1:
+                esc.ScaleValue = 1;
+                esc.ScaleHorizontal = esc.ScaleVertical = false;
+                break;
+            case 2:
+                esc.ScaleHorizontal = true;
+                esc.ScaleVertical = false;
+                break;
+            case 3:
+                esc.ScaleHorizontal = false;
+                esc.ScaleVertical = true;
+                break;
+            case 4:
+                esc.ScaleHorizontal = esc.ScaleVertical = true;
+                break;
+            default:
+                return obj;
             }
             return esc;
         }
@@ -3085,8 +3091,9 @@ public class POSPrinterService extends JposBase implements POSPrinterService116 
     private static final int CanStation = 16;
 
     private int[] getAllowed(int station) {
-        return switch (station) {
-            case PTR_S_JOURNAL -> new int[]{
+        switch (station) {
+        case PTR_S_JOURNAL:
+            return new int[]{
                     Data.CapJrn2Color ? 1 : 0,
                     Data.CapJrnBold ? 1 : 0,
                     Data.CapJrnDhigh ? 1 : 0,
@@ -3105,7 +3112,8 @@ public class POSPrinterService extends JposBase implements POSPrinterService116 
                     PTR_S_JOURNAL,
                     Data.CapJrnPresent ? 1 : 0
             };
-            case PTR_S_RECEIPT -> new int[]{
+        case PTR_S_RECEIPT:
+            return new int[]{
                     Data.CapRec2Color ? 1 : 0,
                     Data.CapRecBold ? 1 : 0,
                     Data.CapRecDhigh ? 1 : 0,
@@ -3124,7 +3132,8 @@ public class POSPrinterService extends JposBase implements POSPrinterService116 
                     PTR_S_RECEIPT,
                     Data.CapRecPresent ? 1 : 0
             };
-            case PTR_S_SLIP -> new int[]{
+        case PTR_S_SLIP:
+            return new int[]{
                     Data.CapSlp2Color ? 1 : 0,
                     Data.CapSlpBold ? 1 : 0,
                     Data.CapSlpDhigh ? 1 : 0,
@@ -3143,8 +3152,8 @@ public class POSPrinterService extends JposBase implements POSPrinterService116 
                     PTR_S_SLIP,
                     Data.CapSlpPresent ? 1 : 0
             };
-            default -> null;
-        };
+        }
+        return null;
     }
 
     private void plausibilityCheckData(int station, List<PrintDataPart> data) throws JposException {
@@ -3226,22 +3235,26 @@ public class POSPrinterService extends JposBase implements POSPrinterService116 
      */
     void checkTwoStations(int stations, int[] stationIndex, int[] station) throws JposException {
         switch (stations) {
-            case PTR_S_JOURNAL_RECEIPT, PTR_TWO_RECEIPT_JOURNAL -> {
-                check(!Data.CapConcurrentJrnRec, JPOS_E_ILLEGAL, "No concurrent printing on journal and receipt");
-                stationIndex[0] = getStationIndex(station[0] = PTR_S_JOURNAL);
-                stationIndex[1] = getStationIndex(station[1] = PTR_S_RECEIPT);
-            }
-            case PTR_S_JOURNAL_SLIP, PTR_TWO_SLIP_JOURNAL -> {
-                check(!Data.CapConcurrentJrnSlp, JPOS_E_ILLEGAL, "No concurrent printing on journal and slip");
-                stationIndex[0] = getStationIndex(station[0] = PTR_S_JOURNAL);
-                stationIndex[1] = getStationIndex(station[1] = PTR_S_SLIP);
-            }
-            case PTR_S_RECEIPT_SLIP, PTR_TWO_SLIP_RECEIPT -> {
-                check(!Data.CapConcurrentRecSlp, JPOS_E_ILLEGAL, "No concurrent printing on receipt and slip");
-                stationIndex[0] = getStationIndex(station[0] = PTR_S_SLIP);
-                stationIndex[1] = getStationIndex(station[1] = PTR_S_RECEIPT);
-            }
-            default -> throw new JposException(JPOS_E_ILLEGAL, "Invalid print stations: " + stations);
+        case PTR_S_JOURNAL_RECEIPT:
+        case PTR_TWO_RECEIPT_JOURNAL:
+            check(!Data.CapConcurrentJrnRec, JPOS_E_ILLEGAL, "No concurrent printing on journal and receipt");
+            stationIndex[0] = getStationIndex(station[0] = PTR_S_JOURNAL);
+            stationIndex[1] = getStationIndex(station[1] = PTR_S_RECEIPT);
+            break;
+        case PTR_S_JOURNAL_SLIP:
+        case PTR_TWO_SLIP_JOURNAL:
+            check(!Data.CapConcurrentJrnSlp, JPOS_E_ILLEGAL, "No concurrent printing on journal and slip");
+            stationIndex[0] = getStationIndex(station[0] = PTR_S_JOURNAL);
+            stationIndex[1] = getStationIndex(station[1] = PTR_S_SLIP);
+            break;
+        case PTR_S_RECEIPT_SLIP:
+        case PTR_TWO_SLIP_RECEIPT:
+            check(!Data.CapConcurrentRecSlp, JPOS_E_ILLEGAL, "No concurrent printing on receipt and slip");
+            stationIndex[0] = getStationIndex(station[0] = PTR_S_SLIP);
+            stationIndex[1] = getStationIndex(station[1] = PTR_S_RECEIPT);
+            break;
+        default:
+            throw new JposException(JPOS_E_ILLEGAL, "Invalid print stations: " + stations);
         }
         check(SidewaysCommand[station[0]] != null || SidewaysCommand[station[1]] != null, JPOS_E_ILLEGAL, "No support for printing to two stations when one station is in sideways print mode");
         check(PagemodeCommand[station[0]] != null || PagemodeCommand[station[1]] != null, JPOS_E_ILLEGAL, "No support for printing to two stations when one station is in page mode");

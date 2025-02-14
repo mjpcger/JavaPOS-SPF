@@ -20,7 +20,6 @@ package de.gmxhome.conrad.jpos.jpos_base.gesturecontrol;
 import de.gmxhome.conrad.jpos.jpos_base.JposCommonProperties;
 import de.gmxhome.conrad.jpos.jpos_base.JposOutputRequest;
 import jpos.JposException;
-import jpos.config.JposEntry;
 
 import java.util.HashMap;
 import java.util.List;
@@ -157,11 +156,16 @@ public class GestureControlProperties extends JposCommonProperties implements Ge
     public void initOnOpen() {
         super.initOnOpen();
         AutoMode = "";
-        Storage = switch (CapStorage) {
-            case GCTL_CST_HARDTOTALS_ONLY -> GCTL_CST_ALL;
-            case GCTL_CST_HOST_ONLY -> GCTL_ST_HOST;
-            default -> GCTL_ST_HOST_HARDTOTALS;
-        };
+        switch (CapStorage) {
+            case GCTL_CST_HARDTOTALS_ONLY:
+                Storage = GCTL_CST_ALL;
+                break;
+            case GCTL_CST_HOST_ONLY:
+                Storage = GCTL_ST_HOST;
+                break;
+            default:
+                Storage = GCTL_ST_HOST_HARDTOTALS;
+        }
     }
     @Override
     public boolean initOnFirstEnable() {

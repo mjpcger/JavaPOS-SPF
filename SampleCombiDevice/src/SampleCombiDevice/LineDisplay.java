@@ -145,8 +145,8 @@ public class LineDisplay extends LineDisplayProperties {
             // We update the coordinates here
             ((SampleCombiDevice.Device.DisplayCoordinates)request.AdditionalData).Update = false;
             for (Object o : data) {
-                if (o instanceof LineDisplayService.DisplayData dd) {
-                    CursorColumn += dd.getData().length();
+                if (o instanceof LineDisplayService.DisplayData) {
+                    CursorColumn += ((LineDisplayService.DisplayData) o).getData().length();
                     while (CursorColumn > Columns) {
                         CursorColumn -= Columns;
                         if (CursorRow < Rows - 1)
@@ -194,7 +194,8 @@ public class LineDisplay extends LineDisplayProperties {
                 processChar(coordinates, ((LineDisplayService.ControlChar) o).getControlCharacter(), attribute);
             else if (o instanceof LineDisplayService.EscNormalize)
                 attribute = Dev.NormalChar;
-            else if (o instanceof LineDisplayService.EscSimple esc && attribute != blinkReverseChar) {
+            else if (o instanceof LineDisplayService.EscSimple && attribute != blinkReverseChar) {
+                LineDisplayService.EscSimple esc = (LineDisplayService.EscSimple) o;
                 // Character attribute values
                 char reverseChar = 'r';
                 char blinkChar = 'b';

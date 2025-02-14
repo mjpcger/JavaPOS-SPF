@@ -92,11 +92,14 @@ public class BillDispenserStatusUpdateEvent extends JposStatusUpdateEvent {
             return true;
         }
         switch (getStatus()) {
-            case BDSP_STATUS_EMPTY, BDSP_STATUS_NEAREMPTY, BDSP_STATUS_EMPTYOK, BDSP_STATUS_JAM, BDSP_STATUS_JAMOK ->
-                    props.DeviceStatus = DeviceState;
-            default -> {
-                return false;
-            }
+        default:
+            return false;
+        case BDSP_STATUS_EMPTY:
+        case BDSP_STATUS_NEAREMPTY:
+        case BDSP_STATUS_EMPTYOK:
+        case BDSP_STATUS_JAM:
+        case BDSP_STATUS_JAMOK:
+            props.DeviceStatus = DeviceState;
         }
         return true;
     }
@@ -104,14 +107,20 @@ public class BillDispenserStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public boolean checkStatusCorresponds() {
         BillDispenserProperties props = (BillDispenserProperties) getPropertySet();
-        return super.checkStatusCorresponds() || switch (getStatus()) {
-            case BDSP_STATUS_EMPTY, BDSP_STATUS_NEAREMPTY, BDSP_STATUS_EMPTYOK, BDSP_STATUS_JAM, BDSP_STATUS_JAMOK ->
-                    props.DeviceStatus == DeviceState;
-            case BDSP_STATUS_ASYNC ->
-                    props.AsyncResultCode == (Exception == null ? BDSP_STATUS_OK : Exception.getErrorCode()) &&
-                            props.AsyncResultCodeExtended == (Exception == null ? 0 : Exception.getErrorCodeExtended());
-            default -> false;
-        };
+        if (super.checkStatusCorresponds())
+            return true;
+        switch (getStatus()) {
+        case BDSP_STATUS_EMPTY:
+        case BDSP_STATUS_NEAREMPTY:
+        case BDSP_STATUS_EMPTYOK:
+        case BDSP_STATUS_JAM:
+        case BDSP_STATUS_JAMOK:
+            return props.DeviceStatus == DeviceState;
+        case BDSP_STATUS_ASYNC:
+            return props.AsyncResultCode == (Exception == null ? BDSP_STATUS_OK : Exception.getErrorCode()) &&
+                    props.AsyncResultCodeExtended == (Exception == null ? 0 : Exception.getErrorCodeExtended());
+        }
+        return false;
     }
 
     @Override
@@ -124,14 +133,22 @@ public class BillDispenserStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case BDSP_STATUS_EMPTY -> "BillDispenser One Slot Empty";
-            case BDSP_STATUS_NEAREMPTY -> "BillDispenser One Slot Nearly Empty";
-            case BDSP_STATUS_EMPTYOK -> "BillDispenser Slots Not Empty";
-            case BDSP_STATUS_JAM -> "BillDispenser Jam Status";
-            case BDSP_STATUS_JAMOK -> "BillDispenser No Jam Status";
-            case BDSP_STATUS_ASYNC -> "BillDispenser Async Method Finished";
-            default -> "Unknown BillDispenser Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+            case BDSP_STATUS_EMPTY:
+                return "BillDispenser One Slot Empty";
+            case BDSP_STATUS_NEAREMPTY:
+                return "BillDispenser One Slot Nearly Empty";
+            case BDSP_STATUS_EMPTYOK:
+                return "BillDispenser Slots Not Empty";
+            case BDSP_STATUS_JAM:
+                return "BillDispenser Jam Status";
+            case BDSP_STATUS_JAMOK:
+                return "BillDispenser No Jam Status";
+            case BDSP_STATUS_ASYNC:
+                return "BillDispenser Async Method Finished";
+        }
+        return "Unknown BillDispenser Status Change: " + getStatus();
     }
 }

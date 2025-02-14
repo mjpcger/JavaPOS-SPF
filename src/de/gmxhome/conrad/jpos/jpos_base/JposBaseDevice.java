@@ -252,7 +252,7 @@ public class JposBaseDevice {
      * @return          runner.Request, if runner is an instance of RequestRunner, otherwise null.
      */
     public JposOutputRequest getRequestRunnersRequest(Runnable runner) {
-        return runner instanceof RequestRunner ? ((RequestRunner)runner).Request : null;
+        return runner instanceof RequestRunner ? ((RequestRunner) runner).Request : null;
     }
 
     /**
@@ -518,8 +518,8 @@ public class JposBaseDevice {
 
     // Convert log4j-Level and java.util.logging-Level to log4pos-Level
     private Level getLog4posLevel(Object loglevel) {
-        if (loglevel instanceof java.util.logging.Level jlevel) {
-            int level = jlevel.intValue();
+        if (loglevel instanceof java.util.logging.Level) {
+            int level = ((java.util.logging.Level)loglevel).intValue();
             if (level == java.util.logging.Level.ALL.intValue())
                 return ALL;
             if (level <= java.util.logging.Level.FINE.intValue())
@@ -876,13 +876,20 @@ public class JposBaseDevice {
     public void handlePowerStateOnEnable(JposCommonProperties dev) throws JposException {
         int state;
         switch (dev.PowerState) {
-            case JPOS_PS_OFF -> state = JPOS_SUE_POWER_OFF;
-            case JPOS_PS_OFFLINE -> state = JPOS_SUE_POWER_OFFLINE;
-            case JPOS_PS_OFF_OFFLINE -> state = JPOS_SUE_POWER_OFF_OFFLINE;
-            case JPOS_PS_ONLINE -> state = JPOS_SUE_POWER_ONLINE;
-            default -> {
-                return;
-            }
+        case JPOS_PS_OFF:
+            state = JPOS_SUE_POWER_OFF;
+            break;
+        case JPOS_PS_OFFLINE:
+            state = JPOS_SUE_POWER_OFFLINE;
+            break;
+        case JPOS_PS_OFF_OFFLINE:
+            state = JPOS_SUE_POWER_OFF_OFFLINE;
+            break;
+        case JPOS_PS_ONLINE:
+            state = JPOS_SUE_POWER_ONLINE;
+            break;
+        default:
+            return;
         }
         JposStatusUpdateEvent event;
         event = new JposStatusUpdateEvent(dev.EventSource, state);
@@ -945,7 +952,7 @@ public class JposBaseDevice {
                     } else if (event instanceof JposDirectIOEvent) {
                         (dioevent = (JposDirectIOEvent) event).setDirectIOProperties();
                     } else if (event instanceof JposStatusUpdateEvent) {
-                        (stevent = (JposStatusUpdateEvent)event).setLateProperties();
+                        (stevent = (JposStatusUpdateEvent) event).setLateProperties();
                     } else if (event instanceof JposOutputCompleteEvent) {
                         (ocevent = (JposOutputCompleteEvent) event).setOutputCompleteProperties();
                     } else if (event instanceof JposErrorEvent) {
@@ -1109,7 +1116,7 @@ public class JposBaseDevice {
         if (trevent != null) {
             trevent.WriteProtected = true;
             if (trevent instanceof JposTransitionWaitingEvent)
-                ((JposTransitionWaitingEvent)trevent).getWaiter().signal();
+                ((JposTransitionWaitingEvent) trevent).getWaiter().signal();
         }
     }
 
@@ -1122,7 +1129,7 @@ public class JposBaseDevice {
         if (dioevent != null) {
             dioevent.WriteProtected = true;
             if (dioevent instanceof JposDirectIOWaitingEvent)
-                ((JposDirectIOWaitingEvent)dioevent).getWaiter().signal();
+                ((JposDirectIOWaitingEvent) dioevent).getWaiter().signal();
         }
     }
 

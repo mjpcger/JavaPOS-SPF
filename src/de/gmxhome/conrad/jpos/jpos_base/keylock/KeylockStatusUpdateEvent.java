@@ -101,15 +101,20 @@ public class KeylockStatusUpdateEvent extends JposStatusUpdateEvent {
         if (ret.length() > 0)
             return ret;
         try {
-            return switch (getStatus()) {
-                case LOCK_KP_ELECTRONIC -> ElectronicKeyValue == null ?
-                        "Lock Position Undefined" :
-                        "Electronic Key Changed To " + getPropertySet().EventSource.getPropertyString(this, "ElectronicKeyValue");
-                case LOCK_KP_LOCK -> "Key Position: Locked";
-                case LOCK_KP_NORM -> "Key Position: Normal";
-                case LOCK_KP_SUPR -> "Key Position: Supervisor";
-                default -> "Key position: " + getStatus();
-            };
+            switch (getStatus()) {
+            case LOCK_KP_ELECTRONIC:
+                return ElectronicKeyValue == null ?
+                    "Lock Position Undefined" :
+                    "Electronic Key Changed To " + getPropertySet().EventSource.getPropertyString(this, "ElectronicKeyValue");
+            case LOCK_KP_LOCK:
+                return "Key Position: Locked";
+            case LOCK_KP_NORM:
+                return "Key Position: Normal";
+            case LOCK_KP_SUPR:
+                return "Key Position: Supervisor";
+            default:
+                return "Key position: " + getStatus();
+            }
         } catch (Exception e) {
             return "Electronic Key Changed To [Error: " + e.getMessage() + "]";
         }

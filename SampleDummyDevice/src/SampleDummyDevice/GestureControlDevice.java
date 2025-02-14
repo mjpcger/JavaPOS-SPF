@@ -84,7 +84,9 @@ public class GestureControlDevice extends JposDevice {
 
         @Override
         public void checkProperties(JposEntry entries) throws JposException {
-            if (entries.getPropertyValue("MethodTimeout") instanceof Integer timeout) {
+            Object value = entries.getPropertyValue("MethodTimeout");
+            if (value instanceof Integer) {
+                int timeout = (Integer) value;
                 check(timeout <= 0, JPOS_E_NOSERVICE, "MethodTimeout must be > 0");
                 MethodTimeout = timeout;
             }

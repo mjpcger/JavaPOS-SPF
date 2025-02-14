@@ -38,10 +38,14 @@ public class DeviceMonitorStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case DMON_SUE_START_MONITORING -> "DeviceMonitor Start Monitoring";
-            case DMON_SUE_STOP_MONITORING -> "DeviceMonitor Stop Monitoring";
-            default -> "Unknown DeviceMonitor Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+        case DMON_SUE_START_MONITORING:
+            return "DeviceMonitor Start Monitoring";
+        case DMON_SUE_STOP_MONITORING:
+            return "DeviceMonitor Stop Monitoring";
+        }
+        return "Unknown DeviceMonitor Status Change: " + getStatus();
     }
 }

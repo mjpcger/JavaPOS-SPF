@@ -241,7 +241,7 @@ public class POSPrinter extends POSPrinterProperties {
                 throw new JposException(JPOS_E_ILLEGAL, e.getMessage(), e);
         }
         List<POSPrinterService.PrintDataPart> dataparts = ((POSPrinterService)EventSource).outputDataParts(data);
-        Object o = null;
+        Object o;
         for (POSPrinterService.PrintDataPart datapart : dataparts) {
             o = datapart;
             if (o instanceof POSPrinterService.EscLogo)

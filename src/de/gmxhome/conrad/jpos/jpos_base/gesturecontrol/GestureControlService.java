@@ -257,7 +257,8 @@ public class GestureControlService extends JposBase implements GestureControlSer
             }
         }
         check(time < 0 && time != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid time: " + time);
-        if (GestureControl.setPosition(positions, time, absolute) instanceof SetPosition req)
+        JposOutputRequest req;
+        if ((req = GestureControl.setPosition(positions, time, absolute)) instanceof SetPosition)
             req.enqueue();
         OutputIDs.add(Data.OutputID);
         logAsyncCall("SetPosition");
@@ -282,7 +283,8 @@ public class GestureControlService extends JposBase implements GestureControlSer
             }
         }
         check(time < 0 && time != JPOS_FOREVER, JPOS_E_ILLEGAL, "Invalid time: " + time);
-        if (GestureControl.setSpeed(positions, time) instanceof SetSpeed req)
+        JposOutputRequest req;
+        if ((req = GestureControl.setSpeed(positions, time)) instanceof SetSpeed)
             req.enqueue();
         OutputIDs.add(Data.OutputID);
         logAsyncCall("SetSpeed");
@@ -293,7 +295,8 @@ public class GestureControlService extends JposBase implements GestureControlSer
         logPreCall("StartMotion", removeOuterArraySpecifier(new Object[]{fileName}, Device.MaxArrayStringElements));
         checkEnabled();
         check(fileName == null || fileName.equals(""), JPOS_E_ILLEGAL, "Filename must not be empty");
-        if (GestureControl.startMotion(fileName) instanceof StartMotion req)
+        JposOutputRequest req;
+        if ((req = GestureControl.startMotion(fileName)) instanceof StartMotion)
             req.enqueue();
         OutputIDs.add(Data.OutputID);
         logAsyncCall("StartMotion");
@@ -304,7 +307,8 @@ public class GestureControlService extends JposBase implements GestureControlSer
         logPreCall("StartPose", removeOuterArraySpecifier(new Object[]{fileName}, Device.MaxArrayStringElements));
         checkEnabled();
         check(fileName == null || fileName.equals(""), JPOS_E_ILLEGAL, "Filename must not be empty");
-        if (GestureControl.startPose(fileName) instanceof StartPose req)
+        JposOutputRequest req;
+        if ((req = GestureControl.startPose(fileName)) instanceof StartPose)
             req.enqueue();
         OutputIDs.add(Data.OutputID);
         logAsyncCall("StartPose");

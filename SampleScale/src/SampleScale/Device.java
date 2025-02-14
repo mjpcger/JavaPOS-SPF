@@ -366,17 +366,20 @@ public class Device extends JposDevice implements Runnable {
                     if (response.length() == 7 && response.charAt(6) == ETX && response.startsWith(String.format("%c09%c", STX, ESC))) {
                         int state = Integer.parseInt(response.substring(4, 6), 10);
                         switch (state) {    // Still in motion: Do it again (no remove of finalizer)
-                            // Weight less than minimum (zero weight)
-                            case 20, 30, 31 ->    // Scale less than zero
-                                    check(System.currentTimeMillis() - startTime > timeout, JPOS_E_TIMEOUT, "No valid weight within time limit");
-                            case 21 ->    // Not in motion since last weighing
-                                    throw new JposException(JPOS_E_EXTENDED, JPOS_ESCAL_SAME_WEIGHT, "Not in motion since last weighing");
-                            case 22 ->    // No price calculation (unit price 0), should never occur
-                                    throw new JposException(JPOS_E_ILLEGAL, 0, "UnitPrice has not been set");
-                            case 32 ->    // Scale is overloaded
-                                    throw new JposException(JPOS_E_EXTENDED, JPOS_ESCAL_OVERWEIGHT, "Scale overloaded");
-                            default ->
-                                    throw new JposException(JPOS_E_FAILURE, 0, "Unknown scale status: " + state);
+                        // Weight less than minimum (zero weight)
+                        case 20:
+                        case 30:
+                        case 31:    // Scale less than zero
+                            check(System.currentTimeMillis() - startTime > timeout, JPOS_E_TIMEOUT, "No valid weight within time limit");
+                            break;
+                        case 21:    // Not in motion since last weighing
+                            throw new JposException(JPOS_E_EXTENDED, JPOS_ESCAL_SAME_WEIGHT, "Not in motion since last weighing");
+                        case 22:    // No price calculation (unit price 0), should never occur
+                            throw new JposException(JPOS_E_ILLEGAL, 0, "UnitPrice has not been set");
+                        case 32:    // Scale is overloaded
+                            throw new JposException(JPOS_E_EXTENDED, JPOS_ESCAL_OVERWEIGHT, "Scale overloaded");
+                        default:
+                            throw new JposException(JPOS_E_FAILURE, 0, "Unknown scale status: " + state);
                         }
                         new SyncObject().suspend(PollDelay);
                     } else if (response.length() == 26 && response.startsWith(String.format("%c02%c3%c", STX, ESC, ESC)) &&

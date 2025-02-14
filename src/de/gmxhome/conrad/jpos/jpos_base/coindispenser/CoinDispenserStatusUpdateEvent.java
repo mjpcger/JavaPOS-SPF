@@ -42,10 +42,13 @@ public class CoinDispenserStatusUpdateEvent extends JposStatusUpdateEvent {
         CoinDispenserProperties props = (CoinDispenserProperties) getPropertySet();
         int status = getStatus();
         switch (status) {
-            case COIN_STATUS_OK, COIN_STATUS_EMPTY, COIN_STATUS_NEAREMPTY, COIN_STATUS_JAM -> props.DispenserStatus = status;
-            default -> {
-                return false;
-            }
+        default:
+            return false;
+        case COIN_STATUS_OK:
+        case COIN_STATUS_EMPTY:
+        case COIN_STATUS_NEAREMPTY:
+        case COIN_STATUS_JAM:
+            props.DispenserStatus = status;
         }
         return true;
     }
@@ -54,10 +57,18 @@ public class CoinDispenserStatusUpdateEvent extends JposStatusUpdateEvent {
     public boolean checkStatusCorresponds() {
         CoinDispenserProperties props = (CoinDispenserProperties) getPropertySet();
         int status = getStatus();
-        return super.checkStatusCorresponds() || switch (status) {
-            case COIN_STATUS_OK, COIN_STATUS_EMPTY, COIN_STATUS_NEAREMPTY, COIN_STATUS_JAM -> props.DispenserStatus == status;
-            default -> false;
-        };
+        if (!super.checkStatusCorresponds()) {
+            switch (status) {
+            case COIN_STATUS_OK:
+            case COIN_STATUS_EMPTY:
+            case COIN_STATUS_NEAREMPTY:
+            case COIN_STATUS_JAM:
+                return props.DispenserStatus == status;
+            default:
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -76,12 +87,18 @@ public class CoinDispenserStatusUpdateEvent extends JposStatusUpdateEvent {
     @Override
     public String toLogString() {
         String ret = super.toLogString();
-        return ret.length() > 0 ? ret : switch (getStatus()) {
-            case COIN_STATUS_OK -> "Coin Dispenser OK";
-            case COIN_STATUS_EMPTY -> "Coin Dispenser Empty";
-            case COIN_STATUS_NEAREMPTY -> "Coin Dispenser Near Empty";
-            case COIN_STATUS_JAM -> "Coin Dispenser Jam";
-            default -> "Unknown Coin Dispenser Status Change: " + getStatus();
-        };
+        if (ret.length() > 0)
+            return ret;
+        switch (getStatus()) {
+        case COIN_STATUS_OK:
+            return "Coin Dispenser OK";
+        case COIN_STATUS_EMPTY:
+            return "Coin Dispenser Empty";
+        case COIN_STATUS_NEAREMPTY:
+            return "Coin Dispenser Near Empty";
+        case COIN_STATUS_JAM:
+            return "Coin Dispenser Jam";
+        }
+        return "Unknown Coin Dispenser Status Change: " + getStatus();
     }
 }

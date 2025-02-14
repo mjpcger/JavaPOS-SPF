@@ -56,22 +56,33 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
         JposCommonProperties props = getPropertySet();
         int state = getStatus();
         switch (state) {
-            case JPOS_SUE_POWER_OFF -> props.PowerState = JPOS_PS_OFF;
-            case JPOS_SUE_POWER_OFF_OFFLINE -> props.PowerState = JPOS_PS_OFF_OFFLINE;
-            case JPOS_SUE_POWER_OFFLINE -> props.PowerState = JPOS_PS_OFFLINE;
-            case JPOS_SUE_POWER_ONLINE -> props.PowerState = JPOS_PS_ONLINE;
-            case JPOS_SUE_UF_COMPLETE, JPOS_SUE_UF_COMPLETE_DEV_NOT_RESTORED, JPOS_SUE_UF_FAILED_DEV_NEEDS_FIRMWARE, JPOS_SUE_UF_FAILED_DEV_OK, JPOS_SUE_UF_FAILED_DEV_UNKNOWN, JPOS_SUE_UF_FAILED_DEV_UNRECOVERABLE -> {
+        case JPOS_SUE_POWER_OFF:
+            props.PowerState = JPOS_PS_OFF;
+            break;
+        case JPOS_SUE_POWER_OFF_OFFLINE:
+            props.PowerState = JPOS_PS_OFF_OFFLINE;
+            break;
+        case JPOS_SUE_POWER_OFFLINE:
+            props.PowerState = JPOS_PS_OFFLINE;
+            break;
+        case JPOS_SUE_POWER_ONLINE:
+            props.PowerState = JPOS_PS_ONLINE;
+            break;
+        case JPOS_SUE_UF_COMPLETE:
+        case JPOS_SUE_UF_COMPLETE_DEV_NOT_RESTORED:
+        case JPOS_SUE_UF_FAILED_DEV_NEEDS_FIRMWARE:
+        case JPOS_SUE_UF_FAILED_DEV_OK:
+        case JPOS_SUE_UF_FAILED_DEV_UNKNOWN:
+        case JPOS_SUE_UF_FAILED_DEV_UNRECOVERABLE:
+            return true;
+        default:
+            if (state > JPOS_SUE_UF_PROGRESS && state <= JPOS_SUE_UF_PROGRESS + 100)
+                return true;
+            if (Objects.equals(state, props.FlagWhenIdleStatusValue)) {
+                props.FlagWhenIdle = false;
                 return true;
             }
-            default -> {
-                if (state > JPOS_SUE_UF_PROGRESS && state <= JPOS_SUE_UF_PROGRESS + 100)
-                    return true;
-                if (Objects.equals(state, props.FlagWhenIdleStatusValue)) {
-                    props.FlagWhenIdle = false;
-                    return true;
-                }
-                return false;
-            }
+            return false;
         }
         return true;
     }
@@ -88,12 +99,16 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
         if (propertiesHaveBeenChanged(properties, oldproperties))
             return true;
         int state = getStatus();
-        return switch (state) {
-            case JPOS_SUE_UF_COMPLETE, JPOS_SUE_UF_COMPLETE_DEV_NOT_RESTORED,
-                    JPOS_SUE_UF_FAILED_DEV_NEEDS_FIRMWARE, JPOS_SUE_UF_FAILED_DEV_OK,
-                    JPOS_SUE_UF_FAILED_DEV_UNKNOWN, JPOS_SUE_UF_FAILED_DEV_UNRECOVERABLE -> true;
-            default -> state > JPOS_SUE_UF_PROGRESS && state <= JPOS_SUE_UF_PROGRESS + 100;
-        };
+        switch (state) {
+        case JPOS_SUE_UF_COMPLETE:
+        case JPOS_SUE_UF_COMPLETE_DEV_NOT_RESTORED:
+        case JPOS_SUE_UF_FAILED_DEV_NEEDS_FIRMWARE:
+        case JPOS_SUE_UF_FAILED_DEV_OK:
+        case JPOS_SUE_UF_FAILED_DEV_UNKNOWN:
+        case JPOS_SUE_UF_FAILED_DEV_UNRECOVERABLE:
+            return true;
+        }
+        return state > JPOS_SUE_UF_PROGRESS && state <= JPOS_SUE_UF_PROGRESS + 100;
     }
 
     /**
@@ -191,16 +206,24 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
     public boolean checkStatusCorresponds() {
         JposCommonProperties props = getPropertySet();
         int state = getStatus();
-        return switch (state) {
-            case JPOS_SUE_POWER_OFF -> props.PowerState == JPOS_PS_OFF;
-            case JPOS_SUE_POWER_OFF_OFFLINE -> props.PowerState == JPOS_PS_OFF_OFFLINE;
-            case JPOS_SUE_POWER_OFFLINE -> props.PowerState == JPOS_PS_OFFLINE;
-            case JPOS_SUE_POWER_ONLINE -> props.PowerState == JPOS_PS_ONLINE;
-            case JPOS_SUE_UF_COMPLETE, JPOS_SUE_UF_COMPLETE_DEV_NOT_RESTORED,
-                    JPOS_SUE_UF_FAILED_DEV_NEEDS_FIRMWARE, JPOS_SUE_UF_FAILED_DEV_OK,
-                    JPOS_SUE_UF_FAILED_DEV_UNKNOWN, JPOS_SUE_UF_FAILED_DEV_UNRECOVERABLE -> true;
-            default -> state > JPOS_SUE_UF_PROGRESS && state <= JPOS_SUE_UF_PROGRESS + 100;
-        };
+        switch (state) {
+        case JPOS_SUE_POWER_OFF:
+            return props.PowerState == JPOS_PS_OFF;
+        case JPOS_SUE_POWER_OFF_OFFLINE:
+            return props.PowerState == JPOS_PS_OFF_OFFLINE;
+        case JPOS_SUE_POWER_OFFLINE:
+            return props.PowerState == JPOS_PS_OFFLINE;
+        case JPOS_SUE_POWER_ONLINE:
+            return props.PowerState == JPOS_PS_ONLINE;
+        case JPOS_SUE_UF_COMPLETE:
+        case JPOS_SUE_UF_COMPLETE_DEV_NOT_RESTORED:
+        case JPOS_SUE_UF_FAILED_DEV_NEEDS_FIRMWARE:
+        case JPOS_SUE_UF_FAILED_DEV_OK:
+        case JPOS_SUE_UF_FAILED_DEV_UNKNOWN:
+        case JPOS_SUE_UF_FAILED_DEV_UNRECOVERABLE:
+            return true;
+        }
+        return state > JPOS_SUE_UF_PROGRESS && state <= JPOS_SUE_UF_PROGRESS + 100;
     }
 
     /**
@@ -213,10 +236,11 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
         JposCommonProperties props = getPropertySet();
         if (props.PowerNotify == JPOS_PN_DISABLED) {
             switch (getStatus()) {
-                case JPOS_SUE_POWER_OFF, JPOS_SUE_POWER_OFF_OFFLINE,
-                        JPOS_SUE_POWER_OFFLINE, JPOS_SUE_POWER_ONLINE -> {
-                    return true;
-                }
+            case JPOS_SUE_POWER_OFF:
+            case JPOS_SUE_POWER_OFF_OFFLINE:
+            case JPOS_SUE_POWER_OFFLINE:
+            case JPOS_SUE_POWER_ONLINE:
+                return true;
             }
         }
         return false;
@@ -229,42 +253,31 @@ public class JposStatusUpdateEvent extends StatusUpdateEvent {
     public String toLogString() {
         int state = getStatus();
         switch (state) {
-            case JPOS_SUE_POWER_OFF -> {
-                return "Device Off";
-            }
-            case JPOS_SUE_POWER_OFF_OFFLINE -> {
-                return "Device Off or Offline";
-            }
-            case JPOS_SUE_POWER_OFFLINE -> {
-                return "Device Offline";
-            }
-            case JPOS_SUE_POWER_ONLINE -> {
-                return "Device Online";
-            }
-            case JPOS_SUE_UF_COMPLETE -> {
-                return "Firmware Update Complete, Device Usable";
-            }
-            case JPOS_SUE_UF_COMPLETE_DEV_NOT_RESTORED -> {
-                return "Firmware update Complete, Device Reset";
-            }
-            case JPOS_SUE_UF_FAILED_DEV_NEEDS_FIRMWARE -> {
-                return "Device Needs Firmware Update";
-            }
-            case JPOS_SUE_UF_FAILED_DEV_OK -> {
-                return "Firmware Update Failed, Device Remains Usable";
-            }
-            case JPOS_SUE_UF_FAILED_DEV_UNKNOWN -> {
-                return "Firmware Update Failed, Device Status Unknown";
-            }
-            case JPOS_SUE_UF_FAILED_DEV_UNRECOVERABLE -> {
-                return "Firmware Update Failed, Device Not Working";
-            }
-            default -> {
-                if (state > JPOS_SUE_UF_PROGRESS && state <= JPOS_SUE_UF_PROGRESS + 100)
-                    return "Firmware Update (" + (state - JPOS_SUE_UF_PROGRESS) + "%)";
-                if (Objects.equals(state, getPropertySet().FlagWhenIdleStatusValue))
-                    return "Device idle";
-            }
+        case JPOS_SUE_POWER_OFF:
+            return "Device Off";
+        case JPOS_SUE_POWER_OFF_OFFLINE:
+            return "Device Off or Offline";
+        case JPOS_SUE_POWER_OFFLINE:
+            return "Device Offline";
+        case JPOS_SUE_POWER_ONLINE:
+            return "Device Online";
+        case JPOS_SUE_UF_COMPLETE:
+            return "Firmware Update Complete, Device Usable";
+        case JPOS_SUE_UF_COMPLETE_DEV_NOT_RESTORED:
+            return "Firmware update Complete, Device Reset";
+        case JPOS_SUE_UF_FAILED_DEV_NEEDS_FIRMWARE:
+            return "Device Needs Firmware Update";
+        case JPOS_SUE_UF_FAILED_DEV_OK:
+            return "Firmware Update Failed, Device Remains Usable";
+        case JPOS_SUE_UF_FAILED_DEV_UNKNOWN:
+            return "Firmware Update Failed, Device Status Unknown";
+        case JPOS_SUE_UF_FAILED_DEV_UNRECOVERABLE:
+            return "Firmware Update Failed, Device Not Working";
+        default:
+            if (state > JPOS_SUE_UF_PROGRESS && state <= JPOS_SUE_UF_PROGRESS + 100)
+                return "Firmware Update (" + (state - JPOS_SUE_UF_PROGRESS) + "%)";
+            if (Objects.equals(state, getPropertySet().FlagWhenIdleStatusValue))
+                return "Device idle";
         }
         return "";
     }
